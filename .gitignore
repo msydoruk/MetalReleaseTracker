@@ -1,0 +1,16 @@
+06-Source/AccessControl/src/*/bin/
+06-Source/AccessControl/src/*/obj/
+06-Source/AccessControl/src/*/*.Cache
+06-Source/AccessControl/src/*/*.user
+06-Source/AccessControl/src/Logs
+06-Source/AccessControl/src/*.suo
+06-Source/Autobuilds/AssemblyInfo.cs
+06-Source/Autobuilds/*.log
+Build
+/Packages
+/06-Source/ResidentPortal/src/RadiantRFID.Portal/images/LockdownLock - Copy.png
+/06-Source/ResidentPortal/src/RadiantRFID.Portal/images/LockNormalLock - Copy.png
+/06-Source/ResidentPortal/src/RadiantRFID.Portal/images/LockopenLock - Copy.png
+/06-Source/ResidentPortal/src/log.txt
+/06-Source/ResidentPortal/src/Documentation/residentportal.hnd-journal
+/06-Source/ResidentPortal/src/Logs
