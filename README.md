@@ -6,7 +6,7 @@ MetalReleaseTracker is a project designed to aggregate and display metal music r
 
 ### Prerequisites
 
-- .NET 6 SDK or later
+- .NET 8 SDK
 - SQL Server (for production) or In-Memory database (for development/testing)
 
 ### Installing
