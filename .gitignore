@@ -14,3 +14,4 @@ Build
 /06-Source/ResidentPortal/src/log.txt
 /06-Source/ResidentPortal/src/Documentation/residentportal.hnd-journal
 /06-Source/ResidentPortal/src/Logs
+*.vsidx

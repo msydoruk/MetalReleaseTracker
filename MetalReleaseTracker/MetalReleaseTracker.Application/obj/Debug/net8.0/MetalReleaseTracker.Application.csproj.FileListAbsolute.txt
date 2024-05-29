@@ -1,0 +1,12 @@
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\bin\Debug\net8.0\MetalReleaseTracker.Application.deps.json
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\bin\Debug\net8.0\MetalReleaseTracker.Application.dll
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\bin\Debug\net8.0\MetalReleaseTracker.Application.pdb
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.AssemblyInfoInputs.cache
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.AssemblyInfo.cs
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.csproj.CoreCompileInputs.cache
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.sourcelink.json
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.dll
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\refint\MetalReleaseTracker.Application.dll
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\MetalReleaseTracker.Application.pdb
+D:\MetalReleaseTracker\MetalReleaseTracker\MetalReleaseTracker.Application\obj\Debug\net8.0\ref\MetalReleaseTracker.Application.dll
