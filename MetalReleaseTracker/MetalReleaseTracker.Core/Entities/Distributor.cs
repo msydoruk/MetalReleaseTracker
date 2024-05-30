@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 
 namespace MetalReleaseTracker.Core.Entities
 {
-    public class Band
+    public class Distributor
     {
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "The band name is required.")]
+        [Required(ErrorMessage = "The distributor  name is required.")]
         public string Name { get; set; }
+
+        [Url]
+        public string ParsingUrl { get; set; }
     }
 }
