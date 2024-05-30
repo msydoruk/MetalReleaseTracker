@@ -15,3 +15,78 @@ Build
 /06-Source/ResidentPortal/src/Documentation/residentportal.hnd-journal
 /06-Source/ResidentPortal/src/Logs
 *.vsidx
+
+
+# Cтандартні файли та папки, що генеруються Visual Studio
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Cтандартні файли та папки, що генеруються .NET
+bin/
+obj/
+out/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.ilk
+*.log
+*.wrn
+*.err
+*.sln.docstates
+
+# Файли налаштувань та середовища розробки
+*.rsuser
+*.DotSettings.user
+
+# Файли, що генеруються налаштуваннями конфігурації
+*.config
+*.ide
+appsettings*.json
+
+# Папки з налаштуваннями та кешем NuGet
+packages/
+nuget.exe
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Тимчасові файли
+*.tmp
+*.temp
+*.log
+*.vspscc
+*.vssscc
+
+# Файли налаштувань системи
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+
+# Веб-файли, що генеруються ASP.NET
+wwwroot/
+
+# Локальні налаштування та секрети
+*.env
+*.local
+
+# Файли IDE
+.idea/
+*.iml
+
+# Файли тестових результатів
+TestResults/
+*.TestResults
+.trx
+.coverage
+.coveragexml
+
+# Лог-файли та файли звітів
+*.log
+*.dmp
+*.mdmp
