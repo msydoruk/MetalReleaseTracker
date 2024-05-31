@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetalReleaseTracker.Core.Entities
+namespace MetalReleaseTracker.Core.Enums
 {
-    internal class Band
+    public enum AlbumStatus
     {
+        New,
+        Restock,
+        Preorder
     }
 }
