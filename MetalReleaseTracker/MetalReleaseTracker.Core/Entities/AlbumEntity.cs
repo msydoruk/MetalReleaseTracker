@@ -5,21 +5,26 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Core.Entities
 {
-    public class Album
+    public class AlbumEntity
     {
         [Key]
         public int Id { get; set; }
 
         [Required]
-        [ForeignKey("Distributor")]
-        public int DistributorId { get; set; }
+        public Guid DistributorId { get; set; }
+
+        [ForeignKey("DistributorId")]
+        public DistributorEntity Distributor { get; set; }
 
         [Required]
-        [ForeignKey("Band")]
-        public int BandId { get; set; }
+        public Guid BandId { get; set; }
+
+        [ForeignKey("BandId")]
+        public BandEntity Band { get; set; }
 
         [Required]
         [RegularExpression("^[A-Z0-9-]*$", ErrorMessage = "SKU can only contain uppercase letters, numbers and hyphens.")]
@@ -64,25 +69,5 @@ namespace MetalReleaseTracker.Core.Entities
         [Required]
         [EnumDataType(typeof(AlbumStatus))]
         public AlbumStatus Status { get; set; }
-
-
-
-        // Navigation properties
-        public Distributor Distributor { get; set; }
-        public Band Band { get; set; }
-    }
-
-    public enum MediaType
-    {
-        CD,
-        LP,
-        Tape
-    }
-
-    public enum AlbumStatus
-    {
-        New,
-        Restock,
-        Preorder
     }
 }

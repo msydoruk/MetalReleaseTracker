@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MetalReleaseTracker.Core.Entities
 {
-    public class Subscription
+    public class SubscriptionEntity
     {
         [Key]
         public int Id { get; set; }
