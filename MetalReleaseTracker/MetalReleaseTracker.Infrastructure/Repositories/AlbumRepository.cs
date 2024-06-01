@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetalReleaseTracker.Infrastructure.Data
+namespace MetalReleaseTracker.Infrastructure.Repositories
 {
     internal class AlbumRepository
     {

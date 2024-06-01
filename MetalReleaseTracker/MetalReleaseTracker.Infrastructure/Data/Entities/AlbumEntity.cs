@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MetalReleaseTracker.Core.Enums;
-
 namespace MetalReleaseTracker.Core.Entities
 {
     public class AlbumEntity

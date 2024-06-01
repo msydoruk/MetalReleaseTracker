@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MetalReleaseTracker.Infrastructure.Data
 {
-    internal class BandRepository
+    internal class MetalReleaseTrackerDbContext
     {
     }
 }

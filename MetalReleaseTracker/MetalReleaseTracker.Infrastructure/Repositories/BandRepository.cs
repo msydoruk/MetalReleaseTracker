@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetalReleaseTracker.Infrastructure.Database
+namespace MetalReleaseTracker.Infrastructure.Repositories
 {
-    internal class MetalReleaseTrackerDbContext
+    internal class BandRepository
     {
     }
 }
