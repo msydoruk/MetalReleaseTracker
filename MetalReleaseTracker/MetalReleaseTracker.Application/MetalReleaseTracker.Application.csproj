@@ -15,7 +15,7 @@
 
 
   <ItemGroup>
-    <AdditionalFiles Include="..\SharedConfig\stylecop.json" Link="stylecop.json" />
+    <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
   
 </Project>
