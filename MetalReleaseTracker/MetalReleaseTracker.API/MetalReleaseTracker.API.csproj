@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <TypeScriptModuleKind>none</TypeScriptModuleKind>
+    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,11 +15,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <AdditionalFiles Include="..\stylecop.json" />
+    <AdditionalFiles Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
 </Project>

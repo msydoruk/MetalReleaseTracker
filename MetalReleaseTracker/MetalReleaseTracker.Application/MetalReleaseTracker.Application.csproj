@@ -13,9 +13,10 @@
     </PackageReference>
   </ItemGroup>
 
-
   <ItemGroup>
-    <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
+    <AdditionalFiles Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
-  
+
+
+
 </Project>

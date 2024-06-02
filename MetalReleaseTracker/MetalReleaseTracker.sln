@@ -14,14 +14,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetalReleaseTracker.Applica
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetalReleaseTracker.Infrastructure", "MetalReleaseTracker.Infrastructure\MetalReleaseTracker.Infrastructure.csproj", "{FF881872-1A58-42EA-8CA9-DEE4BE131E1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetalReleaseTracker.API", "MetalReleaseTracker.API\MetalReleaseTracker.API.csproj", "{5CF3B96F-76A8-4167-A33A-14342DD6DB09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetalReleaseTracker.API", "MetalReleaseTracker.API\MetalReleaseTracker.API.csproj", "{5CF3B96F-76A8-4167-A33A-14342DD6DB09}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedConfig", "SharedConfig", "{E7A7464F-3037-4AC4-BFA4-7994C23AEA96}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{279ADB76-68A4-4A48-BA75-EEE1BE7B053B}"
 	ProjectSection(SolutionItems) = preProject
-		stylecop.json = stylecop.json
-	EndProjectSection
-	ProjectSection(FolderGlobals) = preProject
-		D_5_4MetalReleaseTracker_4MetalReleaseTracker_4stylecop_1json__JsonSchema = https://cdn.subsquid.io/schemas/squid_manifest.json
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Global
