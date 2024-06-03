@@ -19,9 +19,5 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-
 
 </Project>

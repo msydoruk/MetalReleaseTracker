@@ -1,6 +1,6 @@
 root = true 
 
-[*.{cs,vb}]
+[*.cs]
 #### Naming styles ####
 
 # Naming rules
