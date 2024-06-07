@@ -8,7 +8,7 @@ namespace MetalReleaseTracker.Core.Entities
     public class AlbumEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         public Guid DistributorId { get; set; }

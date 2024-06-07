@@ -10,7 +10,7 @@ namespace MetalReleaseTracker.Core.Entities
     public class DistributorEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required(ErrorMessage = "The distributor  name is required.")]
         public string Name { get; set; }

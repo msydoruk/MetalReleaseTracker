@@ -10,7 +10,7 @@ namespace MetalReleaseTracker.Core.Entities
     public class BandEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required(ErrorMessage = "The band name is required.")]
         public string Name { get; set; }

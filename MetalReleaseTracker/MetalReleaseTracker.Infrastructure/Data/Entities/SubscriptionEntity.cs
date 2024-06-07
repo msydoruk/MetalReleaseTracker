@@ -10,7 +10,7 @@ namespace MetalReleaseTracker.Core.Entities
     public class SubscriptionEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [EmailAddress]
