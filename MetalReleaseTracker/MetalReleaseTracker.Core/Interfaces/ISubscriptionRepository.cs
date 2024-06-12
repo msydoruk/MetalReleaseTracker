@@ -11,8 +11,8 @@ namespace MetalReleaseTracker.Core.Interfaces
     {
         Task<SubscriptionEntity> GetByIdAsync(int id);
         Task<IEnumerable<SubscriptionEntity>> GetAllAsync();
-        Task AddAsync(SubscriptionEntity album);
-        Task UpdateAsync(SubscriptionEntity album);
+        Task AddAsync(SubscriptionEntity subscription);
+        Task UpdateAsync(SubscriptionEntity subscription);
         Task DeleteAsync(int id);
     }
 }
