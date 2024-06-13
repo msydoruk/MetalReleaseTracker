@@ -10,8 +10,11 @@ namespace MetalReleaseTracker.Infrastructure.Data
         }
 
         public DbSet<AlbumEntity> Albums { get; set; }
+
         public DbSet<BandEntity> Bands { get; set; }
+
         public DbSet<DistributorEntity> Distributors { get; set; }
+
         public DbSet<SubscriptionEntity> Subscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

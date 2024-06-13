@@ -351,14 +351,3 @@ dotnet_diagnostic.SA1648.severity = none
 dotnet_diagnostic.SA1649.severity = none
 dotnet_diagnostic.SA1650.severity = none
 dotnet_diagnostic.SA1651.severity = none
-[*.{cs,vb}]
-dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 4
-indent_size = 4
-end_of_line = crlf
-dotnet_style_coalesce_expression = true:suggestion
-dotnet_style_null_propagation = true:suggestion
-dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
-dotnet_style_prefer_auto_properties = true:silent
-dotnet_style_object_initializer = true:suggestion
-dotnet_style_prefer_collection_expression = true:suggestion
