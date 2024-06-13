@@ -9,10 +9,14 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface ISubscriptionRepository
     {
-        Task<SubscriptionEntity> GetByIdAsync(int id);
-        Task<IEnumerable<SubscriptionEntity>> GetAllAsync();
-        Task AddAsync(SubscriptionEntity subscription);
-        Task UpdateAsync(SubscriptionEntity subscription);
-        Task DeleteAsync(int id);
+        Task<SubscriptionEntity> GetById(Guid id);
+
+        Task<IEnumerable<SubscriptionEntity>> GetAll();
+
+        Task Add(SubscriptionEntity subscription);
+
+        Task Update(SubscriptionEntity subscription);
+
+        Task Delete(Guid id);
     }
 }

@@ -9,10 +9,14 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IAlbumRepository
     {
-        Task<AlbumEntity> GetByIdAsync(int id);
-        Task<IEnumerable<AlbumEntity>> GetAllAsync();
-        Task AddAsync(AlbumEntity album);
-        Task UpdateAsync(AlbumEntity album);
-        Task DeleteAsync(int id);
+        Task<AlbumEntity> GetById(Guid id);
+
+        Task<IEnumerable<AlbumEntity>> GetAll();
+
+        Task Add(AlbumEntity album);
+
+        Task Update(AlbumEntity album);
+
+        Task Delete(Guid id);
     }
 }

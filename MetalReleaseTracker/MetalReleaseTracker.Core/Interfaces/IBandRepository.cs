@@ -9,10 +9,14 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IBandRepository
     {
-        Task<BandEntity> GetByIdAsync(int id);
-        Task<IEnumerable<BandEntity>> GetAllAsync();
-        Task AddAsync(BandEntity band);
-        Task UpdateAsync(BandEntity band);
-        Task DeleteAsync(int id);
+        Task<BandEntity> GetById(Guid id);
+
+        Task<IEnumerable<BandEntity>> GetAll();
+
+        Task Add(BandEntity band);
+
+        Task Update(BandEntity band);
+
+        Task Delete(Guid id);
     }
 }
