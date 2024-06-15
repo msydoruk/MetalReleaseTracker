@@ -5,15 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetalReleaseTracker.Infrastructure.Data.Entities
+namespace MetalReleaseTracker.Core.Entities
 {
-    public class SubscriptionEntity
+    public class Subscription
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [EmailAddress]
         public string Email { get; set; }
 
         public bool NotifyForNewReleases { get; set; }

@@ -1,4 +1,6 @@
 ﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Infrastructure.Data.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Infrastructure.Data
@@ -9,13 +11,13 @@ namespace MetalReleaseTracker.Infrastructure.Data
         {
         }
 
-        public DbSet<AlbumEntity> Albums { get; set; }
+        public DbSet<Album> Albums { get; set; }
 
-        public DbSet<BandEntity> Bands { get; set; }
+        public DbSet<Band> Bands { get; set; }
 
-        public DbSet<DistributorEntity> Distributors { get; set; }
+        public DbSet<Distributor> Distributors { get; set; }
 
-        public DbSet<SubscriptionEntity> Subscriptions { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

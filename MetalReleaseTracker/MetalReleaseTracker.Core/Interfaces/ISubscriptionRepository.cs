@@ -3,20 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using MetalReleaseTracker.Core.Entities;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface ISubscriptionRepository
     {
-        Task<SubscriptionEntity> GetById(Guid id);
+        Task<Subscription> GetById(Guid id);
 
-        Task<IEnumerable<SubscriptionEntity>> GetAll();
+        Task<IEnumerable<Subscription>> GetAll();
 
-        Task Add(SubscriptionEntity subscription);
+        Task Add(Subscription subscription);
 
-        Task Update(SubscriptionEntity subscription);
+        Task Update(Subscription subscription);
 
         Task Delete(Guid id);
+
+        Task<IEnumerable<Subscription>> GetByEmail(string email);
+
+        Task<IEnumerable<Subscription>> GetByNotifyForNewReleases(bool notify);
     }
 }

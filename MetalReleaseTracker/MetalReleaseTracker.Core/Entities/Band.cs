@@ -5,17 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetalReleaseTracker.Infrastructure.Data.Entities
+namespace MetalReleaseTracker.Core.Entities
 {
-    public class DistributorEntity
+    public class Band
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required(ErrorMessage = "The distributor  name is required.")]
         public string Name { get; set; }
-
-        [Url]
-        public string ParsingUrl { get; set; }
     }
 }
