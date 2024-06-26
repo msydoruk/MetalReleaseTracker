@@ -10,6 +10,7 @@ using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Infrastructure.Data.Entities
 {
+    [Table("Albums")]
     public class AlbumEntity
     {
         [Key]

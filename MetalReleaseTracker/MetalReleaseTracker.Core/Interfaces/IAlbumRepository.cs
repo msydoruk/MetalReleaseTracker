@@ -15,13 +15,7 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<IEnumerable<Album>> GetAll();
 
-        Task<IEnumerable<Album>> GetByBandName(string bandName);
-
         Task<IEnumerable<Album>> GetByReleaseDateRange(DateTime startDate, DateTime endDate);
-
-        Task<IEnumerable<Album>> GetByGenre(string genre);
-
-        Task<IEnumerable<Album>> GetByPriceRange(float minPrice, float maxPrice);
 
         Task<IEnumerable<Album>> GetByStatus(AlbumStatus status);
 

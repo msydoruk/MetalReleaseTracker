@@ -1,30 +1,40 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
+using MetalReleaseTracker.Infrastructure.Data.Entities;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
     public class BandRepository : IBandRepository
     {
         private readonly MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogger<BandRepository> _logger;
 
-        public BandRepository(MetalReleaseTrackerDbContext dbContext)
+        public BandRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<BandRepository> logger)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task Add(Band band)
         {
             try
             {
-                await _dbContext.Bands.AddAsync(band);
+                var bandEntity = _mapper.Map<BandEntity>(band);
+                await _dbContext.Bands.AddAsync(bandEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error adding band: {ex.Message}");
-                throw new Exception("An error occurred while adding the band.", ex);
+                _logger.LogError(ex, "An error occurred while adding a band.");
+                throw;
             }
         }
 
@@ -32,24 +42,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                var entity = await _dbContext.Bands.FindAsync(id);
-                if (entity == null)
+                var band = await _dbContext.Bands.FindAsync(id);
+                if (band != null)
                 {
-                    throw new KeyNotFoundException($"Band with Id '{id}' not found.");
+                    _dbContext.Bands.Remove(band);
+                    await _dbContext.SaveChangesAsync();
                 }
-
-                _dbContext.Bands.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error deleting band: {ex.Message}");
-                throw;
+                else
+                {
+                    _logger.LogWarning($"Attempted to delete band with ID {id}, but no matching band was found.");
+                }
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error deleting band: {ex.Message}");
-                throw new Exception("An error occurred while deleting the band.", ex);
+                _logger.LogError(ex, "An error occurred while deleting a band.");
+                throw;
             }
         }
 
@@ -57,12 +64,16 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Bands.ToListAsync();
+                var bands = await _dbContext.Bands
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Band>>(bands);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving all bands: {ex.Message}");
-                throw new Exception("An error occurred while retrieving bands.", ex);
+                _logger.LogError(ex, "An error occurred while retrieving all bands.");
+                throw;
             }
         }
 
@@ -70,23 +81,16 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                var band = await _dbContext.Bands.FirstOrDefaultAsync(b => b.Id == id);
-                if (band == null)
-                {
-                    throw new KeyNotFoundException($"Band with Id '{id}' not found.");
-                }
+                var band = await _dbContext.Bands
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(b => b.Id == id);
 
-                return band;
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error retrieving band by id '{id}': {ex.Message}");
-                throw;
+                return _mapper.Map<Band>(band);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving band by id '{id}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving the band by id.", ex);
+                _logger.LogError(ex, $"An error occurred while retrieving a band with ID {id}.");
+                throw;
             }
         }
 
@@ -94,13 +98,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                _dbContext.Bands.Update(band);
+                var bandEntity = _mapper.Map<BandEntity>(band);
+                _dbContext.Bands.Update(bandEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error updating band: {ex.Message}");
-                throw new Exception("An error occurred while updating the band.", ex);
+                _logger.LogError(ex, "An error occurred while updating a band.");
+                throw;
             }
         }
     }

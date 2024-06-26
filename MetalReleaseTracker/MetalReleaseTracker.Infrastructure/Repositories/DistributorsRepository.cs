@@ -1,30 +1,40 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
+using MetalReleaseTracker.Infrastructure.Data.Entities;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
     public class DistributorsRepository : IDistributorsRepository
     {
         private readonly MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogger<DistributorsRepository> _logger;
 
-        public DistributorsRepository(MetalReleaseTrackerDbContext dbContext)
+        public DistributorsRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<DistributorsRepository> logger)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task Add(Distributor distributor)
         {
             try
             {
-                await _dbContext.Distributors.AddAsync(distributor);
+                var distributorEntity = _mapper.Map<DistributorEntity>(distributor);
+                await _dbContext.Distributors.AddAsync(distributorEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error adding distributor: {ex.Message}");
-                throw new Exception("An error occurred while adding the distributor.", ex);
+                _logger.LogError(ex, "An error occurred while adding a distributor.");
+                throw;
             }
         }
 
@@ -32,24 +42,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                var entity = await _dbContext.Distributors.FindAsync(id);
-                if (entity == null)
+                var distributor = await _dbContext.Distributors.FindAsync(id);
+                if (distributor != null)
                 {
-                    throw new KeyNotFoundException($"Distributor with Id '{id}' not found.");
+                    _dbContext.Distributors.Remove(distributor);
+                    await _dbContext.SaveChangesAsync();
                 }
-
-                _dbContext.Distributors.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error deleting distributor: {ex.Message}");
-                throw;
+                else
+                {
+                    _logger.LogWarning($"Attempted to delete distributor with ID {id}, but no matching distributor was found.");
+                }
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error deleting distributor: {ex.Message}");
-                throw new Exception("An error occurred while deleting the distributor.", ex);
+                _logger.LogError(ex, "An error occurred while deleting a distributor.");
+                throw;
             }
         }
 
@@ -57,12 +64,16 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Distributors.ToListAsync();
+                var distributors = await _dbContext.Distributors
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Distributor>>(distributors);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving all distributors: {ex.Message}");
-                throw new Exception("An error occurred while retrieving distributors.", ex);
+                _logger.LogError(ex, "An error occurred while retrieving all distributors.");
+                throw;
             }
         }
 
@@ -70,23 +81,16 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                var distributor = await _dbContext.Distributors.FirstOrDefaultAsync(d => d.Id == id);
-                if (distributor == null)
-                {
-                    throw new KeyNotFoundException($"Distributor with Id '{id}' not found.");
-                }
+                var distributor = await _dbContext.Distributors
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(d => d.Id == id);
 
-                return distributor;
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error retrieving distributor by id '{id}': {ex.Message}");
-                throw;
+                return _mapper.Map<Distributor>(distributor);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving distributor by id '{id}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving the distributor by id.", ex);
+                _logger.LogError(ex, $"An error occurred while retrieving a distributor with ID {id}.");
+                throw;
             }
         }
 
@@ -94,13 +98,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                _dbContext.Distributors.Update(distributor);
+                var distributorEntity = _mapper.Map<DistributorEntity>(distributor);
+                _dbContext.Distributors.Update(distributorEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error updating distributor: {ex.Message}");
-                throw new Exception("An error occurred while updating the distributor.", ex);
+                _logger.LogError(ex, "An error occurred while updating a distributor.");
+                throw;
             }
         }
     }

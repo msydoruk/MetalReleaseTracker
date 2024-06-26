@@ -1,5 +1,6 @@
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
+using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
 
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,14 @@ builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
 builder.Services.AddScoped<IBandRepository, BandRepository>();
 builder.Services.AddScoped<IDistributorsRepository, DistributorsRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+builder.Services.AddLogging(config =>
+{
+    config.AddConsole();
+    config.AddDebug();
+});
 
 var app = builder.Build();
 

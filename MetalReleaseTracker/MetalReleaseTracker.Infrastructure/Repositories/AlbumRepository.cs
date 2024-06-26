@@ -1,56 +1,45 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
+using MetalReleaseTracker.Infrastructure.Data.Entities;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
     public class AlbumRepository : IAlbumRepository
     {
         private readonly MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogger<AlbumRepository> _logger;
 
-        public AlbumRepository(MetalReleaseTrackerDbContext dbContext)
+        public AlbumRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<AlbumRepository> logger)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task Add(Album album)
+        public async Task<Album> GetById(Guid id)
         {
             try
             {
-                await _dbContext.Albums.AddAsync(album);
-                await _dbContext.SaveChangesAsync();
+                var album = await _dbContext.Albums
+                    .Include(a => a.Band)
+                    .Include(a => a.Distributor)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == id);
+                return _mapper.Map<Album>(album);
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error adding album: {ex.Message}");
-                throw new Exception("An error occurred while adding the album.", ex);
-            }
-        }
-
-        public async Task Delete(Guid id)
-        {
-            try
-            {
-                var entity = await _dbContext.Albums.FindAsync(id);
-                if (entity == null)
-                {
-                    throw new KeyNotFoundException($"Album with Id '{id}' not found.");
-                }
-
-                _dbContext.Albums.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error deleting album: {ex.Message}");
+                _logger.LogError(ex, $"An error occurred while retrieving an album with ID {id}.");
                 throw;
-            }
-            catch (DbUpdateException ex)
-            {
-                Console.Error.WriteLine($"Error deleting album: {ex.Message}");
-                throw new Exception("An error occurred while deleting the album.", ex);
             }
         }
 
@@ -61,86 +50,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 return await _dbContext.Albums
                     .Include(a => a.Band)
                     .Include(a => a.Distributor)
+                    .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                    .AsNoTracking()
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving all albums: {ex.Message}");
-                throw new Exception("An error occurred while retrieving albums.", ex);
-            }
-        }
-
-        public async Task<IEnumerable<Album>> GetByBandName(string bandName)
-        {
-            try
-            {
-                return await _dbContext.Albums
-                    .Include(a => a.Band)
-                    .Where(a => a.Band.Name == bandName)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error retrieving albums by band name '{bandName}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving albums by band name.", ex);
-            }
-        }
-
-        public async Task<IEnumerable<Album>> GetByGenre(string genre)
-        {
-            try
-            {
-                return await _dbContext.Albums
-                    .Where(a => a.Genre == genre)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error retrieving albums by genre '{genre}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving albums by genre.", ex);
-            }
-        }
-
-        public async Task<Album> GetById(Guid id)
-        {
-            try
-            {
-                var album = await _dbContext.Albums
-                    .Include(a => a.Band)
-                    .Include(a => a.Distributor)
-                    .FirstOrDefaultAsync(a => a.Id == id);
-
-                if (album == null)
-                {
-                    throw new KeyNotFoundException($"Album with Id '{id}' not found.");
-                }
-
-                return album;
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error retrieving album by id '{id}': {ex.Message}");
+                _logger.LogError(ex, "An error occurred while retrieving all albums.");
                 throw;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error retrieving album by id '{id}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving the album by id.", ex);
-            }
-        }
-
-        public async Task<IEnumerable<Album>> GetByPriceRange(float minPrice, float maxPrice)
-        {
-            try
-            {
-                return await _dbContext.Albums
-                    .Where(a => a.Price >= minPrice && a.Price <= maxPrice)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error retrieving albums by price range '{minPrice} - {maxPrice}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving albums by price range.", ex);
             }
         }
 
@@ -148,14 +65,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Albums
+                var albums = await _dbContext.Albums
                     .Where(a => a.ReleaseDate >= startDate && a.ReleaseDate <= endDate)
+                    .AsNoTracking()
                     .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Album>>(albums);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving albums by release date range '{startDate} - {endDate}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving albums by release date range.", ex);
+                _logger.LogError(ex, $"An error occurred while retrieving albums within the date range {startDate} - {endDate}.");
+                throw;
             }
         }
 
@@ -163,14 +83,32 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Albums
+                var albums = await _dbContext.Albums
                     .Where(a => a.Status == status)
+                    .AsNoTracking()
                     .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Album>>(albums);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving albums by status '{status}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving albums by status.", ex);
+                _logger.LogError(ex, $"An error occurred while retrieving albums by status {status}.");
+                throw;
+            }
+        }
+
+        public async Task Add(Album album)
+        {
+            try
+            {
+                var albumEntity = _mapper.Map<AlbumEntity>(album);
+                await _dbContext.Albums.AddAsync(albumEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "An error occurred while adding an album.");
+                throw;
             }
         }
 
@@ -178,13 +116,36 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                _dbContext.Albums.Update(album);
+                var albumEntity = _mapper.Map<AlbumEntity>(album);
+                _dbContext.Albums.Update(albumEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error updating album: {ex.Message}");
-                throw new Exception("An error occurred while updating the album.", ex);
+                _logger.LogError(ex, "An error occurred while updating an album.");
+                throw;
+            }
+        }
+
+        public async Task Delete(Guid id)
+        {
+            try
+            {
+                var album = await _dbContext.Albums.FindAsync(id);
+                if (album != null)
+                {
+                    _dbContext.Albums.Remove(album);
+                    await _dbContext.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogWarning($"Attempted to delete album with ID {id}, but no matching album was found.");
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting an album.");
+                throw;
             }
         }
     }

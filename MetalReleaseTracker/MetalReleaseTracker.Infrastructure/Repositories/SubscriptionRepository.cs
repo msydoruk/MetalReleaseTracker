@@ -1,30 +1,38 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
+using MetalReleaseTracker.Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
     public class SubscriptionRepository : ISubscriptionRepository
     {
         private readonly MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogger<SubscriptionRepository> _logger;
 
-        public SubscriptionRepository(MetalReleaseTrackerDbContext dbContext)
+        public SubscriptionRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<SubscriptionRepository> logger)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task Add(Subscription subscription)
         {
             try
             {
-                await _dbContext.Subscriptions.AddAsync(subscription);
+                var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
+                await _dbContext.Subscriptions.AddAsync(subscriptionEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error adding subscription: {ex.Message}");
-                throw new Exception("An error occurred while adding the subscription.", ex);
+                _logger.LogError(ex, "An error occurred while adding a subscription.");
+                throw;
             }
         }
 
@@ -32,24 +40,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                var entity = await _dbContext.Subscriptions.FindAsync(id);
-                if (entity == null)
+                var subscription = await _dbContext.Subscriptions.FindAsync(id);
+                if (subscription != null)
                 {
-                    throw new KeyNotFoundException($"Subscription with Id '{id}' not found.");
+                    _dbContext.Subscriptions.Remove(subscription);
+                    await _dbContext.SaveChangesAsync();
                 }
-
-                _dbContext.Subscriptions.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error deleting subscription: {ex.Message}");
-                throw;
+                else
+                {
+                    _logger.LogWarning($"Attempted to delete subscription with ID {id}, but no matching subscription was found.");
+                }
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error deleting subscription: {ex.Message}");
-                throw new Exception("An error occurred while deleting the subscription.", ex);
+                _logger.LogError(ex, "An error occurred while deleting a subscription.");
+                throw;
             }
         }
 
@@ -57,12 +62,16 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Subscriptions.ToListAsync();
+                var subscriptions = await _dbContext.Subscriptions
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving all subscriptions: {ex.Message}");
-                throw new Exception("An error occurred while retrieving subscriptions.", ex);
+                _logger.LogError(ex, "An error occurred while retrieving all subscriptions.");
+                throw;
             }
         }
 
@@ -70,14 +79,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Subscriptions
+                var subscriptions = await _dbContext.Subscriptions
+                    .AsNoTracking()
                     .Where(s => s.Email == email)
                     .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving subscriptions by email '{email}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving subscriptions by email.", ex);
+                _logger.LogError(ex, "An error occurred while retrieving subscriptions by email.");
+                throw;
             }
         }
 
@@ -85,23 +97,16 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                var subscription = await _dbContext.Subscriptions.FirstOrDefaultAsync(s => s.Id == id);
-                if (subscription == null)
-                {
-                    throw new KeyNotFoundException($"Subscription with Id '{id}' not found.");
-                }
+                var subscription = await _dbContext.Subscriptions
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.Id == id);
 
-                return subscription;
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Console.Error.WriteLine($"Error retrieving subscription by id '{id}': {ex.Message}");
-                throw;
+                return _mapper.Map<Subscription>(subscription);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving subscription by id '{id}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving the subscription by id.", ex);
+                _logger.LogError(ex, $"An error occurred while retrieving a subscription with ID {id}.");
+                throw;
             }
         }
 
@@ -109,14 +114,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                return await _dbContext.Subscriptions
+                var subscriptions = await _dbContext.Subscriptions
+                    .AsNoTracking()
                     .Where(s => s.NotifyForNewReleases == notify)
                     .ToListAsync();
+
+                return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error retrieving subscriptions by notify flag '{notify}': {ex.Message}");
-                throw new Exception("An error occurred while retrieving subscriptions by notify flag.", ex);
+                _logger.LogError(ex, "An error occurred while retrieving subscriptions by notify flag.");
+                throw;
             }
         }
 
@@ -124,13 +132,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             try
             {
-                _dbContext.Subscriptions.Update(subscription);
+                var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
+                _dbContext.Subscriptions.Update(subscriptionEntity);
                 await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                Console.Error.WriteLine($"Error updating subscription: {ex.Message}");
-                throw new Exception("An error occurred while updating the subscription.", ex);
+                _logger.LogError(ex, "An error occurred while updating a subscription.");
+                throw;
             }
         }
     }
