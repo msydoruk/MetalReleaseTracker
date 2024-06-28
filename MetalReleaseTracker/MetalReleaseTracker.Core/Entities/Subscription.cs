@@ -1,21 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetalReleaseTracker.Infrastructure.Data.Entities
+namespace MetalReleaseTracker.Core.Entities
 {
-    [Table("Subscriptions")]
-    public class SubscriptionEntity
+    public class Subscription
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [EmailAddress]
         public string Email { get; set; }
 
         public bool NotifyForNewReleases { get; set; }

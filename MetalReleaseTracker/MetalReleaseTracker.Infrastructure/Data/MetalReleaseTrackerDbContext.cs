@@ -1,4 +1,6 @@
 ﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Infrastructure.Data.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Infrastructure.Data

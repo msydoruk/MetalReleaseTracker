@@ -1,4 +1,7 @@
+using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
+using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
+using MetalReleaseTracker.Infrastructure.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +15,13 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
+builder.Services.AddScoped<IBandRepository, BandRepository>();
+builder.Services.AddScoped<IDistributorsRepository, DistributorsRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 

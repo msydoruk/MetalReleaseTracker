@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MetalReleaseTracker.Application\MetalReleaseTracker.Application.csproj" />
     <ProjectReference Include="..\MetalReleaseTracker.Infrastructure\MetalReleaseTracker.Infrastructure.csproj" />
   </ItemGroup>
 

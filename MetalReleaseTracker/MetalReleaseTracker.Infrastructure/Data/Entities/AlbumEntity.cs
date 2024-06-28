@@ -1,10 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 using MetalReleaseTracker.Core.Enums;
 
-namespace MetalReleaseTracker.Core.Entities
+namespace MetalReleaseTracker.Infrastructure.Data.Entities
 {
+    [Table("Albums")]
     public class AlbumEntity
     {
         [Key]

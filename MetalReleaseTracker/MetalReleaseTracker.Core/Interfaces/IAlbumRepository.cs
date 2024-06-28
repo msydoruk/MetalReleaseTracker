@@ -3,19 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IAlbumRepository
     {
-        Task<AlbumEntity> GetById(Guid id);
+        Task<Album> GetById(Guid id);
 
-        Task<IEnumerable<AlbumEntity>> GetAll();
+        Task<IEnumerable<Album>> GetAll();
 
-        Task Add(AlbumEntity album);
+        Task Add(Album album);
 
-        Task Update(AlbumEntity album);
+        Task Update(Album album);
 
         Task Delete(Guid id);
     }

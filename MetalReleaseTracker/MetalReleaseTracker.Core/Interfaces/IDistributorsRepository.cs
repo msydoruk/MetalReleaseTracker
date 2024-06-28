@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using MetalReleaseTracker.Core.Entities;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IDistributorsRepository
     {
-        Task<DistributorEntity> GetById(Guid id);
+        Task<Distributor> GetById(Guid id);
 
-        Task<IEnumerable<DistributorEntity>> GetAll();
+        Task<IEnumerable<Distributor>> GetAll();
 
-        Task Add(DistributorEntity distributor);
+        Task Add(Distributor distributor);
 
-        Task Update(DistributorEntity distributor);
+        Task Update(Distributor distributor);
 
         Task Delete(Guid id);
     }
