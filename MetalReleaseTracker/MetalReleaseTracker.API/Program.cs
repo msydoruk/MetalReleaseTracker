@@ -23,12 +23,6 @@ builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-builder.Services.AddLogging(config =>
-{
-    config.AddConsole();
-    config.AddDebug();
-});
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
