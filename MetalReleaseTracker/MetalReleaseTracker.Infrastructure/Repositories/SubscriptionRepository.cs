@@ -8,74 +8,52 @@ using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
-    public class SubscriptionRepository : BaseRepository<SubscriptionRepository>, ISubscriptionRepository
+    public class SubscriptionRepository : ISubscriptionRepository
     {
-        public SubscriptionRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<SubscriptionRepository> logger)
-           : base(dbContext, mapper, logger) { }
+        private readonly MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
+
+        public SubscriptionRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper)
+        {
+            _dbContext = dbContext;
+            _mapper = mapper;
+        }
 
         public async Task Add(Subscription subscription)
         {
-            await HandleDbUpdateException(async () =>
-            {
-                var subscriptionEntity = Mapper.Map<SubscriptionEntity>(subscription);
-                await DbContext.Subscriptions.AddAsync(subscriptionEntity);
-                await DbContext.SaveChangesAsync();
-            });
+            var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
+            await _dbContext.Subscriptions.AddAsync(subscriptionEntity);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(Guid id)
         {
-            await HandleDbUpdateException(async () =>
-            {
-                var subscription = await DbContext.Subscriptions.FindAsync(id);
-                if (subscription == null)
-                {
-                    Logger.LogWarning("Subscription with Id {Id} not found.", id);
-                    throw new KeyNotFoundException($"Subscription with Id '{id}' not found.");
-                }
-
-                DbContext.Subscriptions.Remove(subscription);
-                await DbContext.SaveChangesAsync();
-            });
+            var subscription = await _dbContext.Subscriptions.FindAsync(id);
+            _dbContext.Subscriptions.Remove(subscription);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Subscription>> GetAll()
         {
-            return await HandleDbUpdateException(async () =>
-            {
-                var subscriptions = await DbContext.Subscriptions
+            var subscriptions = await _dbContext.Subscriptions
                     .AsNoTracking()
                     .ToListAsync();
-
-                return Mapper.Map<IEnumerable<Subscription>>(subscriptions);
-            });
+            return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
         }
 
         public async Task<Subscription> GetById(Guid id)
         {
-            return await HandleDbUpdateException(async () =>
-            {
-                var subscription = await DbContext.Subscriptions
+            var subscription = await _dbContext.Subscriptions
                     .AsNoTracking()
                     .FirstOrDefaultAsync(s => s.Id == id);
-
-                if (subscription == null)
-                {
-                    Logger.LogWarning("Subscription with Id {Id} not found.", id);
-                }
-
-                return Mapper.Map<Subscription>(subscription);
-            });
+            return _mapper.Map<Subscription>(subscription);
         }
 
         public async Task Update(Subscription subscription)
         {
-            await HandleDbUpdateException(async () =>
-            {
-                var subscriptionEntity = Mapper.Map<SubscriptionEntity>(subscription);
-                DbContext.Subscriptions.Update(subscriptionEntity);
-                await DbContext.SaveChangesAsync();
-            });
+            var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
+            _dbContext.Subscriptions.Update(subscriptionEntity);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

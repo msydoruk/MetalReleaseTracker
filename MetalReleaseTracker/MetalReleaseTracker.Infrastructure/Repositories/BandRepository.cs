@@ -10,74 +10,52 @@ using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
-    public class BandRepository : BaseRepository<BandRepository>, IBandRepository
+    public class BandRepository : IBandRepository
     {
-        public BandRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<BandRepository> logger)
-            : base(dbContext, mapper, logger) { }
+        private readonly MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
+
+        public BandRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper)
+        {
+            _dbContext = dbContext;
+            _mapper = mapper;
+        }
 
         public async Task Add(Band band)
         {
-            await HandleDbUpdateException(async () =>
-            {
-                var bandEntity = Mapper.Map<BandEntity>(band);
-                await DbContext.Bands.AddAsync(bandEntity);
-                await DbContext.SaveChangesAsync();
-            });
+            var bandEntity = _mapper.Map<BandEntity>(band);
+            await _dbContext.Bands.AddAsync(bandEntity);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(Guid id)
         {
-            await HandleDbUpdateException(async () =>
-            {
-                var band = await DbContext.Bands.FindAsync(id);
-                if (band == null)
-                {
-                    Logger.LogWarning("Band with Id {Id} not found.", id);
-                    throw new KeyNotFoundException($"Band with Id '{id}' not found.");
-                }
-
-                DbContext.Bands.Remove(band);
-                await DbContext.SaveChangesAsync();
-            });
+            var band = await _dbContext.Bands.FindAsync(id);
+            _dbContext.Bands.Remove(band);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Band>> GetAll()
         {
-            return await HandleDbUpdateException(async () =>
-            {
-                var bands = await DbContext.Bands
+            var bands = await _dbContext.Bands
                     .AsNoTracking()
                     .ToListAsync();
-
-                return Mapper.Map<IEnumerable<Band>>(bands);
-            });
+            return _mapper.Map<IEnumerable<Band>>(bands);
         }
 
         public async Task<Band> GetById(Guid id)
         {
-            return await HandleDbUpdateException(async () =>
-            {
-                var band = await DbContext.Bands
+            var band = await _dbContext.Bands
                     .AsNoTracking()
                     .FirstOrDefaultAsync(b => b.Id == id);
-
-                if (band == null)
-                {
-                    Logger.LogWarning("Band with Id {Id} not found.", id);
-                }
-
-                return Mapper.Map<Band>(band);
-            });
+            return _mapper.Map<Band>(band);
         }
 
         public async Task Update(Band band)
         {
-            await HandleDbUpdateException(async () =>
-            {
-                var bandEntity = Mapper.Map<BandEntity>(band);
-                DbContext.Bands.Update(bandEntity);
-                await DbContext.SaveChangesAsync();
-            });
+            var bandEntity = _mapper.Map<BandEntity>(band);
+            _dbContext.Bands.Update(bandEntity);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
