@@ -15,10 +15,6 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<IEnumerable<Album>> GetAll();
 
-        Task<IEnumerable<Album>> GetByReleaseDateRange(DateTime startDate, DateTime endDate);
-
-        Task<IEnumerable<Album>> GetByStatus(AlbumStatus status);
-
         Task Add(Album album);
 
         Task Update(Album album);

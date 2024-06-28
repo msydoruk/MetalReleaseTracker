@@ -19,9 +19,5 @@ namespace MetalReleaseTracker.Core.Interfaces
         Task Update(Subscription subscription);
 
         Task Delete(Guid id);
-
-        Task<IEnumerable<Subscription>> GetByEmail(string email);
-
-        Task<IEnumerable<Subscription>> GetByNotifyForNewReleases(bool notify);
     }
 }

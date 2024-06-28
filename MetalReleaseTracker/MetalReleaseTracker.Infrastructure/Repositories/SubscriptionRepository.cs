@@ -8,139 +8,74 @@ using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
-    public class SubscriptionRepository : ISubscriptionRepository
+    public class SubscriptionRepository : BaseRepository<SubscriptionRepository>, ISubscriptionRepository
     {
-        private readonly MetalReleaseTrackerDbContext _dbContext;
-        private readonly IMapper _mapper;
-        private readonly ILogger<SubscriptionRepository> _logger;
-
         public SubscriptionRepository(MetalReleaseTrackerDbContext dbContext, IMapper mapper, ILogger<SubscriptionRepository> logger)
-        {
-            _dbContext = dbContext;
-            _mapper = mapper;
-            _logger = logger;
-        }
+           : base(dbContext, mapper, logger) { }
 
         public async Task Add(Subscription subscription)
         {
-            try
+            await HandleDbUpdateException(async () =>
             {
-                var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
-                await _dbContext.Subscriptions.AddAsync(subscriptionEntity);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "An error occurred while adding a subscription.");
-                throw;
-            }
+                var subscriptionEntity = Mapper.Map<SubscriptionEntity>(subscription);
+                await DbContext.Subscriptions.AddAsync(subscriptionEntity);
+                await DbContext.SaveChangesAsync();
+            });
         }
 
         public async Task Delete(Guid id)
         {
-            try
+            await HandleDbUpdateException(async () =>
             {
-                var subscription = await _dbContext.Subscriptions.FindAsync(id);
-                if (subscription != null)
+                var subscription = await DbContext.Subscriptions.FindAsync(id);
+                if (subscription == null)
                 {
-                    _dbContext.Subscriptions.Remove(subscription);
-                    await _dbContext.SaveChangesAsync();
+                    Logger.LogWarning("Subscription with Id {Id} not found.", id);
+                    throw new KeyNotFoundException($"Subscription with Id '{id}' not found.");
                 }
-                else
-                {
-                    _logger.LogWarning($"Attempted to delete subscription with ID {id}, but no matching subscription was found.");
-                }
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "An error occurred while deleting a subscription.");
-                throw;
-            }
+
+                DbContext.Subscriptions.Remove(subscription);
+                await DbContext.SaveChangesAsync();
+            });
         }
 
         public async Task<IEnumerable<Subscription>> GetAll()
         {
-            try
+            return await HandleDbUpdateException(async () =>
             {
-                var subscriptions = await _dbContext.Subscriptions
+                var subscriptions = await DbContext.Subscriptions
                     .AsNoTracking()
                     .ToListAsync();
 
-                return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving all subscriptions.");
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<Subscription>> GetByEmail(string email)
-        {
-            try
-            {
-                var subscriptions = await _dbContext.Subscriptions
-                    .AsNoTracking()
-                    .Where(s => s.Email == email)
-                    .ToListAsync();
-
-                return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving subscriptions by email.");
-                throw;
-            }
+                return Mapper.Map<IEnumerable<Subscription>>(subscriptions);
+            });
         }
 
         public async Task<Subscription> GetById(Guid id)
         {
-            try
+            return await HandleDbUpdateException(async () =>
             {
-                var subscription = await _dbContext.Subscriptions
+                var subscription = await DbContext.Subscriptions
                     .AsNoTracking()
                     .FirstOrDefaultAsync(s => s.Id == id);
 
-                return _mapper.Map<Subscription>(subscription);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"An error occurred while retrieving a subscription with ID {id}.");
-                throw;
-            }
-        }
+                if (subscription == null)
+                {
+                    Logger.LogWarning("Subscription with Id {Id} not found.", id);
+                }
 
-        public async Task<IEnumerable<Subscription>> GetByNotifyForNewReleases(bool notify)
-        {
-            try
-            {
-                var subscriptions = await _dbContext.Subscriptions
-                    .AsNoTracking()
-                    .Where(s => s.NotifyForNewReleases == notify)
-                    .ToListAsync();
-
-                return _mapper.Map<IEnumerable<Subscription>>(subscriptions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving subscriptions by notify flag.");
-                throw;
-            }
+                return Mapper.Map<Subscription>(subscription);
+            });
         }
 
         public async Task Update(Subscription subscription)
         {
-            try
+            await HandleDbUpdateException(async () =>
             {
-                var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
-                _dbContext.Subscriptions.Update(subscriptionEntity);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "An error occurred while updating a subscription.");
-                throw;
-            }
+                var subscriptionEntity = Mapper.Map<SubscriptionEntity>(subscription);
+                DbContext.Subscriptions.Update(subscriptionEntity);
+                await DbContext.SaveChangesAsync();
+            });
         }
     }
 }
