@@ -100,14 +100,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 query = query.Where(a => a.Genre.IndexOf(filter.Genre, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            if (filter.PriceMin.HasValue)
+            if (filter.MinimumPrice.HasValue)
             {
-                query = query.Where(a => a.Price >= filter.PriceMin.Value);
+                query = query.Where(a => a.Price >= filter.MinimumPrice.Value);
             }
 
-            if (filter.PriceMax.HasValue)
+            if (filter.MaximumPrice.HasValue)
             {
-                query = query.Where(a => a.Price <= filter.PriceMax.Value);
+                query = query.Where(a => a.Price <= filter.MaximumPrice.Value);
             }
 
             if (filter.Status.HasValue)

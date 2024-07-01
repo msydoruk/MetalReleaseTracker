@@ -12,9 +12,9 @@ namespace MetalReleaseTracker.Core.Filters
 
         public string Genre { get; set; }
 
-        public float? PriceMin { get; set; }
+        public float? MinimumPrice { get; set; }
 
-        public float? PriceMax { get; set; }
+        public float? MaximumPrice { get; set; }
 
         public AlbumStatus? Status { get; set; }
     }
