@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-
 using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Enums;
+using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
-
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
@@ -62,6 +59,63 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var album = await _dbContext.Albums.FindAsync(id);
             _dbContext.Albums.Remove(album);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)
+        {
+            var query = _dbContext.Albums
+                .Include(a => a.Band)
+                .Include(a => a.Distributor)
+                .AsQueryable();
+
+            query = ApplyFilters(query, filter);
+
+            var albums = await query
+                .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return albums;
+        }
+
+        private IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
+        {
+            if (!string.IsNullOrEmpty(filter.BandName))
+            {
+                query = query.Where(a => a.Band.Name.IndexOf(filter.BandName, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+
+            if (filter.ReleaseDateStart.HasValue)
+            {
+                query = query.Where(a => a.ReleaseDate >= filter.ReleaseDateStart.Value);
+            }
+
+            if (filter.ReleaseDateEnd.HasValue)
+            {
+                query = query.Where(a => a.ReleaseDate <= filter.ReleaseDateEnd.Value);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Genre))
+            {
+                query = query.Where(a => a.Genre.IndexOf(filter.Genre, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+
+            if (filter.MinimumPrice.HasValue)
+            {
+                query = query.Where(a => a.Price >= filter.MinimumPrice.Value);
+            }
+
+            if (filter.MaximumPrice.HasValue)
+            {
+                query = query.Where(a => a.Price <= filter.MaximumPrice.Value);
+            }
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(a => a.Status == filter.Status.Value);
+            }
+
+            return query;
         }
     }
 }

@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Enums;
+﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Filters;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
@@ -20,5 +14,7 @@ namespace MetalReleaseTracker.Core.Interfaces
         Task Update(Album album);
 
         Task Delete(Guid id);
+
+        Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter);
     }
 }
