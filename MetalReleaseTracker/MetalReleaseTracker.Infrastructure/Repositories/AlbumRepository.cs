@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-
 using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Enums;
+using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
-
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
 {
@@ -62,6 +59,56 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var album = await _dbContext.Albums.FindAsync(id);
             _dbContext.Albums.Remove(album);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)
+        {
+            var query = _dbContext.Albums
+                .Include(a => a.Band)
+                .Include(a => a.Distributor)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(filter.BandName))
+            {
+                query = query.Where(a => a.Band.Name.Contains(filter.BandName));
+            }
+
+            if (filter.ReleaseDateStart.HasValue)
+            {
+                query = query.Where(a => a.ReleaseDate >= filter.ReleaseDateStart.Value);
+            }
+
+            if (filter.ReleaseDateEnd.HasValue)
+            {
+                query = query.Where(a => a.ReleaseDate <= filter.ReleaseDateEnd.Value);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Genre))
+            {
+                query = query.Where(a => a.Genre.Contains(filter.Genre));
+            }
+
+            if (filter.PriceMin.HasValue)
+            {
+                query = query.Where(a => a.Price >= filter.PriceMin.Value);
+            }
+
+            if (filter.PriceMax.HasValue)
+            {
+                query = query.Where(a => a.Price <= filter.PriceMax.Value);
+            }
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(a => a.Status == filter.Status.Value);
+            }
+
+            var albums = await query
+                .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return albums;
         }
     }
 }
