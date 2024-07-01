@@ -68,9 +68,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 .Include(a => a.Distributor)
                 .AsQueryable();
 
+            query = ApplyFilters(query, filter);
+
+            var albums = await query
+                .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return albums;
+        }
+
+        private IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
+        {
             if (!string.IsNullOrEmpty(filter.BandName))
             {
-                query = query.Where(a => a.Band.Name.Contains(filter.BandName));
+                query = query.Where(a => a.Band.Name.IndexOf(filter.BandName, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
             if (filter.ReleaseDateStart.HasValue)
@@ -85,7 +97,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             if (!string.IsNullOrEmpty(filter.Genre))
             {
-                query = query.Where(a => a.Genre.Contains(filter.Genre));
+                query = query.Where(a => a.Genre.IndexOf(filter.Genre, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
             if (filter.PriceMin.HasValue)
@@ -103,12 +115,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 query = query.Where(a => a.Status == filter.Status.Value);
             }
 
-            var albums = await query
-                .ProjectTo<Album>(_mapper.ConfigurationProvider)
-                .AsNoTracking()
-                .ToListAsync();
-
-            return albums;
+            return query;
         }
     }
 }
