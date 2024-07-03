@@ -9,7 +9,7 @@ namespace MetalReleaseTracker.Tests
         public static MetalReleaseTrackerDbContext CreateDbContext()
         {
             var options = new DbContextOptionsBuilder<MetalReleaseTrackerDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
 
             var context = new MetalReleaseTrackerDbContext(options);

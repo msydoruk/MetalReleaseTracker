@@ -2,8 +2,9 @@
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
 using MetalReleaseTracker.Infrastructure.Repositories;
+using MetalReleaseTracker.Tests.Base;
 
-namespace MetalReleaseTracker.Tests
+namespace MetalReleaseTracker.Tests.Repositories
 {
     public class SubscriptionRepositoryTests : IntegrationTestBase
     {
@@ -55,6 +56,22 @@ namespace MetalReleaseTracker.Tests
         }
 
         [Fact]
+        public async Task Add_ShouldNotAddSubscription_WhenEmailIsInvalid()
+        {
+            var subscription = new Subscription
+            {
+                Email = "",
+                NotifyForNewReleases = true
+            };
+
+            await _repository.Add(subscription);
+
+            var result = await DbContext.Subscriptions.FindAsync(subscription.Id);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task GetAll_ShouldReturnAllSubscriptions()
         {
             var result = await _repository.GetAll();
@@ -75,6 +92,14 @@ namespace MetalReleaseTracker.Tests
         }
 
         [Fact]
+        public async Task GetById_ShouldReturnNull_WhenIdDoesNotExist()
+        {
+            var result = await _repository.GetById(Guid.NewGuid());
+
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task Update_ShouldUpdateSubscription()
         {
             var subscriptionEntity = DbContext.Subscriptions.First();
@@ -85,24 +110,49 @@ namespace MetalReleaseTracker.Tests
 
             DbContext.Entry(subscriptionEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
-            await _repository.Update(subscription);
+            var result = await _repository.Update(subscription);
 
-            var result = await DbContext.Subscriptions.FindAsync(subscription.Id);
+            var updatedEntity = await DbContext.Subscriptions.FindAsync(subscription.Id);
 
-            Assert.NotNull(result);
-            Assert.Equal("updated@example.com", result.Email);
-            Assert.Equal(subscription.NotifyForNewReleases, result.NotifyForNewReleases);
+            Assert.True(result);
+            Assert.NotNull(updatedEntity);
+            Assert.Equal("updated@example.com", updatedEntity.Email);
+            Assert.Equal(subscription.NotifyForNewReleases, updatedEntity.NotifyForNewReleases);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnFalse_WhenSubscriptionDoesNotExist()
+        {
+            var subscription = new Subscription
+            {
+                Id = Guid.NewGuid(),
+                Email = "nonexistent@example.com",
+                NotifyForNewReleases = true
+            };
+
+            var result = await _repository.Update(subscription);
+
+            Assert.False(result);
         }
 
         [Fact]
         public async Task Delete_ShouldRemoveSubscription()
         {
             var subscriptionEntity = DbContext.Subscriptions.First();
-            await _repository.Delete(subscriptionEntity.Id);
+            var result = await _repository.Delete(subscriptionEntity.Id);
 
-            var result = await DbContext.Subscriptions.FindAsync(subscriptionEntity.Id);
+            var deletedEntity = await DbContext.Subscriptions.FindAsync(subscriptionEntity.Id);
 
-            Assert.Null(result);
+            Assert.True(result);
+            Assert.Null(deletedEntity);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldReturnFalse_WhenSubscriptionDoesNotExist()
+        {
+            var result = await _repository.Delete(Guid.NewGuid());
+
+            Assert.False(result);
         }
     }
 }

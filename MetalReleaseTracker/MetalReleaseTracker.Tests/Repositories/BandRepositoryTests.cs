@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-
-using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
 using MetalReleaseTracker.Infrastructure.Repositories;
+using MetalReleaseTracker.Tests.Base;
 
-namespace MetalReleaseTracker.Tests
+namespace MetalReleaseTracker.Tests.Repositories
 {
     public class BandRepositoryTests : IntegrationTestBase
     {
@@ -50,6 +48,15 @@ namespace MetalReleaseTracker.Tests
         }
 
         [Fact]
+        public async Task GetById_ShouldReturnNull_WhenIdDoesNotExist()
+        {
+            var result = await _repository.GetById(Guid.NewGuid());
+
+            Assert.Null(result);
+        }
+
+
+        [Fact]
         public async Task Add_ShouldAddBand()
         {
             var band = new Band
@@ -67,6 +74,21 @@ namespace MetalReleaseTracker.Tests
         }
 
         [Fact]
+        public async Task Add_ShouldNotAddBand_WhenBandIsInvalid()
+        {
+            var band = new Band
+            {
+                Name = ""
+            };
+
+            await _repository.Add(band);
+
+            var result = await DbContext.Bands.FindAsync(band.Id);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task Update_ShouldUpdateBand()
         {
             var bandEntity = DbContext.Bands.First();
@@ -76,23 +98,47 @@ namespace MetalReleaseTracker.Tests
 
             DbContext.Entry(bandEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
-            await _repository.Update(band);
+            var result = await _repository.Update(band);
 
             var updatedEntity = await DbContext.Bands.FindAsync(band.Id);
 
+            Assert.True(result);
             Assert.NotNull(updatedEntity);
             Assert.Equal("Updated Band", updatedEntity.Name);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnFalse_WhenBandDoesNotExist()
+        {
+            var band = new Band
+            {
+                Id = Guid.NewGuid(),
+                Name = "Non-existent Band"
+            };
+
+            var result = await _repository.Update(band);
+
+            Assert.False(result);
         }
 
         [Fact]
         public async Task Delete_ShouldRemoveBand()
         {
             var bandEntity = DbContext.Bands.First();
-            await _repository.Delete(bandEntity.Id);
+            var result = await _repository.Delete(bandEntity.Id);
 
-            var result = await DbContext.Bands.FindAsync(bandEntity.Id);
+            var deletedEntity = await DbContext.Bands.FindAsync(bandEntity.Id);
 
-            Assert.Null(result);
+            Assert.True(result);
+            Assert.Null(deletedEntity);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldReturnFalse_WhenBandDoesNotExist()
+        {
+            var result = await _repository.Delete(Guid.NewGuid());
+
+            Assert.False(result);
         }
     }
 }

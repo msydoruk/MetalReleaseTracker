@@ -25,11 +25,19 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task Delete(Guid id)
+        public async Task<bool> Delete(Guid id)
         {
-            var distributor = await _dbContext.Distributors.FindAsync(id);
-            _dbContext.Distributors.Remove(distributor);
-            await _dbContext.SaveChangesAsync();
+            var existingDistributor = await _dbContext.Distributors.FindAsync(id);
+
+            if (existingDistributor == null)
+            {
+                return false;
+            }
+
+            _dbContext.Distributors.Remove(existingDistributor);
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
 
         public async Task<IEnumerable<Distributor>> GetAll()
@@ -48,11 +56,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return _mapper.Map<Distributor>(distributor);
         }
 
-        public async Task Update(Distributor distributor)
+        public async Task<bool> Update(Distributor distributor)
         {
-            var distributorEntity = _mapper.Map<DistributorEntity>(distributor);
-            _dbContext.Distributors.Update(distributorEntity);
-            await _dbContext.SaveChangesAsync();
+            var existingDistributor = await _dbContext.Distributors.FindAsync(distributor.Id);
+
+            if (existingDistributor == null)
+            {
+                return false;
+            }
+
+            existingDistributor.Name = distributor.Name;
+            existingDistributor.ParsingUrl = distributor.ParsingUrl;
+
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
     }
 }

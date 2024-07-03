@@ -25,11 +25,19 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task Delete(Guid id)
+        public async Task<bool> Delete(Guid id)
         {
             var subscription = await _dbContext.Subscriptions.FindAsync(id);
+
+            if (subscription == null)
+            {
+                return false;
+            }
+
             _dbContext.Subscriptions.Remove(subscription);
-            await _dbContext.SaveChangesAsync();
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
 
         public async Task<IEnumerable<Subscription>> GetAll()
@@ -48,11 +56,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return _mapper.Map<Subscription>(subscription);
         }
 
-        public async Task Update(Subscription subscription)
+        public async Task<bool> Update(Subscription subscription)
         {
-            var subscriptionEntity = _mapper.Map<SubscriptionEntity>(subscription);
-            _dbContext.Subscriptions.Update(subscriptionEntity);
-            await _dbContext.SaveChangesAsync();
+            var existingSubscription = await _dbContext.Subscriptions.FindAsync(subscription.Id);
+
+            if (existingSubscription == null)
+            {
+                return false;
+            }
+
+            existingSubscription.Email = subscription.Email;
+            existingSubscription.NotifyForNewReleases = subscription.NotifyForNewReleases;
+
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
     }
 }

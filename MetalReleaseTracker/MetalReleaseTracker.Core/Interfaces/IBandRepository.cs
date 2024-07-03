@@ -12,8 +12,8 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task Add(Band band);
 
-        Task Update(Band band);
+        Task<bool> Update(Band band);
 
-        Task Delete(Guid id);
+        Task<bool> Delete(Guid id);
     }
 }

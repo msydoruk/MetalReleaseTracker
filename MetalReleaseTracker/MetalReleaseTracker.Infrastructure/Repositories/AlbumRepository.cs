@@ -47,18 +47,38 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task Update(Album album)
+        public async Task<bool> Update(Album album)
         {
-            var albumEntity = _mapper.Map<AlbumEntity>(album);
-            _dbContext.Albums.Update(albumEntity);
-            await _dbContext.SaveChangesAsync();
+            var existingAlbum = await _dbContext.Albums
+                .Include(a => a.Band)
+                .Include(a => a.Distributor)
+                .FirstOrDefaultAsync(a => a.Id == album.Id);
+
+            if (existingAlbum == null)
+            {
+                return false;
+            }
+
+            _mapper.Map(album, existingAlbum);
+
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
 
-        public async Task Delete(Guid id)
+        public async Task<bool> Delete(Guid id)
         {
-            var album = await _dbContext.Albums.FindAsync(id);
-            _dbContext.Albums.Remove(album);
-            await _dbContext.SaveChangesAsync();
+            var existingAlbum = await _dbContext.Albums.FindAsync(id);
+
+            if (existingAlbum == null)
+            {
+                return false;
+            }
+
+            _dbContext.Albums.Remove(existingAlbum);
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
 
         public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
 using MetalReleaseTracker.Infrastructure.Repositories;
+using MetalReleaseTracker.Tests.Base;
 
-namespace MetalReleaseTracker.Tests
+namespace MetalReleaseTracker.Tests.Repositories
 {
     public class DistributorsRepositoryTests : IntegrationTestBase
     {
@@ -62,6 +57,22 @@ namespace MetalReleaseTracker.Tests
         }
 
         [Fact]
+        public async Task Add_ShouldNotAddDistributor_WhenDistributorIsInvalid()
+        {
+            var distributor = new Distributor
+            {
+                Name = "",
+                ParsingUrl = "https://example.com/new"
+            };
+
+            await _repository.Add(distributor);
+
+            var result = await DbContext.Distributors.FindAsync(distributor.Id);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task GetAll_ShouldReturnAllDistributors()
         {
             var result = await _repository.GetAll();
@@ -80,6 +91,14 @@ namespace MetalReleaseTracker.Tests
         }
 
         [Fact]
+        public async Task GetById_ShouldReturnNull_WhenIdDoesNotExist()
+        {
+            var result = await _repository.GetById(Guid.NewGuid());
+
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task Update_ShouldUpdateDistributor()
         {
             var distributorEntity = DbContext.Distributors.First();
@@ -90,24 +109,48 @@ namespace MetalReleaseTracker.Tests
 
             DbContext.Entry(distributorEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
-            await _repository.Update(distributor);
+            var result = await _repository.Update(distributor);
 
-            var result = await DbContext.Distributors.FindAsync(distributor.Id);
+            var updatedEntity = await DbContext.Distributors.FindAsync(distributor.Id);
 
-            Assert.NotNull(result);
-            Assert.Equal("Updated Distributor", result.Name);
-            Assert.Equal("https://example.com/updated", result.ParsingUrl);
+            Assert.True(result);
+            Assert.NotNull(updatedEntity);
+            Assert.Equal("Updated Distributor", updatedEntity.Name);
+            Assert.Equal("https://example.com/updated", updatedEntity.ParsingUrl);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnFalse_WhenDistributorDoesNotExist()
+        {
+            var distributor = new Distributor
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test1",
+            };
+
+            var result = await _repository.Update(distributor);
+
+            Assert.False(result);
         }
 
         [Fact]
         public async Task Delete_ShouldRemoveDistributor()
         {
             var distributorEntity = DbContext.Distributors.First();
-            await _repository.Delete(distributorEntity.Id);
+            var result = await _repository.Delete(distributorEntity.Id);
 
-            var result = await DbContext.Distributors.FindAsync(distributorEntity.Id);
+            var deletedEntity = await DbContext.Distributors.FindAsync(distributorEntity.Id);
 
-            Assert.Null(result);
+            Assert.True(result);
+            Assert.Null(deletedEntity);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldReturnFalse_WhenDistributorDoesNotExist()
+        {
+            var result = await _repository.Delete(Guid.NewGuid());
+
+            Assert.False(result);
         }
     }
 }

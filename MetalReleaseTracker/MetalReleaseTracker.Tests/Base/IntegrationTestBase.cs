@@ -1,11 +1,8 @@
 ﻿using AutoMapper;
 using MetalReleaseTracker.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 
-using Microsoft.Extensions.DependencyInjection;
-
-namespace MetalReleaseTracker.Tests
+namespace MetalReleaseTracker.Tests.Base
 {
     public abstract class IntegrationTestBase
     {
@@ -14,10 +11,9 @@ namespace MetalReleaseTracker.Tests
 
         protected IntegrationTestBase()
         {
-            var options = new DbContextOptionsBuilder<MetalReleaseTrackerDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                .Options;
-            DbContext = new MetalReleaseTrackerDbContext(options);
+            DbContext = TestDbContextFactory.CreateDbContext();
+            DbContext.Database.EnsureDeleted();
+            DbContext.Database.EnsureCreated();
 
             var config = new MapperConfiguration(cfg =>
             {
@@ -32,7 +28,8 @@ namespace MetalReleaseTracker.Tests
 
         public void Dispose()
         {
-            DbContext.Dispose();
+            DbContext.Database.EnsureDeleted(); 
+            DbContext.Dispose(); 
         }
     }
 }

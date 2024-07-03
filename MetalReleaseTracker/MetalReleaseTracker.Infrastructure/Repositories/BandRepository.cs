@@ -25,11 +25,20 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task Delete(Guid id)
+        public async Task<bool> Delete(Guid id)
         {
-            var band = await _dbContext.Bands.FindAsync(id);
-            _dbContext.Bands.Remove(band);
-            await _dbContext.SaveChangesAsync();
+            var existingBand = await _dbContext.Bands.FindAsync(id);
+
+            if (existingBand == null)
+            {
+                return false;
+            }
+
+            _dbContext.Bands.Remove(existingBand);
+
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
 
         public async Task<IEnumerable<Band>> GetAll()
@@ -48,11 +57,20 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return _mapper.Map<Band>(band);
         }
 
-        public async Task Update(Band band)
+        public async Task<bool> Update(Band band)
         {
-            var bandEntity = _mapper.Map<BandEntity>(band);
-            _dbContext.Bands.Update(bandEntity);
-            await _dbContext.SaveChangesAsync();
+            var existingBand = await _dbContext.Bands.FindAsync(band.Id);
+
+            if (existingBand == null)
+            {
+                return false;
+            }
+
+            existingBand.Name = band.Name;
+
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
     }
 }
