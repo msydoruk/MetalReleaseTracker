@@ -4,32 +4,49 @@ using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 
 namespace MetalReleaseTracker.Tests.Base
 {
-    public abstract class IntegrationTestBase
+    public abstract class IntegrationTestBase : IDisposable
     {
         protected readonly MetalReleaseTrackerDbContext DbContext;
         protected readonly IMapper Mapper;
+        private bool _disposed;
 
         protected IntegrationTestBase()
         {
             DbContext = TestDbContextFactory.CreateDbContext();
-            DbContext.Database.EnsureDeleted();
-            DbContext.Database.EnsureCreated();
+            Mapper = InitializeMapper();
 
+            InitializeData(DbContext);
+        }
+
+        protected virtual IMapper InitializeMapper()
+        {
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<MappingProfile>();
             });
-            Mapper = config.CreateMapper();
-
-            InitializeData(DbContext);
+            return config.CreateMapper();
         }
 
         protected abstract void InitializeData(MetalReleaseTrackerDbContext context);
 
         public void Dispose()
+            {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
         {
-            DbContext.Database.EnsureDeleted(); 
-            DbContext.Dispose(); 
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    Console.WriteLine("Dispose called");
+                    DbContext.Database.EnsureDeleted(); 
+                    DbContext.Dispose();
+                }
+                _disposed = true;
+            }
         }
     }
 }

@@ -18,11 +18,43 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             _mapper = mapper;
         }
 
+        public async Task<Band> GetById(Guid id)
+        {
+            var band = await _dbContext.Bands
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(b => b.Id == id);
+            return _mapper.Map<Band>(band);
+        }
+
+        public async Task<IEnumerable<Band>> GetAll()
+        {
+            var bands = await _dbContext.Bands
+                    .AsNoTracking()
+                    .ToListAsync();
+            return _mapper.Map<IEnumerable<Band>>(bands);
+        }
+
         public async Task Add(Band band)
         {
             var bandEntity = _mapper.Map<BandEntity>(band);
             await _dbContext.Bands.AddAsync(bandEntity);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<bool> Update(Band band)
+        {
+            var existingBand = await _dbContext.Bands.FindAsync(band.Id);
+
+            if (existingBand == null)
+            {
+                return false;
+            }
+
+            _mapper.Map(band, existingBand);
+
+            var changes = await _dbContext.SaveChangesAsync();
+
+            return changes > 0;
         }
 
         public async Task<bool> Delete(Guid id)
@@ -35,38 +67,6 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             }
 
             _dbContext.Bands.Remove(existingBand);
-
-            var changes = await _dbContext.SaveChangesAsync();
-
-            return changes > 0;
-        }
-
-        public async Task<IEnumerable<Band>> GetAll()
-        {
-            var bands = await _dbContext.Bands
-                    .AsNoTracking()
-                    .ToListAsync();
-            return _mapper.Map<IEnumerable<Band>>(bands);
-        }
-
-        public async Task<Band> GetById(Guid id)
-        {
-            var band = await _dbContext.Bands
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Id == id);
-            return _mapper.Map<Band>(band);
-        }
-
-        public async Task<bool> Update(Band band)
-        {
-            var existingBand = await _dbContext.Bands.FindAsync(band.Id);
-
-            if (existingBand == null)
-            {
-                return false;
-            }
-
-            existingBand.Name = band.Name;
 
             var changes = await _dbContext.SaveChangesAsync();
 
