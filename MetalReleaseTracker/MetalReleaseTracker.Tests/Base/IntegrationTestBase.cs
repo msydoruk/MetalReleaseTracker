@@ -8,7 +8,6 @@ namespace MetalReleaseTracker.Tests.Base
     {
         protected readonly MetalReleaseTrackerDbContext DbContext;
         protected readonly IMapper Mapper;
-        private bool _disposed;
 
         protected IntegrationTestBase()
         {
@@ -31,30 +30,8 @@ namespace MetalReleaseTracker.Tests.Base
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    if (DbContext != null)
-                    {
-                        DbContext.Database.EnsureDeleted();
-                        DbContext.Dispose();
-                    }
-                }
-
-                _disposed = true;
-            }
-        }
-
-        ~IntegrationTestBase()
-        {
-            Dispose(false);
+            DbContext.Database.EnsureDeleted();
+            DbContext.Dispose();
         }
     }
 }
