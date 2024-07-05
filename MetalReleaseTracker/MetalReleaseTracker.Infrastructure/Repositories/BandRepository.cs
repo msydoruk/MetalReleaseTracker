@@ -23,6 +23,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var band = await _dbContext.Bands
                     .AsNoTracking()
                     .FirstOrDefaultAsync(b => b.Id == id);
+
             return _mapper.Map<Band>(band);
         }
 
@@ -31,6 +32,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var bands = await _dbContext.Bands
                     .AsNoTracking()
                     .ToListAsync();
+
             return _mapper.Map<IEnumerable<Band>>(bands);
         }
 
@@ -67,7 +69,6 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             }
 
             _dbContext.Bands.Remove(existingBand);
-
             var changes = await _dbContext.SaveChangesAsync();
 
             return changes > 0;

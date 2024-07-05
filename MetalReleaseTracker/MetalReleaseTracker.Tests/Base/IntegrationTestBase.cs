@@ -30,7 +30,7 @@ namespace MetalReleaseTracker.Tests.Base
         protected abstract void InitializeData(MetalReleaseTrackerDbContext context);
 
         public void Dispose()
-            {
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -41,12 +41,20 @@ namespace MetalReleaseTracker.Tests.Base
             {
                 if (disposing)
                 {
-                    Console.WriteLine("Dispose called");
-                    DbContext.Database.EnsureDeleted(); 
-                    DbContext.Dispose();
+                    if (DbContext != null)
+                    {
+                        DbContext.Database.EnsureDeleted();
+                        DbContext.Dispose();
+                    }
                 }
+
                 _disposed = true;
             }
+        }
+
+        ~IntegrationTestBase()
+        {
+            Dispose(false);
         }
     }
 }

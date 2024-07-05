@@ -27,6 +27,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                     .Include(a => a.Distributor)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(a => a.Id == id);
+
             return _mapper.Map<Album>(album);
         }
 
