@@ -10,8 +10,8 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task Add(Subscription subscription);
 
-        Task Update(Subscription subscription);
+        Task<bool> Update(Subscription subscription);
 
-        Task Delete(Guid id);
+        Task<bool> Delete(Guid id);
     }
 }

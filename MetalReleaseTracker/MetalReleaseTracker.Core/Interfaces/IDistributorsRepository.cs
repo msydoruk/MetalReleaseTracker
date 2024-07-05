@@ -10,8 +10,8 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task Add(Distributor distributor);
 
-        Task Update(Distributor distributor);
+        Task<bool> Update(Distributor distributor);
 
-        Task Delete(Guid id);
+        Task<bool> Delete(Guid id);
     }
 }
