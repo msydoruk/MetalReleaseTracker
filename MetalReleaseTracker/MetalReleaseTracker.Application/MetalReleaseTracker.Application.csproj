@@ -13,8 +13,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MetalReleaseTracker.Core\MetalReleaseTracker.Core.csproj" />
-  </ItemGroup>
-
 </Project>

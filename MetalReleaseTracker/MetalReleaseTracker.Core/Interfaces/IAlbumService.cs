@@ -1,7 +1,7 @@
 ﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Filters;
 
-namespace MetalReleaseTracker.Core.Services
+namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IAlbumService
     {

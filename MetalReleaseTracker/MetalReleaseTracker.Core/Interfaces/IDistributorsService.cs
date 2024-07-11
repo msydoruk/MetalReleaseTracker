@@ -1,6 +1,6 @@
 ﻿using MetalReleaseTracker.Core.Entities;
 
-namespace MetalReleaseTracker.Core.Services
+namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IDistributorsService
     {
