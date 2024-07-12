@@ -21,13 +21,9 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<Distributor> GetById(Guid id)
         {
-            var distributor = await _distributorsRepository.GetById(id);
-            if (distributor == null)
-            {
-                throw new EntityNotFoundException($"Distributor with ID {id} not found.");
-            }
+            ValidateGuid(id);
 
-            return distributor;
+            return await GetExistingDistributorById(id);
         }
 
         public async Task<IEnumerable<Distributor>> GetAll()
@@ -46,22 +42,16 @@ namespace MetalReleaseTracker.Core.Services
         {
             ValidateDistributor(distributor);
 
-            var existingDistributor = await _distributorsRepository.GetById(distributor.Id);
-            if (existingDistributor == null)
-            {
-                throw new EntityNotFoundException($"Distributor with ID {distributor.Id} not found.");
-            }
+            await GetExistingDistributorById(distributor.Id);
 
             return await _distributorsRepository.Update(distributor);
         }
 
         public async Task<bool> Delete(Guid id)
         {
-            var distributor = await _distributorsRepository.GetById(id);
-            if (distributor == null)
-            {
-                throw new EntityNotFoundException($"Distributor with ID {id} not found.");
-            }
+            ValidateGuid(id);
+
+            await GetExistingDistributorById(id);
 
             return await _distributorsRepository.Delete(id);
         }
@@ -72,6 +62,25 @@ namespace MetalReleaseTracker.Core.Services
             if (!results.IsValid)
             {
                 throw new ValidationException(results.Errors);
+            }
+        }
+
+        private async Task<Distributor> GetExistingDistributorById(Guid id)
+        {
+            var distributor = await _distributorsRepository.GetById(id);
+            if (distributor == null)
+            {
+                throw new EntityNotFoundException($"Distributor with ID {id} not found.");
+            }
+
+            return distributor;
+        }
+
+        private void ValidateGuid(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
             }
         }
     }

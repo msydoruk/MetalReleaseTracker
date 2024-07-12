@@ -1,6 +1,7 @@
 using FluentValidation;
 using MetalReleaseTracker.API.Middleware;
 using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Core.Validators;
@@ -39,6 +40,7 @@ builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddTransient<IValidator<Album>, AlbumValidator>();
+builder.Services.AddScoped<IValidator<AlbumFilter>, AlbumFilterValidator>();
 builder.Services.AddTransient<IValidator<Band>, BandValidator>();
 builder.Services.AddTransient<IValidator<Distributor>, DistributorValidator>();
 builder.Services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();

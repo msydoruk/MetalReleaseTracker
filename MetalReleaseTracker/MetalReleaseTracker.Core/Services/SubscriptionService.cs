@@ -21,13 +21,9 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<Subscription> GetById(Guid id)
         {
-            var subscription = await _subscriptionRepository.GetById(id);
-            if (subscription == null)
-            {
-                throw new EntityNotFoundException($"Subscription with ID {id} not found.");
-            }
+            ValidateGuid(id);
 
-            return subscription;
+            return await GetExistingSubscriptionById(id);
         }
 
         public async Task<IEnumerable<Subscription>> GetAll()
@@ -46,22 +42,16 @@ namespace MetalReleaseTracker.Core.Services
         {
             ValidateSubscription(subscription);
 
-            var existingSubscription = await _subscriptionRepository.GetById(subscription.Id);
-            if (existingSubscription == null)
-            {
-                throw new EntityNotFoundException($"Subscription with ID {subscription.Id} not found.");
-            }
+            await GetExistingSubscriptionById(subscription.Id);
 
             return await _subscriptionRepository.Update(subscription);
         }
 
         public async Task<bool> Delete(Guid id)
         {
-            var subscription = await _subscriptionRepository.GetById(id);
-            if (subscription == null)
-            {
-                throw new EntityNotFoundException($"Subscription with ID {id} not found.");
-            }
+            ValidateGuid(id);
+
+            await GetExistingSubscriptionById(id);
 
             return await _subscriptionRepository.Delete(id);
         }
@@ -72,6 +62,25 @@ namespace MetalReleaseTracker.Core.Services
             if (!results.IsValid)
             {
                 throw new ValidationException(results.Errors);
+            }
+        }
+
+        private async Task<Subscription> GetExistingSubscriptionById(Guid id)
+        {
+            var subscription = await _subscriptionRepository.GetById(id);
+            if (subscription == null)
+            {
+                throw new EntityNotFoundException($"Subscription with ID {id} not found.");
+            }
+
+            return subscription;
+        }
+
+        private void ValidateGuid(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
             }
         }
     }

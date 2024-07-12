@@ -19,13 +19,9 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<Band> GetById(Guid id)
         {
-            var band = await _bandRepository.GetById(id);
-            if (band == null)
-            {
-                throw new EntityNotFoundException($"Band with ID {id} not found.");
-            }
+            ValidateGuid(id);
 
-            return band;
+            return await GetExistingBandById(id);
         }
 
         public async Task<IEnumerable<Band>> GetAll()
@@ -44,22 +40,16 @@ namespace MetalReleaseTracker.Core.Services
         {
             ValidateBand(band);
 
-            var existingBand = await _bandRepository.GetById(band.Id);
-            if (existingBand == null)
-            {
-                throw new EntityNotFoundException($"Band with ID {band.Id} not found.");
-            }
+            await GetExistingBandById(band.Id);
 
             return await _bandRepository.Update(band);
         }
 
         public async Task<bool> Delete(Guid id)
         {
-            var band = await _bandRepository.GetById(id);
-            if (band == null)
-            {
-                throw new EntityNotFoundException($"Band with ID {id} not found.");
-            }
+            ValidateGuid(id);
+
+            await GetExistingBandById(id);
 
             return await _bandRepository.Delete(id);
         }
@@ -70,6 +60,25 @@ namespace MetalReleaseTracker.Core.Services
             if (!results.IsValid)
             {
                 throw new ValidationException(results.Errors);
+            }
+        }
+
+        private async Task<Band> GetExistingBandById(Guid id)
+        {
+            var band = await _bandRepository.GetById(id);
+            if (band == null)
+            {
+                throw new EntityNotFoundException($"Band with ID {id} not found.");
+            }
+
+            return band;
+        }
+
+        private void ValidateGuid(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
             }
         }
     }

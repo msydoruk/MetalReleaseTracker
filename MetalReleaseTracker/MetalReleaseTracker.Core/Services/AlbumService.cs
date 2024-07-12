@@ -11,22 +11,20 @@ namespace MetalReleaseTracker.Сore.Services
     {
         private readonly IAlbumRepository _albumRepository;
         private readonly IValidator<Album> _albumValidator;
+        private readonly IValidator<AlbumFilter> _albumFilterValidator;
 
-        public AlbumService(IAlbumRepository albumRepository, IValidator<Album> albumValidator)
+        public AlbumService(IAlbumRepository albumRepository, IValidator<Album> albumValidator, IValidator<AlbumFilter> albumFilterValidator)
         {
             _albumRepository = albumRepository;
             _albumValidator = albumValidator;
+            _albumFilterValidator = albumFilterValidator;
         }
 
         public async Task<Album> GetById(Guid id)
         {
-            var album = await _albumRepository.GetById(id);
-            if (album == null)
-            {
-                throw new EntityNotFoundException($"Album with ID {id} not found.");
-            }
+            ValidateGuid(id);
 
-            return album;
+            return await GetExistingAlbumById(id);
         }
 
         public async Task<IEnumerable<Album>> GetAll()
@@ -45,32 +43,23 @@ namespace MetalReleaseTracker.Сore.Services
         {
             ValidateAlbum(album);
 
-            var existingAlbum = await _albumRepository.GetById(album.Id);
-            if (existingAlbum == null)
-            {
-                throw new EntityNotFoundException($"Album with ID {album.Id} not found.");
-            }
+            await GetExistingAlbumById(album.Id);
 
             return await _albumRepository.Update(album);
         }
 
         public async Task<bool> Delete(Guid id)
         {
-            var album = await _albumRepository.GetById(id);
-            if (album == null)
-            {
-                throw new EntityNotFoundException($"Album with ID {id} not found.");
-            }
+            ValidateGuid(id);
+
+            await GetExistingAlbumById(id);
 
             return await _albumRepository.Delete(id);
         }
 
         public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)
         {
-            if (filter == null)
-            {
-                throw new ArgumentNullException(nameof(filter), "Filter cannot be null.");
-            }
+            ValidateFilter(filter);
 
             return await _albumRepository.GetByFilter(filter);
         }
@@ -81,6 +70,34 @@ namespace MetalReleaseTracker.Сore.Services
             if (!results.IsValid)
             {
                 throw new ValidationException(results.Errors);
+            }
+        }
+
+        private void ValidateFilter(AlbumFilter filter)
+        {
+            ValidationResult results = _albumFilterValidator.Validate(filter);
+            if (!results.IsValid)
+            {
+                throw new ValidationException(results.Errors);
+            }
+        }
+
+        private async Task<Album> GetExistingAlbumById(Guid id)
+        {
+            var album = await _albumRepository.GetById(id);
+            if (album == null)
+            {
+                throw new EntityNotFoundException($"Album with ID {id} not found.");
+            }
+
+            return album;
+        }
+
+        private void ValidateGuid(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
             }
         }
     }
