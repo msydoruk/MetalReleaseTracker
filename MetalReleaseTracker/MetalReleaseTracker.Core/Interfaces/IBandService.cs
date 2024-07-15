@@ -4,7 +4,7 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IBandService
     {
-        Task<Band> GetByIdBand(Guid id);
+        Task<Band> GetBandById(Guid id);
 
         Task<IEnumerable<Band>> GetAllBands();
 

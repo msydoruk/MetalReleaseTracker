@@ -19,7 +19,7 @@ namespace MetalReleaseTracker.Core.Services
             _subscriptionValidator = subscriptionValidator;
         }
 
-        public async Task<Subscription> GetByIdSubscription(Guid id)
+        public async Task<Subscription> GetSubscriptionById(Guid id)
         {
             ValidateGuid(id);
 

@@ -5,7 +5,7 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IAlbumService
     {
-        Task<Album> GetByIdAlbum(Guid id);
+        Task<Album> GetAlbumById(Guid id);
 
         Task<IEnumerable<Album>> GetAllAlbums();
 
@@ -15,6 +15,6 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<bool> DeleteAlbum(Guid id);
 
-        Task<IEnumerable<Album>> GetByFilterAlbums(AlbumFilter filter);
+        Task<IEnumerable<Album>> GetAlbumsByFilter(AlbumFilter filter);
     }
 }

@@ -19,7 +19,7 @@ namespace MetalReleaseTracker.Core.Services
             _distributorValidator = distributorValidator;
         }
 
-        public async Task<Distributor> GetByIdDistributor(Guid id)
+        public async Task<Distributor> GetDistributorById(Guid id)
         {
             ValidateGuid(id);
 

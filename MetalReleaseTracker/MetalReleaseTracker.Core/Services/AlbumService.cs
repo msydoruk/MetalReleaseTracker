@@ -20,7 +20,7 @@ namespace MetalReleaseTracker.Сore.Services
             _albumFilterValidator = albumFilterValidator;
         }
 
-        public async Task<Album> GetByIdAlbum(Guid id)
+        public async Task<Album> GetAlbumById(Guid id)
         {
             ValidateGuid(id);
 
@@ -57,7 +57,7 @@ namespace MetalReleaseTracker.Сore.Services
             return await _albumRepository.Delete(id);
         }
 
-        public async Task<IEnumerable<Album>> GetByFilterAlbums(AlbumFilter filter)
+        public async Task<IEnumerable<Album>> GetAlbumsByFilter(AlbumFilter filter)
         {
             ValidateFilter(filter);
 

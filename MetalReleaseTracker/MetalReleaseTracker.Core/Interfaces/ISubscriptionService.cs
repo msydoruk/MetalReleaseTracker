@@ -4,7 +4,7 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface ISubscriptionService
     {
-        Task<Subscription> GetByIdSubscription(Guid id);
+        Task<Subscription> GetSubscriptionById(Guid id);
 
         Task<IEnumerable<Subscription>> GetAllSubscriptions();
 

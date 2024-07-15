@@ -17,7 +17,7 @@ namespace MetalReleaseTracker.Core.Services
             _bandValidator = bandValidator;
         }
 
-        public async Task<Band> GetByIdBand(Guid id)
+        public async Task<Band> GetBandById(Guid id)
         {
             ValidateGuid(id);
 
