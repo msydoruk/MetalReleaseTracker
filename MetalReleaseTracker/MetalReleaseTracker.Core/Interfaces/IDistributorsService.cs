@@ -4,14 +4,14 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IDistributorsService
     {
-        Task<Distributor> GetById(Guid id);
+        Task<Distributor> GetByIdDistributor(Guid id);
 
-        Task<IEnumerable<Distributor>> GetAll();
+        Task<IEnumerable<Distributor>> GetAllDistributors();
 
-        Task Add(Distributor distributor);
+        Task AddDistributor(Distributor distributor);
 
-        Task<bool> Update(Distributor distributor);
+        Task<bool> UpdateDistributor(Distributor distributor);
 
-        Task<bool> Delete(Guid id);
+        Task<bool> DeleteDistributor(Guid id);
     }
 }

@@ -20,44 +20,44 @@ namespace MetalReleaseTracker.Сore.Services
             _albumFilterValidator = albumFilterValidator;
         }
 
-        public async Task<Album> GetById(Guid id)
+        public async Task<Album> GetByIdAlbum(Guid id)
         {
             ValidateGuid(id);
 
-            return await GetExistingAlbumById(id);
+            return await EnsureAlbumExists(id);
         }
 
-        public async Task<IEnumerable<Album>> GetAll()
+        public async Task<IEnumerable<Album>> GetAllAlbums()
         {
             return await _albumRepository.GetAll();
         }
 
-        public async Task Add(Album album)
+        public async Task AddAlbum(Album album)
         {
             ValidateAlbum(album);
 
             await _albumRepository.Add(album);
         }
 
-        public async Task<bool> Update(Album album)
+        public async Task<bool> UpdateAlbum(Album album)
         {
             ValidateAlbum(album);
 
-            await GetExistingAlbumById(album.Id);
+            await EnsureAlbumExists(album.Id);
 
             return await _albumRepository.Update(album);
         }
 
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> DeleteAlbum(Guid id)
         {
             ValidateGuid(id);
 
-            await GetExistingAlbumById(id);
+            await EnsureAlbumExists(id);
 
             return await _albumRepository.Delete(id);
         }
 
-        public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)
+        public async Task<IEnumerable<Album>> GetByFilterAlbums(AlbumFilter filter)
         {
             ValidateFilter(filter);
 
@@ -82,7 +82,7 @@ namespace MetalReleaseTracker.Сore.Services
             }
         }
 
-        private async Task<Album> GetExistingAlbumById(Guid id)
+        private async Task<Album> EnsureAlbumExists(Guid id)
         {
             var album = await _albumRepository.GetById(id);
             if (album == null)

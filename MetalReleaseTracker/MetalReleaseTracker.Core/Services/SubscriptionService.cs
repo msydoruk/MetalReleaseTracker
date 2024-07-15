@@ -19,39 +19,39 @@ namespace MetalReleaseTracker.Core.Services
             _subscriptionValidator = subscriptionValidator;
         }
 
-        public async Task<Subscription> GetById(Guid id)
+        public async Task<Subscription> GetByIdSubscription(Guid id)
         {
             ValidateGuid(id);
 
-            return await GetExistingSubscriptionById(id);
+            return await EnsureSubscriptionExists(id);
         }
 
-        public async Task<IEnumerable<Subscription>> GetAll()
+        public async Task<IEnumerable<Subscription>> GetAllSubscriptions()
         {
             return await _subscriptionRepository.GetAll();
         }
 
-        public async Task Add(Subscription subscription)
+        public async Task AddSubscription(Subscription subscription)
         {
             ValidateSubscription(subscription);
 
             await _subscriptionRepository.Add(subscription);
         }
 
-        public async Task<bool> Update(Subscription subscription)
+        public async Task<bool> UpdateSubscription(Subscription subscription)
         {
             ValidateSubscription(subscription);
 
-            await GetExistingSubscriptionById(subscription.Id);
+            await EnsureSubscriptionExists(subscription.Id);
 
             return await _subscriptionRepository.Update(subscription);
         }
 
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> DeleteSubscription(Guid id)
         {
             ValidateGuid(id);
 
-            await GetExistingSubscriptionById(id);
+            await EnsureSubscriptionExists(id);
 
             return await _subscriptionRepository.Delete(id);
         }
@@ -65,7 +65,7 @@ namespace MetalReleaseTracker.Core.Services
             }
         }
 
-        private async Task<Subscription> GetExistingSubscriptionById(Guid id)
+        private async Task<Subscription> EnsureSubscriptionExists(Guid id)
         {
             var subscription = await _subscriptionRepository.GetById(id);
             if (subscription == null)

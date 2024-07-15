@@ -19,39 +19,39 @@ namespace MetalReleaseTracker.Core.Services
             _distributorValidator = distributorValidator;
         }
 
-        public async Task<Distributor> GetById(Guid id)
+        public async Task<Distributor> GetByIdDistributor(Guid id)
         {
             ValidateGuid(id);
 
-            return await GetExistingDistributorById(id);
+            return await EnsureDistributorExists(id);
         }
 
-        public async Task<IEnumerable<Distributor>> GetAll()
+        public async Task<IEnumerable<Distributor>> GetAllDistributors()
         {
             return await _distributorsRepository.GetAll();
         }
 
-        public async Task Add(Distributor distributor)
+        public async Task AddDistributor(Distributor distributor)
         {
             ValidateDistributor(distributor);
 
             await _distributorsRepository.Add(distributor);
         }
 
-        public async Task<bool> Update(Distributor distributor)
+        public async Task<bool> UpdateDistributor(Distributor distributor)
         {
             ValidateDistributor(distributor);
 
-            await GetExistingDistributorById(distributor.Id);
+            await EnsureDistributorExists(distributor.Id);
 
             return await _distributorsRepository.Update(distributor);
         }
 
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> DeleteDistributor(Guid id)
         {
             ValidateGuid(id);
 
-            await GetExistingDistributorById(id);
+            await EnsureDistributorExists(id);
 
             return await _distributorsRepository.Delete(id);
         }
@@ -65,7 +65,7 @@ namespace MetalReleaseTracker.Core.Services
             }
         }
 
-        private async Task<Distributor> GetExistingDistributorById(Guid id)
+        private async Task<Distributor> EnsureDistributorExists(Guid id)
         {
             var distributor = await _distributorsRepository.GetById(id);
             if (distributor == null)

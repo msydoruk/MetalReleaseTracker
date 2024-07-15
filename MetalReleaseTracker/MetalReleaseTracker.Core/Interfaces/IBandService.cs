@@ -4,14 +4,14 @@ namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IBandService
     {
-        Task<Band> GetById(Guid id);
+        Task<Band> GetByIdBand(Guid id);
 
-        Task<IEnumerable<Band>> GetAll();
+        Task<IEnumerable<Band>> GetAllBands();
 
-        Task Add(Band band);
+        Task AddBand(Band band);
 
-        Task<bool> Update(Band band);
+        Task<bool> UpdateBand(Band band);
 
-        Task<bool> Delete(Guid id);
+        Task<bool> DeleteBand(Guid id);
     }
 }

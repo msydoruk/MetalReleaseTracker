@@ -40,7 +40,7 @@ builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddTransient<IValidator<Album>, AlbumValidator>();
-builder.Services.AddScoped<IValidator<AlbumFilter>, AlbumFilterValidator>();
+builder.Services.AddTransient<IValidator<AlbumFilter>, AlbumFilterValidator>();
 builder.Services.AddTransient<IValidator<Band>, BandValidator>();
 builder.Services.AddTransient<IValidator<Distributor>, DistributorValidator>();
 builder.Services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();

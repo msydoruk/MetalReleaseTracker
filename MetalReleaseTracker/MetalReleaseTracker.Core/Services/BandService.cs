@@ -17,39 +17,39 @@ namespace MetalReleaseTracker.Core.Services
             _bandValidator = bandValidator;
         }
 
-        public async Task<Band> GetById(Guid id)
+        public async Task<Band> GetByIdBand(Guid id)
         {
             ValidateGuid(id);
 
-            return await GetExistingBandById(id);
+            return await EnsureBandExists(id);
         }
 
-        public async Task<IEnumerable<Band>> GetAll()
+        public async Task<IEnumerable<Band>> GetAllBands()
         {
             return await _bandRepository.GetAll();
         }
 
-        public async Task Add(Band band)
+        public async Task AddBand(Band band)
         {
             ValidateBand(band);
 
             await _bandRepository.Add(band);
         }
 
-        public async Task<bool> Update(Band band)
+        public async Task<bool> UpdateBand(Band band)
         {
             ValidateBand(band);
 
-            await GetExistingBandById(band.Id);
+            await EnsureBandExists(band.Id);
 
             return await _bandRepository.Update(band);
         }
 
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> DeleteBand(Guid id)
         {
             ValidateGuid(id);
 
-            await GetExistingBandById(id);
+            await EnsureBandExists(id);
 
             return await _bandRepository.Delete(id);
         }
@@ -63,7 +63,7 @@ namespace MetalReleaseTracker.Core.Services
             }
         }
 
-        private async Task<Band> GetExistingBandById(Guid id)
+        private async Task<Band> EnsureBandExists(Guid id)
         {
             var band = await _bandRepository.GetById(id);
             if (band == null)
