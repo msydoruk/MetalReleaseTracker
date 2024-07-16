@@ -44,6 +44,7 @@ builder.Services.AddTransient<IValidator<AlbumFilter>, AlbumFilterValidator>();
 builder.Services.AddTransient<IValidator<Band>, BandValidator>();
 builder.Services.AddTransient<IValidator<Distributor>, DistributorValidator>();
 builder.Services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();
+builder.Services.AddTransient<UniversalValidator>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
