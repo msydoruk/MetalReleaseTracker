@@ -1,20 +1,20 @@
 ﻿using FluentValidation;
+using MetalReleaseTracker.Core.Interfaces;
 
 namespace MetalReleaseTracker.Core.Validators
 {
-    public class UniversalValidator
+    public class ValidationService : IValidationService
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IEnumerable<IValidator> _validators;
 
-        public UniversalValidator(IServiceProvider serviceProvider)
+        public ValidationService(IEnumerable<IValidator> validators)
         {
-            _serviceProvider = serviceProvider;
+            _validators = validators;
         }
 
         public void Validate<T>(T entity)
         {
-            var validatorType = typeof(IValidator<T>);
-            var validator = _serviceProvider.GetService(validatorType) as IValidator<T>;
+            var validator = _validators.OfType<IValidator<T>>().FirstOrDefault();
             if (validator == null)
             {
                 throw new InvalidOperationException($"No validator found for type {typeof(T).Name}");

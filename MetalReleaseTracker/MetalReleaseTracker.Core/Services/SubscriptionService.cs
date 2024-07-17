@@ -1,22 +1,18 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-
-using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Interfaces;
-using MetalReleaseTracker.Core.Validators;
 
 namespace MetalReleaseTracker.Core.Services
 {
     public class SubscriptionService : ISubscriptionService
     {
         private readonly ISubscriptionRepository _subscriptionRepository;
-        private readonly IValidator<Subscription> _subscriptionValidator;
+        private readonly IValidationService _validationService;
 
-        public SubscriptionService(ISubscriptionRepository subscriptionRepository, IValidator<Subscription> subscriptionValidator)
+        public SubscriptionService(ISubscriptionRepository subscriptionRepository, IValidationService validationService)
         {
             _subscriptionRepository = subscriptionRepository;
-            _subscriptionValidator = subscriptionValidator;
+            _validationService = validationService;
         }
 
         public async Task<Subscription> GetSubscriptionById(Guid id)
@@ -33,14 +29,14 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task AddSubscription(Subscription subscription)
         {
-            ValidateSubscription(subscription);
+            _validationService.Validate(subscription);
 
             await _subscriptionRepository.Add(subscription);
         }
 
         public async Task<bool> UpdateSubscription(Subscription subscription)
         {
-            ValidateSubscription(subscription);
+            _validationService.Validate(subscription);
 
             await EnsureSubscriptionExists(subscription.Id);
 
@@ -54,15 +50,6 @@ namespace MetalReleaseTracker.Core.Services
             await EnsureSubscriptionExists(id);
 
             return await _subscriptionRepository.Delete(id);
-        }
-
-        private void ValidateSubscription(Subscription subscription)
-        {
-            ValidationResult results = _subscriptionValidator.Validate(subscription);
-            if (!results.IsValid)
-            {
-                throw new ValidationException(results.Errors);
-            }
         }
 
         private async Task<Subscription> EnsureSubscriptionExists(Guid id)
