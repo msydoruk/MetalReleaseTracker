@@ -18,7 +18,7 @@ namespace MetalReleaseTracker.Сore.Services
 
         public async Task<Album> GetAlbumById(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             return await EnsureAlbumExists(id);
         }
@@ -46,7 +46,7 @@ namespace MetalReleaseTracker.Сore.Services
 
         public async Task<bool> DeleteAlbum(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             await EnsureAlbumExists(id);
 
@@ -69,14 +69,6 @@ namespace MetalReleaseTracker.Сore.Services
             }
 
             return album;
-        }
-
-        private void ValidateGuid(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
-            }
         }
     }
 }

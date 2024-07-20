@@ -17,7 +17,7 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<Subscription> GetSubscriptionById(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             return await EnsureSubscriptionExists(id);
         }
@@ -45,7 +45,7 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<bool> DeleteSubscription(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             await EnsureSubscriptionExists(id);
 
@@ -61,14 +61,6 @@ namespace MetalReleaseTracker.Core.Services
             }
 
             return subscription;
-        }
-
-        private void ValidateGuid(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
-            }
         }
     }
 }

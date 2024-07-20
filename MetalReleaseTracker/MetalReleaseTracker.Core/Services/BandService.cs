@@ -17,7 +17,7 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<Band> GetBandById(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             return await EnsureBandExists(id);
         }
@@ -45,7 +45,7 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<bool> DeleteBand(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             await EnsureBandExists(id);
 
@@ -61,14 +61,6 @@ namespace MetalReleaseTracker.Core.Services
             }
 
             return band;
-        }
-
-        private void ValidateGuid(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
-            }
         }
     }
 }
