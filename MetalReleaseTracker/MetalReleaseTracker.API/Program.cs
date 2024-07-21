@@ -1,12 +1,14 @@
-using MetalReleaseTracker.API.Middleware;
+﻿using MetalReleaseTracker.API.Middleware;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.�ore.Services;
+using MetalReleaseTracker.Сore.Services;
+
 using Microsoft.EntityFrameworkCore;
+
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
