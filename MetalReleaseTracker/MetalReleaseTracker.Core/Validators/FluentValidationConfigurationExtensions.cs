@@ -1,4 +1,7 @@
 ﻿using FluentValidation;
+using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Filters;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MetalReleaseTracker.Core.Validators
 {
@@ -6,19 +9,20 @@ namespace MetalReleaseTracker.Core.Validators
     {
         public static IEnumerable<IValidator> GetFluentValidators(IServiceProvider serviceProvider)
         {
-            var assembly = typeof(FluentValidationConfigurationExtensions).Assembly;
+            var validators = new List<IValidator>
+            {
+                serviceProvider.GetService<IValidator<AlbumFilter>>(),
 
-            var validatorTypes = assembly.GetTypes()
-                .Where(type => !type.IsAbstract && type.GetInterfaces()
-                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidator<>)))
-                .ToList();
+                serviceProvider.GetService<IValidator<Album>>(),
 
-            var validators = validatorTypes
-               .Select(vt => serviceProvider
-               .GetService(vt.GetInterfaces()
-               .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidator<>))))
-               .Cast<IValidator>()
-               .ToList();
+                serviceProvider.GetService<IValidator<Band>>(),
+
+                serviceProvider.GetService<IValidator<Distributor>>(),
+
+                serviceProvider.GetService<IValidator<Subscription>>(),
+
+                serviceProvider.GetService<IValidator<Guid>>()
+            };
 
             return validators;
         }
