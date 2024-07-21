@@ -1,4 +1,7 @@
+using FluentValidation;
 using MetalReleaseTracker.API.Middleware;
+using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Core.Validators;
