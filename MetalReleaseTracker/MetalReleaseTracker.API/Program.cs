@@ -1,17 +1,12 @@
-﻿using FluentValidation;
-using MetalReleaseTracker.API.Middleware;
-using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Filters;
+﻿using MetalReleaseTracker.API.Middleware;
+using MetalReleaseTracker.API.ValidationConfiguration;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
-using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
 using MetalReleaseTracker.Сore.Services;
-
 using Microsoft.EntityFrameworkCore;
-
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,17 +36,8 @@ builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
-builder.Services.AddTransient<IValidator<Album>, AlbumValidator>();
-builder.Services.AddTransient<IValidator<AlbumFilter>, AlbumFilterValidator>();
-builder.Services.AddTransient<IValidator<Band>, BandValidator>();
-builder.Services.AddTransient<IValidator<Distributor>, DistributorValidator>();
-builder.Services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();
-builder.Services.AddTransient<IValidator<Guid>, GuidValidator>();
-builder.Services.AddTransient<IValidationService>(serviceProvider =>
-{
-    var validators = FluentValidationConfigurationExtensions.GetFluentValidators(serviceProvider);
-    return new ValidationService(validators);
-});
+builder.Services.AddCustomValidators();
+builder.Services.AddValidationServiceWithAllValidators();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
