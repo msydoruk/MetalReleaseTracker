@@ -1,10 +1,11 @@
-﻿using FluentValidation;
+﻿using System.Linq;
+using FluentValidation;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
 
-namespace MetalReleaseTracker.API.ValidationConfiguration
+namespace MetalReleaseTracker.API.Extensions
 {
     public static class FluentValidationConfigurationExtensions
     {
@@ -27,25 +28,21 @@ namespace MetalReleaseTracker.API.ValidationConfiguration
 
         public static IServiceCollection AddValidationServiceWithAllValidators(this IServiceCollection services)
         {
-            services.AddTransient<IValidationService, ValidationService>(serviceProvider =>
+            services.AddScoped<IEnumerable<IValidator>>(provider =>
             {
-                var validators = new List<IValidator>
-                {
-                    serviceProvider.GetRequiredService<IValidator<Album>>(),
+                var validators = provider.GetServices<IValidator<Album>>()
+                               .Cast<IValidator>()
+                               .Concat(provider.GetServices<IValidator<AlbumFilter>>())
+                               .Concat(provider.GetServices<IValidator<Band>>())
+                               .Concat(provider.GetServices<IValidator<Distributor>>())
+                               .Concat(provider.GetServices<IValidator<Subscription>>())
+                               .Concat(provider.GetServices<IValidator<Guid>>())
+                               .ToList();
 
-                    serviceProvider.GetRequiredService<IValidator<AlbumFilter>>(),
-
-                    serviceProvider.GetRequiredService<IValidator<Band>>(),
-
-                    serviceProvider.GetRequiredService<IValidator<Distributor>>(),
-
-                    serviceProvider.GetRequiredService<IValidator<Subscription>>(),
-
-                    serviceProvider.GetRequiredService<IValidator<Guid>>()
-                };
-
-                return new ValidationService(validators);
+                return validators;
             });
+
+            services.AddScoped<IValidationService, ValidationService>();
 
             return services;
         }

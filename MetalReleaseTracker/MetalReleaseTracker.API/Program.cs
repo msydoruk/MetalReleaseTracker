@@ -1,5 +1,5 @@
-﻿using MetalReleaseTracker.API.Middleware;
-using MetalReleaseTracker.API.ValidationConfiguration;
+﻿using MetalReleaseTracker.API.Extensions;
+using MetalReleaseTracker.API.Middleware;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Infrastructure.Data;
