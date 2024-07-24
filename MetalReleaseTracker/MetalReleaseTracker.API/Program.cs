@@ -1,14 +1,11 @@
-using FluentValidation;
+﻿using MetalReleaseTracker.API.Extensions;
 using MetalReleaseTracker.API.Middleware;
-using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
-using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.�ore.Services;
+using MetalReleaseTracker.Сore.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -39,11 +36,8 @@ builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
-builder.Services.AddTransient<IValidator<Album>, AlbumValidator>();
-builder.Services.AddTransient<IValidator<AlbumFilter>, AlbumFilterValidator>();
-builder.Services.AddTransient<IValidator<Band>, BandValidator>();
-builder.Services.AddTransient<IValidator<Distributor>, DistributorValidator>();
-builder.Services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();
+builder.Services.AddCustomValidators();
+builder.Services.AddValidationServiceWithAllValidators();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 

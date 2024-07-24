@@ -1,27 +1,23 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-
-using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Interfaces;
-using MetalReleaseTracker.Core.Validators;
 
 namespace MetalReleaseTracker.Core.Services
 {
     public class DistributorsService : IDistributorsService
     {
         private readonly IDistributorsRepository _distributorsRepository;
-        private readonly IValidator<Distributor> _distributorValidator;
+        private readonly IValidationService _validationService;
 
-        public DistributorsService(IDistributorsRepository distributorsRepository, IValidator<Distributor> distributorValidator)
+        public DistributorsService(IDistributorsRepository distributorsRepository, IValidationService validationService)
         {
             _distributorsRepository = distributorsRepository;
-            _distributorValidator = distributorValidator;
+            _validationService = validationService;
         }
 
         public async Task<Distributor> GetDistributorById(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             return await EnsureDistributorExists(id);
         }
@@ -33,14 +29,14 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task AddDistributor(Distributor distributor)
         {
-            ValidateDistributor(distributor);
+            _validationService.Validate(distributor);
 
             await _distributorsRepository.Add(distributor);
         }
 
         public async Task<bool> UpdateDistributor(Distributor distributor)
         {
-            ValidateDistributor(distributor);
+            _validationService.Validate(distributor);
 
             await EnsureDistributorExists(distributor.Id);
 
@@ -49,20 +45,11 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<bool> DeleteDistributor(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             await EnsureDistributorExists(id);
 
             return await _distributorsRepository.Delete(id);
-        }
-
-        private void ValidateDistributor(Distributor distributor)
-        {
-            ValidationResult results = _distributorValidator.Validate(distributor);
-            if (!results.IsValid)
-            {
-                throw new ValidationException(results.Errors);
-            }
         }
 
         private async Task<Distributor> EnsureDistributorExists(Guid id)
@@ -74,14 +61,6 @@ namespace MetalReleaseTracker.Core.Services
             }
 
             return distributor;
-        }
-
-        private void ValidateGuid(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
-            }
         }
     }
 }

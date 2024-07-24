@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Interfaces;
 
@@ -9,17 +7,17 @@ namespace MetalReleaseTracker.Core.Services
     public class BandService : IBandService
     {
         private readonly IBandRepository _bandRepository;
-        private readonly IValidator<Band> _bandValidator;
+        private readonly IValidationService _validationService;
 
-        public BandService(IBandRepository bandRepository, IValidator<Band> bandValidator)
+        public BandService(IBandRepository bandRepository, IValidationService validationService)
         {
             _bandRepository = bandRepository;
-            _bandValidator = bandValidator;
+            _validationService = validationService;
         }
 
         public async Task<Band> GetBandById(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             return await EnsureBandExists(id);
         }
@@ -31,14 +29,14 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task AddBand(Band band)
         {
-            ValidateBand(band);
+            _validationService.Validate(band);
 
             await _bandRepository.Add(band);
         }
 
         public async Task<bool> UpdateBand(Band band)
         {
-            ValidateBand(band);
+            _validationService.Validate(band);
 
             await EnsureBandExists(band.Id);
 
@@ -47,20 +45,11 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<bool> DeleteBand(Guid id)
         {
-            ValidateGuid(id);
+            _validationService.Validate(id);
 
             await EnsureBandExists(id);
 
             return await _bandRepository.Delete(id);
-        }
-
-        private void ValidateBand(Band band)
-        {
-            ValidationResult results = _bandValidator.Validate(band);
-            if (!results.IsValid)
-            {
-                throw new ValidationException(results.Errors);
-            }
         }
 
         private async Task<Band> EnsureBandExists(Guid id)
@@ -72,14 +61,6 @@ namespace MetalReleaseTracker.Core.Services
             }
 
             return band;
-        }
-
-        private void ValidateGuid(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentException("The ID must be a non-empty GUID.", nameof(id));
-            }
         }
     }
 }
