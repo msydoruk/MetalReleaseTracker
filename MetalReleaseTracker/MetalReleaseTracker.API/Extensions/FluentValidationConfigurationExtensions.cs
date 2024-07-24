@@ -12,15 +12,10 @@ namespace MetalReleaseTracker.API.Extensions
         public static IServiceCollection AddCustomValidators(this IServiceCollection services)
         {
             services.AddTransient<IValidator<Album>, AlbumValidator>();
-
             services.AddTransient<IValidator<AlbumFilter>, AlbumFilterValidator>();
-
             services.AddTransient<IValidator<Band>, BandValidator>();
-
             services.AddTransient<IValidator<Distributor>, DistributorValidator>();
-
             services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();
-
             services.AddTransient<IValidator<Guid>, GuidValidator>();
 
             return services;
