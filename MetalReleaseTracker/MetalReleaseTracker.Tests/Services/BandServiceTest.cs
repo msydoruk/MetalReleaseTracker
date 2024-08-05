@@ -1,75 +1,84 @@
 ﻿using FluentValidation;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Exceptions;
+using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Core.Validators;
-using MetalReleaseTracker.Infrastructure.Data;
-using MetalReleaseTracker.Infrastructure.Data.Entities;
-using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Tests.Base;
-using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace MetalReleaseTracker.Tests.Services
 {
-    public class BandServiceTest : IntegrationTestBase
+    public class BandServiceTest 
     {
-        private readonly BandRepository _bandRepository;
+        private readonly Mock<IBandRepository> _bandRepository;
         private readonly ValidationService _validationService;
         private readonly BandService _bandService;
 
         public BandServiceTest()
         {
-            _bandRepository = new BandRepository(DbContext, Mapper);
+            _bandRepository = new Mock<IBandRepository>();
             _validationService = new ValidationService(new List<IValidator>
             {
                 new BandValidator(),
                 new GuidValidator()
             });
-            _bandService = new BandService(_bandRepository, _validationService);
-        }
-
-        protected override void InitializeData(MetalReleaseTrackerDbContext context)
-        {
-            var bands = new[]
-            {
-                new BandEntity 
-                { 
-                    Id = Guid.NewGuid(), 
-                    Name = "Metallica" 
-                },
-                new BandEntity 
-                { 
-                    Id = Guid.NewGuid(), 
-                    Name = "Iron Maiden" 
-                }
-            };
-            context.Bands.AddRange(bands);
-            context.SaveChanges();
+            _bandService = new BandService(_bandRepository.Object, _validationService);
         }
 
         [Fact]
         public async Task GetBandById_ShouldReturnBand_WhenIdExists()
         {
-            var existingBand = await DbContext.Bands.FirstAsync();
-            var result = await _bandService.GetBandById(existingBand.Id);
+            var bandId = Guid.NewGuid();
+            var band = new Band 
+            {
+                Id = bandId, 
+                Name = "Metallica" 
+            };
+
+            _bandRepository.Setup(repo => repo.GetById(bandId)).ReturnsAsync(band);
+
+            var result = await _bandService.GetBandById(bandId);
 
             Assert.NotNull(result);
-            Assert.Equal(existingBand.Name, result.Name);
+            Assert.Equal(bandId, result.Id);
+            _bandRepository.Verify(repo => repo.GetById(bandId), Times.Once);
         }
 
         [Fact]
         public async Task GetBandById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
         {
-            await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.GetBandById(Guid.NewGuid()));
+            var bandId = Guid.NewGuid();
+            _bandRepository.Setup(repo => repo.GetById(bandId)).ReturnsAsync((Band)null);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.GetBandById(bandId));
+            _bandRepository.Verify(repo => repo.GetById(bandId), Times.Once);
         }
 
         [Fact]
         public async Task GetAllBands_ShouldReturnAllBands()
         {
+            var bands = new List<Band>
+            {
+                new Band 
+                { 
+                    Id = Guid.NewGuid(), 
+                    Name = "Metallica" 
+                },
+
+                new Band 
+                { 
+                    Id = Guid.NewGuid(),
+                    Name = "Iron Maiden" 
+                }
+            };
+
+            _bandRepository.Setup(repo => repo.GetAll()).ReturnsAsync(bands);
+
             var result = await _bandService.GetAllBands();
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
+            _bandRepository.Verify(repo => repo.GetAll(), Times.Once);
         }
 
         [Fact]
@@ -80,12 +89,12 @@ namespace MetalReleaseTracker.Tests.Services
                 Id = Guid.NewGuid(), 
                 Name = "Slayer" 
             };
+
+            _bandRepository.Setup(repo => repo.Add(newBand)).Returns(Task.CompletedTask);
+
             await _bandService.AddBand(newBand);
 
-            var result = await DbContext.Bands.FindAsync(newBand.Id);
-
-            Assert.NotNull(result);
-            Assert.Equal(newBand.Name, result.Name);
+            _bandRepository.Verify(repo => repo.Add(newBand), Times.Once);
         }
 
         [Fact]
@@ -97,21 +106,32 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             await Assert.ThrowsAsync<ValidationException>(() => _bandService.AddBand(band));
+            _bandRepository.Verify(repo => repo.Add(It.IsAny<Band>()), Times.Never);
         }
 
         [Fact]
         public async Task UpdateBand_ShouldUpdateBand()
         {
-            var existingBand = await DbContext.Bands.FirstAsync();
-            var updatedBand = Mapper.Map<Band>(existingBand);
-            updatedBand.Name = "Updated Band Name";
+            var existingBand = new Band
+            {
+                Id = Guid.NewGuid(),
+                Name = "Existing Band"
+            };
+
+            var updatedBand = new Band
+            {
+                Id = existingBand.Id,
+                Name = "Updated Band Name"
+            };
+
+            _bandRepository.Setup(repo => repo.GetById(existingBand.Id)).ReturnsAsync(existingBand);
+            _bandRepository.Setup(repo => repo.Update(updatedBand)).ReturnsAsync(true);
+
             var result = await _bandService.UpdateBand(updatedBand);
 
-            var retrievedBand = await DbContext.Bands.FindAsync(existingBand.Id);
-
             Assert.True(result);
-            Assert.NotNull(retrievedBand);
-            Assert.Equal(updatedBand.Name, retrievedBand.Name);
+            _bandRepository.Verify(repo => repo.GetById(existingBand.Id), Times.Once);
+            _bandRepository.Verify(repo => repo.Update(updatedBand), Times.Once);
         }
 
         [Fact]
@@ -123,25 +143,40 @@ namespace MetalReleaseTracker.Tests.Services
                 Name = "Non-existent Band"
             };
 
+            _bandRepository.Setup(repo => repo.GetById(band.Id)).ReturnsAsync((Band)null);
+
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.UpdateBand(band));
+            _bandRepository.Verify(repo => repo.GetById(band.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteBand_ShouldRemoveBand()
         {
-            var band = await DbContext.Bands.FirstAsync();
-            var result = await _bandService.DeleteBand(band.Id);
+            var existingBand = new Band
+            {
+                Id = Guid.NewGuid(),
+                Name = "Existing Band"
+            };
 
-            var deletedBand = await DbContext.Bands.FindAsync(band.Id);
+            _bandRepository.Setup(repo => repo.GetById(existingBand.Id)).ReturnsAsync(existingBand);
+            _bandRepository.Setup(repo => repo.Delete(existingBand.Id)).ReturnsAsync(true);
+
+            var result = await _bandService.DeleteBand(existingBand.Id);
 
             Assert.True(result);
-            Assert.Null(deletedBand);
+            _bandRepository.Verify(repo => repo.GetById(existingBand.Id), Times.Once);
+            _bandRepository.Verify(repo => repo.Delete(existingBand.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteBand_ShouldThrowEntityNotFoundException_WhenBandDoesNotExist()
         {
-            await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.DeleteBand(Guid.NewGuid()));
+            var bandId = Guid.NewGuid();
+            _bandRepository.Setup(repo => repo.GetById(bandId)).ReturnsAsync((Band)null);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.DeleteBand(bandId));
+            _bandRepository.Verify(repo => repo.GetById(bandId), Times.Once);
+            _bandRepository.Verify(repo => repo.Delete(bandId), Times.Never);
         }
     }
 }

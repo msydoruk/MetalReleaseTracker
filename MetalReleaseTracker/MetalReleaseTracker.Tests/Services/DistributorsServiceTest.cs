@@ -1,77 +1,87 @@
 ﻿using FluentValidation;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Exceptions;
+using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Core.Validators;
-using MetalReleaseTracker.Infrastructure.Data;
-using MetalReleaseTracker.Infrastructure.Data.Entities;
-using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Tests.Base;
-using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace MetalReleaseTracker.Tests.Services
 {
-    public class DistributorsServiceTest : IntegrationTestBase
+    public class DistributorsServiceTest
     {
-        private readonly DistributorsRepository _distributorsRepository;
+        private readonly Mock<IDistributorsRepository> _distributorsRepository;
         private readonly ValidationService _validationService;
         private readonly DistributorsService _distributorsService;
 
         public DistributorsServiceTest()
         {
-            _distributorsRepository = new DistributorsRepository(DbContext, Mapper);
+            _distributorsRepository = new Mock<IDistributorsRepository>();
             _validationService = new ValidationService(new List<IValidator>
             {
                 new DistributorValidator(),
                 new GuidValidator()
             });
-            _distributorsService = new DistributorsService(_distributorsRepository, _validationService);
-        }
-
-        protected override void InitializeData(MetalReleaseTrackerDbContext context)
-        {
-            var distributors = new[]
-            {
-                new DistributorEntity 
-                { 
-                    Id = Guid.NewGuid(), 
-                    Name = "Universal Music",
-                    ParsingUrl = "https://example.com/universal"
-                },
-                new DistributorEntity 
-                { 
-                    Id = Guid.NewGuid(), 
-                    Name = "Sony Music",
-                    ParsingUrl = "https://example.com/warner"
-                }
-            };
-            context.Distributors.AddRange(distributors);
-            context.SaveChanges();
+            _distributorsService = new DistributorsService(_distributorsRepository.Object, _validationService);
         }
 
         [Fact]
         public async Task GetDistributorById_ShouldReturnDistributor_WhenIdExists()
         {
-            var existingDistributor = await DbContext.Distributors.FirstAsync();
-            var result = await _distributorsService.GetDistributorById(existingDistributor.Id);
+            var distributorId = Guid.NewGuid();
+            var distributor = new Distributor 
+            { 
+                Id = distributorId, 
+                Name = "Warner Music",
+                ParsingUrl = "https://example.com/new"
+            };
+
+            _distributorsRepository.Setup(repo => repo.GetById(distributorId)).ReturnsAsync(distributor);
+
+            var result = await _distributorsService.GetDistributorById(distributorId);
 
             Assert.NotNull(result);
-            Assert.Equal(existingDistributor.Name, result.Name);
+            Assert.Equal(distributorId, result.Id);
+            _distributorsRepository.Verify(repo => repo.GetById(distributorId), Times.Once);
         }
 
         [Fact]
         public async Task GetDistributorById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
         {
-            await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.GetDistributorById(Guid.NewGuid()));
+            var distributorId = Guid.NewGuid();
+            _distributorsRepository.Setup(repo => repo.GetById(distributorId)).ReturnsAsync((Distributor)null);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.GetDistributorById(distributorId));
+            _distributorsRepository.Verify(repo => repo.GetById(distributorId), Times.Once);
         }
 
         [Fact]
         public async Task GetAllDistributors_ShouldReturnAllDistributors()
         {
+            var distributors = new List<Distributor>
+            {
+                new Distributor 
+                { 
+                    Id = Guid.NewGuid(),
+                    Name = "Universal Music",
+                    ParsingUrl = "https://example.com/universal"
+                },
+
+                new Distributor 
+                { 
+                    Id = Guid.NewGuid(),
+                    Name = "Sony Music",
+                    ParsingUrl = "https://example.com/warner"
+                }
+            };
+
+            _distributorsRepository.Setup(repo => repo.GetAll()).ReturnsAsync(distributors);
+
             var result = await _distributorsService.GetAllDistributors();
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
+            _distributorsRepository.Verify(repo => repo.GetAll(), Times.Once);
         }
 
         [Fact]
@@ -83,12 +93,12 @@ namespace MetalReleaseTracker.Tests.Services
                 Name = "Warner Music",
                 ParsingUrl = "https://example.com/new"
             };
+
+            _distributorsRepository.Setup(repo => repo.Add(newDistributor)).Returns(Task.CompletedTask);
+
             await _distributorsService.AddDistributor(newDistributor);
 
-            var result = await DbContext.Distributors.FindAsync(newDistributor.Id);
-
-            Assert.NotNull(result);
-            Assert.Equal(newDistributor.Name, result.Name);
+            _distributorsRepository.Verify(repo => repo.Add(newDistributor), Times.Once);
         }
 
         [Fact]
@@ -101,21 +111,34 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             await Assert.ThrowsAsync<ValidationException>(() => _distributorsService.AddDistributor(distributor));
+            _distributorsRepository.Verify(repo => repo.Add(It.IsAny<Distributor>()), Times.Never);
         }
 
         [Fact]
         public async Task UpdateDistributor_ShouldUpdateDistributor()
         {
-            var existingDistributor = await DbContext.Distributors.FirstAsync();
-            var updatedDistributor = Mapper.Map<Distributor>(existingDistributor);
-            updatedDistributor.Name = "Updated Distributor Name";
+            var existingDistributor = new Distributor
+            {
+                Id = Guid.NewGuid(),
+                Name = "Existing Distributor",
+                ParsingUrl = "https://example.com/universal"
+            };
+
+            var updatedDistributor = new Distributor
+            {
+                Id = existingDistributor.Id,
+                Name = "Updated Distributor Name",
+                ParsingUrl = existingDistributor.ParsingUrl
+            };
+
+            _distributorsRepository.Setup(repo => repo.GetById(existingDistributor.Id)).ReturnsAsync(existingDistributor);
+            _distributorsRepository.Setup(repo => repo.Update(updatedDistributor)).ReturnsAsync(true);
+
             var result = await _distributorsService.UpdateDistributor(updatedDistributor);
 
-            var retrievedDistributor = await DbContext.Distributors.FindAsync(existingDistributor.Id);
-
             Assert.True(result);
-            Assert.NotNull(retrievedDistributor);
-            Assert.Equal(updatedDistributor.Name, retrievedDistributor.Name);
+            _distributorsRepository.Verify(repo => repo.GetById(existingDistributor.Id), Times.Once);
+            _distributorsRepository.Verify(repo => repo.Update(updatedDistributor), Times.Once);
         }
 
         [Fact]
@@ -128,25 +151,41 @@ namespace MetalReleaseTracker.Tests.Services
                 ParsingUrl = "https://example.com/test"
             };
 
+            _distributorsRepository.Setup(repo => repo.GetById(distributor.Id)).ReturnsAsync((Distributor)null);
+
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.UpdateDistributor(distributor));
+            _distributorsRepository.Verify(repo => repo.GetById(distributor.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteDistributor_ShouldRemoveDistributor()
         {
-            var distributor = await DbContext.Distributors.FirstAsync();
-            var result = await _distributorsService.DeleteDistributor(distributor.Id);
+            var existingDistributor = new Distributor
+            {
+                Id = Guid.NewGuid(),
+                Name = "Existing Distributor",
+                ParsingUrl = "https://example.com/test"
+            };
 
-            var deletedDistributor = await DbContext.Distributors.FindAsync(distributor.Id);
+            _distributorsRepository.Setup(repo => repo.GetById(existingDistributor.Id)).ReturnsAsync(existingDistributor);
+            _distributorsRepository.Setup(repo => repo.Delete(existingDistributor.Id)).ReturnsAsync(true);
+
+            var result = await _distributorsService.DeleteDistributor(existingDistributor.Id);
 
             Assert.True(result);
-            Assert.Null(deletedDistributor);
+            _distributorsRepository.Verify(repo => repo.GetById(existingDistributor.Id), Times.Once);
+            _distributorsRepository.Verify(repo => repo.Delete(existingDistributor.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteDistributor_ShouldThrowEntityNotFoundException_WhenDistributorDoesNotExist()
         {
-            await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.DeleteDistributor(Guid.NewGuid()));
+            var distributorId = Guid.NewGuid();
+            _distributorsRepository.Setup(repo => repo.GetById(distributorId)).ReturnsAsync((Distributor)null);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.DeleteDistributor(distributorId));
+            _distributorsRepository.Verify(repo => repo.GetById(distributorId), Times.Once);
+            _distributorsRepository.Verify(repo => repo.Delete(distributorId), Times.Never);
         }
     }
 }

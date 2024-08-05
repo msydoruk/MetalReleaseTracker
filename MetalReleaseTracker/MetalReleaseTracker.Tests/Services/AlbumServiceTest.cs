@@ -3,60 +3,65 @@ using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Filters;
+using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
-using MetalReleaseTracker.Infrastructure.Data;
-using MetalReleaseTracker.Infrastructure.Data.Entities;
-using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Tests.Base;
 using MetalReleaseTracker.Сore.Services;
-using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace MetalReleaseTracker.Tests.Services
 {
-    public class AlbumServiceTest : IntegrationTestBase
+    public class AlbumServiceTest
     {
-        private readonly AlbumRepository _albumRepository;
+        private readonly Mock<IAlbumRepository> _albumRepository;
         private readonly ValidationService _validationService;
         private readonly AlbumService _albumService;
 
         public AlbumServiceTest()
         {
-            _albumRepository = new AlbumRepository(DbContext, Mapper);
+            _albumRepository = new Mock<IAlbumRepository>();
             _validationService = new ValidationService(new List<IValidator> 
             { 
                 new AlbumValidator(),
                 new AlbumFilterValidator(),
                 new GuidValidator()
             });
-            _albumService = new AlbumService(_albumRepository, _validationService);
+            _albumService = new AlbumService(_albumRepository.Object, _validationService);
         }
 
-        protected override void InitializeData(MetalReleaseTrackerDbContext context)
+        [Fact]
+        public async Task GetAlbumById_ShouldReturnAlbum_WhenIdExists()
         {
-            var band = new BandEntity 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = "Metallica" 
-            };
-            context.Bands.Add(band);
+            var albumId = Guid.NewGuid();
+            var album = new Album { Id = albumId, Name = "Test Album" };
+            _albumRepository.Setup(repo => repo.GetById(albumId)).ReturnsAsync(album);
 
-            var distributor = new DistributorEntity
-            {
-                Id = Guid.NewGuid(),
-                Name = "Universal Music",
-                ParsingUrl = "http://example.com/universal"
-            };
-            context.Distributors.Add(distributor);
+            var result = await _albumService.GetAlbumById(albumId);
 
-            var albums = new[]
+            Assert.NotNull(result);
+            Assert.Equal(albumId, result.Id);
+            _albumRepository.Verify(repo => repo.GetById(albumId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAlbumById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
+        {
+            var albumId = Guid.NewGuid();
+            _albumRepository.Setup(repo => repo.GetById(albumId)).ReturnsAsync((Album)null);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(() => _albumService.GetAlbumById(albumId));
+            _albumRepository.Verify(repo => repo.GetById(albumId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllAlbums_ShouldReturnAllAlbums()
+        {
+            var albums = new List<Album>
             {
-                new AlbumEntity
-                {
+                new Album 
+                { 
                     Id = Guid.NewGuid(),
-                    Band = band,
-                    BandId = band.Id,
-                    Distributor = distributor,
-                    DistributorId = distributor.Id,
+                    DistributorId = Guid.NewGuid(),
+                    BandId = Guid.NewGuid(),
                     SKU = "SKU-001",
                     Name = "Master of Puppets",
                     ReleaseDate = new DateTime(1986, 3, 3),
@@ -70,13 +75,12 @@ namespace MetalReleaseTracker.Tests.Services
                     Description = "One of the most influential metal albums of all time.",
                     Status = AlbumStatus.Restock
                 },
-                new AlbumEntity
-                {
+
+                new Album 
+                { 
                     Id = Guid.NewGuid(),
-                    Band = band,
-                    BandId = band.Id,
-                    Distributor = distributor,
-                    DistributorId = distributor.Id,
+                    DistributorId = Guid.NewGuid(),
+                    BandId = Guid.NewGuid(),
                     SKU = "SKU-002",
                     Name = "Ride the Lightning",
                     ReleaseDate = new DateTime(1984, 7, 27),
@@ -91,49 +95,24 @@ namespace MetalReleaseTracker.Tests.Services
                     Status = AlbumStatus.Preorder
                 }
             };
-            context.Albums.AddRange(albums);
-            context.SaveChanges();
-        }
 
-        [Fact]
-        public async Task GetAlbumById_ShouldReturnAlbum_WhenIdExists()
-        {
-            var existingAlbum = await DbContext.Albums.FirstAsync();
-            var result = await _albumService.GetAlbumById(existingAlbum.Id);
+            _albumRepository.Setup(repo => repo.GetAll()).ReturnsAsync(albums);
 
-            Assert.NotNull(result);
-            Assert.Equal(existingAlbum.Id, result.Id);
-        }
-
-        [Fact]
-        public async Task GetAlbumById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
-        {
-            await Assert.ThrowsAsync<EntityNotFoundException>(() => _albumService.GetAlbumById(Guid.NewGuid()));
-        }
-
-        [Fact]
-        public async Task GetAllAlbums_ShouldReturnAllAlbums()
-        {
             var result = await _albumService.GetAllAlbums();
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
+            _albumRepository.Verify(repo => repo.GetAll(), Times.Once);
         }
 
         [Fact]
         public async Task AddAlbum_ShouldAddAlbum()
         {
-            var band = await DbContext.Bands.FirstAsync();
-            var distributor = await DbContext.Distributors.FirstAsync();
-
-            DbContext.Entry(band).State = EntityState.Detached;
-            DbContext.Entry(distributor).State = EntityState.Detached;
-
-            var album = new Album
+            var newAlbum = new Album
             {
                 Id = Guid.NewGuid(),
-                BandId = band.Id,
-                DistributorId = distributor.Id,
+                DistributorId = Guid.NewGuid(),  
+                BandId = Guid.NewGuid(),
                 Name = "New Album",
                 ReleaseDate = DateTime.UtcNow,
                 Genre = "Heavy Metal",
@@ -148,12 +127,11 @@ namespace MetalReleaseTracker.Tests.Services
                 Description = "Album description"
             };
 
-            await _albumService.AddAlbum(album);
+            _albumRepository.Setup(repo => repo.Add(newAlbum)).Returns(Task.CompletedTask);
 
-            var result = await DbContext.Albums.FindAsync(album.Id);
+            await _albumService.AddAlbum(newAlbum);
 
-            Assert.NotNull(result);
-            Assert.Equal(album.Name, result.Name);
+            _albumRepository.Verify(repo => repo.Add(newAlbum), Times.Once);
         }
 
         [Fact]
@@ -176,21 +154,54 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             await Assert.ThrowsAsync<ValidationException>(() => _albumService.AddAlbum(album));
+            _albumRepository.Verify(repo => repo.Add(It.IsAny<Album>()), Times.Never);
         }
 
         [Fact]
         public async Task UpdateAlbum_ShouldUpdateAlbum()
         {
-            var existingAlbum = await DbContext.Albums.FirstAsync();
-            var updatedAlbum = Mapper.Map<Album>(existingAlbum);
-            updatedAlbum.Name = "Updated Album Name";
+            var existingAlbum = new Album
+            {
+                Id = Guid.NewGuid(),
+                BandId = Guid.NewGuid(),
+                DistributorId = Guid.NewGuid(),
+                Name = "Existing Album",
+                ReleaseDate = DateTime.UtcNow,
+                Genre = "Heavy Metal",
+                Price = 12,
+                SKU = "ABC-123",
+                PurchaseUrl = "https://example.com/purchase",
+                PhotoUrl = "https://example.com/photo",
+                Label = "Label Name",
+                Press = "Press Information",
+                Description = "Album description"
+            };
+
+            var updatedAlbum = new Album
+            {
+                Id = existingAlbum.Id,
+                Name = "Updated Album Name",
+                BandId = existingAlbum.BandId,
+                DistributorId = existingAlbum.DistributorId,
+                ReleaseDate = existingAlbum.ReleaseDate,
+                Genre = existingAlbum.Genre,
+                Price = existingAlbum.Price,
+                SKU = existingAlbum.SKU,
+                PurchaseUrl = existingAlbum.PurchaseUrl,
+                PhotoUrl = existingAlbum.PhotoUrl,
+                Label = existingAlbum.Label,
+                Press = existingAlbum.Press,
+                Description = existingAlbum.Description
+            };
+
+            _albumRepository.Setup(repo => repo.GetById(existingAlbum.Id)).ReturnsAsync(existingAlbum);
+            _albumRepository.Setup(repo => repo.Update(updatedAlbum)).ReturnsAsync(true);
+
             var result = await _albumService.UpdateAlbum(updatedAlbum);
 
-            var retrievedAlbum = await DbContext.Albums.FindAsync(updatedAlbum.Id);
-
             Assert.True(result);
-            Assert.NotNull(retrievedAlbum);
-            Assert.Equal(updatedAlbum.Name, retrievedAlbum.Name);
+            _albumRepository.Verify(repo => repo.GetById(existingAlbum.Id), Times.Once);
+            _albumRepository.Verify(repo => repo.Update(updatedAlbum), Times.Once);
         }
 
         [Fact]
@@ -215,25 +226,53 @@ namespace MetalReleaseTracker.Tests.Services
                 Description = "Album description"
             };
 
+            _albumRepository.Setup(repo => repo.GetById(album.Id)).ReturnsAsync((Album)null);
+
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _albumService.UpdateAlbum(album));
+            _albumRepository.Verify(repo => repo.GetById(album.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteAlbum_ShouldRemoveAlbum()
         {
-            var existingAlbum = await DbContext.Albums.FirstAsync();
+            var existingAlbum = new Album 
+            { 
+                Id = Guid.NewGuid(),
+                BandId = Guid.NewGuid(),
+                DistributorId = Guid.NewGuid(),
+                Name = "Existing Album",
+                ReleaseDate = DateTime.UtcNow,
+                Genre = "Heavy Metal",
+                Price = 15,
+                Status = AlbumStatus.New,
+                SKU = "DEF-456",
+                PurchaseUrl = "https://example.com/purchase",
+                PhotoUrl = "https://example.com/photo",
+                Media = MediaType.CD,
+                Label = "Label Name",
+                Press = "Press Information",
+                Description = "Album description"
+            };
+
+            _albumRepository.Setup(repo => repo.GetById(existingAlbum.Id)).ReturnsAsync(existingAlbum);
+            _albumRepository.Setup(repo => repo.Delete(existingAlbum.Id)).ReturnsAsync(true); 
+
             var result = await _albumService.DeleteAlbum(existingAlbum.Id);
 
-            var deletedAlbum = await DbContext.Albums.FindAsync(existingAlbum.Id);
-
             Assert.True(result);
-            Assert.Null(deletedAlbum);
+            _albumRepository.Verify(repo => repo.GetById(existingAlbum.Id), Times.Once);
+            _albumRepository.Verify(repo => repo.Delete(existingAlbum.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteAlbum_ShouldThrowEntityNotFoundException_WhenAlbumDoesNotExist()
         {
-            await Assert.ThrowsAsync<EntityNotFoundException>(() => _albumService.DeleteAlbum(Guid.NewGuid()));
+            var albumId = Guid.NewGuid();
+            _albumRepository.Setup(repo => repo.GetById(albumId)).ReturnsAsync((Album)null);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(() => _albumService.DeleteAlbum(albumId));
+            _albumRepository.Verify(repo => repo.GetById(albumId), Times.Once);
+            _albumRepository.Verify(repo => repo.Delete(albumId), Times.Never);
         }
 
         [Fact]
@@ -247,10 +286,54 @@ namespace MetalReleaseTracker.Tests.Services
                 Genre = "Thrash Metal"
             };
 
+            var albums = new List<Album>
+            {
+                new Album 
+                { 
+                    Id = Guid.NewGuid(),
+                    Band = new Band { Name = "Metallica" },
+                    DistributorId = Guid.NewGuid(),
+                    Name = "Album 1",
+                    ReleaseDate = new DateTime(1986, 3, 3),
+                    Genre = "Thrash Metal",
+                    Price = 15,
+                    Status = AlbumStatus.New,
+                    SKU = "DEF-456",
+                    PurchaseUrl = "https://example.com/purchase",
+                    PhotoUrl = "https://example.com/photo",
+                    Media = MediaType.CD,
+                    Label = "Label Name",
+                    Press = "Press Information",
+                    Description = "Album description"
+                },
+
+                new Album 
+                { 
+                    Id = Guid.NewGuid(),
+                    Band = new Band { Name = "Metallica" },
+                    DistributorId = Guid.NewGuid(),
+                    Name = "Album 2",
+                    ReleaseDate = new DateTime(1984, 7, 27),
+                    Genre = "Thrash Metal",
+                    Price = 15,
+                    Status = AlbumStatus.New,
+                    SKU = "DEF-456",
+                    PurchaseUrl = "https://example.com/purchase",
+                    PhotoUrl = "https://example.com/photo",
+                    Media = MediaType.CD,
+                    Label = "Label Name",
+                    Press = "Press Information",
+                    Description = "Album description"
+                }
+            };
+
+            _albumRepository.Setup(repo => repo.GetByFilter(filter)).ReturnsAsync(albums);
+
             var result = await _albumService.GetAlbumsByFilter(filter);
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
+            _albumRepository.Verify(repo => repo.GetByFilter(filter), Times.Once);
         }
 
         [Fact]
@@ -264,9 +347,12 @@ namespace MetalReleaseTracker.Tests.Services
                 Genre = "InvalidGenre"
             };
 
+            _albumRepository.Setup(repo => repo.GetByFilter(filter)).ReturnsAsync(new List<Album>());
+            
             var result = await _albumService.GetAlbumsByFilter(filter);
 
             Assert.Empty(result);
+            _albumRepository.Verify(repo => repo.GetByFilter(filter), Times.Once);
         }
     }
 }
