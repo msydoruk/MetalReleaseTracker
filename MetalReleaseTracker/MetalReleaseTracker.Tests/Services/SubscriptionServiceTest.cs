@@ -26,165 +26,130 @@ namespace MetalReleaseTracker.Tests.Services
         }
 
         [Fact]
-        public async Task GetSubscriptionById_ShouldReturnSubscription_WhenIdExists()
+        public async Task GetSubscriptionById_WhenIdExists_ShouldReturnSubscription()
         {
             var subscriptionId = Guid.NewGuid();
-            var subscription = new Subscription
-            {
-                Id = subscriptionId,
-                Email = "test3@example.com",
-                NotifyForNewReleases = true
-            };
-
-            _subscriptionRepository.Setup(repo => repo.GetById(subscriptionId)).ReturnsAsync(subscription);
+            var subscription = CreateSampleSubscription(subscriptionId, email: "test3@example.com");
+            _subscriptionRepository.Setup(repository => repository.GetById(subscriptionId)).ReturnsAsync(subscription);
 
             var result = await _subscriptionService.GetSubscriptionById(subscriptionId);
 
             Assert.NotNull(result);
             Assert.Equal(subscriptionId, result.Id);
-            _subscriptionRepository.Verify(repo => repo.GetById(subscriptionId), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.GetById(subscriptionId), Times.Once);
         }
 
         [Fact]
-        public async Task GetSubscriptionById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
+        public async Task GetSubscriptionById_WhenIdDoesNotExist_ShouldThrowEntityNotFoundException()
         {
             var subscriptionId = Guid.NewGuid();
-            _subscriptionRepository.Setup(repo => repo.GetById(subscriptionId)).ReturnsAsync((Subscription)null);
+            _subscriptionRepository.Setup(repository => repository.GetById(subscriptionId)).ReturnsAsync((Subscription)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _subscriptionService.GetSubscriptionById(subscriptionId));
-            _subscriptionRepository.Verify(repo => repo.GetById(subscriptionId), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.GetById(subscriptionId), Times.Once);
         }
 
         [Fact]
         public async Task GetAllSubscriptions_ShouldReturnAllSubscriptions()
         {
-            var subscriptions = new List<Subscription>
-            {
-                new Subscription
-                {
-                    Id = Guid.NewGuid(),
-                    Email = "test1@example.com",
-                    NotifyForNewReleases = true
-                },
-
-                new Subscription
-                {
-                    Id = Guid.NewGuid(),
-                    Email = "test2@example.com",
-                    NotifyForNewReleases = false
-                }
-            };
-
-            _subscriptionRepository.Setup(repo => repo.GetAll()).ReturnsAsync(subscriptions);
+            var subscriptions = CreateSampleSubscriptions();
+            _subscriptionRepository.Setup(repository => repository.GetAll()).ReturnsAsync(subscriptions);
 
             var result = await _subscriptionService.GetAllSubscriptions();
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
-            _subscriptionRepository.Verify(repo => repo.GetAll(), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.GetAll(), Times.Once);
         }
 
         [Fact]
         public async Task AddSubscription_ShouldAddSubscription()
         {
-            var newSubscription = new Subscription 
-            { 
-                Id = Guid.NewGuid(), 
-                Email = "test3@example.com",
-                NotifyForNewReleases = true
-            };
-
-            _subscriptionRepository.Setup(repo => repo.Add(newSubscription)).Returns(Task.CompletedTask);
+            var newSubscription = CreateSampleSubscription(email: "test3@example.com");
+            _subscriptionRepository.Setup(repository => repository.Add(newSubscription)).Returns(Task.CompletedTask);
 
             await _subscriptionService.AddSubscription(newSubscription);
 
-            _subscriptionRepository.Verify(repo => repo.Add(newSubscription), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.Add(newSubscription), Times.Once);
         }
 
         [Fact]
-        public async Task AddSubscription_ShouldThrowValidationException_WhenSubscriptionIsInvalid()
+        public async Task AddSubscription_WhenSubscriptionIsInvalid_ShouldThrowValidationException()
         {
-            var subscription = new Subscription
-            {
-                Email =  ""
-            };
+            var subscription = CreateSampleSubscription(email: "");
 
             await Assert.ThrowsAsync<ValidationException>(() => _subscriptionService.AddSubscription(subscription));
-            _subscriptionRepository.Verify(repo => repo.Add(It.IsAny<Subscription>()), Times.Never);
+            _subscriptionRepository.Verify(repository => repository.Add(It.IsAny<Subscription>()), Times.Never);
         }
 
         [Fact]
         public async Task UpdateSubscription_ShouldUpdateSubscription()
         {
-            var existingSubscription = new Subscription
-            {
-                Id = Guid.NewGuid(),
-                Email = "test1@example.com",
-                NotifyForNewReleases = true
-            };
+            var existingSubscription = CreateSampleSubscription(email: "test1@example.com");
+            var updatedSubscription = CreateSampleSubscription(existingSubscription.Id, email: "testUpdate@example.com");
 
-            var updatedSubscription = new Subscription
-            {
-                Id = existingSubscription.Id,
-                Email = "testUpdate@example.com",
-                NotifyForNewReleases = existingSubscription.NotifyForNewReleases
-            };
-
-            _subscriptionRepository.Setup(repo => repo.GetById(existingSubscription.Id)).ReturnsAsync(existingSubscription);
-            _subscriptionRepository.Setup(repo => repo.Update(updatedSubscription)).ReturnsAsync(true);
+            _subscriptionRepository.Setup(repository => repository.GetById(existingSubscription.Id)).ReturnsAsync(existingSubscription);
+            _subscriptionRepository.Setup(repository => repository.Update(updatedSubscription)).ReturnsAsync(true);
 
             var result = await _subscriptionService.UpdateSubscription(updatedSubscription);
 
             Assert.True(result);
-            _subscriptionRepository.Verify(repo => repo.GetById(existingSubscription.Id), Times.Once);
-            _subscriptionRepository.Verify(repo => repo.Update(updatedSubscription), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.GetById(existingSubscription.Id), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.Update(updatedSubscription), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateSubscription_ShouldThrowEntityNotFoundException_WhenSubscriptionDoesNotExist()
+        public async Task UpdateSubscription_WhenSubscriptionDoesNotExist_ShouldThrowEntityNotFoundException()
         {
-            var subscription = new Subscription
-            {
-                Id = Guid.NewGuid(),
-                Email = "invalid@gmail.com",
-                NotifyForNewReleases = false
-            };
-
-            _subscriptionRepository.Setup(repo => repo.GetById(subscription.Id)).ReturnsAsync((Subscription)null);
+            var subscription = CreateSampleSubscription(email: "invalid@gmail.com");
+            _subscriptionRepository.Setup(repository => repository.GetById(subscription.Id)).ReturnsAsync((Subscription)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _subscriptionService.UpdateSubscription(subscription));
-            _subscriptionRepository.Verify(repo => repo.GetById(subscription.Id), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.GetById(subscription.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteSubscription_ShouldRemoveSubscription()
         {
-            var existingSubscription = new Subscription
-            {
-                Id = Guid.NewGuid(),
-                Email = "test1@example.com",
-                NotifyForNewReleases = true
-            };
-
-            _subscriptionRepository.Setup(repo => repo.GetById(existingSubscription.Id)).ReturnsAsync(existingSubscription);
-            _subscriptionRepository.Setup(repo => repo.Delete(existingSubscription.Id)).ReturnsAsync(true);
+            var existingSubscription = CreateSampleSubscription(email: "test1@example.com");
+            _subscriptionRepository.Setup(repository => repository.GetById(existingSubscription.Id)).ReturnsAsync(existingSubscription);
+            _subscriptionRepository.Setup(repository => repository.Delete(existingSubscription.Id)).ReturnsAsync(true);
 
             var result = await _subscriptionService.DeleteSubscription(existingSubscription.Id);
 
             Assert.True(result);
-            _subscriptionRepository.Verify(repo => repo.GetById(existingSubscription.Id), Times.Once);
-            _subscriptionRepository.Verify(repo => repo.Delete(existingSubscription.Id), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.GetById(existingSubscription.Id), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.Delete(existingSubscription.Id), Times.Once);
         }
 
         [Fact]
-        public async Task DeleteSubscription_ShouldThrowEntityNotFoundException_WhenSubscriptionDoesNotExist()
+        public async Task DeleteSubscription_WhenSubscriptionDoesNotExist_ShouldThrowEntityNotFoundException()
         {
             var subscriptionId = Guid.NewGuid();
-            _subscriptionRepository.Setup(repo => repo.GetById(subscriptionId)).ReturnsAsync((Subscription)null);
+            _subscriptionRepository.Setup(repository => repository.GetById(subscriptionId)).ReturnsAsync((Subscription)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _subscriptionService.DeleteSubscription(subscriptionId));
-            _subscriptionRepository.Verify(repo => repo.GetById(subscriptionId), Times.Once);
-            _subscriptionRepository.Verify(repo => repo.Delete(subscriptionId), Times.Never);
+            _subscriptionRepository.Verify(repository => repository.GetById(subscriptionId), Times.Once);
+            _subscriptionRepository.Verify(repository => repository.Delete(subscriptionId), Times.Never);
+        }
+
+        private Subscription CreateSampleSubscription(Guid? id = null, string email = "test@example.com", bool notifyForNewReleases = true)
+        {
+            return new Subscription
+            {
+                Id = id ?? Guid.NewGuid(),
+                Email = email,
+                NotifyForNewReleases = notifyForNewReleases
+            };
+        }
+
+        private List<Subscription> CreateSampleSubscriptions()
+        {
+            return new List<Subscription>
+            {
+                CreateSampleSubscription(email: "test1@example.com", notifyForNewReleases: true),
+                CreateSampleSubscription(email: "test2@example.com", notifyForNewReleases: false)
+            };
         }
     }
 }

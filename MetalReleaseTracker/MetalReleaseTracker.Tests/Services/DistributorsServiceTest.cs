@@ -26,83 +26,55 @@ namespace MetalReleaseTracker.Tests.Services
         }
 
         [Fact]
-        public async Task GetDistributorById_ShouldReturnDistributor_WhenIdExists()
+        public async Task GetDistributorById_WhenIdExists_ShouldReturnDistributor()
         {
             var distributorId = Guid.NewGuid();
-            var distributor = new Distributor 
-            { 
-                Id = distributorId, 
-                Name = "Warner Music",
-                ParsingUrl = "https://example.com/new"
-            };
-
-            _distributorsRepository.Setup(repo => repo.GetById(distributorId)).ReturnsAsync(distributor);
+            var distributor = CreateSampleDistributor(distributorId);
+            _distributorsRepository.Setup(repository => repository.GetById(distributorId)).ReturnsAsync(distributor);
 
             var result = await _distributorsService.GetDistributorById(distributorId);
 
             Assert.NotNull(result);
             Assert.Equal(distributorId, result.Id);
-            _distributorsRepository.Verify(repo => repo.GetById(distributorId), Times.Once);
+            _distributorsRepository.Verify(repository => repository.GetById(distributorId), Times.Once);
         }
 
         [Fact]
-        public async Task GetDistributorById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
+        public async Task GetDistributorById_WhenIdDoesNotExist_ShouldThrowEntityNotFoundException()
         {
             var distributorId = Guid.NewGuid();
-            _distributorsRepository.Setup(repo => repo.GetById(distributorId)).ReturnsAsync((Distributor)null);
+            _distributorsRepository.Setup(repository => repository.GetById(distributorId)).ReturnsAsync((Distributor)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.GetDistributorById(distributorId));
-            _distributorsRepository.Verify(repo => repo.GetById(distributorId), Times.Once);
+            _distributorsRepository.Verify(repository => repository.GetById(distributorId), Times.Once);
         }
 
         [Fact]
         public async Task GetAllDistributors_ShouldReturnAllDistributors()
         {
-            var distributors = new List<Distributor>
-            {
-                new Distributor 
-                { 
-                    Id = Guid.NewGuid(),
-                    Name = "Universal Music",
-                    ParsingUrl = "https://example.com/universal"
-                },
-
-                new Distributor 
-                { 
-                    Id = Guid.NewGuid(),
-                    Name = "Sony Music",
-                    ParsingUrl = "https://example.com/warner"
-                }
-            };
-
-            _distributorsRepository.Setup(repo => repo.GetAll()).ReturnsAsync(distributors);
+            var distributors = CreateSampleDistributors();
+            _distributorsRepository.Setup(repository => repository.GetAll()).ReturnsAsync(distributors);
 
             var result = await _distributorsService.GetAllDistributors();
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
-            _distributorsRepository.Verify(repo => repo.GetAll(), Times.Once);
+            _distributorsRepository.Verify(repository => repository.GetAll(), Times.Once);
         }
 
         [Fact]
         public async Task AddDistributor_ShouldAddDistributor()
         {
-            var newDistributor = new Distributor 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = "Warner Music",
-                ParsingUrl = "https://example.com/new"
-            };
-
-            _distributorsRepository.Setup(repo => repo.Add(newDistributor)).Returns(Task.CompletedTask);
+            var newDistributor = CreateSampleDistributor(name: "Warner Music", parsingUrl: "https://example.com/warner");
+            _distributorsRepository.Setup(repository => repository.Add(newDistributor)).Returns(Task.CompletedTask);
 
             await _distributorsService.AddDistributor(newDistributor);
 
-            _distributorsRepository.Verify(repo => repo.Add(newDistributor), Times.Once);
+            _distributorsRepository.Verify(repository => repository.Add(newDistributor), Times.Once);
         }
 
         [Fact]
-        public async Task AddDistributor_ShouldThrowValidationException_WhenDistributorIsInvalid()
+        public async Task AddDistributor_WhenDistributorIsInvalid_ShouldThrowValidationException()
         {
             var distributor = new Distributor
             {
@@ -111,81 +83,77 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             await Assert.ThrowsAsync<ValidationException>(() => _distributorsService.AddDistributor(distributor));
-            _distributorsRepository.Verify(repo => repo.Add(It.IsAny<Distributor>()), Times.Never);
+            _distributorsRepository.Verify(repository => repository.Add(It.IsAny<Distributor>()), Times.Never);
         }
 
         [Fact]
         public async Task UpdateDistributor_ShouldUpdateDistributor()
         {
-            var existingDistributor = new Distributor
-            {
-                Id = Guid.NewGuid(),
-                Name = "Existing Distributor",
-                ParsingUrl = "https://example.com/universal"
-            };
+            var existingDistributor = CreateSampleDistributor(name: "Existing Distributor", parsingUrl: "https://example.com/existing");
+            var updatedDistributor = CreateSampleDistributor(existingDistributor.Id, name: "Updated Distributor Name", parsingUrl: existingDistributor.ParsingUrl);
 
-            var updatedDistributor = new Distributor
-            {
-                Id = existingDistributor.Id,
-                Name = "Updated Distributor Name",
-                ParsingUrl = existingDistributor.ParsingUrl
-            };
-
-            _distributorsRepository.Setup(repo => repo.GetById(existingDistributor.Id)).ReturnsAsync(existingDistributor);
-            _distributorsRepository.Setup(repo => repo.Update(updatedDistributor)).ReturnsAsync(true);
+            _distributorsRepository.Setup(repository => repository.GetById(existingDistributor.Id)).ReturnsAsync(existingDistributor);
+            _distributorsRepository.Setup(repository => repository.Update(updatedDistributor)).ReturnsAsync(true);
 
             var result = await _distributorsService.UpdateDistributor(updatedDistributor);
 
             Assert.True(result);
-            _distributorsRepository.Verify(repo => repo.GetById(existingDistributor.Id), Times.Once);
-            _distributorsRepository.Verify(repo => repo.Update(updatedDistributor), Times.Once);
+            _distributorsRepository.Verify(repository => repository.GetById(existingDistributor.Id), Times.Once);
+            _distributorsRepository.Verify(repository => repository.Update(updatedDistributor), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateDistributor_ShouldThrowEntityNotFoundException_WhenDistributorDoesNotExist()
+        public async Task UpdateDistributor_WhenDistributorDoesNotExist_ShouldThrowEntityNotFoundException()
         {
-            var distributor = new Distributor
-            {
-                Id = Guid.NewGuid(),
-                Name = "Non-existent Distributor",
-                ParsingUrl = "https://example.com/test"
-            };
-
-            _distributorsRepository.Setup(repo => repo.GetById(distributor.Id)).ReturnsAsync((Distributor)null);
+            var distributor = CreateSampleDistributor(name: "Non-existent Distributor", parsingUrl: "https://example.com/nonexistent");
+            _distributorsRepository.Setup(repository => repository.GetById(distributor.Id)).ReturnsAsync((Distributor)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.UpdateDistributor(distributor));
-            _distributorsRepository.Verify(repo => repo.GetById(distributor.Id), Times.Once);
+            _distributorsRepository.Verify(repository => repository.GetById(distributor.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteDistributor_ShouldRemoveDistributor()
         {
-            var existingDistributor = new Distributor
-            {
-                Id = Guid.NewGuid(),
-                Name = "Existing Distributor",
-                ParsingUrl = "https://example.com/test"
-            };
-
-            _distributorsRepository.Setup(repo => repo.GetById(existingDistributor.Id)).ReturnsAsync(existingDistributor);
-            _distributorsRepository.Setup(repo => repo.Delete(existingDistributor.Id)).ReturnsAsync(true);
+            var existingDistributor = CreateSampleDistributor(name: "Existing Distributor", parsingUrl: "https://example.com/existing");
+            _distributorsRepository.Setup(repository => repository.GetById(existingDistributor.Id)).ReturnsAsync(existingDistributor);
+            _distributorsRepository.Setup(repository => repository.Delete(existingDistributor.Id)).ReturnsAsync(true);
 
             var result = await _distributorsService.DeleteDistributor(existingDistributor.Id);
 
             Assert.True(result);
-            _distributorsRepository.Verify(repo => repo.GetById(existingDistributor.Id), Times.Once);
-            _distributorsRepository.Verify(repo => repo.Delete(existingDistributor.Id), Times.Once);
+            _distributorsRepository.Verify(repository => repository.GetById(existingDistributor.Id), Times.Once);
+            _distributorsRepository.Verify(repository => repository.Delete(existingDistributor.Id), Times.Once);
         }
 
         [Fact]
-        public async Task DeleteDistributor_ShouldThrowEntityNotFoundException_WhenDistributorDoesNotExist()
+        public async Task DeleteDistributor_WhenDistributorDoesNotExist_ShouldThrowEntityNotFoundException()
         {
             var distributorId = Guid.NewGuid();
-            _distributorsRepository.Setup(repo => repo.GetById(distributorId)).ReturnsAsync((Distributor)null);
+            _distributorsRepository.Setup(repository => repository.GetById(distributorId)).ReturnsAsync((Distributor)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _distributorsService.DeleteDistributor(distributorId));
-            _distributorsRepository.Verify(repo => repo.GetById(distributorId), Times.Once);
-            _distributorsRepository.Verify(repo => repo.Delete(distributorId), Times.Never);
+            _distributorsRepository.Verify(repository => repository.GetById(distributorId), Times.Once);
+            _distributorsRepository.Verify(repository => repository.Delete(distributorId), Times.Never);
+        }
+
+        private Distributor CreateSampleDistributor(Guid? id = null, string name = "Test Distributor", string parsingUrl = "https://example.com")
+        {
+            return new Distributor
+            {
+                Id = id ?? Guid.NewGuid(),
+                Name = name,
+                ParsingUrl = parsingUrl
+            };
+        }
+
+        private List<Distributor> CreateSampleDistributors()
+        {
+            return new List<Distributor>
+            {
+                CreateSampleDistributor(name: "Universal Music", parsingUrl: "https://example.com/universal"),
+                CreateSampleDistributor(name: "Sony Music", parsingUrl: "https://example.com/sony")
+            };
         }
     }
 }

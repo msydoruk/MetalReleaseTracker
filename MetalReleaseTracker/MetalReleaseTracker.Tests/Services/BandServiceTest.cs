@@ -26,79 +26,56 @@ namespace MetalReleaseTracker.Tests.Services
         }
 
         [Fact]
-        public async Task GetBandById_ShouldReturnBand_WhenIdExists()
+        public async Task GetBandById_WhenIdExists_ShouldReturnBand()
         {
             var bandId = Guid.NewGuid();
-            var band = new Band 
-            {
-                Id = bandId, 
-                Name = "Metallica" 
-            };
+            var band = CreateSampleBand(bandId);
 
-            _bandRepository.Setup(repo => repo.GetById(bandId)).ReturnsAsync(band);
+            _bandRepository.Setup(repository => repository.GetById(bandId)).ReturnsAsync(band);
 
             var result = await _bandService.GetBandById(bandId);
 
             Assert.NotNull(result);
             Assert.Equal(bandId, result.Id);
-            _bandRepository.Verify(repo => repo.GetById(bandId), Times.Once);
+            _bandRepository.Verify(repository => repository.GetById(bandId), Times.Once);
         }
 
         [Fact]
-        public async Task GetBandById_ShouldThrowEntityNotFoundException_WhenIdDoesNotExist()
+        public async Task GetBandById_WhenIdDoesNotExist_ShouldThrowEntityNotFoundException()
         {
             var bandId = Guid.NewGuid();
-            _bandRepository.Setup(repo => repo.GetById(bandId)).ReturnsAsync((Band)null);
+            _bandRepository.Setup(repository => repository.GetById(bandId)).ReturnsAsync((Band)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.GetBandById(bandId));
-            _bandRepository.Verify(repo => repo.GetById(bandId), Times.Once);
+            _bandRepository.Verify(repository => repository.GetById(bandId), Times.Once);
         }
 
         [Fact]
         public async Task GetAllBands_ShouldReturnAllBands()
         {
-            var bands = new List<Band>
-            {
-                new Band 
-                { 
-                    Id = Guid.NewGuid(), 
-                    Name = "Metallica" 
-                },
-
-                new Band 
-                { 
-                    Id = Guid.NewGuid(),
-                    Name = "Iron Maiden" 
-                }
-            };
-
-            _bandRepository.Setup(repo => repo.GetAll()).ReturnsAsync(bands);
+            var bands = CreateSampleBands();
+            _bandRepository.Setup(repository => repository.GetAll()).ReturnsAsync(bands);
 
             var result = await _bandService.GetAllBands();
 
             Assert.NotEmpty(result);
             Assert.Equal(2, result.Count());
-            _bandRepository.Verify(repo => repo.GetAll(), Times.Once);
+            _bandRepository.Verify(repository => repository.GetAll(), Times.Once);
         }
 
         [Fact]
         public async Task AddBand_ShouldAddBand()
         {
-            var newBand = new Band 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = "Slayer" 
-            };
-
-            _bandRepository.Setup(repo => repo.Add(newBand)).Returns(Task.CompletedTask);
+            var newBand = CreateSampleBand(name: "Slayer");
+            _bandRepository.Setup(repository => repository.Add(newBand)).Returns(Task.CompletedTask);
 
             await _bandService.AddBand(newBand);
 
-            _bandRepository.Verify(repo => repo.Add(newBand), Times.Once);
+            _bandRepository.Verify(repository => repository.Add(newBand), Times.Once);
         }
 
         [Fact]
-        public async Task AddBand_ShouldThrowValidationException_WhenBandIsInvalid()
+        public async Task AddBand_WhenBandIsInvalid_ShouldThrowValidationException()
         {
             var band = new Band
             {
@@ -106,77 +83,76 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             await Assert.ThrowsAsync<ValidationException>(() => _bandService.AddBand(band));
-            _bandRepository.Verify(repo => repo.Add(It.IsAny<Band>()), Times.Never);
+            _bandRepository.Verify(repository => repository.Add(It.IsAny<Band>()), Times.Never);
         }
 
         [Fact]
         public async Task UpdateBand_ShouldUpdateBand()
         {
-            var existingBand = new Band
-            {
-                Id = Guid.NewGuid(),
-                Name = "Existing Band"
-            };
+            var existingBand = CreateSampleBand();
+            var updatedBand = CreateSampleBand(existingBand.Id, name: "Updated Band Name");
 
-            var updatedBand = new Band
-            {
-                Id = existingBand.Id,
-                Name = "Updated Band Name"
-            };
-
-            _bandRepository.Setup(repo => repo.GetById(existingBand.Id)).ReturnsAsync(existingBand);
-            _bandRepository.Setup(repo => repo.Update(updatedBand)).ReturnsAsync(true);
+            _bandRepository.Setup(repository => repository.GetById(existingBand.Id)).ReturnsAsync(existingBand);
+            _bandRepository.Setup(repository => repository.Update(updatedBand)).ReturnsAsync(true);
 
             var result = await _bandService.UpdateBand(updatedBand);
 
             Assert.True(result);
-            _bandRepository.Verify(repo => repo.GetById(existingBand.Id), Times.Once);
-            _bandRepository.Verify(repo => repo.Update(updatedBand), Times.Once);
+            _bandRepository.Verify(repository => repository.GetById(existingBand.Id), Times.Once);
+            _bandRepository.Verify(repository => repository.Update(updatedBand), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateBand_ShouldThrowEntityNotFoundException_WhenBandDoesNotExist()
+        public async Task UpdateBand_WhenBandDoesNotExist_ShouldThrowEntityNotFoundException()
         {
-            var band = new Band
-            {
-                Id = Guid.NewGuid(),
-                Name = "Non-existent Band"
-            };
-
-            _bandRepository.Setup(repo => repo.GetById(band.Id)).ReturnsAsync((Band)null);
+            var band = CreateSampleBand(name: "Non-existent Band");
+            _bandRepository.Setup(repository => repository.GetById(band.Id)).ReturnsAsync((Band)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.UpdateBand(band));
-            _bandRepository.Verify(repo => repo.GetById(band.Id), Times.Once);
+            _bandRepository.Verify(repository => repository.GetById(band.Id), Times.Once);
         }
 
         [Fact]
         public async Task DeleteBand_ShouldRemoveBand()
         {
-            var existingBand = new Band
-            {
-                Id = Guid.NewGuid(),
-                Name = "Existing Band"
-            };
-
-            _bandRepository.Setup(repo => repo.GetById(existingBand.Id)).ReturnsAsync(existingBand);
-            _bandRepository.Setup(repo => repo.Delete(existingBand.Id)).ReturnsAsync(true);
+            var existingBand = CreateSampleBand();
+            _bandRepository.Setup(repository => repository.GetById(existingBand.Id)).ReturnsAsync(existingBand);
+            _bandRepository.Setup(repository => repository.Delete(existingBand.Id)).ReturnsAsync(true);
 
             var result = await _bandService.DeleteBand(existingBand.Id);
 
             Assert.True(result);
-            _bandRepository.Verify(repo => repo.GetById(existingBand.Id), Times.Once);
-            _bandRepository.Verify(repo => repo.Delete(existingBand.Id), Times.Once);
+            _bandRepository.Verify(repository => repository.GetById(existingBand.Id), Times.Once);
+            _bandRepository.Verify(repository => repository.Delete(existingBand.Id), Times.Once);
         }
 
         [Fact]
-        public async Task DeleteBand_ShouldThrowEntityNotFoundException_WhenBandDoesNotExist()
+        public async Task DeleteBand_WhenBandDoesNotExist_ShouldThrowEntityNotFoundException()
         {
             var bandId = Guid.NewGuid();
-            _bandRepository.Setup(repo => repo.GetById(bandId)).ReturnsAsync((Band)null);
+            _bandRepository.Setup(repository => repository.GetById(bandId)).ReturnsAsync((Band)null);
 
             await Assert.ThrowsAsync<EntityNotFoundException>(() => _bandService.DeleteBand(bandId));
-            _bandRepository.Verify(repo => repo.GetById(bandId), Times.Once);
-            _bandRepository.Verify(repo => repo.Delete(bandId), Times.Never);
+            _bandRepository.Verify(repository => repository.GetById(bandId), Times.Once);
+            _bandRepository.Verify(repository => repository.Delete(bandId), Times.Never);
+        }
+
+        private Band CreateSampleBand(Guid? id = null, string name = "Test Band")
+        {
+            return new Band
+            {
+                Id = id ?? Guid.NewGuid(),
+                Name = name
+            };
+        }
+
+        private List<Band> CreateSampleBands()
+        {
+            return new List<Band>
+            {
+                CreateSampleBand(name: "Metallica"),
+                CreateSampleBand(name: "Iron Maiden")
+            };
         }
     }
 }
