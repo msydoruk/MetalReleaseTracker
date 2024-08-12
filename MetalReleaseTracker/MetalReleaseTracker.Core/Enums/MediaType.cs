@@ -10,6 +10,7 @@ namespace MetalReleaseTracker.Core.Enums
     {
         CD,
         LP,
-        Tape
+        Tape,
+        Unknown
     }
 }
