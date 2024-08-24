@@ -1,90 +1,84 @@
 ﻿using System.Globalization;
-using HtmlAgilityPack;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
+using MetalReleaseTracker.Core.Parsers;
+using MetalReleaseTracker.Infrastructure.Loaders;
 
 namespace MetalReleaseTracker.Infrastructure.Parsers
 {
     public class OsmoseProductionsParser : IParser
     {
-        private const string DefaultUrl = "https://www.osmoseproductions.com/liste/index.cfm?what=all&lng=2&tete=ukraine";
+        private readonly HtmlLoader _htmlLoader;
+        private readonly MediaTypeParser _mediaTypeParser;
+        private readonly AlbumStatusParser _albumStatusParser;
+        private readonly YearParser _yearParser;
 
-        private readonly HttpClient _httpClient;
-
-        public OsmoseProductionsParser()
+        public OsmoseProductionsParser(HtmlLoader htmlLoader, MediaTypeParser mediaTypeParser, AlbumStatusParser albumStatusParser, YearParser yearParser)
         {
-            _httpClient = new HttpClient();
+            _htmlLoader = htmlLoader;
+            _mediaTypeParser = mediaTypeParser;
+            _albumStatusParser = albumStatusParser;
+            _yearParser = yearParser;
         }
 
-        public async Task<IEnumerable<Album>> ParseAlbums(string url = DefaultUrl)
+        public async Task<IEnumerable<Album>> ParseAlbums(Distributor distributor)
         {
             var albums = new List<Album>();
-            var htmlDocument = await LoadHtmlDocumentAsync(url);
+            var baseUrl = distributor.ParsingUrl;
+            string nextPageUrl = baseUrl;
+            bool hasMorePages;
 
-            var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
-
-            if (albumNodes != null)
+            do
             {
-                foreach (var node in albumNodes)
+                var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(nextPageUrl);
+
+                var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
+
+                if (albumNodes != null)
                 {
-                    var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
-                    var albumDetails = await ParseAlbumDetails(albumUrl);
-
-                    var album = new Album
+                    foreach (var node in albumNodes)
                     {
-                        Id = Guid.NewGuid(),
-                        DistributorId = albumDetails.DistributorId,
-                        Distributor = albumDetails.Distributor,
-                        BandId = albumDetails.BandId,
-                        Band = albumDetails.Band,
-                        SKU = albumDetails.SKU,
-                        Name = albumDetails.Name,
-                        ReleaseDate = albumDetails.ReleaseDate,
-                        Genre = albumDetails.Genre,
-                        Price = albumDetails.Price,
-                        PurchaseUrl = albumDetails.PurchaseUrl,
-                        PhotoUrl = albumDetails.PhotoUrl,
-                        Media = albumDetails.Media,
-                        Label = albumDetails.Label,
-                        Press = albumDetails.Press,
-                        Description = albumDetails.Description,
-                        Status = albumDetails.Status
-                    };
+                        var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
+                        var albumDetails = await ParseAlbumDetails(albumUrl);
 
-                    albums.Add(album);
+                        var album = new Album
+                        {
+                            Id = Guid.NewGuid(),
+                            DistributorId = albumDetails.DistributorId,
+                            Distributor = albumDetails.Distributor,
+                            BandId = albumDetails.BandId,
+                            Band = albumDetails.Band,
+                            SKU = albumDetails.SKU,
+                            Name = albumDetails.Name,
+                            ReleaseDate = albumDetails.ReleaseDate,
+                            Genre = albumDetails.Genre,
+                            Price = albumDetails.Price,
+                            PurchaseUrl = albumDetails.PurchaseUrl,
+                            PhotoUrl = albumDetails.PhotoUrl,
+                            Media = albumDetails.Media,
+                            Label = albumDetails.Label,
+                            Press = albumDetails.Press,
+                            Description = albumDetails.Description,
+                            Status = albumDetails.Status
+                        };
+
+                        albums.Add(album);
+                    }
                 }
+
+                (nextPageUrl, hasMorePages) = PaginationHelper.GetNextPageUrl(htmlDocument);
+
+                await Task.Delay(1000);
             }
+            while (hasMorePages);
 
             return albums;
         }
 
-        public async Task<IEnumerable<Band>> ParseBands(string url = DefaultUrl)
+        private async Task<Album> ParseAlbumDetails(string albumUrl)
         {
-            var bands = new List<Band>();
-            var htmlDocument = await LoadHtmlDocumentAsync(url);
-
-            var bandNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
-
-            if (bandNodes != null)
-            {
-                foreach (var node in bandNodes)
-                {
-                    var band = new Band
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = node.SelectSingleNode(".//span[@class='TtypeC TcolorC']").InnerText.Trim()
-                    };
-                    bands.Add(band);
-                }
-            }
-
-            return bands;
-        }
-
-        public async Task<Album> ParseAlbumDetails(string albumUrl)
-        {
-            var htmlDocument = await LoadHtmlDocumentAsync(albumUrl);
+            var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(albumUrl);
 
             var distributor = new Distributor
             {
@@ -112,7 +106,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             var releaseDateNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Year :')]");
-            var releaseDate = releaseDateNode != null ? ParseYear(releaseDateNode.InnerText.Split(':').Last().Trim()) : DateTime.MinValue;
+            var releaseDate = releaseDateNode != null ? _yearParser.ParseYear(releaseDateNode.InnerText.Split(':').Last().Trim()) : DateTime.MinValue;
 
             var genreNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Genre :')]");
             var genre = genreNode?.InnerText.Trim() ?? "Unknown Genre";
@@ -128,7 +122,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var photoUrl = photoUrlNode?.GetAttributeValue("src", "img").Trim() ?? "Unknown Photo URL";
 
             var mediaNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Media:')]");
-            var media = mediaNode != null ? ParseMediaType(mediaNode.InnerText.Split(':').Last().Trim()) : MediaType.Unknown;
+            var media = mediaNode != null ? _mediaTypeParser.ParseMediaType(mediaNode.InnerText.Split(':').Last().Trim()) : MediaType.Unknown;
 
             var labelNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Label :')]//a");
             var label = labelNode?.InnerText.Trim() ?? "Unknown Label";
@@ -140,7 +134,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var description = descriptionNode?.InnerText.Trim() ?? "No Description";
 
             var statusNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'New or Used :')]");
-            var status = statusNode != null ? ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
+            var status = statusNode != null ? _albumStatusParser.ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
 
             var album = new Album
             {
@@ -164,50 +158,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             };
 
             return album;
-        }
-
-        public async Task<HtmlDocument> LoadHtmlDocumentAsync(string url)
-        {
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-
-            var pageContents = await response.Content.ReadAsStringAsync();
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(pageContents);
-
-            return htmlDocument;
-        }
-
-        private MediaType ParseMediaType(string mediaType)
-        {
-            return mediaType switch
-            {
-                "CD" => MediaType.CD,
-                "LP" => MediaType.LP,
-                "Tape" => MediaType.Tape,
-                _ => MediaType.Unknown
-            };
-        }
-
-        private AlbumStatus ParseAlbumStatus(string status)
-        {
-            return status switch
-            {
-                "New" => AlbumStatus.New,
-                "Restock" => AlbumStatus.Restock,
-                "Preorder" => AlbumStatus.Preorder,
-                _ => AlbumStatus.Unknown
-            };
-        }
-
-        private DateTime ParseYear(string year)
-        {
-            if (DateTime.TryParseExact(year?.Trim(), "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-            {
-                return date;
-            }
-
-            return DateTime.MinValue;
         }
     }
 }

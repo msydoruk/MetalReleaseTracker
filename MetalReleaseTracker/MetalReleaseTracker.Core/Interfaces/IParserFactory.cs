@@ -2,8 +2,8 @@
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
-    public interface IParser
+    public interface IParserFactory
     {
-        Task<IEnumerable<Album>> ParseAlbums(Distributor distributor);
+        IParser CreateParser(Distributor distributor);
     }
 }
