@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Infrastructure.Data.Entities
 {
@@ -14,5 +15,7 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
 
         [Url]
         public string ParsingUrl { get; set; }
+
+        public DistributorCode Code { get; set; }
     }
 }

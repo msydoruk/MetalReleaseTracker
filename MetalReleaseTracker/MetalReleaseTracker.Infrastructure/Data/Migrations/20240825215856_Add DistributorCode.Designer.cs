@@ -4,6 +4,7 @@ using MetalReleaseTracker.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MetalReleaseTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(MetalReleaseTrackerDbContext))]
-    partial class MetalReleaseTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240825215856_Add DistributorCode")]
+    partial class AddDistributorCode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using HtmlAgilityPack;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
@@ -10,29 +11,23 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
     public class OsmoseProductionsParser : IParser
     {
         private readonly HtmlLoader _htmlLoader;
-        private readonly MediaTypeParser _mediaTypeParser;
-        private readonly AlbumStatusParser _albumStatusParser;
-        private readonly YearParser _yearParser;
+        private readonly AlbumParser _albumParser;
 
-        public OsmoseProductionsParser(HtmlLoader htmlLoader, MediaTypeParser mediaTypeParser, AlbumStatusParser albumStatusParser, YearParser yearParser)
+        public OsmoseProductionsParser(HtmlLoader htmlLoader, AlbumParser albumParser)
         {
             _htmlLoader = htmlLoader;
-            _mediaTypeParser = mediaTypeParser;
-            _albumStatusParser = albumStatusParser;
-            _yearParser = yearParser;
+            _albumParser = albumParser;
         }
 
-        public async Task<IEnumerable<Album>> ParseAlbums(Distributor distributor)
+        public async Task<IEnumerable<Album>> ParseAlbums(string parsingUrl)
         {
             var albums = new List<Album>();
-            var baseUrl = distributor.ParsingUrl;
-            string nextPageUrl = baseUrl;
+            string nextPageUrl = parsingUrl;
             bool hasMorePages;
 
             do
             {
                 var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(nextPageUrl);
-
                 var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
 
                 if (albumNodes != null)
@@ -67,7 +62,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                     }
                 }
 
-                (nextPageUrl, hasMorePages) = PaginationHelper.GetNextPageUrl(htmlDocument);
+                (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
 
                 await Task.Delay(1000);
             }
@@ -106,7 +101,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             var releaseDateNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Year :')]");
-            var releaseDate = releaseDateNode != null ? _yearParser.ParseYear(releaseDateNode.InnerText.Split(':').Last().Trim()) : DateTime.MinValue;
+            var releaseDate = releaseDateNode != null ? _albumParser.ParseYear(releaseDateNode.InnerText.Split(':').Last().Trim()) : DateTime.MinValue;
 
             var genreNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Genre :')]");
             var genre = genreNode?.InnerText.Trim() ?? "Unknown Genre";
@@ -122,7 +117,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var photoUrl = photoUrlNode?.GetAttributeValue("src", "img").Trim() ?? "Unknown Photo URL";
 
             var mediaNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Media:')]");
-            var media = mediaNode != null ? _mediaTypeParser.ParseMediaType(mediaNode.InnerText.Split(':').Last().Trim()) : MediaType.Unknown;
+            var media = mediaNode != null ? _albumParser.ParseMediaType(mediaNode.InnerText.Split(':').Last().Trim()) : MediaType.Unknown;
 
             var labelNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Label :')]//a");
             var label = labelNode?.InnerText.Trim() ?? "Unknown Label";
@@ -134,7 +129,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var description = descriptionNode?.InnerText.Trim() ?? "No Description";
 
             var statusNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'New or Used :')]");
-            var status = statusNode != null ? _albumStatusParser.ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
+            var status = statusNode != null ? _albumParser.ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
 
             var album = new Album
             {
@@ -158,6 +153,21 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             };
 
             return album;
+        }
+
+        private (string nextPageUrl, bool hasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
+        {
+            var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPagination']//a[contains(@href, 'page=') and not(contains(@href, 'javascript'))]");
+            if (nextPageNode != null)
+            {
+                string nextPageUrl = nextPageNode.GetAttributeValue("href", null);
+                if (!string.IsNullOrEmpty(nextPageUrl))
+                {
+                    return (nextPageUrl, true);
+                }
+            }
+
+            return (null, false);
         }
     }
 }

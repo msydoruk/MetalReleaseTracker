@@ -42,11 +42,14 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddSingleton<MediaTypeParser>();
-builder.Services.AddSingleton<AlbumStatusParser>();
-builder.Services.AddSingleton<YearParser>();
+builder.Services.AddSingleton<AlbumParser>();
 
-builder.Services.AddSingleton<UserAgentProvider>();
+builder.Services.AddSingleton<UserAgentProvider>(provider =>
+{
+    var filePath = "/MetalReleaseTracker/MetalReleaseTracker/MetalReleaseTracker.Infrastructure/Providers/user_agents.txt";
+    return new UserAgentProvider(filePath);
+});
+
 builder.Services.AddSingleton<HtmlLoader>();
 
 builder.Services.AddTransient<IParserFactory, ParserFactory>();

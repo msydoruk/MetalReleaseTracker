@@ -1,9 +1,9 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
     public interface IParserFactory
     {
-        IParser CreateParser(Distributor distributor);
+        IParser CreateParser(DistributorCode code);
     }
 }
