@@ -1,29 +1,27 @@
 ﻿using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
-using MetalReleaseTracker.Core.Parsers;
-using MetalReleaseTracker.Infrastructure.Loaders;
-using MetalReleaseTracker.Infrastructure.Parsers;
 
 namespace MetalReleaseTracker.Infrastructure.Factories
 {
     public class ParserFactory : IParserFactory
     {
-        private readonly HtmlLoader _htmlLoader;
-        private readonly AlbumParser _albumParser;
+        private readonly IEnumerable<IParser> _parsers;
 
-        public ParserFactory(HtmlLoader htmlLoader, AlbumParser albumParser)
+        public ParserFactory(IEnumerable<IParser> parsers)
         {
-            _htmlLoader = htmlLoader;
-            _albumParser = albumParser;
+            _parsers = parsers;
         }
 
         public IParser CreateParser(DistributorCode code)
         {
-            return code switch
+           var parser = _parsers.FirstOrDefault(p => p.DistributorCode == code);
+
+            if (parser == null)
             {
-                DistributorCode.OsmoseProductions => new OsmoseProductionsParser(_htmlLoader, _albumParser),
-                _ => throw new NotSupportedException($"Parser for distributor {code} is not supported."),
-            };
+                throw new NotSupportedException($"Parser for distributor {code} is not supported.");
+            }
+
+            return parser;
         }
     }
 }

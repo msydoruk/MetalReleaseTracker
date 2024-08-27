@@ -8,6 +8,7 @@ using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Factories;
 using MetalReleaseTracker.Infrastructure.Http;
 using MetalReleaseTracker.Infrastructure.Loaders;
+using MetalReleaseTracker.Infrastructure.Parsers;
 using MetalReleaseTracker.Infrastructure.Repositories;
 using MetalReleaseTracker.Сore.Services;
 using Microsoft.EntityFrameworkCore;
@@ -43,16 +44,12 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<AlbumParser>();
-
-builder.Services.AddSingleton<UserAgentProvider>(provider =>
-{
-    var filePath = "/MetalReleaseTracker/MetalReleaseTracker/MetalReleaseTracker.Infrastructure/Providers/user_agents.txt";
-    return new UserAgentProvider(filePath);
-});
-
+builder.Services.AddSingleton<UserAgentProvider>();
 builder.Services.AddSingleton<HtmlLoader>();
 
-builder.Services.AddTransient<IParserFactory, ParserFactory>();
+builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
+builder.Services.AddScoped<IParserFactory, ParserFactory>();
+builder.Services.AddScoped<AlbumParsingService>();
 
 builder.Services.AddCustomValidators();
 builder.Services.AddValidationServiceWithAllValidators();

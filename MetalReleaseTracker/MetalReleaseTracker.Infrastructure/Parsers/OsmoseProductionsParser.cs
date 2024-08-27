@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using HtmlAgilityPack;
+using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
@@ -12,6 +13,8 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
     {
         private readonly HtmlLoader _htmlLoader;
         private readonly AlbumParser _albumParser;
+
+        public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
         public OsmoseProductionsParser(HtmlLoader htmlLoader, AlbumParser albumParser)
         {
@@ -37,28 +40,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                         var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
                         var albumDetails = await ParseAlbumDetails(albumUrl);
 
-                        var album = new Album
-                        {
-                            Id = Guid.NewGuid(),
-                            DistributorId = albumDetails.DistributorId,
-                            Distributor = albumDetails.Distributor,
-                            BandId = albumDetails.BandId,
-                            Band = albumDetails.Band,
-                            SKU = albumDetails.SKU,
-                            Name = albumDetails.Name,
-                            ReleaseDate = albumDetails.ReleaseDate,
-                            Genre = albumDetails.Genre,
-                            Price = albumDetails.Price,
-                            PurchaseUrl = albumDetails.PurchaseUrl,
-                            PhotoUrl = albumDetails.PhotoUrl,
-                            Media = albumDetails.Media,
-                            Label = albumDetails.Label,
-                            Press = albumDetails.Press,
-                            Description = albumDetails.Description,
-                            Status = albumDetails.Status
-                        };
-
-                        albums.Add(album);
+                        albums.Add(albumDetails);
                     }
                 }
 
@@ -75,19 +57,10 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         {
             var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(albumUrl);
 
-            var distributor = new Distributor
-            {
-                Id = Guid.NewGuid(),
-                Name = "Osmose Productions"
-            };
+            var distributorName = "Osmose";
 
             var bandNameNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonAb']/a");
             var bandName = bandNameNode?.InnerText.Replace("&nbsp;", " ").Trim() ?? "Unknown Band";
-            var band = new Band
-            {
-                Id = Guid.NewGuid(),
-                Name = bandName
-            };
 
             var skuNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Press :')]");
             var sku = skuNode?.InnerText.Split(':').Last().Trim() ?? "Unknown SKU";
@@ -131,13 +104,10 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var statusNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'New or Used :')]");
             var status = statusNode != null ? _albumParser.ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
 
-            var album = new Album
+            return new AlbumDTO
             {
-                Id = Guid.NewGuid(),
-                DistributorId = distributor.Id,
-                Distributor = distributor,
-                BandId = band.Id,
-                Band = band,
+                DistributorName = distributorName,
+                BandName = bandName,
                 SKU = sku,
                 Name = name,
                 ReleaseDate = releaseDate,
@@ -151,8 +121,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                 Description = description,
                 Status = status
             };
-
-            return album;
         }
 
         private (string nextPageUrl, bool hasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)

@@ -1,12 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Application.DTOs
 {
-    internal class AlbumDTO
+    public class AlbumDTO : Album
     {
+        public string DistributorName { get; set; }
+
+        public string BandName { get; set; }
+
+        public string SKU { get; set; }
+
+        public string Name { get; set; }
+
+        public DateTime ReleaseDate { get; set; }
+
+        public string Genre { get; set; }
+
+        public float Price { get; set; }
+
+        public string PurchaseUrl { get; set; }
+
+        public string PhotoUrl { get; set; }
+
+        public MediaType Media { get; set; }
+
+        public string Label { get; set; }
+
+        public string Press { get; set; }
+
+        public string Description { get; set; }
+
+        public AlbumStatus Status { get; set; }
     }
 }

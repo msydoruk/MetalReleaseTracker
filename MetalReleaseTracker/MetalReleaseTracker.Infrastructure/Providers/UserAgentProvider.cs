@@ -1,4 +1,7 @@
-﻿using System;
+﻿using System.Reflection;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Http
 {
@@ -7,10 +10,18 @@ namespace MetalReleaseTracker.Infrastructure.Http
         private readonly Random _random;
         private readonly List<string> _userAgents;
 
-        public UserAgentProvider(string filePath)
+        public UserAgentProvider(IConfiguration configuration)
         {
             _random = new Random();
-            _userAgents = LoadUserAgentsFromFile(filePath);
+
+            var relativeFilePath = configuration.GetValue<string>("FileSettings:UserAgentsFilePath");
+
+            var basePath = AppContext.BaseDirectory;
+
+            var infrastructurePath = Path.GetFullPath(Path.Combine(basePath, @"..\..\..\..\MetalReleaseTracker.Infrastructure"));
+            var absoluteFilePath = Path.Combine(infrastructurePath, relativeFilePath);
+
+            _userAgents = LoadUserAgentsFromFile(absoluteFilePath);
         }
 
         private List<string> LoadUserAgentsFromFile(string filePath)
