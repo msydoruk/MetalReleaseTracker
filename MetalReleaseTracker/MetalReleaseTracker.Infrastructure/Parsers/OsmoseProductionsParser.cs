@@ -3,8 +3,6 @@ using HtmlAgilityPack;
 using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Core.Parsers;
-using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Loaders;
 
 namespace MetalReleaseTracker.Infrastructure.Parsers
@@ -13,20 +11,18 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
     {
         private readonly HtmlLoader _htmlLoader;
         private readonly AlbumParser _albumParser;
-        private readonly MetalReleaseTrackerDbContext _dbContext;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
-        public OsmoseProductionsParser(HtmlLoader htmlLoader, AlbumParser albumParser, MetalReleaseTrackerDbContext dbContext)
+        public OsmoseProductionsParser(HtmlLoader htmlLoader, AlbumParser albumParser)
         {
             _htmlLoader = htmlLoader;
             _albumParser = albumParser;
-            _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<AlbumDTO>> ParseAlbums(string parsingUrl)
+        public async Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl)
         {
-            var albums = new List<AlbumDTO>();
+            var albums = new List<AlbumDto>();
             string nextPageUrl = parsingUrl;
             bool hasMorePages;
 
@@ -55,12 +51,9 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return albums;
         }
 
-        private async Task<AlbumDTO> ParseAlbumDetails(string albumUrl)
+        private async Task<AlbumDto> ParseAlbumDetails(string albumUrl)
         {
             var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(albumUrl);
-
-            var distributor = _dbContext.Distributors.FirstOrDefault(distributor => albumUrl.Contains(distributor.ParsingUrl));
-            var distributorName = distributor?.Name ?? "Unknown Distributor";
 
             var bandNameNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonAb']/a");
             var bandName = bandNameNode?.InnerText.Replace("&nbsp;", " ").Trim() ?? "Unknown Band";
@@ -107,9 +100,8 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var statusNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'New or Used :')]");
             var status = statusNode != null ? _albumParser.ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
 
-            return new AlbumDTO
+            return new AlbumDto
             {
-                DistributorName = distributorName,
                 BandName = bandName,
                 SKU = sku,
                 Name = name,

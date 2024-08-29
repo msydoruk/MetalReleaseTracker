@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MetalReleaseTracker.Application.DTOs
 {
-    internal class SubscriptionDTO
+    internal class SubscriptionDto
     {
     }
 }

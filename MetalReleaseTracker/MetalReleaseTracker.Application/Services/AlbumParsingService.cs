@@ -13,7 +13,7 @@ namespace MetalReleaseTracker.Application.Services
             _parserFactory = parserFactory;
         }
 
-        public async Task<IEnumerable<AlbumDTO>> GetAlbumsFromDistributor(DistributorCode distributorCode, string parsingUrl)
+        public async Task<IEnumerable<AlbumDto>> GetAlbumsFromDistributor(DistributorCode distributorCode, string parsingUrl)
         {
             var parser = _parserFactory.CreateParser(distributorCode);
 

@@ -2,10 +2,8 @@
 
 namespace MetalReleaseTracker.Application.DTOs
 {
-    public class AlbumDTO
+    public class AlbumDto
     {
-        public string DistributorName { get; set; }
-
         public string BandName { get; set; }
 
         public string SKU { get; set; }

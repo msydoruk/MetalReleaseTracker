@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using MetalReleaseTracker.Core.Enums;
 
-namespace MetalReleaseTracker.Core.Parsers
+namespace MetalReleaseTracker.Infrastructure.Parsers
 {
     public class AlbumParser
     {

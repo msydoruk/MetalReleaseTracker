@@ -3,7 +3,6 @@ using MetalReleaseTracker.API.Middleware;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Application.Services;
 using MetalReleaseTracker.Core.Interfaces;
-using MetalReleaseTracker.Core.Parsers;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
