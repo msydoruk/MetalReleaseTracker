@@ -1,9 +1,6 @@
-﻿using System.Reflection;
+﻿using Microsoft.Extensions.Configuration;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-
-namespace MetalReleaseTracker.Infrastructure.Http
+namespace MetalReleaseTracker.Infrastructure.Providers
 {
     public class UserAgentProvider
     {
@@ -15,11 +12,7 @@ namespace MetalReleaseTracker.Infrastructure.Http
             _random = new Random();
 
             var relativeFilePath = configuration.GetValue<string>("FileSettings:UserAgentsFilePath");
-
-            var basePath = AppContext.BaseDirectory;
-
-            var infrastructurePath = Path.GetFullPath(Path.Combine(basePath, @"..\..\..\..\MetalReleaseTracker.Infrastructure"));
-            var absoluteFilePath = Path.Combine(infrastructurePath, relativeFilePath);
+            var absoluteFilePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, relativeFilePath));
 
             _userAgents = LoadUserAgentsFromFile(absoluteFilePath);
         }
@@ -37,9 +30,9 @@ namespace MetalReleaseTracker.Infrastructure.Http
                     throw new FileNotFoundException($"File with User-Agent not found: {filePath}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                throw new InvalidOperationException("Could not load User-Agent from file.", ex);
+                throw new InvalidOperationException("Could not load User-Agent from file.", exception);
             }
         }
 

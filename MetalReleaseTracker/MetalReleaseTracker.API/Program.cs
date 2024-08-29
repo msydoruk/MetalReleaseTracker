@@ -1,14 +1,16 @@
 ﻿using MetalReleaseTracker.API.Extensions;
 using MetalReleaseTracker.API.Middleware;
+using MetalReleaseTracker.Application.Interfaces;
+using MetalReleaseTracker.Application.Services;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Parsers;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Factories;
-using MetalReleaseTracker.Infrastructure.Http;
 using MetalReleaseTracker.Infrastructure.Loaders;
 using MetalReleaseTracker.Infrastructure.Parsers;
+using MetalReleaseTracker.Infrastructure.Providers;
 using MetalReleaseTracker.Infrastructure.Repositories;
 using MetalReleaseTracker.Сore.Services;
 using Microsoft.EntityFrameworkCore;

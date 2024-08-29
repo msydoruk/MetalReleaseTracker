@@ -1,5 +1,5 @@
-﻿using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Core.Interfaces;
+﻿using MetalReleaseTracker.Application.Interfaces;
+using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Infrastructure.Factories
 {

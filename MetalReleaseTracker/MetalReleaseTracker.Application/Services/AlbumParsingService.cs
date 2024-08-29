@@ -1,8 +1,8 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Application.DTOs;
+using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Core.Interfaces;
 
-namespace MetalReleaseTracker.Core.Services
+namespace MetalReleaseTracker.Application.Services
 {
     public class AlbumParsingService
     {
@@ -13,7 +13,7 @@ namespace MetalReleaseTracker.Core.Services
             _parserFactory = parserFactory;
         }
 
-        public async Task<IEnumerable<Album>> GetAlbumsFromDistributor(DistributorCode distributorCode, string parsingUrl)
+        public async Task<IEnumerable<AlbumDTO>> GetAlbumsFromDistributor(DistributorCode distributorCode, string parsingUrl)
         {
             var parser = _parserFactory.CreateParser(distributorCode);
 

@@ -1,9 +1,8 @@
-﻿using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Enums;
+﻿using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Application.DTOs
 {
-    public class AlbumDTO : Album
+    public class AlbumDTO
     {
         public string DistributorName { get; set; }
 

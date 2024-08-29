@@ -1,5 +1,5 @@
 ﻿using HtmlAgilityPack;
-using MetalReleaseTracker.Infrastructure.Http;
+using MetalReleaseTracker.Infrastructure.Providers;
 
 namespace MetalReleaseTracker.Infrastructure.Loaders
 {

@@ -1,6 +1,6 @@
 ﻿using MetalReleaseTracker.Core.Enums;
 
-namespace MetalReleaseTracker.Core.Interfaces
+namespace MetalReleaseTracker.Application.Interfaces
 {
     public interface IParserFactory
     {
