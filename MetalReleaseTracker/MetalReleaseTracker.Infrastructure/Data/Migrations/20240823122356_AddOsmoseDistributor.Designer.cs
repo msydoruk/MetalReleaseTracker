@@ -4,6 +4,7 @@ using MetalReleaseTracker.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MetalReleaseTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(MetalReleaseTrackerDbContext))]
-    partial class MetalReleaseTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240823122356_AddOsmoseDistributor")]
+    partial class AddOsmoseDistributor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,9 +115,6 @@ namespace MetalReleaseTracker.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Code")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()

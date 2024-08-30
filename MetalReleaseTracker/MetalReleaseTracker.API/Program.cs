@@ -1,9 +1,15 @@
 ﻿using MetalReleaseTracker.API.Extensions;
 using MetalReleaseTracker.API.Middleware;
+using MetalReleaseTracker.Application.Interfaces;
+using MetalReleaseTracker.Application.Services;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
+using MetalReleaseTracker.Infrastructure.Factories;
+using MetalReleaseTracker.Infrastructure.Loaders;
+using MetalReleaseTracker.Infrastructure.Parsers;
+using MetalReleaseTracker.Infrastructure.Providers;
 using MetalReleaseTracker.Infrastructure.Repositories;
 using MetalReleaseTracker.Сore.Services;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +41,16 @@ builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddSingleton<AlbumParser>();
+builder.Services.AddSingleton<UserAgentProvider>();
+builder.Services.AddSingleton<HtmlLoader>();
+
+builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
+builder.Services.AddScoped<IParserFactory, ParserFactory>();
+builder.Services.AddScoped<AlbumParsingService>();
 
 builder.Services.AddCustomValidators();
 builder.Services.AddValidationServiceWithAllValidators();

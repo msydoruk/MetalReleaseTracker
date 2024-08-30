@@ -10,6 +10,7 @@ namespace MetalReleaseTracker.Core.Enums
     {
         New,
         Restock,
-        Preorder
+        Preorder,
+        Unknown
     }
 }
