@@ -29,6 +29,12 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             do
             {
                 var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(nextPageUrl);
+
+                if (htmlDocument == null || htmlDocument.DocumentNode == null)
+                {
+                    throw new InvalidOperationException("Failed to load or parse the HTML document. Album");
+                }
+
                 var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
 
                 if (albumNodes != null)
@@ -55,7 +61,18 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         {
             var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(albumUrl);
 
+            if (htmlDocument == null || htmlDocument.DocumentNode == null)
+            {
+                throw new InvalidOperationException("Failed to load or parse the HTML document. AlbumDetails");
+            }
+
             var bandNameNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonAb']/a");
+
+            if (bandNameNode == null)
+            {
+                throw new InvalidOperationException("Band name node is missing in the HTML document.");
+            }
+
             var bandName = bandNameNode?.InnerText.Replace("&nbsp;", " ").Trim() ?? "Unknown Band";
 
             var skuNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Press :')]");
