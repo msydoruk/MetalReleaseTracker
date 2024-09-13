@@ -40,7 +40,7 @@ namespace MetalReleaseTracker.Tests.Parsers
         public async Task ParseAlbums_WhenHtmlIsValid_ShouldReturnAlbums()
         {
             var firstPageDocument = new HtmlDocument();
-            firstPageDocument.LoadHtml(GetMockHtmlWithAlbums());
+            firstPageDocument.LoadHtml(GetMockAlbumsHtml());
 
             var albumDetailDocument = new HtmlDocument();
             albumDetailDocument.LoadHtml(GetMockAlbumDetailHtml());
@@ -82,15 +82,26 @@ namespace MetalReleaseTracker.Tests.Parsers
         public async Task ParseAlbums_WhenPageHasMultiplePages_ShouldHandlePagination()
         {
             var firstPageDocument = new HtmlDocument();
-            firstPageDocument.LoadHtml(GetMockHtmlWithAlbums());
+            firstPageDocument.LoadHtml(GetMockPaginationHtml());
 
             var secondPageDocument = new HtmlDocument();
             secondPageDocument.LoadHtml("<html><body>No more albums</body></html>");
 
+            var albumDetailDocument = new HtmlDocument();
+            albumDetailDocument.LoadHtml(GetMockAlbumDetailHtml());
+
             _htmlLoaderMock
                 .SetupSequence(loader => loader.LoadHtmlDocumentAsync("http://example.com"))
                 .ReturnsAsync(firstPageDocument)
-                .ReturnsAsync(secondPageDocument);
+                .ReturnsAsync(secondPageDocument); 
+
+            _htmlLoaderMock
+                .Setup(loader => loader.LoadHtmlDocumentAsync("/album1"))
+                .ReturnsAsync(albumDetailDocument);
+
+            _htmlLoaderMock
+                .Setup(loader => loader.LoadHtmlDocumentAsync("/album2"))
+                .ReturnsAsync(albumDetailDocument);
 
             _htmlLoaderMock
                 .Setup(loader => loader.LoadHtmlDocumentAsync("http://example.com?page=2"))
@@ -113,7 +124,51 @@ namespace MetalReleaseTracker.Tests.Parsers
                 await _parser.ParseAlbums("http://example.com"));
         }
 
-        private string GetMockHtmlWithAlbums()
+        [Fact]
+        public async Task ParseAlbums_WhenHtmlDocumentIsNull_ShouldThrowException()
+        {
+            _htmlLoaderMock.Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
+                           .ReturnsAsync((HtmlDocument)null);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _parser.ParseAlbums("http://example.com"));
+            Assert.Equal("Failed to load or parse the HTML document. Album", exception.Message);
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenAlbumNodesAreMissing_ShouldThrowException()
+        {
+            var htmlDocument = new HtmlDocument();
+            htmlDocument.LoadHtml("<html><body></body></html>");
+
+            _htmlLoaderMock.Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
+                           .ReturnsAsync(htmlDocument);
+
+            var result = await _parser.ParseAlbums("http://example.com");
+
+            Assert.Empty(result);
+        }
+
+        private string GetMockPaginationHtml()
+        {
+            return @"
+            <html>
+                <body>
+                    <div class='row GshopListingA'>
+                        <div class='column three mobile-four'>
+                            <a href='/album1'></a>
+                        </div>
+                        <div class='column three mobile-four'>
+                            <a href='/album2'></a>
+                        </div>
+                    </div>
+                <div class='GtoursPagination'>
+                    <a href='http://example.com?page=2'>Next</a>
+                </div>
+            </body>
+        </html>";
+        }
+
+        private string GetMockAlbumsHtml()
         {
             return @"
             <html>
@@ -125,9 +180,6 @@ namespace MetalReleaseTracker.Tests.Parsers
                         <div class='column three mobile-four'>
                             <a href='/album/2'>Album 2</a>
                         </div>
-                    </div>
-                    <div class='GtoursPagination'>
-                        <a href='http://example.com?page=2'>Next Page</a>
                     </div>
                 </body>
             </html>";
