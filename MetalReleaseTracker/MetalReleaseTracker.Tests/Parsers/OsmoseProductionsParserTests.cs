@@ -16,6 +16,8 @@ namespace MetalReleaseTracker.Tests.Parsers
         private readonly Mock<AlbumParser> _albumParserMock;
         private IConfiguration _configuration;
 
+        private const string ParsingUrl = "http://example.com";
+
         public OsmoseProductionsParserTests()
         {
             _httpClientMock = new Mock<HttpClient>();
@@ -39,25 +41,14 @@ namespace MetalReleaseTracker.Tests.Parsers
         [Fact]
         public async Task ParseAlbums_WhenHtmlIsValid_ShouldReturnAlbums()
         {
-            var firstPageDocument = new HtmlDocument();
-            firstPageDocument.LoadHtml(GetMockAlbumsHtml());
+            var firstPageDocument = CreateHtmlDocument(GetMockAlbumsHtml());
+            var albumDetailDocument = CreateHtmlDocument(GetMockAlbumDetailHtml());
 
-            var albumDetailDocument = new HtmlDocument();
-            albumDetailDocument.LoadHtml(GetMockAlbumDetailHtml());
+            SetupHtmlLoader(ParsingUrl, firstPageDocument);
+            SetupHtmlLoader("/album/1", albumDetailDocument);
+            SetupHtmlLoader("/album/2", albumDetailDocument);
 
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync("http://example.com"))
-                .ReturnsAsync(firstPageDocument);
-
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync("/album/1"))
-                .ReturnsAsync(albumDetailDocument);
-
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync("/album/2"))
-                .ReturnsAsync(albumDetailDocument);
-
-            var albums = await _parser.ParseAlbums("http://example.com");
+            var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
             Assert.Equal(2, albums.Count());
@@ -66,14 +57,11 @@ namespace MetalReleaseTracker.Tests.Parsers
         [Fact]
         public async Task ParseAlbums_WhenHtmlIsEmpty_ShouldReturnEmptyList()
         {
-            var emptyHtmlDocument = new HtmlDocument();
-            emptyHtmlDocument.LoadHtml("<html><body><div class='row GshopListingA'></div></body></html>");
+            var emptyHtmlDocument = CreateHtmlDocument("<html><body><div class='row GshopListingA'></div></body></html>");
 
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
-                .ReturnsAsync(emptyHtmlDocument);
+            SetupHtmlLoader(It.IsAny<string>(), emptyHtmlDocument);
 
-            var albums = await _parser.ParseAlbums("http://example.com");
+            var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.Empty(albums);
         }
@@ -81,33 +69,20 @@ namespace MetalReleaseTracker.Tests.Parsers
         [Fact]
         public async Task ParseAlbums_WhenPageHasMultiplePages_ShouldHandlePagination()
         {
-            var firstPageDocument = new HtmlDocument();
-            firstPageDocument.LoadHtml(GetMockPaginationHtml());
-
-            var secondPageDocument = new HtmlDocument();
-            secondPageDocument.LoadHtml("<html><body>No more albums</body></html>");
-
-            var albumDetailDocument = new HtmlDocument();
-            albumDetailDocument.LoadHtml(GetMockAlbumDetailHtml());
+            var firstPageDocument = CreateHtmlDocument(GetMockPaginationHtml());
+            var secondPageDocument = CreateHtmlDocument("<html><body>No more albums</body></html>");
+            var albumDetailDocument = CreateHtmlDocument(GetMockAlbumDetailHtml());
 
             _htmlLoaderMock
-                .SetupSequence(loader => loader.LoadHtmlDocumentAsync("http://example.com"))
+                .SetupSequence(loader => loader.LoadHtmlDocumentAsync(ParsingUrl))
                 .ReturnsAsync(firstPageDocument)
-                .ReturnsAsync(secondPageDocument); 
-
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync("/album1"))
-                .ReturnsAsync(albumDetailDocument);
-
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync("/album2"))
-                .ReturnsAsync(albumDetailDocument);
-
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync("http://example.com?page=2"))
                 .ReturnsAsync(secondPageDocument);
 
-            var albums = await _parser.ParseAlbums("http://example.com");
+            SetupHtmlLoader("/album1", albumDetailDocument);
+            SetupHtmlLoader("/album2", albumDetailDocument);
+            SetupHtmlLoader("http://example.com?page=2", secondPageDocument);
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
             Assert.Equal(2, albums.Count());
@@ -121,7 +96,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                 .ThrowsAsync(new HttpRequestException());
 
             await Assert.ThrowsAsync<HttpRequestException>(async () =>
-                await _parser.ParseAlbums("http://example.com"));
+                await _parser.ParseAlbums(ParsingUrl));
         }
 
         [Fact]
@@ -130,22 +105,34 @@ namespace MetalReleaseTracker.Tests.Parsers
             _htmlLoaderMock.Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
                            .ReturnsAsync((HtmlDocument)null);
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _parser.ParseAlbums("http://example.com"));
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _parser.ParseAlbums(ParsingUrl));
             Assert.Equal("Failed to load or parse the HTML document. Album", exception.Message);
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenAlbumNodesAreMissing_ShouldThrowException()
+        public async Task ParseAlbums_WhenAlbumNodesAreMissing_ShouldReturnEmptyList()
         {
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml("<html><body></body></html>");
+            var htmlDocument = CreateHtmlDocument("<html><body></body></html>");
 
-            _htmlLoaderMock.Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
-                           .ReturnsAsync(htmlDocument);
+            SetupHtmlLoader(It.IsAny<string>(), htmlDocument);
 
-            var result = await _parser.ParseAlbums("http://example.com");
+            var result = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.Empty(result);
+        }
+
+        private void SetupHtmlLoader(string url, HtmlDocument document)
+        {
+            _htmlLoaderMock
+                .Setup(loader => loader.LoadHtmlDocumentAsync(url))
+                .ReturnsAsync(document);
+        }
+
+        private HtmlDocument CreateHtmlDocument(string html)
+        {
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+            return document;
         }
 
         private string GetMockPaginationHtml()

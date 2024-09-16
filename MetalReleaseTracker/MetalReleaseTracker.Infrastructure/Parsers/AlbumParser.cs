@@ -11,8 +11,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             {
                 "New" => AlbumStatus.New,
                 "Restock" => AlbumStatus.Restock,
-                "Preorder" => AlbumStatus.Preorder,
-                _ => AlbumStatus.Unknown
+                "Preorder" => AlbumStatus.Preorder
             };
         }
 
@@ -22,8 +21,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             {
                 "CD" => MediaType.CD,
                 "LP" => MediaType.LP,
-                "Tape" => MediaType.Tape,
-                _ => MediaType.Unknown
+                "Tape" => MediaType.Tape
             };
         }
 

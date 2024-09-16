@@ -50,7 +50,6 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
         [Url]
         public string PhotoUrl { get; set; }
 
-        [Required]
         [EnumDataType(typeof(MediaType))]
         public MediaType Media { get; set; }
 
@@ -64,7 +63,6 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
         [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must contain at least 10 characters.")]
         public string Description { get; set; }
 
-        [Required]
         [EnumDataType(typeof(AlbumStatus))]
         public AlbumStatus Status { get; set; }
     }
