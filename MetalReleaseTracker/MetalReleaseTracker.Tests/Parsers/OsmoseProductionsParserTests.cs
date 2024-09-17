@@ -1,37 +1,22 @@
 ﻿using HtmlAgilityPack;
-using MetalReleaseTracker.Infrastructure.Loaders;
+using MetalReleaseTracker.Infrastructure.Utils;
 using MetalReleaseTracker.Infrastructure.Parsers;
-using MetalReleaseTracker.Infrastructure.Providers;
-using Microsoft.Extensions.Configuration;
 using Moq;
+using MetalReleaseTracker.Core.Exceptions;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
     public class OsmoseProductionsParserTests
     {
         private readonly OsmoseProductionsParser _parser;
-        private readonly Mock<HtmlLoader> _htmlLoaderMock;
-        private readonly Mock<UserAgentProvider> _userAgentProvider;
-        private readonly Mock<HttpClient> _httpClientMock;
+        private readonly Mock<IHtmlLoader> _htmlLoaderMock;
         private readonly Mock<AlbumParser> _albumParserMock;
-        private IConfiguration _configuration;
 
         private const string ParsingUrl = "http://example.com";
 
         public OsmoseProductionsParserTests()
         {
-            _httpClientMock = new Mock<HttpClient>();
-
-            var inMemorySettings = new Dictionary<string, string> {
-                {"FileSettings:UserAgentsFilePath", "../../../../MetalReleaseTracker.Infrastructure/Resources/user_agents.txt"}
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(inMemorySettings)
-                .Build();
-
-            _userAgentProvider = new Mock<UserAgentProvider>(_configuration);
-
-            _htmlLoaderMock = new Mock<HtmlLoader>(_httpClientMock.Object, _userAgentProvider.Object);
+            _htmlLoaderMock = new Mock<IHtmlLoader>();
 
             _albumParserMock = new Mock<AlbumParser>();
 
@@ -55,15 +40,16 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenHtmlIsEmpty_ShouldReturnEmptyList()
+        public async Task ParseAlbums_WhenHtmlIsEmpty_ShouldThrowException()
         {
             var emptyHtmlDocument = CreateHtmlDocument("<html><body><div class='row GshopListingA'></div></body></html>");
 
             SetupHtmlLoader(It.IsAny<string>(), emptyHtmlDocument);
 
-            var albums = await _parser.ParseAlbums(ParsingUrl);
+            var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() =>
+                _parser.ParseAlbums(ParsingUrl));
 
-            Assert.Empty(albums);
+            Assert.Equal("Failed to load or parse the HTML document http://example.com", exception.Message);
         }
 
         [Fact]
@@ -89,36 +75,64 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenHtmlLoaderFails_ShouldThrowException()
-        {
-            _htmlLoaderMock
-                .Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
-                .ThrowsAsync(new HttpRequestException());
-
-            await Assert.ThrowsAsync<HttpRequestException>(async () =>
-                await _parser.ParseAlbums(ParsingUrl));
-        }
-
-        [Fact]
         public async Task ParseAlbums_WhenHtmlDocumentIsNull_ShouldThrowException()
         {
-            _htmlLoaderMock.Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
-                           .ReturnsAsync((HtmlDocument)null);
+            SetupHtmlLoader(ParsingUrl, null);
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _parser.ParseAlbums(ParsingUrl));
-            Assert.Equal("Failed to load or parse the HTML document. Album", exception.Message);
+            var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() => _parser.ParseAlbums(ParsingUrl));
+
+            Assert.StartsWith("Failed to load or parse the HTML document", exception.Message);
+            Assert.Contains(ParsingUrl, exception.Message);
         }
 
         [Fact]
         public async Task ParseAlbums_WhenAlbumNodesAreMissing_ShouldReturnEmptyList()
         {
-            var htmlDocument = CreateHtmlDocument("<html><body></body></html>");
+            var htmlDocument = CreateHtmlDocument("<html><body><div class='row GshopListingA'></div></body></html>");
 
-            SetupHtmlLoader(It.IsAny<string>(), htmlDocument);
+            SetupHtmlLoader(ParsingUrl, htmlDocument);
 
             var result = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenParseAlbumDetailsReturnsIncompleteData_ShouldReturnAlbumWithNullName()
+        {
+            var firstPageHtml = @"
+            <html>
+                <body>
+                    <div class='row GshopListingA'>
+                        <div class='column three mobile-four'>
+                            <a href='/album/1'></a>
+                        </div>
+                    </div>
+                </body>
+            </html>";
+
+            var firstPageDocument = CreateHtmlDocument(firstPageHtml);
+
+            var incompleteAlbumDetailHtml = @"
+            <html>
+                <body>
+                    <div class='column twelve'>
+                        <span class='cufonAb'></span>
+                    </div>
+                    <span class='cufonEb'>Press : SR000</span>
+                </body>
+            </html>";
+
+            var incompleteAlbumDetailDocument = CreateHtmlDocument(incompleteAlbumDetailHtml);
+
+            SetupHtmlLoader(ParsingUrl, firstPageDocument);
+            SetupHtmlLoader("/album/1", incompleteAlbumDetailDocument);
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(albums);
+            Assert.Single(albums);
+            Assert.Null(albums.First().Name);
         }
 
         private void SetupHtmlLoader(string url, HtmlDocument document)

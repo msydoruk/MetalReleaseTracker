@@ -1,21 +1,20 @@
-﻿using System.Globalization;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Exceptions;
-using MetalReleaseTracker.Infrastructure.Loaders;
+using MetalReleaseTracker.Infrastructure.Utils;
 
 namespace MetalReleaseTracker.Infrastructure.Parsers
 {
     public class OsmoseProductionsParser : IParser
     {
-        private readonly HtmlLoader _htmlLoader;
+        private readonly IHtmlLoader _htmlLoader;
         private readonly AlbumParser _albumParser;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
-        public OsmoseProductionsParser(HtmlLoader htmlLoader, AlbumParser albumParser)
+        public OsmoseProductionsParser(IHtmlLoader htmlLoader, AlbumParser albumParser)
         {
             _htmlLoader = htmlLoader;
             _albumParser = albumParser;
@@ -33,7 +32,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
                 if (htmlDocument == null || htmlDocument.DocumentNode == null)
                 {
-                    throw new OsmoseProductionsParserException("Failed to load or parse the HTML document", nextPageUrl);
+                    throw new OsmoseProductionsParserException($"Failed to load or parse the HTML document {nextPageUrl}");
                 }
 
                 var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
@@ -64,44 +63,28 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             if (htmlDocument == null || htmlDocument.DocumentNode == null)
             {
-                throw new OsmoseProductionsParserException("Failed to load or parse the HTML document", albumUrl);
+                throw new OsmoseProductionsParserException($"Failed to load or parse the HTML document {albumUrl}");
             }
 
             var bandName = GetNodeValue(htmlDocument, "//span[@class='cufonAb']/a") ?? "Unknown Band";
-            var sku = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Press :')]")?.Split(':').Last().Trim() ?? "Unknown SKU";
-            var name = GetNodeValue(htmlDocument, "//div[@class='column twelve']//span[@class='cufonAb']")?.Replace("&nbsp;", " ").Trim() ?? "Unknown Album Name";
+            var sku = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Press :')]")?.Split(':').Last().Trim();
 
-            var nameParts = name.Split("</a>&nbsp;");
-            if (nameParts.Length > 1)
-            {
-                name = nameParts[1].Trim();
-            }
-            else if (name.StartsWith(bandName + " "))
-            {
-                name = name.Substring(bandName.Length).Trim();
-            }
+            var nameNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='column twelve']//span[@class='cufonAb']");
+            var nameHtml = nameNode?.InnerHtml;
+            var name = !string.IsNullOrEmpty(nameHtml)
+                ? nameHtml.Split(new[] { "</a>&nbsp;" }, StringSplitOptions.None).Last().Trim()
+                : null;
 
             var releaseDateText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Year :')]");
             var releaseDate = !string.IsNullOrEmpty(releaseDateText) ? _albumParser.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
 
             var genre = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Genre :')]");
 
-            var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd ']")?.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
-            float price = 0.0f;
-            if (!string.IsNullOrEmpty(priceText))
-            {
-                if (float.TryParse(priceText, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedPrice))
-                {
-                    price = parsedPrice;
-                }
-                else
-                {
-                    throw new OsmoseProductionsParserException($"Failed to parse price: {priceText}", albumUrl);
-                }
-            }
+            var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd ']");
+            float price = _albumParser.ParsePrice(priceText);
 
             var purchaseUrl = GetNodeAttribute(htmlDocument.DocumentNode, "//a[@class='lienor']", "href") ?? "Unknown URL";
-            var photoUrl = GetNodeAttribute(htmlDocument.DocumentNode, "//div[@class='column left four GshopListingALeft mobile-one']//img", "src") ?? "Unknown Photo URL";
+            var photoUrl = GetNodeAttribute(htmlDocument.DocumentNode, "//div[@class='column left four GshopListingALeft mobile-one']//img", "src");
 
             var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]");
             var media = mediaTypeText != null ? _albumParser.ParseMediaType(mediaTypeText.Split(':').Last().Trim()) : (MediaType?)null;

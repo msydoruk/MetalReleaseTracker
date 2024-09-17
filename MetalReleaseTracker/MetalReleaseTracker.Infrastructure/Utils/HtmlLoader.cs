@@ -1,9 +1,9 @@
 ﻿using HtmlAgilityPack;
 using MetalReleaseTracker.Infrastructure.Providers;
 
-namespace MetalReleaseTracker.Infrastructure.Loaders
+namespace MetalReleaseTracker.Infrastructure.Utils
 {
-    public class HtmlLoader
+    public class HtmlLoader : IHtmlLoader
     {
         private readonly HttpClient _httpClient;
         private readonly UserAgentProvider _userAgentProvider;
