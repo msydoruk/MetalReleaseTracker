@@ -3,6 +3,7 @@ using MetalReleaseTracker.Infrastructure.Utils;
 using MetalReleaseTracker.Infrastructure.Parsers;
 using Moq;
 using MetalReleaseTracker.Core.Exceptions;
+using System.Diagnostics;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
@@ -98,9 +99,9 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenParseAlbumDetailsReturnsIncompleteData_ShouldReturnAlbumWithNullName()
+        public async Task ParseAlbums_WhenBandNameIsMissing_ShouldThrowOsmoseProductionsParserException()
         {
-            var firstPageHtml = @"
+            var albumsHtml = @"
             <html>
                 <body>
                     <div class='row GshopListingA'>
@@ -110,8 +111,6 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                 </body>
             </html>";
-
-            var firstPageDocument = CreateHtmlDocument(firstPageHtml);
 
             var incompleteAlbumDetailHtml = @"
             <html>
@@ -123,16 +122,257 @@ namespace MetalReleaseTracker.Tests.Parsers
                 </body>
             </html>";
 
+            var albumsDocument = CreateHtmlDocument(albumsHtml);
             var incompleteAlbumDetailDocument = CreateHtmlDocument(incompleteAlbumDetailHtml);
 
-            SetupHtmlLoader(ParsingUrl, firstPageDocument);
+            SetupHtmlLoader("http://example.com", albumsDocument);
             SetupHtmlLoader("/album/1", incompleteAlbumDetailDocument);
+
+            var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() => _parser.ParseAlbums("http://example.com"));
+
+            Assert.Equal("Band name is missing in the HTML document /album/1", exception.Message);
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenAlbumNameIsMissing_ShouldThrowOsmoseProductionsParserException()
+        {
+            var albumsHtml = @"
+            <html>
+                <body>
+                    <div class='row GshopListingA'>
+                        <div class='column three mobile-four'>
+                            <a href='/album/1'></a>
+                        </div>
+                    </div>
+                </body>
+            </html>";
+
+            var incompleteAlbumDetailHtml = @"
+            <html>
+                <body>
+                        <span class='cufonAb'><a href='/band/1'>Test Band</a></span>
+                    <span class='cufonEb'>Press : SR000</span>
+                </body>
+            </html>";
+
+            var albumsDocument = CreateHtmlDocument(albumsHtml);
+            var incompleteAlbumDetailDocument = CreateHtmlDocument(incompleteAlbumDetailHtml);
+
+            SetupHtmlLoader("http://example.com", albumsDocument);
+            SetupHtmlLoader("/album/1", incompleteAlbumDetailDocument);
+
+            var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() => _parser.ParseAlbums("http://example.com"));
+
+            Assert.Equal("Album name is missing in the HTML document /album/1", exception.Message);
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenPriceIsInvalid_ShouldReturnZeroForPrice()
+        {
+            var albumsHtml = GetMockAlbumsHtml();
+            var albumDetailHtml = @"
+            <html>
+                <body>
+                    <span class='cufonAb'>
+                        <a>Band Name</a>
+                    </span>
+                    <div class='column twelve'>
+                        <span class='cufonAb'>Album Name</span>
+                    </div>
+                         <span class='cufonCd '>Invalid Price</span> 
+                </body>
+            </html>";
+
+            var albumsDocument = CreateHtmlDocument(albumsHtml);
+            var invalidPriceDocument = CreateHtmlDocument(albumDetailHtml);
+
+            SetupHtmlLoader(ParsingUrl, albumsDocument);
+            SetupHtmlLoader("/album/1", invalidPriceDocument);
+            SetupHtmlLoader("/album/2", invalidPriceDocument);
 
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Single(albums);
-            Assert.Null(albums.First().Name);
+            Assert.Equal(2, albums.Count());
+            Assert.All(albums, album => Assert.Equal(0.0f, album.Price));
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenReleaseDateIsInvalid_ShouldReturnDefaultDate()
+        {
+            var albumsHtml = GetMockAlbumsHtml();
+            var albumDetailHtml = @"
+            <html>
+                <body>
+                    <span class='cufonAb'>
+                        <a>Band Name</a>
+                    </span>
+                    <div class='column twelve'>
+                        <span class='cufonAb'>Album Name</span>
+                    </div>
+                    <span class='cufonEb'>Press : SR000</span>
+                    <span class='cufonEb'>Year : Invalid Date</span>
+                </body>
+            </html>";
+
+            var albumsDocument = CreateHtmlDocument(albumsHtml);
+            var invalidDateDocument = CreateHtmlDocument(albumDetailHtml);
+
+            SetupHtmlLoader(ParsingUrl, albumsDocument);
+            SetupHtmlLoader("/album/1", invalidDateDocument);
+            SetupHtmlLoader("/album/2", invalidDateDocument);
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(albums);
+            Assert.Equal(2, albums.Count());
+            Assert.All(albums, album => Assert.Equal(DateTime.MinValue, album.ReleaseDate));
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenGenreAndLabelFieldsAreMissing_ShouldReturnNullForOptionalFields()
+        {
+            var albumsHtml = GetMockAlbumsHtml();
+            var incompleteAlbumDetailHtml = @"
+            <html>
+                <body>
+                    <span class='cufonAb'>
+                        <a>Band Name</a>
+                    </span>
+                    <div class='column twelve'>
+                        <span class='cufonAb'>Album Name</span>
+                    </div>
+                    <span class='cufonEb'>Press : SR000</span>
+                    <span class='cufonEb'>Year : 2022</span>
+                </body>
+            </html>";
+
+            var albumsDocument = CreateHtmlDocument(albumsHtml);
+            var incompleteAlbumDetailDocument = CreateHtmlDocument(incompleteAlbumDetailHtml);
+
+            SetupHtmlLoader(ParsingUrl, albumsDocument);
+            SetupHtmlLoader("/album/1", incompleteAlbumDetailDocument);
+            SetupHtmlLoader("/album/2", incompleteAlbumDetailDocument);
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(albums);
+            Assert.Equal(2, albums.Count());
+
+            var album = albums.First();
+            Assert.Equal("Album Name", album.Name);
+            Assert.Equal("Band Name", album.BandName);
+            Assert.Null(album.Genre);
+            Assert.Null(album.Label);
+        }
+
+        [Fact]
+        public async Task ParseAlbums_ShouldHaveDelayBetweenPages()
+        {
+            var firstPageDocument = CreateHtmlDocument(GetMockPaginationHtml());
+            var secondPageDocument = CreateHtmlDocument("<html><body>No more albums</body></html>");
+            var albumDetailDocument = CreateHtmlDocument(GetMockAlbumDetailHtml());
+
+            var stopwatch = new Stopwatch();
+
+            _htmlLoaderMock
+               .SetupSequence(loader => loader.LoadHtmlDocumentAsync(ParsingUrl))
+               .ReturnsAsync(firstPageDocument)
+               .ReturnsAsync(secondPageDocument);
+
+            SetupHtmlLoader("/album1", albumDetailDocument);
+            SetupHtmlLoader("/album2", albumDetailDocument);
+            SetupHtmlLoader("http://example.com?page=2", secondPageDocument);
+
+            stopwatch.Start();
+            await _parser.ParseAlbums(ParsingUrl);
+            stopwatch.Stop();
+
+            Assert.True(stopwatch.ElapsedMilliseconds >= 1000, "Delay between page requests should be at least 1 second.");
+        }
+
+        [Fact]
+        public async Task ParseAlbumDetails_WhenPhotoUrlFieldIsMissing_ShouldReturnNull()
+        {
+            var albumsHtml = GetMockAlbumsHtml();
+            var albumDetailHtml = @"
+            <html>
+                <body>
+                    <span class='cufonAb'>
+                        <a>Band Name</a>
+                    </span>
+                    <div class='column twelve'>
+                        <span class='cufonAb'>Album Name</span>
+                    </div>
+                    <span class='cufonEb'>Year : 2022</span>
+                </body>
+            </html>";
+
+            SetupHtmlLoader(ParsingUrl, CreateHtmlDocument(albumsHtml));
+            SetupHtmlLoader("/album/1", CreateHtmlDocument(albumDetailHtml));
+            SetupHtmlLoader("/album/2", CreateHtmlDocument(albumDetailHtml));
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(albums);
+            Assert.Equal(2, albums.Count());
+            Assert.Null(albums.First().PhotoUrl);
+        }
+
+        [Fact]
+        public async Task ParseAlbumDetails_WhenUnsupportedMediaType_ShouldReturnNull()
+        {
+            var albumsHtml = GetMockAlbumsHtml();
+            var albumDetailHtml = @"
+            <html>
+                <body>
+                    <span class='cufonAb'>
+                        <a>Band Name</a>
+                    </span>
+                    <div class='column twelve'>
+                        <span class='cufonAb'>Album Name</span>
+                    </div>
+                    <span class='cufonEb'>Media: Unknown Media Type</span>
+                </body>
+            </html>";
+
+            SetupHtmlLoader(ParsingUrl, CreateHtmlDocument(albumsHtml));
+            SetupHtmlLoader("/album/1", CreateHtmlDocument(albumDetailHtml));
+            SetupHtmlLoader("/album/2", CreateHtmlDocument(albumDetailHtml));
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(albums);
+            Assert.Equal(2, albums.Count());
+            Assert.Null(albums.First().Media);
+        }
+
+        [Fact]
+        public async Task ParseAlbumDetails_WhenUnsupportedAlbumStatus_ShouldReturnNull()
+        {
+            var albumsHtml = GetMockAlbumsHtml();
+            var albumDetailHtml = @"
+            <html>
+                <body>
+                    <span class='cufonAb'>
+                        <a>Band Name</a>
+                    </span>
+                    <div class='column twelve'>
+                        <span class='cufonAb'>Album Name</span>
+                    </div>
+                    <span class='cufonEb'>New or Used : Unknown</span>
+                </body>
+            </html>";
+
+            SetupHtmlLoader(ParsingUrl, CreateHtmlDocument(albumsHtml));
+            SetupHtmlLoader("/album/1", CreateHtmlDocument(albumDetailHtml));
+            SetupHtmlLoader("/album/2", CreateHtmlDocument(albumDetailHtml));
+
+            var albums = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(albums);
+            Assert.Equal(2, albums.Count());
+            Assert.Null(albums.First().Status);
         }
 
         private void SetupHtmlLoader(string url, HtmlDocument document)

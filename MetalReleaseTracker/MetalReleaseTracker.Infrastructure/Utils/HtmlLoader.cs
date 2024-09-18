@@ -14,7 +14,7 @@ namespace MetalReleaseTracker.Infrastructure.Utils
             _userAgentProvider = userAgentProvider;
         }
 
-        public virtual async Task<HtmlDocument> LoadHtmlDocumentAsync(string url)
+        public async Task<HtmlDocument> LoadHtmlDocumentAsync(string url)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, url);
 

@@ -1,4 +1,6 @@
-﻿using HtmlAgilityPack;
+﻿using System.Globalization;
+
+using HtmlAgilityPack;
 using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
@@ -66,7 +68,12 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                 throw new OsmoseProductionsParserException($"Failed to load or parse the HTML document {albumUrl}");
             }
 
-            var bandName = GetNodeValue(htmlDocument, "//span[@class='cufonAb']/a") ?? "Unknown Band";
+            var bandName = GetNodeValue(htmlDocument, "//span[@class='cufonAb']/a");
+            if (string.IsNullOrEmpty(bandName))
+            {
+                throw new OsmoseProductionsParserException($"Band name is missing in the HTML document {albumUrl}");
+            }
+
             var sku = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Press :')]")?.Split(':').Last().Trim();
 
             var nameNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='column twelve']//span[@class='cufonAb']");
@@ -74,6 +81,10 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var name = !string.IsNullOrEmpty(nameHtml)
                 ? nameHtml.Split(new[] { "</a>&nbsp;" }, StringSplitOptions.None).Last().Trim()
                 : null;
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new OsmoseProductionsParserException($"Album name is missing in the HTML document {albumUrl}");
+            }
 
             var releaseDateText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Year :')]");
             var releaseDate = !string.IsNullOrEmpty(releaseDateText) ? _albumParser.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
@@ -81,9 +92,8 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var genre = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Genre :')]");
 
             var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd ']");
-            float price = _albumParser.ParsePrice(priceText);
+            float price = ParsePrice(priceText);
 
-            var purchaseUrl = GetNodeAttribute(htmlDocument.DocumentNode, "//a[@class='lienor']", "href") ?? "Unknown URL";
             var photoUrl = GetNodeAttribute(htmlDocument.DocumentNode, "//div[@class='column left four GshopListingALeft mobile-one']//img", "src");
 
             var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]");
@@ -104,7 +114,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                 ReleaseDate = releaseDate,
                 Genre = genre,
                 Price = price,
-                PurchaseUrl = purchaseUrl,
+                PurchaseUrl = albumUrl,
                 PhotoUrl = photoUrl,
                 Media = media,
                 Label = label,
@@ -139,6 +149,21 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         {
             var selectedNode = node.SelectSingleNode(xPath);
             return selectedNode?.GetAttributeValue(attribute, null)?.Trim();
+        }
+
+        private float ParsePrice(string priceText)
+        {
+            priceText = priceText?.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
+
+            if (!string.IsNullOrEmpty(priceText))
+            {
+                if (float.TryParse(priceText, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedPrice))
+                {
+                    return parsedPrice;
+                }
+            }
+
+            return 0.0f;
         }
     }
 }

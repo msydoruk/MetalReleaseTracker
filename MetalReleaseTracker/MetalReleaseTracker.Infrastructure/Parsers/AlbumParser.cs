@@ -6,23 +6,25 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 {
     public class AlbumParser
     {
-        public AlbumStatus ParseAlbumStatus(string status)
+        public AlbumStatus? ParseAlbumStatus(string status)
         {
             return status switch
             {
                 "New" => AlbumStatus.New,
                 "Restock" => AlbumStatus.Restock,
-                "Preorder" => AlbumStatus.Preorder
+                "Preorder" => AlbumStatus.Preorder,
+                _ => null
             };
         }
 
-        public MediaType ParseMediaType(string mediaType)
+        public MediaType? ParseMediaType(string mediaType)
         {
             return mediaType switch
             {
                 "CD" => MediaType.CD,
                 "LP" => MediaType.LP,
-                "Tape" => MediaType.Tape
+                "Tape" => MediaType.Tape,
+                _ => null
             };
         }
 
@@ -34,25 +36,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             return DateTime.MinValue;
-        }
-
-        public float ParsePrice(string priceText)
-        {
-            priceText = priceText?.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
-
-            if (!string.IsNullOrEmpty(priceText))
-            {
-                if (float.TryParse(priceText, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedPrice))
-                {
-                    return parsedPrice;
-                }
-                else
-                {
-                    throw new OsmoseProductionsParserException($"Failed to parse price: {priceText}");
-                }
-            }
-
-            return 0.0f;
         }
     }
 }
