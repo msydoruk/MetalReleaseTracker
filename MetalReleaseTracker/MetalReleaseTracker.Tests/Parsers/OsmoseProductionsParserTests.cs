@@ -4,6 +4,7 @@ using MetalReleaseTracker.Infrastructure.Parsers;
 using Moq;
 using MetalReleaseTracker.Core.Exceptions;
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
@@ -12,16 +13,17 @@ namespace MetalReleaseTracker.Tests.Parsers
         private readonly OsmoseProductionsParser _parser;
         private readonly Mock<IHtmlLoader> _htmlLoaderMock;
         private readonly Mock<AlbumParser> _albumParserMock;
+        private readonly Mock<ILogger<OsmoseProductionsParser>> _loggerMock;
 
         private const string ParsingUrl = "http://example.com";
 
         public OsmoseProductionsParserTests()
         {
             _htmlLoaderMock = new Mock<IHtmlLoader>();
-
             _albumParserMock = new Mock<AlbumParser>();
+            _loggerMock = new Mock<ILogger<OsmoseProductionsParser>>();
 
-            _parser = new OsmoseProductionsParser(_htmlLoaderMock.Object, _albumParserMock.Object);
+            _parser = new OsmoseProductionsParser(_htmlLoaderMock.Object, _albumParserMock.Object, _loggerMock.Object);
         }
 
         [Fact]
@@ -41,7 +43,7 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenHtmlIsEmpty_ShouldThrowException()
+        public async Task ParseAlbums_WhenHtmlIsEmpty_ShouldThrowOsmoseProductionsParserException()
         {
             var emptyHtmlDocument = CreateHtmlDocument("<html><body><div class='row GshopListingA'></div></body></html>");
 
@@ -76,7 +78,7 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenHtmlDocumentIsNull_ShouldThrowException()
+        public async Task ParseAlbums_WhenHtmlDocumentIsNull_ShouldThrowOsmoseProductionsParserException()
         {
             SetupHtmlLoader(ParsingUrl, null);
 
@@ -99,7 +101,7 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenBandNameIsMissing_ShouldThrowOsmoseProductionsParserException()
+        public async Task ParseAlbums_WhenBandNameIsMissing_ShouldReturnEmptyList()
         {
             var albumsHtml = @"
             <html>
@@ -116,7 +118,7 @@ namespace MetalReleaseTracker.Tests.Parsers
             <html>
                 <body>
                     <div class='column twelve'>
-                        <span class='cufonAb'></span>
+                        <span class='cufonAb'>Album Name</span>
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                 </body>
@@ -128,13 +130,13 @@ namespace MetalReleaseTracker.Tests.Parsers
             SetupHtmlLoader("http://example.com", albumsDocument);
             SetupHtmlLoader("/album/1", incompleteAlbumDetailDocument);
 
-            var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() => _parser.ParseAlbums("http://example.com"));
+            var albums = await _parser.ParseAlbums("http://example.com");
 
-            Assert.Equal("Band name is missing in the HTML document /album/1", exception.Message);
+            Assert.Empty(albums);
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenAlbumNameIsMissing_ShouldThrowOsmoseProductionsParserException()
+        public async Task ParseAlbums_WhenAlbumNameIsMissing_ShouldReturnEmptyList()
         {
             var albumsHtml = @"
             <html>
@@ -150,7 +152,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var incompleteAlbumDetailHtml = @"
             <html>
                 <body>
-                        <span class='cufonAb'><a href='/band/1'>Test Band</a></span>
+                        <span class='cufonAb'>
+                            <a href='/band/1'>Test Band</a>
+                        </span>
                     <span class='cufonEb'>Press : SR000</span>
                 </body>
             </html>";
@@ -161,9 +165,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             SetupHtmlLoader("http://example.com", albumsDocument);
             SetupHtmlLoader("/album/1", incompleteAlbumDetailDocument);
 
-            var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() => _parser.ParseAlbums("http://example.com"));
+            var albums = await _parser.ParseAlbums("http://example.com");
 
-            Assert.Equal("Album name is missing in the HTML document /album/1", exception.Message);
+            Assert.Empty(albums);
         }
 
         [Fact]
@@ -179,7 +183,8 @@ namespace MetalReleaseTracker.Tests.Parsers
                     <div class='column twelve'>
                         <span class='cufonAb'>Album Name</span>
                     </div>
-                         <span class='cufonCd '>Invalid Price</span> 
+                        <span class='cufonEb'>Press : SR000</span>
+                        <span class='cufonCd'>Invalid Price</span> 
                 </body>
             </html>";
 
@@ -230,7 +235,7 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbums_WhenGenreAndLabelFieldsAreMissing_ShouldReturnNullForOptionalFields()
+        public async Task ParseAlbums_WhenGenreAndLabelFieldsAreMissing_ShouldReturnNullForGenreAndLabelFields()
         {
             var albumsHtml = GetMockAlbumsHtml();
             var incompleteAlbumDetailHtml = @"
@@ -304,7 +309,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     <div class='column twelve'>
                         <span class='cufonAb'>Album Name</span>
                     </div>
-                    <span class='cufonEb'>Year : 2022</span>
+                    <span class='cufonEb'>Press : SR000</span>
                 </body>
             </html>";
 
@@ -332,6 +337,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     <div class='column twelve'>
                         <span class='cufonAb'>Album Name</span>
                     </div>
+                    <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>Media: Unknown Media Type</span>
                 </body>
             </html>";
@@ -360,6 +366,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     <div class='column twelve'>
                         <span class='cufonAb'>Album Name</span>
                     </div>
+                    <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>New or Used : Unknown</span>
                 </body>
             </html>";
@@ -442,7 +449,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                         <span class='cufonEb'>Press : SR000</span>
                         <span class='cufonEb'>Year : 2022</span>
                         <span class='cufonEb'>Genre : Metal</span>
-                        <span class='cufonCd '>10 EUR</span>
+                        <span class='cufonCd'>10 EUR</span>
                         <a class='lienor' href='http://purchase.com'>Purchase</a>
                     <div class='column left four GshopListingALeft mobile-one'>
                         <img src='http://example.com/photo.jpg' />

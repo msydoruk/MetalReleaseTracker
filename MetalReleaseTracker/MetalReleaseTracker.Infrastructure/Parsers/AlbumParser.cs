@@ -37,5 +37,18 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             return DateTime.MinValue;
         }
+
+        public float ParsePrice(string priceText)
+        {
+            if (!string.IsNullOrEmpty(priceText))
+            {
+                if (float.TryParse(priceText, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedPrice))
+                {
+                    return parsedPrice;
+                }
+            }
+
+            return 0.0f;
+        }
     }
 }
