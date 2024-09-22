@@ -23,11 +23,12 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             _logger = logger;
         }
 
-        public async Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl)
+        public async Task<ParsingResultDto<List<AlbumDto>>> ParseAlbums(string parsingUrl)
         {
             var albums = new List<AlbumDto>();
             string nextPageUrl = parsingUrl;
             bool hasMorePages;
+            var parsingResult = new ParsingResultDto<List<AlbumDto>> { Data = albums };
 
             do
             {
@@ -42,13 +43,13 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                         var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
                         var albumDetails = await ParseAlbumDetails(albumUrl);
 
-                        if (albumDetails.IsSuccessful)
+                        if (albumDetails.IsSuccess)
                         {
-                            albums.Add(albumDetails);
+                            albums.Add(albumDetails.Data);
                         }
                         else
                         {
-                            _logger.LogError($"Album {albumUrl} skipped. Reason: {albumDetails.Message}");
+                            _logger.LogError($"Album {albumUrl} skipped. Reason: {albumDetails.ErrorMessage}");
                         }
                     }
                 }
@@ -59,10 +60,10 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
             while (hasMorePages);
 
-            return albums;
+            return parsingResult;
         }
 
-        private async Task<AlbumDto> ParseAlbumDetails(string albumUrl)
+        private async Task<ParsingResultDto<AlbumDto>> ParseAlbumDetails(string albumUrl)
         {
             var htmlDocument = await LoadAndValidateHtmlDocument(albumUrl);
 
@@ -70,14 +71,17 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var name = ParseAlbumName(htmlDocument);
             var sku = ParseSku(htmlDocument);
 
-            if (!CheckRequiredFields(bandName, name, sku, albumUrl, out string message))
+            if (!CheckRequiredFields(bandName, name, sku))
             {
+                var message = $"Missing band name or album name or SKU in the HTML document {albumUrl}. " +
+                  $"Band: {bandName ?? "Unknown"}, Album: {name ?? "Unknown"}, SKU: {sku ?? "Unknown"}";
+
                 _logger.LogError(message);
 
-                return new AlbumDto
+                return new ParsingResultDto<AlbumDto>
                 {
-                    IsSuccessful = false,
-                    Message = message
+                    IsSuccess = false,
+                    ErrorMessage = message
                 };
             }
 
@@ -91,21 +95,24 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var description = ParseDescription(htmlDocument);
             var status = ParseStatus(htmlDocument);
 
-            return new AlbumDto
+            return new ParsingResultDto<AlbumDto>
             {
-                BandName = bandName,
-                SKU = sku,
-                Name = name,
-                ReleaseDate = releaseDate,
-                Genre = genre,
-                Price = price,
-                PurchaseUrl = albumUrl,
-                PhotoUrl = photoUrl,
-                Media = media,
-                Label = label,
-                Press = press,
-                Description = description,
-                Status = status
+                Data = new AlbumDto
+                {
+                    BandName = bandName,
+                    SKU = sku,
+                    Name = name,
+                    ReleaseDate = releaseDate,
+                    Genre = genre,
+                    Price = price,
+                    PurchaseUrl = albumUrl,
+                    PhotoUrl = photoUrl,
+                    Media = media,
+                    Label = label,
+                    Press = press,
+                    Description = description,
+                    Status = status
+                }
             };
         }
 
@@ -148,15 +155,13 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return htmlDocument;
         }
 
-        private bool CheckRequiredFields(string bandName, string name, string sku, string albumUrl, out string message)
+        private bool CheckRequiredFields(string bandName, string name, string sku)
         {
             if (string.IsNullOrEmpty(bandName) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(sku))
             {
-                message = $"Missing band name or album name or SKU in the HTML document {albumUrl}. Band: {bandName ?? "Unknown"}, Album: {name ?? "Unknown"}, SKU: {sku ?? "Unknown"}";
                 return false;
             }
 
-            message = string.Empty;
             return true;
         }
 

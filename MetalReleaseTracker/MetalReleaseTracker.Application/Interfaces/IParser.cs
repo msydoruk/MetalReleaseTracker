@@ -7,6 +7,6 @@ namespace MetalReleaseTracker.Application.Interfaces
     {
         DistributorCode DistributorCode { get; }
 
-        Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl);
+        Task<ParsingResultDto<List<AlbumDto>>> ParseAlbums(string parsingUrl);
     }
 }

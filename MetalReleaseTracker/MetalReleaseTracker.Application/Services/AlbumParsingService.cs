@@ -19,7 +19,7 @@ namespace MetalReleaseTracker.Application.Services
 
             var albums = await parser.ParseAlbums(parsingUrl);
 
-            return albums;
+            return albums.Data;
         }
     }
 }
