@@ -46,8 +46,8 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<AlbumParser>();
 builder.Services.AddSingleton<UserAgentProvider>();
-builder.Services.AddSingleton<HtmlLoader>();
 
+builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
 builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
 builder.Services.AddScoped<IParserFactory, ParserFactory>();
 builder.Services.AddScoped<AlbumParsingService>();

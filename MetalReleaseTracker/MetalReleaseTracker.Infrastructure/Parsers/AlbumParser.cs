@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Core.Exceptions;
 
 namespace MetalReleaseTracker.Infrastructure.Parsers
 {

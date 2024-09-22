@@ -184,7 +184,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                         <span class='cufonAb'>Album Name</span>
                     </div>
                         <span class='cufonEb'>Press : SR000</span>
-                        <span class='cufonCd'>Invalid Price</span> 
+                        <span class='cufonCd'>Invalid Price</span>
                 </body>
             </html>";
 

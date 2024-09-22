@@ -29,5 +29,9 @@ namespace MetalReleaseTracker.Application.DTOs
         public string Description { get; set; }
 
         public AlbumStatus? Status { get; set; }
+
+        public bool IsSuccessful { get; set; } = true;
+
+        public string Message { get; set; }
     }
 }

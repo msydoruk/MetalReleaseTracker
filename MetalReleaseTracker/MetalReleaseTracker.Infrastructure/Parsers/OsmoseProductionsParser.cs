@@ -42,15 +42,13 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                         var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
                         var albumDetails = await ParseAlbumDetails(albumUrl);
 
-                        if (albumDetails != null && !string.IsNullOrEmpty(albumDetails.BandName)
-                        && !string.IsNullOrEmpty(albumDetails.Name) && !string.IsNullOrEmpty(albumDetails.SKU))
+                        if (albumDetails.IsSuccessful)
                         {
                             albums.Add(albumDetails);
                         }
                         else
                         {
-                            string message = $"Album {albumUrl} skipped due to missing required fields.";
-                            _logger.LogWarning(message);
+                            _logger.LogError($"Album {albumUrl} skipped. Reason: {albumDetails.Message}");
                         }
                     }
                 }
@@ -70,14 +68,19 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             var bandName = ParseBandName(htmlDocument);
             var name = ParseAlbumName(htmlDocument);
-            if (string.IsNullOrEmpty(bandName) || string.IsNullOrEmpty(name))
+            var sku = ParseSku(htmlDocument);
+
+            if (!CheckRequiredFields(bandName, name, sku, albumUrl, out string message))
             {
-                string message = $"Missing band name or album name in the HTML document {albumUrl}. Band: {bandName ?? "Unknown"}, Album: {name ?? "Unknown"}";
                 _logger.LogError(message);
-                return null;
+
+                return new AlbumDto
+                {
+                    IsSuccessful = false,
+                    Message = message
+                };
             }
 
-            var sku = ParseSku(htmlDocument);
             var releaseDate = ParseReleaseDate(htmlDocument);
             var genre = ParseGenre(htmlDocument);
             var price = ParsePrice(htmlDocument);
@@ -145,6 +148,18 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return htmlDocument;
         }
 
+        private bool CheckRequiredFields(string bandName, string name, string sku, string albumUrl, out string message)
+        {
+            if (string.IsNullOrEmpty(bandName) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(sku))
+            {
+                message = $"Missing band name or album name or SKU in the HTML document {albumUrl}. Band: {bandName ?? "Unknown"}, Album: {name ?? "Unknown"}, SKU: {sku ?? "Unknown"}";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
         private string ParseBandName(HtmlDocument htmlDocument)
         {
             var bandName = GetNodeValue(htmlDocument, "//span[@class='cufonAb']/a");
@@ -193,8 +208,8 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private MediaType? ParseMediaType(HtmlDocument htmlDocument)
         {
-            var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]");
-            return mediaTypeText != null ? _albumParser.ParseMediaType(mediaTypeText.Split(':').Last().Trim()) : null;
+            var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]")?.Split(':').Last().Trim();
+            return _albumParser.ParseMediaType(mediaTypeText);
         }
 
         private string ParseLabel(HtmlDocument htmlDocument)
@@ -214,9 +229,9 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private AlbumStatus? ParseStatus(HtmlDocument htmlDocument)
         {
-            var statusText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'New or Used :')]");
+            var statusText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'New or Used :')]")?.Split(':').Last().Trim();
 
-            return statusText != null ? _albumParser.ParseAlbumStatus(statusText.Split(':').Last().Trim()) : null;
+            return _albumParser.ParseAlbumStatus(statusText);
         }
     }
 }
