@@ -1,23 +1,27 @@
-﻿using System.Globalization;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Infrastructure.Loaders;
+using MetalReleaseTracker.Infrastructure.Exceptions;
+using MetalReleaseTracker.Infrastructure.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.Infrastructure.Parsers
 {
     public class OsmoseProductionsParser : IParser
     {
-        private readonly HtmlLoader _htmlLoader;
+        private const int PageDelayMilliseconds = 1000;
+        private readonly IHtmlLoader _htmlLoader;
         private readonly AlbumParser _albumParser;
+        private readonly ILogger<OsmoseProductionsParser> _logger;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
-        public OsmoseProductionsParser(HtmlLoader htmlLoader, AlbumParser albumParser)
+        public OsmoseProductionsParser(IHtmlLoader htmlLoader, AlbumParser albumParser, ILogger<OsmoseProductionsParser> logger)
         {
             _htmlLoader = htmlLoader;
             _albumParser = albumParser;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl)
@@ -28,7 +32,8 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             do
             {
-                var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(nextPageUrl);
+                var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
+
                 var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
 
                 if (albumNodes != null)
@@ -38,83 +43,72 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                         var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
                         var albumDetails = await ParseAlbumDetails(albumUrl);
 
-                        albums.Add(albumDetails);
+                        if (albumDetails.IsSuccess)
+                        {
+                            albums.Add(albumDetails.Data);
+                        }
+                        else
+                        {
+                            _logger.LogError($"Failed to parse album: {albumDetails.ErrorMessage}");
+                        }
                     }
                 }
 
                 (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
 
-                await Task.Delay(1000);
+                await Task.Delay(PageDelayMilliseconds);
             }
             while (hasMorePages);
 
             return albums;
         }
 
-        private async Task<AlbumDto> ParseAlbumDetails(string albumUrl)
+        private async Task<ParsingResult<AlbumDto>> ParseAlbumDetails(string albumUrl)
         {
-            var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(albumUrl);
+            var htmlDocument = await LoadAndValidateHtmlDocument(albumUrl);
 
-            var bandNameNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonAb']/a");
-            var bandName = bandNameNode?.InnerText.Replace("&nbsp;", " ").Trim() ?? "Unknown Band";
+            var bandName = ParseBandName(htmlDocument);
+            var name = ParseAlbumName(htmlDocument);
+            var sku = ParseSku(htmlDocument);
 
-            var skuNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Press :')]");
-            var sku = skuNode?.InnerText.Split(':').Last().Trim() ?? "Unknown SKU";
-
-            var nameNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='column twelve']//span[@class='cufonAb']");
-            var name = nameNode?.InnerText.Replace("&nbsp;", " ").Trim() ?? "Unknown Album Name";
-
-            if (!string.IsNullOrEmpty(bandName) && name.StartsWith(bandName + " "))
+            if (!CheckRequiredFields(bandName, name, sku))
             {
-                name = name.Substring(bandName.Length).Trim();
+                return new ParsingResult<AlbumDto>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Missing band name or album name or SKU in the HTML document {albumUrl}. " +
+                           $"Band: {bandName}, Album: {name}, SKU: {sku}"
+                };
             }
 
-            var releaseDateNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Year :')]");
-            var releaseDate = releaseDateNode != null ? _albumParser.ParseYear(releaseDateNode.InnerText.Split(':').Last().Trim()) : DateTime.MinValue;
+            var releaseDate = ParseReleaseDate(htmlDocument);
+            var genre = ParseGenre(htmlDocument);
+            var price = ParsePrice(htmlDocument);
+            var photoUrl = ParsePhotoUrl(htmlDocument);
+            var media = ParseMediaType(htmlDocument);
+            var label = ParseLabel(htmlDocument);
+            var press = ParsePress(htmlDocument);
+            var description = ParseDescription(htmlDocument);
+            var status = ParseStatus(htmlDocument);
 
-            var genreNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Genre :')]");
-            var genre = genreNode?.InnerText.Trim() ?? "Unknown Genre";
-
-            var priceNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonCd ']");
-            var priceText = priceNode?.InnerText.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
-            var price = priceText != null ? float.Parse(priceText, CultureInfo.InvariantCulture) : 0.0f;
-
-            var purchaseUrlNode = htmlDocument.DocumentNode.SelectSingleNode("//a[@class='lienor']");
-            var purchaseUrl = purchaseUrlNode?.GetAttributeValue("href", "purchaseUrl").Trim() ?? "Unknown URL";
-
-            var photoUrlNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='column left four GshopListingALeft mobile-one']//img");
-            var photoUrl = photoUrlNode?.GetAttributeValue("src", "img").Trim() ?? "Unknown Photo URL";
-
-            var mediaNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Media:')]");
-            var media = mediaNode != null ? _albumParser.ParseMediaType(mediaNode.InnerText.Split(':').Last().Trim()) : MediaType.Unknown;
-
-            var labelNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Label :')]//a");
-            var label = labelNode?.InnerText.Trim() ?? "Unknown Label";
-
-            var pressNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Press :')]");
-            var press = pressNode?.InnerText.Split(':').Last().Trim() ?? "Unknown Press";
-
-            var descriptionNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Info :')]");
-            var description = descriptionNode?.InnerText.Trim() ?? "No Description";
-
-            var statusNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'New or Used :')]");
-            var status = statusNode != null ? _albumParser.ParseAlbumStatus(statusNode.InnerText.Split(':').Last().Trim()) : AlbumStatus.Unknown;
-
-            return new AlbumDto
+            return new ParsingResult<AlbumDto>
             {
-                BandName = bandName,
-                SKU = sku,
-                Name = name,
-                ReleaseDate = releaseDate,
-                Genre = genre,
-                Price = price,
-                PurchaseUrl = purchaseUrl,
-                PhotoUrl = photoUrl,
-                Media = media,
-                Label = label,
-                Press = press,
-                Description = description,
-                Status = status
+                Data = new AlbumDto
+                {
+                    BandName = bandName,
+                    SKU = sku,
+                    Name = name,
+                    ReleaseDate = releaseDate,
+                    Genre = genre,
+                    Price = price,
+                    PurchaseUrl = albumUrl,
+                    PhotoUrl = photoUrl,
+                    Media = media,
+                    Label = label,
+                    Press = press,
+                    Description = description,
+                    Status = status
+                }
             };
         }
 
@@ -131,6 +125,114 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             return (null, false);
+        }
+
+        private string GetNodeValue(HtmlDocument document, string xPath)
+        {
+            var node = document.DocumentNode.SelectSingleNode(xPath);
+            return node?.InnerText?.Trim();
+        }
+
+        private string GetNodeAttribute(HtmlNode node, string xPath, string attribute)
+        {
+            var selectedNode = node.SelectSingleNode(xPath);
+            return selectedNode?.GetAttributeValue(attribute, null)?.Trim();
+        }
+
+        private async Task<HtmlDocument> LoadAndValidateHtmlDocument(string url)
+        {
+            var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(url);
+
+            if (htmlDocument?.DocumentNode == null)
+            {
+                throw new OsmoseProductionsParserException($"Failed to load or parse the HTML document {url}");
+            }
+
+            return htmlDocument;
+        }
+
+        private bool CheckRequiredFields(string bandName, string name, string sku)
+        {
+            if (string.IsNullOrEmpty(bandName) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(sku))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private string ParseBandName(HtmlDocument htmlDocument)
+        {
+            var bandName = GetNodeValue(htmlDocument, "//span[@class='cufonAb']/a");
+
+            return bandName;
+        }
+
+        private string ParseAlbumName(HtmlDocument htmlDocument)
+        {
+            var nameNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='column twelve']//span[@class='cufonAb']");
+            var nameHtml = nameNode?.InnerHtml;
+            var name = !string.IsNullOrEmpty(nameHtml)
+                ? nameHtml.Split(new[] { "</a>&nbsp;" }, StringSplitOptions.None).Last().Trim()
+                : null;
+
+            return name;
+        }
+
+        private string ParseSku(HtmlDocument htmlDocument)
+        {
+            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Press :')]")?.Split(':').Last().Trim();
+        }
+
+        private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
+        {
+            var releaseDateText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Year :')]");
+            return !string.IsNullOrEmpty(releaseDateText) ? _albumParser.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
+        }
+
+        private string ParseGenre(HtmlDocument htmlDocument)
+        {
+            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Genre :')]");
+        }
+
+        private float ParsePrice(HtmlDocument htmlDocument)
+        {
+            var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd']");
+            priceText = priceText?.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
+            return _albumParser.ParsePrice(priceText);
+        }
+
+        private string ParsePhotoUrl(HtmlDocument htmlDocument)
+        {
+            return GetNodeAttribute(htmlDocument.DocumentNode, "//div[@class='column left four GshopListingALeft mobile-one']//img", "src");
+        }
+
+        private MediaType? ParseMediaType(HtmlDocument htmlDocument)
+        {
+            var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]")?.Split(':').Last().Trim();
+            return _albumParser.ParseMediaType(mediaTypeText);
+        }
+
+        private string ParseLabel(HtmlDocument htmlDocument)
+        {
+            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Label :')]//a");
+        }
+
+        private string ParsePress(HtmlDocument htmlDocument)
+        {
+            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Press :')]")?.Split(':').Last().Trim();
+        }
+
+        private string ParseDescription(HtmlDocument htmlDocument)
+        {
+            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Info :')]");
+        }
+
+        private AlbumStatus? ParseStatus(HtmlDocument htmlDocument)
+        {
+            var statusText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'New or Used :')]")?.Split(':').Last().Trim();
+
+            return _albumParser.ParseAlbumStatus(statusText);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace MetalReleaseTracker.Application.DTOs
 
         public string PhotoUrl { get; set; }
 
-        public MediaType Media { get; set; }
+        public MediaType? Media { get; set; }
 
         public string Label { get; set; }
 
@@ -28,6 +28,6 @@ namespace MetalReleaseTracker.Application.DTOs
 
         public string Description { get; set; }
 
-        public AlbumStatus Status { get; set; }
+        public AlbumStatus? Status { get; set; }
     }
 }

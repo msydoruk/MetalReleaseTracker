@@ -1,9 +1,9 @@
 ﻿using HtmlAgilityPack;
 using MetalReleaseTracker.Infrastructure.Providers;
 
-namespace MetalReleaseTracker.Infrastructure.Loaders
+namespace MetalReleaseTracker.Infrastructure.Utils
 {
-    public class HtmlLoader
+    public class HtmlLoader : IHtmlLoader
     {
         private readonly HttpClient _httpClient;
         private readonly UserAgentProvider _userAgentProvider;
@@ -14,7 +14,7 @@ namespace MetalReleaseTracker.Infrastructure.Loaders
             _userAgentProvider = userAgentProvider;
         }
 
-        public virtual async Task<HtmlDocument> LoadHtmlDocumentAsync(string url)
+        public async Task<HtmlDocument> LoadHtmlDocumentAsync(string url)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, url);
 
