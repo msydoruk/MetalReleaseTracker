@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace MetalReleaseTracker.Application.DTOs
+namespace MetalReleaseTracker.Infrastructure.Parsers
 {
-    public class ParsingResultDto<T>
+    public class ParsingResult<T>
     {
         public T Data { get; set; }
 

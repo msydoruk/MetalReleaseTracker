@@ -2,10 +2,9 @@
 using MetalReleaseTracker.Infrastructure.Utils;
 using MetalReleaseTracker.Infrastructure.Parsers;
 using Moq;
-using MetalReleaseTracker.Core.Exceptions;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using System;
+using MetalReleaseTracker.Infrastructure.Exceptions;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
@@ -40,7 +39,7 @@ namespace MetalReleaseTracker.Tests.Parsers
             var album = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(album);
-            Assert.Equal(2, album.Data.Count);
+            Assert.Equal(2, album.Count());
         }
 
         [Fact]
@@ -75,7 +74,7 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
+            Assert.Equal(2, albums.Count());
         }
 
         [Fact]
@@ -98,7 +97,7 @@ namespace MetalReleaseTracker.Tests.Parsers
 
             var result = await _parser.ParseAlbums(ParsingUrl);
 
-            Assert.Empty(result.Data);
+            Assert.Empty(result);
         }
 
         [Fact]
@@ -133,7 +132,7 @@ namespace MetalReleaseTracker.Tests.Parsers
 
             var albums = await _parser.ParseAlbums("http://example.com");
 
-            Assert.Empty(albums.Data);
+            Assert.Empty(albums);
         }
 
         [Fact]
@@ -168,7 +167,7 @@ namespace MetalReleaseTracker.Tests.Parsers
 
             var albums = await _parser.ParseAlbums("http://example.com");
 
-            Assert.Empty(albums.Data);
+            Assert.Empty(albums);
         }
 
         [Fact]
@@ -199,8 +198,8 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
-            Assert.All(albums.Data, album => Assert.Equal(0.0f, album.Price));
+            Assert.Equal(2, albums.Count());
+            Assert.All(albums, album => Assert.Equal(0.0f, album.Price));
         }
 
         [Fact]
@@ -231,8 +230,8 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
-            Assert.All(albums.Data, album => Assert.Equal(DateTime.MinValue, album.ReleaseDate));
+            Assert.Equal(2, albums.Count());
+            Assert.All(albums, album => Assert.Equal(DateTime.MinValue, album.ReleaseDate));
         }
 
         [Fact]
@@ -263,9 +262,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
+            Assert.Equal(2, albums.Count());
 
-            var album = albums.Data.First();
+            var album = albums.First();
             Assert.Equal("Album Name", album.Name);
             Assert.Equal("Band Name", album.BandName);
             Assert.Null(album.Genre);
@@ -321,8 +320,8 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
-            Assert.Null(albums.Data.First().PhotoUrl);
+            Assert.Equal(2, albums.Count());
+            Assert.Null(albums.First().PhotoUrl);
         }
 
         [Fact]
@@ -350,8 +349,8 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
-            Assert.Null(albums.Data.First().Media);
+            Assert.Equal(2, albums.Count());
+            Assert.Null(albums.First().Media);
         }
 
         [Fact]
@@ -379,8 +378,8 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albums = await _parser.ParseAlbums(ParsingUrl);
 
             Assert.NotNull(albums);
-            Assert.Equal(2, albums.Data.Count());
-            Assert.Null(albums.Data.First().Status);
+            Assert.Equal(2, albums.Count());
+            Assert.Null(albums.First().Status);
         }
 
         private void SetupHtmlLoader(string url, HtmlDocument document)

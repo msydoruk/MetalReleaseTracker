@@ -2,7 +2,7 @@
 using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Core.Exceptions;
+using MetalReleaseTracker.Infrastructure.Exceptions;
 using MetalReleaseTracker.Infrastructure.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +10,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 {
     public class OsmoseProductionsParser : IParser
     {
+        private const int PageDelayMilliseconds = 1000;
         private readonly IHtmlLoader _htmlLoader;
         private readonly AlbumParser _albumParser;
         private readonly ILogger<OsmoseProductionsParser> _logger;
@@ -23,12 +24,11 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             _logger = logger;
         }
 
-        public async Task<ParsingResultDto<List<AlbumDto>>> ParseAlbums(string parsingUrl)
+        public async Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl)
         {
             var albums = new List<AlbumDto>();
             string nextPageUrl = parsingUrl;
             bool hasMorePages;
-            var parsingResult = new ParsingResultDto<List<AlbumDto>> { Data = albums };
 
             do
             {
@@ -49,21 +49,21 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                         }
                         else
                         {
-                            _logger.LogError($"Album {albumUrl} skipped. Reason: {albumDetails.ErrorMessage}");
+                            _logger.LogError($"Failed to parse album: {albumDetails.ErrorMessage}");
                         }
                     }
                 }
 
                 (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
 
-                await Task.Delay(1000);
+                await Task.Delay(PageDelayMilliseconds);
             }
             while (hasMorePages);
 
-            return parsingResult;
+            return albums;
         }
 
-        private async Task<ParsingResultDto<AlbumDto>> ParseAlbumDetails(string albumUrl)
+        private async Task<ParsingResult<AlbumDto>> ParseAlbumDetails(string albumUrl)
         {
             var htmlDocument = await LoadAndValidateHtmlDocument(albumUrl);
 
@@ -73,15 +73,11 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             if (!CheckRequiredFields(bandName, name, sku))
             {
-                var message = $"Missing band name or album name or SKU in the HTML document {albumUrl}. " +
-                  $"Band: {bandName ?? "Unknown"}, Album: {name ?? "Unknown"}, SKU: {sku ?? "Unknown"}";
-
-                _logger.LogError(message);
-
-                return new ParsingResultDto<AlbumDto>
+                return new ParsingResult<AlbumDto>
                 {
                     IsSuccess = false,
-                    ErrorMessage = message
+                    ErrorMessage = $"Missing band name or album name or SKU in the HTML document {albumUrl}. " +
+                           $"Band: {bandName}, Album: {name}, SKU: {sku}"
                 };
             }
 
@@ -95,7 +91,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var description = ParseDescription(htmlDocument);
             var status = ParseStatus(htmlDocument);
 
-            return new ParsingResultDto<AlbumDto>
+            return new ParsingResult<AlbumDto>
             {
                 Data = new AlbumDto
                 {
