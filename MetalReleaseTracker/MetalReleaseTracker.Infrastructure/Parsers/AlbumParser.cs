@@ -3,9 +3,9 @@ using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Infrastructure.Parsers
 {
-    public class AlbumParser
+    public static class AlbumParser
     {
-        public AlbumStatus? ParseAlbumStatus(string status)
+        public static AlbumStatus? ParseAlbumStatus(string status)
         {
             return status switch
             {
@@ -16,7 +16,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             };
         }
 
-        public MediaType? ParseMediaType(string mediaType)
+        public static MediaType? ParseMediaType(string mediaType)
         {
             return mediaType switch
             {
@@ -27,7 +27,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             };
         }
 
-        public DateTime ParseYear(string year)
+        public static DateTime ParseYear(string year)
         {
             if (DateTime.TryParseExact(year?.Trim(), "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
             {
@@ -37,7 +37,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return DateTime.MinValue;
         }
 
-        public float ParsePrice(string priceText)
+        public static float ParsePrice(string priceText)
         {
             if (!string.IsNullOrEmpty(priceText))
             {

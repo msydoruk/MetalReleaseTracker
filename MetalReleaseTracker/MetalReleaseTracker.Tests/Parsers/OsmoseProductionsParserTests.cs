@@ -12,7 +12,6 @@ namespace MetalReleaseTracker.Tests.Parsers
     {
         private readonly OsmoseProductionsParser _parser;
         private readonly Mock<IHtmlLoader> _htmlLoaderMock;
-        private readonly Mock<AlbumParser> _albumParserMock;
         private readonly Mock<ILogger<OsmoseProductionsParser>> _loggerMock;
 
         private const string ParsingUrl = "http://example.com";
@@ -20,10 +19,9 @@ namespace MetalReleaseTracker.Tests.Parsers
         public OsmoseProductionsParserTests()
         {
             _htmlLoaderMock = new Mock<IHtmlLoader>();
-            _albumParserMock = new Mock<AlbumParser>();
             _loggerMock = new Mock<ILogger<OsmoseProductionsParser>>();
 
-            _parser = new OsmoseProductionsParser(_htmlLoaderMock.Object, _albumParserMock.Object, _loggerMock.Object);
+            _parser = new OsmoseProductionsParser(_htmlLoaderMock.Object, _loggerMock.Object);
         }
 
         [Fact]
