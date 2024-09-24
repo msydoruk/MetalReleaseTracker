@@ -12,15 +12,13 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
     {
         private const int PageDelayMilliseconds = 1000;
         private readonly IHtmlLoader _htmlLoader;
-        private readonly AlbumParser _albumParser;
         private readonly ILogger<OsmoseProductionsParser> _logger;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
-        public OsmoseProductionsParser(IHtmlLoader htmlLoader, AlbumParser albumParser, ILogger<OsmoseProductionsParser> logger)
+        public OsmoseProductionsParser(IHtmlLoader htmlLoader, ILogger<OsmoseProductionsParser> logger)
         {
             _htmlLoader = htmlLoader;
-            _albumParser = albumParser;
             _logger = logger;
         }
 
@@ -187,7 +185,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
         {
             var releaseDateText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Year :')]");
-            return !string.IsNullOrEmpty(releaseDateText) ? _albumParser.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
+            return !string.IsNullOrEmpty(releaseDateText) ? AlbumParser.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
         }
 
         private string ParseGenre(HtmlDocument htmlDocument)
@@ -199,7 +197,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         {
             var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd']");
             priceText = priceText?.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
-            return _albumParser.ParsePrice(priceText);
+            return AlbumParser.ParsePrice(priceText);
         }
 
         private string ParsePhotoUrl(HtmlDocument htmlDocument)
@@ -210,7 +208,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         private MediaType? ParseMediaType(HtmlDocument htmlDocument)
         {
             var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]")?.Split(':').Last().Trim();
-            return _albumParser.ParseMediaType(mediaTypeText);
+            return AlbumParser.ParseMediaType(mediaTypeText);
         }
 
         private string ParseLabel(HtmlDocument htmlDocument)
@@ -232,7 +230,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         {
             var statusText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'New or Used :')]")?.Split(':').Last().Trim();
 
-            return _albumParser.ParseAlbumStatus(statusText);
+            return AlbumParser.ParseAlbumStatus(statusText);
         }
     }
 }

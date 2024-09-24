@@ -44,7 +44,6 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddSingleton<AlbumParser>();
 builder.Services.AddSingleton<UserAgentProvider>();
 
 builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
