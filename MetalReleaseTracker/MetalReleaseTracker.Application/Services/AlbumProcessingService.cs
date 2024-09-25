@@ -6,17 +6,32 @@ using MetalReleaseTracker.Core.Interfaces;
 
 namespace MetalReleaseTracker.Application.Services
 {
-    public class AlbumProcessingService
+    public class AlbumProcessingService : IAlbumProcessingService
     {
         private readonly IParserFactory _parserFactory;
         private readonly IAlbumService _albumService;
         private readonly IBandService _bandService;
+        private readonly IDistributorsService _distributorService;
 
-        public AlbumProcessingService(IParserFactory parserFactory, IAlbumService albumService, IBandService bandService)
+        public AlbumProcessingService(IParserFactory parserFactory, IAlbumService albumService, IBandService bandService, IDistributorsService distributorService)
         {
             _parserFactory = parserFactory;
             _albumService = albumService;
             _bandService = bandService;
+            _distributorService = distributorService;
+        }
+
+        public async Task SynchronizeAlbums()
+        {
+            var distributors = await _distributorService.GetAllDistributors();
+
+            foreach (var distributor in distributors)
+            {
+                if (!string.IsNullOrEmpty(distributor.ParsingUrl))
+                {
+                    await ProcessAlbumsFromDistributor(distributor.Code, distributor.ParsingUrl);
+                }
+            }
         }
 
         public async Task<IEnumerable<AlbumDto>> ProcessAlbumsFromDistributor(DistributorCode distributorCode, string parsingUrl)
