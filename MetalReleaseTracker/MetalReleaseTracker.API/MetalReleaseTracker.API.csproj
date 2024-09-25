@@ -32,4 +32,8 @@
     <ProjectReference Include="..\MetalReleaseTracker.Infrastructure\MetalReleaseTracker.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>

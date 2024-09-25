@@ -49,7 +49,7 @@ builder.Services.AddSingleton<UserAgentProvider>();
 builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
 builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
 builder.Services.AddScoped<IParserFactory, ParserFactory>();
-builder.Services.AddScoped<AlbumParsingService>();
+builder.Services.AddScoped<AlbumProcessingService>();
 
 builder.Services.AddCustomValidators();
 builder.Services.AddValidationServiceWithAllValidators();
