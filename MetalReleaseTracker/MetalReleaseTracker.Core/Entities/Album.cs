@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using MetalReleaseTracker.Core.Enums;
+﻿using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Core.Entities
 {
@@ -43,5 +37,9 @@ namespace MetalReleaseTracker.Core.Entities
         public string Description { get; set; }
 
         public AlbumStatus Status { get; set; }
+
+        public bool IsHidden { get; set; }
+
+        public DateTime ModificationTime { get; set; }
     }
 }

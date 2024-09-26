@@ -13,9 +13,11 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
         [Required(ErrorMessage = "The distributor  name is required.")]
         public string Name { get; set; }
 
+        [Required]
         [Url]
         public string ParsingUrl { get; set; }
 
+        [Required]
         public DistributorCode Code { get; set; }
     }
 }

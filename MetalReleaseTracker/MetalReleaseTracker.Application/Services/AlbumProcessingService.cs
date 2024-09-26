@@ -27,10 +27,7 @@ namespace MetalReleaseTracker.Application.Services
 
             foreach (var distributor in distributors)
             {
-                if (!string.IsNullOrEmpty(distributor.ParsingUrl))
-                {
-                    await ProcessAlbumsFromDistributor(distributor.Code, distributor.ParsingUrl);
-                }
+                await ProcessAlbumsFromDistributor(distributor.Code, distributor.ParsingUrl);
             }
         }
 
@@ -40,13 +37,13 @@ namespace MetalReleaseTracker.Application.Services
 
             var parsedAlbums = await parser.ParseAlbums(parsingUrl);
 
-            var existingBands = await _bandService.GetAllBands();
-            var existingAlbums = await _albumService.GetAllAlbums();
+            var bandCache = new Dictionary<string, Band>();
+            var existingAlbums = GetAlbumsFromDistributor(distributorCode);
             var processedAlbums = new List<AlbumDto>();
 
             foreach (var album in parsedAlbums)
             {
-                var band = FindBandByName(existingBands, album.BandName);
+                var band = await FindBandInCache(bandCache, album.BandName);
                 var existingAlbum = FindAlbumBySKU(existingAlbums, album.SKU);
 
                 if (existingAlbum == null)
@@ -63,9 +60,40 @@ namespace MetalReleaseTracker.Application.Services
                 processedAlbums.Add(album);
             }
 
-            await DeleteMatchingAlbumsBySKU(existingAlbums, parsedAlbums);
+            await HideOldAlbums(existingAlbums, parsedAlbums);
 
             return processedAlbums;
+        }
+
+        private IEnumerable<Album> GetAlbumsFromDistributor(DistributorCode distributorCode)
+        {
+            var allAlbums = _albumService.GetAllAlbums().Result;
+            return allAlbums.Where(album => album.Distributor.Code == distributorCode);
+        }
+
+        private async Task<Band> FindBandInCache(Dictionary<string, Band> bandCache, string bandName)
+        {
+            if (bandCache.TryGetValue(bandName, out var cachedBand))
+            {
+                return cachedBand;
+            }
+
+            var band = FindBandByName(bandCache.Values, bandName);
+
+            if (band == null)
+            {
+                band = new Band
+                {
+                    Id = Guid.NewGuid(),
+                    Name = bandName
+                };
+
+                bandCache[bandName] = band;
+
+                await _bandService.AddBand(band);
+            }
+
+            return band;
         }
 
         private Band FindBandByName(IEnumerable<Band> bands, string bandName)
@@ -95,32 +123,27 @@ namespace MetalReleaseTracker.Application.Services
                 Label = albumDto.Label,
                 Press = albumDto.Press,
                 Description = albumDto.Description,
-                Status = (AlbumStatus)albumDto.Status
+                Status = (AlbumStatus)albumDto.Status,
+                IsHidden = false,
+                ModificationTime = DateTime.UtcNow
             };
         }
 
         private void UpdateExistingAlbum(Album existingAlbum, AlbumDto albumDto)
         {
-            existingAlbum.Name = albumDto.Name;
-            existingAlbum.ReleaseDate = albumDto.ReleaseDate;
-            existingAlbum.Genre = albumDto.Genre;
             existingAlbum.Price = albumDto.Price;
-            existingAlbum.PurchaseUrl = albumDto.PurchaseUrl;
-            existingAlbum.PhotoUrl = albumDto.PhotoUrl;
-            existingAlbum.Media = (MediaType)albumDto.Media;
-            existingAlbum.Label = albumDto.Label;
-            existingAlbum.Press = albumDto.Press;
-            existingAlbum.Description = albumDto.Description;
-            existingAlbum.Status = (AlbumStatus)albumDto.Status;
+            existingAlbum.ModificationTime = DateTime.UtcNow;
         }
 
-        private async Task DeleteMatchingAlbumsBySKU(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums)
+        private async Task HideOldAlbums(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums) //переробити. додати статус на avalible. додати modificstiontime ishidded для альбома
         {
             foreach (var existingAlbum in existingAlbums)
             {
-                if (parsedAlbums.Any(parsedAlbum => parsedAlbum.SKU == existingAlbum.SKU))
+                if (!parsedAlbums.Any(parsedAlbum => parsedAlbum.SKU == existingAlbum.SKU))
                 {
-                    await _albumService.DeleteAlbum(existingAlbum.Id);
+                    existingAlbum.IsHidden = true;
+                    existingAlbum.ModificationTime = DateTime.UtcNow;
+                    await _albumService.UpdateAlbum(existingAlbum);
                 }
             }
         }
