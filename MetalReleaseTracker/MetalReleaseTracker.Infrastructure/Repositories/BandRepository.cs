@@ -22,7 +22,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             var band = await _dbContext.Bands
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Id == id);
+                    .FirstOrDefaultAsync(band => band.Id == id);
 
             return _mapper.Map<Band>(band);
         }
@@ -34,6 +34,15 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                     .ToListAsync();
 
             return _mapper.Map<IEnumerable<Band>>(bands);
+        }
+
+        public async Task<Band> GetByName(string bandName)
+        {
+            var bands = await _dbContext.Bands
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(band => band.Name.Equals(bandName, StringComparison.OrdinalIgnoreCase)); // Ігнорування регістру
+
+            return _mapper.Map<Band>(bands);
         }
 
         public async Task Add(Band band)

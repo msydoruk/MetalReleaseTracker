@@ -60,6 +60,13 @@ namespace MetalReleaseTracker.Сore.Services
             return await _albumRepository.GetByFilter(filter);
         }
 
+        public async Task<IEnumerable<Album>> GetAllAlbumsFromDistributor(Guid distributorId)
+        {
+            _validationService.Validate(distributorId);
+
+            return await _albumRepository.GetByDistributorId(distributorId);
+        }
+
         private async Task<Album> EnsureAlbumExists(Guid id)
         {
             var album = await _albumRepository.GetById(id);

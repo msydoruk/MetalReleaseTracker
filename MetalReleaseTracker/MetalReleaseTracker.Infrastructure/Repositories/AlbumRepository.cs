@@ -99,6 +99,19 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return albums;
         }
 
+        public async Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId)
+        {
+            var albums = await _dbContext.Albums
+                .Include(a => a.Band)
+                .Include(a => a.Distributor)
+                .Where(a => a.Distributor.Id == distributorId)
+                .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return albums;
+        }
+
         private IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
         {
             if (!string.IsNullOrEmpty(filter.BandName))

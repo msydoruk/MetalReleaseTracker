@@ -27,11 +27,11 @@ namespace MetalReleaseTracker.Application.Services
 
             foreach (var distributor in distributors)
             {
-                await ProcessAlbumsFromDistributor(distributor.Code, distributor.ParsingUrl);
+                await ProcessDistributorAlbums(distributor.Code, distributor.ParsingUrl);
             }
         }
 
-        public async Task<IEnumerable<AlbumDto>> ProcessAlbumsFromDistributor(DistributorCode distributorCode, string parsingUrl)
+        public async Task<IEnumerable<AlbumDto>> ProcessDistributorAlbums(DistributorCode distributorCode, string parsingUrl)
         {
             var parser = _parserFactory.CreateParser(distributorCode);
 
@@ -43,12 +43,12 @@ namespace MetalReleaseTracker.Application.Services
 
             foreach (var album in parsedAlbums)
             {
-                var band = await FindBandInCache(bandCache, album.BandName);
+                var band = await GetBandInCache(bandCache, album.BandName);
                 var existingAlbum = FindAlbumBySKU(existingAlbums, album.SKU);
 
                 if (existingAlbum == null)
                 {
-                    var newAlbum = CreateNewAlbum(album, band);
+                    var newAlbum = MapToAlbum(album, band);
                     await _albumService.AddAlbum(newAlbum);
                 }
                 else
@@ -65,22 +65,25 @@ namespace MetalReleaseTracker.Application.Services
             return processedAlbums;
         }
 
-        private IEnumerable<Album> GetAlbumsFromDistributor(DistributorCode distributorCode)
+        private async Task<IEnumerable<Album>> GetAlbumsFromDistributor(DistributorCode distributorCode)
         {
-            var allAlbums = _albumService.GetAllAlbums().Result;
-            return allAlbums.Where(album => album.Distributor.Code == distributorCode);
+            return await _albumService.GetAllAlbumsFromDistributor(distributorCode);
         }
 
-        private async Task<Band> FindBandInCache(Dictionary<string, Band> bandCache, string bandName)
+        private async Task<Band> GetBandInCache(Dictionary<string, Band> bandCache, string bandName)
         {
             if (bandCache.TryGetValue(bandName, out var cachedBand))
             {
                 return cachedBand;
             }
 
-            var band = FindBandByName(bandCache.Values, bandName);
+            var band = await _bandService.GetBandByName(bandName);
 
-            if (band == null)
+            if (band != null)
+            {
+                bandCache[bandName] = band;
+            }
+            else
             {
                 band = new Band
                 {
@@ -106,7 +109,7 @@ namespace MetalReleaseTracker.Application.Services
             return albums.FirstOrDefault(existingAlbum => existingAlbum.SKU == sku);
         }
 
-        private Album CreateNewAlbum(AlbumDto albumDto, Band band)
+        private Album MapToAlbum(AlbumDto albumDto, Band band)
         {
             return new Album
             {
@@ -135,7 +138,7 @@ namespace MetalReleaseTracker.Application.Services
             existingAlbum.ModificationTime = DateTime.UtcNow;
         }
 
-        private async Task HideOldAlbums(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums) //переробити. додати статус на avalible. додати modificstiontime ishidded для альбома
+        private async Task HideOldAlbums(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums) //краще використовувати Hashset ніж List
         {
             foreach (var existingAlbum in existingAlbums)
             {
