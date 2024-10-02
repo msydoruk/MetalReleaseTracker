@@ -102,8 +102,6 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         public async Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId)
         {
             var albums = await _dbContext.Albums
-                .Include(a => a.Band)
-                .Include(a => a.Distributor)
                 .Where(a => a.Distributor.Id == distributorId)
                 .ProjectTo<Album>(_mapper.ConfigurationProvider)
                 .AsNoTracking()

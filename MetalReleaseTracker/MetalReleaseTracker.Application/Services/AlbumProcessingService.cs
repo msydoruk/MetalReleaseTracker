@@ -27,23 +27,23 @@ namespace MetalReleaseTracker.Application.Services
 
             foreach (var distributor in distributors)
             {
-                await ProcessDistributorAlbums(distributor.Code, distributor.ParsingUrl);
+                await ProcessAlbumsFromDistributor(distributor, distributor.ParsingUrl);
             }
         }
 
-        public async Task<IEnumerable<AlbumDto>> ProcessDistributorAlbums(DistributorCode distributorCode, string parsingUrl)
+        public async Task<IEnumerable<AlbumDto>> ProcessAlbumsFromDistributor(Distributor distributor, string parsingUrl)
         {
-            var parser = _parserFactory.CreateParser(distributorCode);
+            var parser = _parserFactory.CreateParser(distributor.Code);
 
             var parsedAlbums = await parser.ParseAlbums(parsingUrl);
 
             var bandCache = new Dictionary<string, Band>();
-            var existingAlbums = GetAlbumsFromDistributor(distributorCode);
+            var existingAlbums = await GetAlbumsFromDistributorById(distributor.Id);
             var processedAlbums = new List<AlbumDto>();
 
             foreach (var album in parsedAlbums)
             {
-                var band = await GetBandInCache(bandCache, album.BandName);
+                var band = await GetOrAddBandToCache(bandCache, album.BandName);
                 var existingAlbum = FindAlbumBySKU(existingAlbums, album.SKU);
 
                 if (existingAlbum == null)
@@ -53,24 +53,24 @@ namespace MetalReleaseTracker.Application.Services
                 }
                 else
                 {
-                    UpdateExistingAlbum(existingAlbum, album);
+                    UpdateAlbumDetails(existingAlbum, album);
                     await _albumService.UpdateAlbum(existingAlbum);
                 }
 
                 processedAlbums.Add(album);
             }
 
-            await HideOldAlbums(existingAlbums, parsedAlbums);
+            await HideAlbumsNotInParsedList(existingAlbums, parsedAlbums);
 
             return processedAlbums;
         }
 
-        private async Task<IEnumerable<Album>> GetAlbumsFromDistributor(DistributorCode distributorCode)
+        private async Task<IEnumerable<Album>> GetAlbumsFromDistributorById(Guid distributorId)
         {
-            return await _albumService.GetAllAlbumsFromDistributor(distributorCode);
+            return await _albumService.GetAllAlbumsFromDistributor(distributorId);
         }
 
-        private async Task<Band> GetBandInCache(Dictionary<string, Band> bandCache, string bandName)
+        private async Task<Band> GetOrAddBandToCache(Dictionary<string, Band> bandCache, string bandName)
         {
             if (bandCache.TryGetValue(bandName, out var cachedBand))
             {
@@ -97,11 +97,6 @@ namespace MetalReleaseTracker.Application.Services
             }
 
             return band;
-        }
-
-        private Band FindBandByName(IEnumerable<Band> bands, string bandName)
-        {
-            return bands.FirstOrDefault(existingBand => existingBand.Name == bandName);
         }
 
         private Album FindAlbumBySKU(IEnumerable<Album> albums, string sku)
@@ -132,17 +127,19 @@ namespace MetalReleaseTracker.Application.Services
             };
         }
 
-        private void UpdateExistingAlbum(Album existingAlbum, AlbumDto albumDto)
+        private void UpdateAlbumDetails(Album existingAlbum, AlbumDto albumDto)
         {
             existingAlbum.Price = albumDto.Price;
             existingAlbum.ModificationTime = DateTime.UtcNow;
         }
 
-        private async Task HideOldAlbums(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums) //краще використовувати Hashset ніж List
+        private async Task HideAlbumsNotInParsedList(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums)
         {
+            var parsedAlbumsSet = new HashSet<string>(parsedAlbums.Select(album => album.SKU));
+
             foreach (var existingAlbum in existingAlbums)
             {
-                if (!parsedAlbums.Any(parsedAlbum => parsedAlbum.SKU == existingAlbum.SKU))
+                if (!parsedAlbumsSet.Contains(existingAlbum.SKU))
                 {
                     existingAlbum.IsHidden = true;
                     existingAlbum.ModificationTime = DateTime.UtcNow;
