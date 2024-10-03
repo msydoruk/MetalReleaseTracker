@@ -38,8 +38,6 @@ namespace MetalReleaseTracker.Core.Entities
 
         public AlbumStatus Status { get; set; }
 
-        public bool IsHidden { get; set; }
-
         public DateTime ModificationTime { get; set; }
     }
 }

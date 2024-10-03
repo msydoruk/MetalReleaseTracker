@@ -47,7 +47,7 @@ namespace MetalReleaseTracker.Tests.Services
                     Label = "Test Label",
                     Press = "Test Press",
                     Description = "Test Description",
-                    Status = AlbumStatus.Available
+                    Status = AlbumStatus.Restock
                 },
             };
             var existingAlbums = new List<Album>();
@@ -56,12 +56,12 @@ namespace MetalReleaseTracker.Tests.Services
             _bandServiceMock.Setup(band => band.GetBandByName("Band1")).ReturnsAsync(band1);
             _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code)).Returns(Mock.Of<IParser>());
             _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code).ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
-            _albumServiceMock.Setup(album => album.GetAllAlbumsFromDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
-            var result = await _service.ProcessAlbumsFromDistributor(distributor, distributor.ParsingUrl);
+            await _service.ProcessAlbumsFromDistributor(distributor);
 
             _albumServiceMock.Verify(album => album.AddAlbum(It.IsAny<Album>()), Times.Exactly(1));
-            Assert.Equal(1, result.Count());
+            Assert.Equal(1, parsedAlbums.Count);
         }
 
         [Fact]
@@ -103,7 +103,7 @@ namespace MetalReleaseTracker.Tests.Services
                     Label = "Test Label",
                     Press = "Test Press",
                     Description = "Test Description",
-                    Status = AlbumStatus.Available
+                    Status = AlbumStatus.New
                 }
             };
             var band1 = new Band 
@@ -115,12 +115,12 @@ namespace MetalReleaseTracker.Tests.Services
             _bandServiceMock.Setup(band => band.GetBandByName("Band1")).ReturnsAsync(band1);
             _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code)).Returns(Mock.Of<IParser>());
             _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code).ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
-            _albumServiceMock.Setup(album => album.GetAllAlbumsFromDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
-            var result = await _service.ProcessAlbumsFromDistributor(distributor, distributor.ParsingUrl);
+            await _service.ProcessAlbumsFromDistributor(distributor);
 
             _albumServiceMock.Verify(album => album.UpdateAlbum(It.IsAny<Album>()), Times.Once);
-            Assert.Single(result);
+            Assert.Single(existingAlbums);
         }
 
         [Fact]
@@ -161,8 +161,7 @@ namespace MetalReleaseTracker.Tests.Services
                     Label = "Test Label",
                     Press = "Test Press",
                     Description = "Test Description",
-                    Status = AlbumStatus.Restock,
-                    IsHidden = false 
+                    Status = AlbumStatus.Restock
                 },
                 new Album 
                 { 
@@ -177,8 +176,7 @@ namespace MetalReleaseTracker.Tests.Services
                     Label = "Test Label",
                     Press = "Test Press",
                     Description = "Test Description",
-                    Status = AlbumStatus.Preorder,
-                    IsHidden = false 
+                    Status = AlbumStatus.Preorder
                 }
             };
             var band1 = new Band 
@@ -190,11 +188,11 @@ namespace MetalReleaseTracker.Tests.Services
             _bandServiceMock.Setup(band => band.GetBandByName("Band1")).ReturnsAsync(band1);
             _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code)).Returns(Mock.Of<IParser>());
             _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code).ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
-            _albumServiceMock.Setup(album => album.GetAllAlbumsFromDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
-            await _service.ProcessAlbumsFromDistributor(distributor, distributor.ParsingUrl);
+            await _service.ProcessAlbumsFromDistributor(distributor);
 
-            _albumServiceMock.Verify(album => album.UpdateAlbum(It.Is<Album>(x => x.IsHidden)), Times.Once);
+            _albumServiceMock.Verify(album => album.UpdateAlbums(It.IsAny<IEnumerable<Album>>()), Times.Once);
         }
     }
 }

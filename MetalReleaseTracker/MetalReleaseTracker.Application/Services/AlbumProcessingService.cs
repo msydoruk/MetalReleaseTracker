@@ -27,24 +27,23 @@ namespace MetalReleaseTracker.Application.Services
 
             foreach (var distributor in distributors)
             {
-                await ProcessAlbumsFromDistributor(distributor, distributor.ParsingUrl);
+                await ProcessAlbumsFromDistributor(distributor);
             }
         }
 
-        public async Task<IEnumerable<AlbumDto>> ProcessAlbumsFromDistributor(Distributor distributor, string parsingUrl)
+        public async Task ProcessAlbumsFromDistributor(Distributor distributor)
         {
             var parser = _parserFactory.CreateParser(distributor.Code);
 
-            var parsedAlbums = await parser.ParseAlbums(parsingUrl);
+            var parsedAlbums = await parser.ParseAlbums(distributor.ParsingUrl);
 
             var bandCache = new Dictionary<string, Band>();
-            var existingAlbums = await GetAlbumsFromDistributorById(distributor.Id);
-            var processedAlbums = new List<AlbumDto>();
+            var existingAlbums = await _albumService.GetAlbumsByDistributor(distributor.Id);
 
             foreach (var album in parsedAlbums)
             {
                 var band = await GetOrAddBandToCache(bandCache, album.BandName);
-                var existingAlbum = FindAlbumBySKU(existingAlbums, album.SKU);
+                var existingAlbum = existingAlbums.FirstOrDefault(existingAlbum => existingAlbum.SKU == album.SKU);
 
                 if (existingAlbum == null)
                 {
@@ -53,55 +52,43 @@ namespace MetalReleaseTracker.Application.Services
                 }
                 else
                 {
-                    UpdateAlbumDetails(existingAlbum, album);
+                    UpdateAlbumPrice(existingAlbum, album);
                     await _albumService.UpdateAlbum(existingAlbum);
                 }
-
-                processedAlbums.Add(album);
             }
 
             await HideAlbumsNotInParsedList(existingAlbums, parsedAlbums);
-
-            return processedAlbums;
-        }
-
-        private async Task<IEnumerable<Album>> GetAlbumsFromDistributorById(Guid distributorId)
-        {
-            return await _albumService.GetAllAlbumsFromDistributor(distributorId);
         }
 
         private async Task<Band> GetOrAddBandToCache(Dictionary<string, Band> bandCache, string bandName)
         {
-            if (bandCache.TryGetValue(bandName, out var cachedBand))
+            if (!bandCache.TryGetValue(bandName, out var band))
             {
-                return cachedBand;
-            }
+                band = await _bandService.GetBandByName(bandName) ?? CreateNewBand(bandName);
 
-            var band = await _bandService.GetBandByName(bandName);
+                UpdateBandCache(bandCache, bandName, band);
 
-            if (band != null)
-            {
-                bandCache[bandName] = band;
-            }
-            else
-            {
-                band = new Band
+                if (band.Id == Guid.Empty)
                 {
-                    Id = Guid.NewGuid(),
-                    Name = bandName
-                };
-
-                bandCache[bandName] = band;
-
-                await _bandService.AddBand(band);
+                    await _bandService.AddBand(band);
+                }
             }
 
             return band;
         }
 
-        private Album FindAlbumBySKU(IEnumerable<Album> albums, string sku)
+        private Band CreateNewBand(string bandName)
         {
-            return albums.FirstOrDefault(existingAlbum => existingAlbum.SKU == sku);
+            return new Band
+            {
+                Id = Guid.NewGuid(),
+                Name = bandName
+            };
+        }
+
+        private void UpdateBandCache(Dictionary<string, Band> bandCache, string bandName, Band band)
+        {
+            bandCache[bandName] = band;
         }
 
         private Album MapToAlbum(AlbumDto albumDto, Band band)
@@ -122,12 +109,11 @@ namespace MetalReleaseTracker.Application.Services
                 Press = albumDto.Press,
                 Description = albumDto.Description,
                 Status = (AlbumStatus)albumDto.Status,
-                IsHidden = false,
                 ModificationTime = DateTime.UtcNow
             };
         }
 
-        private void UpdateAlbumDetails(Album existingAlbum, AlbumDto albumDto)
+        private void UpdateAlbumPrice(Album existingAlbum, AlbumDto albumDto)
         {
             existingAlbum.Price = albumDto.Price;
             existingAlbum.ModificationTime = DateTime.UtcNow;
@@ -137,14 +123,21 @@ namespace MetalReleaseTracker.Application.Services
         {
             var parsedAlbumsSet = new HashSet<string>(parsedAlbums.Select(album => album.SKU));
 
+            var albumsToUpdate = new List<Album>();
+
             foreach (var existingAlbum in existingAlbums)
             {
                 if (!parsedAlbumsSet.Contains(existingAlbum.SKU))
                 {
-                    existingAlbum.IsHidden = true;
+                    existingAlbum.Status = AlbumStatus.Unavailable;
                     existingAlbum.ModificationTime = DateTime.UtcNow;
-                    await _albumService.UpdateAlbum(existingAlbum);
+                    albumsToUpdate.Add(existingAlbum);
                 }
+            }
+
+            if (albumsToUpdate.Any())
+            {
+                await _albumService.UpdateAlbums(albumsToUpdate);
             }
         }
     }

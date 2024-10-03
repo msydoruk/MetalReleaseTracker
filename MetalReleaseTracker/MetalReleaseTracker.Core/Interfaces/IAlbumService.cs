@@ -13,10 +13,12 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<bool> UpdateAlbum(Album album);
 
+        Task UpdateAlbums(IEnumerable<Album> albums);
+
         Task<bool> DeleteAlbum(Guid id);
 
         Task<IEnumerable<Album>> GetAlbumsByFilter(AlbumFilter filter);
 
-        Task<IEnumerable<Album>> GetAllAlbumsFromDistributor(Guid distributorId);
+        Task<IEnumerable<Album>> GetAlbumsByDistributor(Guid distributorId);
     }
 }
