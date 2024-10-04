@@ -52,8 +52,8 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         public async Task<bool> Update(Album album)
         {
             var existingAlbum = await _dbContext.Albums
-                .Include(album => album.Band)
-                .Include(album => album.Distributor)
+                .Include(albumDb => album.Band)
+                .Include(albumDb => album.Distributor)
                 .FirstOrDefaultAsync(albums => albums.Id == album.Id);
 
             if (existingAlbum == null)
@@ -70,14 +70,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
         public async Task<bool> UpdateAlbums(IEnumerable<Album> albums)
         {
+            var albumIds = albums.Select(a => a.Id).ToList();
+
+            var existingAlbums = await _dbContext.Albums
+                .Where(album => albumIds.Contains(album.Id))
+                .ToDictionaryAsync(album => album.Id);
+
             var albumEntities = _mapper.Map<IEnumerable<AlbumEntity>>(albums);
 
             foreach (var albumEntity in albumEntities)
             {
-                var existingAlbum = await _dbContext.Albums
-                    .FirstOrDefaultAsync(album => album.Id == albumEntity.Id);
-
-                if (existingAlbum != null)
+                if (existingAlbums.TryGetValue(albumEntity.Id, out var existingAlbum))
                 {
                     _mapper.Map(albumEntity, existingAlbum);
                 }

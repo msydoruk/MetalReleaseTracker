@@ -64,31 +64,19 @@ namespace MetalReleaseTracker.Application.Services
         {
             if (!bandCache.TryGetValue(bandName, out var band))
             {
-                band = await _bandService.GetBandByName(bandName) ?? CreateNewBand(bandName);
+                band = await _bandService.GetBandByName(bandName);
 
-                UpdateBandCache(bandCache, bandName, band);
-
-                if (band.Id == Guid.Empty)
+                if (band == null)
                 {
+                    band = new Band { Id = Guid.NewGuid(), Name = bandName };
+
                     await _bandService.AddBand(band);
                 }
+
+                bandCache[bandName] = band;
             }
 
             return band;
-        }
-
-        private Band CreateNewBand(string bandName)
-        {
-            return new Band
-            {
-                Id = Guid.NewGuid(),
-                Name = bandName
-            };
-        }
-
-        private void UpdateBandCache(Dictionary<string, Band> bandCache, string bandName, Band band)
-        {
-            bandCache[bandName] = band;
         }
 
         private Album MapToAlbum(AlbumDto albumDto, Band band)

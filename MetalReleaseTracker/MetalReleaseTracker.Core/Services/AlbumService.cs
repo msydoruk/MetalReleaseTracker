@@ -49,7 +49,6 @@ namespace MetalReleaseTracker.Сore.Services
             foreach (var  album in albums)
             {
                 _validationService.Validate(album);
-                await EnsureAlbumExists(album.Id);
             }
 
             await _albumRepository.UpdateAlbums(albums);

@@ -29,7 +29,10 @@ namespace MetalReleaseTracker.Core.Services
 
         public async Task<Band> GetBandByName(string bandName)
         {
-            _validationService.Validate(bandName);
+            if (string.IsNullOrEmpty(bandName))
+            {
+                throw new ArgumentException("Band name cannot be empty or null.", nameof(bandName));
+            }
 
             return await EnsureBandExistsByName(bandName);
         }
