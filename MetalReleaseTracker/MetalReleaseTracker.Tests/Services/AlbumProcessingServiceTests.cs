@@ -27,16 +27,23 @@ namespace MetalReleaseTracker.Tests.Services
         }
 
         [Fact]
-        public async Task ProcessAlbumsFromDistributor_ShouldAddNewAlbums()
+        public async Task SynchronizeAllAlbums_ShouldAddNewAlbums()
         {
-            var distributor = new Distributor { Id = Guid.NewGuid(), Code = DistributorCode.OsmoseProductions, ParsingUrl = "testUrl" };
+            var distributor = new Distributor 
+            { 
+                Id = Guid.NewGuid(), 
+                Code = DistributorCode.OsmoseProductions, 
+                ParsingUrl = "testUrl" 
+            };
+
+            var distributors = new List<Distributor> { distributor };
 
             var parsedAlbums = new List<AlbumDto>
             {
                 new AlbumDto 
                 { 
                     SKU = "SKU1", 
-                    BandName = "Band1", 
+                    BandName = "Band", 
                     Name = "Album1", 
                     Price = 8,
                     ReleaseDate = DateTime.Now,
@@ -51,30 +58,56 @@ namespace MetalReleaseTracker.Tests.Services
                 },
             };
             var existingAlbums = new List<Album>();
-            var band1 = new Band { Id = Guid.NewGuid(), Name = "Band1" };
+            var band = new Band 
+            { 
+                Id = Guid.NewGuid(), 
+                Name = "Band" 
+            };
 
-            _bandServiceMock.Setup(band => band.GetBandByName("Band1")).ReturnsAsync(band1);
-            _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code)).Returns(Mock.Of<IParser>());
-            _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code).ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            var parserMock = new Mock<IParser>();
+            parserMock
+                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
+                .ReturnsAsync(parsedAlbums);
 
-            await _service.ProcessAlbumsFromDistributor(distributor);
+            _parserFactoryMock
+                .Setup(factory => factory.CreateParser(distributor.Code))
+                .Returns(parserMock.Object);
 
-            _albumServiceMock.Verify(album => album.AddAlbum(It.IsAny<Album>()), Times.Exactly(1));
-            Assert.Equal(1, parsedAlbums.Count);
+            _distributorServiceMock
+                .Setup(service => service.GetAllDistributors())
+                .ReturnsAsync(distributors);
+
+            _bandServiceMock
+                .Setup(service => service.GetBandByName(It.IsAny<string>()))
+                .ReturnsAsync(band);
+
+            _albumServiceMock
+                .Setup(service => service.GetAlbumsByDistributor(distributor.Id))
+                .ReturnsAsync(existingAlbums);
+
+            await _service.SynchronizeAllAlbums();
+
+            _albumServiceMock.Verify(album => album.AddAlbum(It.IsAny<Album>()), Times.Once);
         }
 
         [Fact]
-        public async Task ProcessAlbumsFromDistributor_ShouldUpdatesExistingAlbums()
+        public async Task SynchronizeAllAlbums_ShouldUpdatesExistingAlbums()
         {
-            var distributor = new Distributor { Id = Guid.NewGuid(), Code = DistributorCode.OsmoseProductions, ParsingUrl = "testUrl" };
+            var distributor = new Distributor 
+            { 
+                Id = Guid.NewGuid(), 
+                Code = DistributorCode.OsmoseProductions, 
+                ParsingUrl = "testUrl" 
+            };
+
+            var distributors = new List<Distributor> { distributor };
 
             var parsedAlbums = new List<AlbumDto>
             {
                 new AlbumDto 
                 { 
                     SKU = "SKU1", 
-                    BandName = "Band1", 
+                    BandName = "Band", 
                     Name = "Album1", 
                     Price = 12,
                     ReleaseDate = DateTime.Now,
@@ -106,33 +139,55 @@ namespace MetalReleaseTracker.Tests.Services
                     Status = AlbumStatus.New
                 }
             };
-            var band1 = new Band 
+
+            var band = new Band 
             { 
                 Id = Guid.NewGuid(), 
-                Name = "Band1" 
+                Name = "Band" 
             };
 
-            _bandServiceMock.Setup(band => band.GetBandByName("Band1")).ReturnsAsync(band1);
-            _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code)).Returns(Mock.Of<IParser>());
-            _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code).ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            var parserMock = new Mock<IParser>();
+            parserMock
+                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
+                .ReturnsAsync(parsedAlbums);
 
-            await _service.ProcessAlbumsFromDistributor(distributor);
+            _parserFactoryMock
+                .Setup(factory => factory.CreateParser(distributor.Code))
+                .Returns(parserMock.Object);
+
+            _distributorServiceMock
+                .Setup(service => service.GetAllDistributors())
+                .ReturnsAsync(distributors);
+
+            _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>()))
+                .ReturnsAsync(band);
+
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id))
+                .ReturnsAsync(existingAlbums);
+
+            await _service.SynchronizeAllAlbums();
 
             _albumServiceMock.Verify(album => album.UpdateAlbum(It.IsAny<Album>()), Times.Once);
-            Assert.Single(existingAlbums);
         }
 
         [Fact]
-        public async Task ProcessAlbumsFromDistributor_ShouldHidesOldAlbums()
+        public async Task SynchronizeAllAlbums_ShouldHidesOldAlbums()
         {
-            var distributor = new Distributor { Id = Guid.NewGuid(), Code = DistributorCode.OsmoseProductions, ParsingUrl = "http://example.com" };
+            var distributor = new Distributor 
+            { 
+                Id = Guid.NewGuid(), 
+                Code = DistributorCode.OsmoseProductions, 
+                ParsingUrl = "http://example.com" 
+            };
+
+            var distributors = new List<Distributor> { distributor };
+
             var parsedAlbums = new List<AlbumDto>
             {
                 new AlbumDto 
                 { 
                     SKU ="SKU1", 
-                    BandName = "Band1", 
+                    BandName = "Band", 
                     Name = "Album1", 
                     Price = 10,
                     ReleaseDate = DateTime.Now,
@@ -179,20 +234,96 @@ namespace MetalReleaseTracker.Tests.Services
                     Status = AlbumStatus.Preorder
                 }
             };
-            var band1 = new Band 
+            var band = new Band 
             { 
                 Id = Guid.NewGuid(), 
-                Name = "Band1" 
+                Name = "Band" 
             };
 
-            _bandServiceMock.Setup(band => band.GetBandByName("Band1")).ReturnsAsync(band1);
-            _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code)).Returns(Mock.Of<IParser>());
-            _parserFactoryMock.Setup(parser => parser.CreateParser(distributor.Code).ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            var parserMock = new Mock<IParser>();
+            parserMock
+                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
+                .ReturnsAsync(parsedAlbums);
 
-            await _service.ProcessAlbumsFromDistributor(distributor);
+            _parserFactoryMock
+                .Setup(factory => factory.CreateParser(distributor.Code))
+                .Returns(parserMock.Object);
+
+            _distributorServiceMock
+                .Setup(service => service.GetAllDistributors())
+                .ReturnsAsync(distributors);
+
+            _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>()))
+                .ReturnsAsync(band);
+
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id))
+                .ReturnsAsync(existingAlbums);
+
+            await _service.SynchronizeAllAlbums();
 
             _albumServiceMock.Verify(album => album.UpdateAlbums(It.IsAny<IEnumerable<Album>>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task SynchronizeAllAlbums_ShouldCallAddBand_WhenBandDoesNotExist()
+        {
+            var distributor = new Distributor
+            {
+                Id = Guid.NewGuid(),
+                Code = DistributorCode.OsmoseProductions,
+                ParsingUrl = "testUrl"
+            };
+
+            var distributors = new List<Distributor> { distributor };
+
+            var parsedAlbums = new List<AlbumDto>
+            {
+                new AlbumDto
+                {
+                    SKU = "SKU1",
+                    BandName = "Band",
+                    Name = "Album1",
+                    Price = 10,
+                    ReleaseDate = DateTime.Now,
+                    Genre = "Metal",
+                    PurchaseUrl = "http://testpurchase.com",
+                    PhotoUrl = "http://testphoto.com",
+                    Media = MediaType.CD,
+                    Label = "Test Label",
+                    Press = "Test Press",
+                    Description = "Test Description",
+                    Status = AlbumStatus.New
+                }
+            };
+
+            var existingAlbums = new List<Album>();
+
+            Band band = null;
+
+            var parserMock = new Mock<IParser>();
+            parserMock
+                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
+                .ReturnsAsync(parsedAlbums);
+
+            _parserFactoryMock
+                .Setup(factory => factory.CreateParser(distributor.Code))
+                .Returns(parserMock.Object);
+
+            _distributorServiceMock
+                 .Setup(service => service.GetAllDistributors())
+                 .ReturnsAsync(distributors);
+
+            _bandServiceMock
+                .Setup(service => service.GetBandByName(It.IsAny<string>()))
+                .ReturnsAsync(band);
+
+            _albumServiceMock
+                .Setup(service => service.GetAlbumsByDistributor(distributor.Id))
+                .ReturnsAsync(existingAlbums);
+
+            await _service.SynchronizeAllAlbums();
+
+            _bandServiceMock.Verify(bandService => bandService.AddBand(It.Is<Band>(band => band.Name == "Band")), Times.Once);
         }
     }
 }
