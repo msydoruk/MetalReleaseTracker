@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MetalReleaseTracker.Core.Entities;
-using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
@@ -70,23 +69,13 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
         public async Task<bool> UpdateAlbums(IEnumerable<Album> albums)
         {
-            var albumIds = albums.Select(a => a.Id).ToList();
+            var albumDictionary = albums.ToDictionary(album => album.Id);
 
-            var existingAlbums = await _dbContext.Albums
-                .Where(album => albumIds.Contains(album.Id))
-                .ToDictionaryAsync(album => album.Id);
-
-            var albumEntities = _mapper.Map<IEnumerable<AlbumEntity>>(albums);
-
-            foreach (var albumEntity in albumEntities)
-            {
-                if (existingAlbums.TryGetValue(albumEntity.Id, out var existingAlbum))
-                {
-                    _mapper.Map(albumEntity, existingAlbum);
-                }
-            }
-
-            var changes = await _dbContext.SaveChangesAsync();
+            var changes = await _dbContext.Albums
+                .Where(albumDb => albumDictionary.ContainsKey(albumDb.Id))
+                .ExecuteUpdateAsync(albumDb => albumDb
+                    .SetProperty(existingAlbum => existingAlbum.Status, album => albumDictionary[album.Id].Status)
+                    .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
 
             return changes > 0;
         }

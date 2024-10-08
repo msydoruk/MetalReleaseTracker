@@ -27,7 +27,7 @@ namespace MetalReleaseTracker.Tests.Services
         }
 
         [Fact]
-        public async Task SynchronizeAllAlbums_ShouldAddNewAlbums()
+        public async Task SynchronizeAllAlbums_WhenNoExistingAlbums_ShouldAddNewAlbums()
         {
             var distributor = new Distributor 
             { 
@@ -40,22 +40,7 @@ namespace MetalReleaseTracker.Tests.Services
 
             var parsedAlbums = new List<AlbumDto>
             {
-                new AlbumDto 
-                { 
-                    SKU = "SKU1", 
-                    BandName = "Band", 
-                    Name = "Album1", 
-                    Price = 8,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.CD,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.Restock
-                },
+               CreateSampleAlbumDto()
             };
             var existingAlbums = new List<Album>();
             var band = new Band 
@@ -65,33 +50,23 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock
-                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
-                .ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock
-                .Setup(factory => factory.CreateParser(distributor.Code))
-                .Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
-            _distributorServiceMock
-                .Setup(service => service.GetAllDistributors())
-                .ReturnsAsync(distributors);
+            _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
-            _bandServiceMock
-                .Setup(service => service.GetBandByName(It.IsAny<string>()))
-                .ReturnsAsync(band);
+            _bandServiceMock.Setup(service => service.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock
-                .Setup(service => service.GetAlbumsByDistributor(distributor.Id))
-                .ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
-            _albumServiceMock.Verify(album => album.AddAlbum(It.IsAny<Album>()), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.AddAlbum(It.IsAny<Album>()), Times.Once);
         }
 
         [Fact]
-        public async Task SynchronizeAllAlbums_ShouldUpdatesExistingAlbums()
+        public async Task SynchronizeAllAlbums_WhenAlbumExists_ShouldUpdatesExistingAlbums()
         {
             var distributor = new Distributor 
             { 
@@ -104,40 +79,11 @@ namespace MetalReleaseTracker.Tests.Services
 
             var parsedAlbums = new List<AlbumDto>
             {
-                new AlbumDto 
-                { 
-                    SKU = "SKU1", 
-                    BandName = "Band", 
-                    Name = "Album1", 
-                    Price = 12,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.CD,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.Restock
-                }
+                CreateSampleAlbumDto()
             };
             var existingAlbums = new List<Album>
             {
-                new Album 
-                { 
-                    SKU = "SKU1", 
-                    BandId = Guid.NewGuid(), 
-                    Price = 10,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.CD,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.New
-                }
+                CreateSampleAlbum(sku: "SKU1")
             };
 
             var band = new Band 
@@ -147,31 +93,23 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock
-                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
-                .ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock
-                .Setup(factory => factory.CreateParser(distributor.Code))
-                .Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
-            _distributorServiceMock
-                .Setup(service => service.GetAllDistributors())
-                .ReturnsAsync(distributors);
+            _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
-            _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>()))
-                .ReturnsAsync(band);
+            _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id))
-                .ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
-            _albumServiceMock.Verify(album => album.UpdateAlbum(It.IsAny<Album>()), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.UpdateAlbum(It.Is<Album>(album => album.Price == 12)), Times.Once);
         }
 
         [Fact]
-        public async Task SynchronizeAllAlbums_ShouldHidesOldAlbums()
+        public async Task SynchronizeAllAlbums_WhenOldAlbumsExist_ShouldHidesOldAlbums()
         {
             var distributor = new Distributor 
             { 
@@ -184,55 +122,12 @@ namespace MetalReleaseTracker.Tests.Services
 
             var parsedAlbums = new List<AlbumDto>
             {
-                new AlbumDto 
-                { 
-                    SKU ="SKU1", 
-                    BandName = "Band", 
-                    Name = "Album1", 
-                    Price = 10,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.LP,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.New
-                }
+                CreateSampleAlbumDto()
             };
             var existingAlbums = new List<Album>
             {
-                new Album 
-                { 
-                    SKU = "SKU1", 
-                    BandId = Guid.NewGuid(),
-                    Price = 11,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.Tape,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.Restock
-                },
-                new Album 
-                { 
-                    SKU = "SKU2", 
-                    BandId = Guid.NewGuid(),
-                    Price = 17,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.CD,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.Preorder
-                }
+                CreateSampleAlbum(sku: "SKU1"),
+                CreateSampleAlbum(sku: "SKU2"),
             };
             var band = new Band 
             { 
@@ -241,31 +136,23 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock
-                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
-                .ReturnsAsync(parsedAlbums);
+            parserMock .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock
-                .Setup(factory => factory.CreateParser(distributor.Code))
-                .Returns(parserMock.Object);
+            _parserFactoryMock .Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
-            _distributorServiceMock
-                .Setup(service => service.GetAllDistributors())
-                .ReturnsAsync(distributors);
+            _distributorServiceMock .Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
-            _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>()))
-                .ReturnsAsync(band);
+            _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id))
-                .ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
-            _albumServiceMock.Verify(album => album.UpdateAlbums(It.IsAny<IEnumerable<Album>>()), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.UpdateAlbums(It.Is<IEnumerable<Album>>(album => album.All(status => status.Status == AlbumStatus.Unavailable))), Times.Once);
         }
 
         [Fact]
-        public async Task SynchronizeAllAlbums_ShouldCallAddBand_WhenBandDoesNotExist()
+        public async Task SynchronizeAllAlbums_WhenBandDoesNotExist_ShouldCallAddBand()
         {
             var distributor = new Distributor
             {
@@ -278,52 +165,64 @@ namespace MetalReleaseTracker.Tests.Services
 
             var parsedAlbums = new List<AlbumDto>
             {
-                new AlbumDto
-                {
-                    SKU = "SKU1",
-                    BandName = "Band",
-                    Name = "Album1",
-                    Price = 10,
-                    ReleaseDate = DateTime.Now,
-                    Genre = "Metal",
-                    PurchaseUrl = "http://testpurchase.com",
-                    PhotoUrl = "http://testphoto.com",
-                    Media = MediaType.CD,
-                    Label = "Test Label",
-                    Press = "Test Press",
-                    Description = "Test Description",
-                    Status = AlbumStatus.New
-                }
+                CreateSampleAlbumDto()
             };
 
             var existingAlbums = new List<Album>();
 
-            Band band = null;
-
             var parserMock = new Mock<IParser>();
-            parserMock
-                .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl))
-                .ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock
-                .Setup(factory => factory.CreateParser(distributor.Code))
-                .Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
-            _distributorServiceMock
-                 .Setup(service => service.GetAllDistributors())
-                 .ReturnsAsync(distributors);
+            _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
-            _bandServiceMock
-                .Setup(service => service.GetBandByName(It.IsAny<string>()))
-                .ReturnsAsync(band);
+            _bandServiceMock.Setup(service => service.GetBandByName(It.IsAny<string>())).ReturnsAsync((Band) null);
 
-            _albumServiceMock
-                .Setup(service => service.GetAlbumsByDistributor(distributor.Id))
-                .ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
             _bandServiceMock.Verify(bandService => bandService.AddBand(It.Is<Band>(band => band.Name == "Band")), Times.Once);
+        }
+
+        private Album CreateSampleAlbum(string sku)
+        {
+            return new Album
+            {
+                SKU = sku,
+                BandId = Guid.NewGuid(),
+                Price = 17,
+                ReleaseDate = DateTime.Now,
+                Genre = "Metal",
+                PurchaseUrl = "http://testpurchase.com",
+                PhotoUrl = "http://testphoto.com",
+                Media = MediaType.CD,
+                Label = "Test Label",
+                Press = "Test Press",
+                Description = "Test Description",
+                Status = AlbumStatus.Preorder
+            };
+        }
+
+        private AlbumDto CreateSampleAlbumDto()
+        {
+            return new AlbumDto
+            {
+                SKU = "SKU1",
+                BandName = "Band",
+                Name = "Album1",
+                Price = 12,
+                ReleaseDate = DateTime.Now,
+                Genre = "Metal",
+                PurchaseUrl = "http://testpurchase.com",
+                PhotoUrl = "http://testphoto.com",
+                Media = MediaType.CD,
+                Label = "Test Label",
+                Press = "Test Press",
+                Description = "Test Description",
+                Status = AlbumStatus.Restock
+            };
         }
     }
 }

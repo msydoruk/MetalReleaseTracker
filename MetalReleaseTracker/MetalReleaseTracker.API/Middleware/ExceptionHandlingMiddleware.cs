@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using Serilog;
 
 namespace MetalReleaseTracker.API.Middleware
 {
