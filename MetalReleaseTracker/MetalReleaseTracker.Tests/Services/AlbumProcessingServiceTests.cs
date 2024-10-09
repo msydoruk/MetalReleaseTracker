@@ -105,7 +105,7 @@ namespace MetalReleaseTracker.Tests.Services
 
             await _service.SynchronizeAllAlbums();
 
-            _albumServiceMock.Verify(albumService => albumService.UpdateAlbum(It.Is<Album>(album => album.Price == 12)), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.UpdatePriceForAlbums(It.Is<IEnumerable<Guid>>(ids => ids.Contains(existingAlbums.First().Id)),12),Times.Once);
         }
 
         [Fact]
@@ -148,7 +148,11 @@ namespace MetalReleaseTracker.Tests.Services
 
             await _service.SynchronizeAllAlbums();
 
-            _albumServiceMock.Verify(albumService => albumService.UpdateAlbums(It.Is<IEnumerable<Album>>(album => album.All(status => status.Status == AlbumStatus.Unavailable))), Times.Once);
+            var expectedAlbumIds = existingAlbums
+                .Where(album => album.SKU != "SKU1")
+                .Select(album => album.Id);
+
+            _albumServiceMock.Verify(albumService => albumService.UpdateAlbumsStatus(It.Is<IEnumerable<Guid>>(ids => ids.SequenceEqual(expectedAlbumIds))), Times.Once);
         }
 
         [Fact]
@@ -190,6 +194,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             return new Album
             {
+                Id = Guid.NewGuid(),
                 SKU = sku,
                 BandId = Guid.NewGuid(),
                 Price = 17,

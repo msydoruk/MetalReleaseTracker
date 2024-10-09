@@ -44,14 +44,24 @@ namespace MetalReleaseTracker.Сore.Services
             return await _albumRepository.Update(album);
         }
 
-        public async Task UpdateAlbums(IEnumerable<Album> albums)
+        public async Task UpdateAlbumsStatus(IEnumerable<Guid> albumsIds)
         {
-            foreach (var  album in albums)
+            foreach (var albumId in albumsIds)
             {
-                _validationService.Validate(album);
+                _validationService.Validate(albumId);
             }
 
-            await _albumRepository.UpdateAlbums(albums);
+            await _albumRepository.UpdateAlbumsStatus(albumsIds);
+        }
+
+        public async Task UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice)
+        {
+            foreach (var albumId in albumIds)
+            {
+                _validationService.Validate(albumId);
+            }
+
+            await _albumRepository.UpdatePriceForAlbums(albumIds, newPrice);
         }
 
         public async Task<bool> DeleteAlbum(Guid id)

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
@@ -51,8 +52,8 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         public async Task<bool> Update(Album album)
         {
             var existingAlbum = await _dbContext.Albums
-                .Include(albumDb => album.Band)
-                .Include(albumDb => album.Distributor)
+                .Include(albumDb => albumDb.Band)
+                .Include(albumDb => albumDb.Distributor)
                 .FirstOrDefaultAsync(albums => albums.Id == album.Id);
 
             if (existingAlbum == null)
@@ -67,14 +68,26 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<bool> UpdateAlbums(IEnumerable<Album> albums)
+        public async Task<bool> UpdateAlbumsStatus(IEnumerable<Guid> albumsIds)
         {
-            var albumDictionary = albums.ToDictionary(album => album.Id);
+            var albumIdList = albumsIds.ToList();
 
             var changes = await _dbContext.Albums
-                .Where(albumDb => albumDictionary.ContainsKey(albumDb.Id))
+                .Where(album => albumIdList.Contains(album.Id)).ExecuteUpdateAsync(albumDb => albumDb
+                    .SetProperty(existingAlbum => existingAlbum.Status, status => AlbumStatus.Unavailable)
+                    .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
+
+            return changes > 0;
+        }
+
+        public async Task<bool> UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice)
+        {
+            var albumIdList = albumIds.ToList();
+
+            var changes = await _dbContext.Albums
+                .Where(album => albumIdList.Contains(album.Id))
                 .ExecuteUpdateAsync(albumDb => albumDb
-                    .SetProperty(existingAlbum => existingAlbum.Status, album => albumDictionary[album.Id].Status)
+                    .SetProperty(existingAlbum => existingAlbum.Price, price => newPrice)
                     .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
 
             return changes > 0;

@@ -52,7 +52,7 @@ namespace MetalReleaseTracker.Application.Services
                 }
                 else
                 {
-                    UpdateAlbumPrice(existingAlbum, album);
+                    await UpdateAlbumPrice(existingAlbum, album);
                 }
             }
 
@@ -100,33 +100,34 @@ namespace MetalReleaseTracker.Application.Services
             };
         }
 
-        private async void UpdateAlbumPrice(Album existingAlbum, AlbumDto albumDto)
+        private async Task UpdateAlbumPrice(Album existingAlbum, AlbumDto albumDto)
         {
-            existingAlbum.Price = albumDto.Price;
-            existingAlbum.ModificationTime = DateTime.UtcNow;
+            if (existingAlbum.Price != albumDto.Price)
+            {
+                existingAlbum.Price = albumDto.Price;
+                existingAlbum.ModificationTime = DateTime.UtcNow;
 
-            await _albumService.UpdateAlbum(existingAlbum);
+                await _albumService.UpdatePriceForAlbums(new[] { existingAlbum.Id }, existingAlbum.Price);
+            }
         }
 
         private async Task MarkAlbumsAsUnavailable(IEnumerable<Album> existingAlbums, IEnumerable<AlbumDto> parsedAlbums)
         {
             var parsedAlbumsSet = new HashSet<string>(parsedAlbums.Select(album => album.SKU));
 
-            var albumsToUpdate = new List<Album>();
+            var albumsToUpdate = new List<Guid>();
 
             foreach (var existingAlbum in existingAlbums)
             {
                 if (!parsedAlbumsSet.Contains(existingAlbum.SKU))
                 {
-                    existingAlbum.Status = AlbumStatus.Unavailable;
-                    existingAlbum.ModificationTime = DateTime.UtcNow;
-                    albumsToUpdate.Add(existingAlbum);
+                    albumsToUpdate.Add(existingAlbum.Id);
                 }
             }
 
             if (albumsToUpdate.Any())
             {
-                await _albumService.UpdateAlbums(albumsToUpdate);
+                await _albumService.UpdateAlbumsStatus(albumsToUpdate);
             }
         }
     }
