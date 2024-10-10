@@ -80,14 +80,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<bool> UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice)
+        public async Task<bool> UpdatePriceForAlbums(Dictionary<Guid, float> albumPrices)
         {
-            var albumIdList = albumIds.ToList();
+            var albumIdList = albumPrices.Keys.ToList();
 
             var changes = await _dbContext.Albums
                 .Where(album => albumIdList.Contains(album.Id))
                 .ExecuteUpdateAsync(albumDb => albumDb
-                    .SetProperty(existingAlbum => existingAlbum.Price, price => newPrice)
+                    .SetProperty(existingAlbum => existingAlbum.Price, album => albumPrices[album.Id])
                     .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
 
             return changes > 0;

@@ -34,7 +34,6 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
 
         public string Genre { get; set; }
 
-        [Range(1, float.MaxValue, ErrorMessage = "Min price is 1$")]
         public float Price { get; set; }
 
         [Url]

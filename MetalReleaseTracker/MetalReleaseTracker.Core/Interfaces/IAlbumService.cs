@@ -16,7 +16,7 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task UpdateAlbumsStatus(IEnumerable<Guid> albumsIds, AlbumStatus status);
 
-        Task UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice);
+        Task UpdatePriceForAlbums(Dictionary<Guid, float> albumPrices);
 
         Task<bool> DeleteAlbum(Guid id);
 

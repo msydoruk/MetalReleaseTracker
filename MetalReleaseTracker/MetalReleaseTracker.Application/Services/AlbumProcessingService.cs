@@ -13,7 +13,11 @@ namespace MetalReleaseTracker.Application.Services
         private readonly IBandService _bandService;
         private readonly IDistributorsService _distributorService;
 
-        public AlbumProcessingService(IParserFactory parserFactory, IAlbumService albumService, IBandService bandService, IDistributorsService distributorService)
+        public AlbumProcessingService(
+            IParserFactory parserFactory,
+            IAlbumService albumService,
+            IBandService bandService,
+            IDistributorsService distributorService)
         {
             _parserFactory = parserFactory;
             _albumService = albumService;
@@ -38,6 +42,9 @@ namespace MetalReleaseTracker.Application.Services
             var parsedAlbums = await parser.ParseAlbums(distributor.ParsingUrl);
 
             var bandCache = new Dictionary<string, Band>();
+
+            var albumsToUpdate = new Dictionary<Guid, float>();
+
             var existingAlbums = await _albumService.GetAlbumsByDistributor(distributor.Id);
 
             foreach (var album in parsedAlbums)
@@ -52,9 +59,11 @@ namespace MetalReleaseTracker.Application.Services
                 }
                 else
                 {
-                    await UpdateAlbumPrice(existingAlbum, album);
+                    AddAlbumToUpdate(existingAlbum, album, albumsToUpdate);
                 }
             }
+
+            await UpdateAlbumsPrices(albumsToUpdate);
 
             await MarkAlbumsAsUnavailable(existingAlbums, parsedAlbums);
         }
@@ -100,24 +109,19 @@ namespace MetalReleaseTracker.Application.Services
             };
         }
 
-        private async Task UpdateAlbumPrice(Album existingAlbum, AlbumDto albumDto)
+        private void AddAlbumToUpdate(Album existingAlbum, AlbumDto parsedAlbum, Dictionary<Guid, float> albumsToUpdate)
         {
-            var updatedAlbumPrices = new Dictionary<Guid, float>();
-
-            if (existingAlbum.Price != albumDto.Price && albumDto.Price > 0)
+            if (existingAlbum.Price != parsedAlbum.Price)
             {
-                existingAlbum.Price = albumDto.Price;
-                existingAlbum.ModificationTime = DateTime.UtcNow;
-
-                updatedAlbumPrices[existingAlbum.Id] = existingAlbum.Price;
+                albumsToUpdate.Add(existingAlbum.Id, parsedAlbum.Price);
             }
+        }
 
-            if (updatedAlbumPrices.Any())
+        private async Task UpdateAlbumsPrices(Dictionary<Guid, float> albumsToUpdate)
+        {
+            if (albumsToUpdate.Any())
             {
-                foreach (var albumPrice in updatedAlbumPrices)
-                {
-                    await _albumService.UpdatePriceForAlbums(new List<Guid> { albumPrice.Key }, albumPrice.Value);
-                }
+                await _albumService.UpdatePriceForAlbums(albumsToUpdate);
             }
         }
 

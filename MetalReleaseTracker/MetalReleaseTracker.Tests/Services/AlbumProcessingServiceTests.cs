@@ -52,13 +52,13 @@ namespace MetalReleaseTracker.Tests.Services
             var parserMock = new Mock<IParser>();
             parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(It.IsAny<DistributorCode>())).Returns(parserMock.Object);
 
             _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
             _bandServiceMock.Setup(service => service.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
@@ -95,17 +95,22 @@ namespace MetalReleaseTracker.Tests.Services
             var parserMock = new Mock<IParser>();
             parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(It.IsAny<DistributorCode>())).Returns(parserMock.Object);
 
             _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
             _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
-            _albumServiceMock.Verify(albumService => albumService.UpdatePriceForAlbums(It.Is<IEnumerable<Guid>>(ids => ids.Contains(existingAlbums.First().Id)),12),Times.Once);
+            var expectedAlbumPrices = new Dictionary<Guid, float>
+            {
+                { existingAlbums.First().Id, 12 }
+            };
+
+            _albumServiceMock.Verify(albumService => albumService.UpdatePriceForAlbums(It.Is<Dictionary<Guid, float>>(prices => prices.Count == 1 && prices.ContainsKey(existingAlbums.First().Id) && prices[existingAlbums.First().Id] == 12)), Times.Once);
         }
 
         [Fact]
@@ -136,15 +141,15 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock .Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock .Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(It.IsAny<DistributorCode>())).Returns(parserMock.Object);
 
-            _distributorServiceMock .Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
+            _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
             _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
@@ -177,13 +182,13 @@ namespace MetalReleaseTracker.Tests.Services
             var parserMock = new Mock<IParser>();
             parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
-            _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
+            _parserFactoryMock.Setup(factory => factory.CreateParser(It.IsAny<DistributorCode>())).Returns(parserMock.Object);
 
             _distributorServiceMock.Setup(service => service.GetAllDistributors()).ReturnsAsync(distributors);
 
             _bandServiceMock.Setup(service => service.GetBandByName(It.IsAny<string>())).ReturnsAsync((Band) null);
 
-            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(distributor.Id)).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 

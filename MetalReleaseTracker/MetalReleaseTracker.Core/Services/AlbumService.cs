@@ -55,14 +55,14 @@ namespace MetalReleaseTracker.Сore.Services
             await _albumRepository.UpdateAlbumsStatus(albumsIds, status);
         }
 
-        public async Task UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice)
+        public async Task UpdatePriceForAlbums(Dictionary<Guid, float> albumPrices)
         {
-            foreach (var albumId in albumIds)
+            foreach (var albumId in albumPrices.Keys)
             {
                 _validationService.Validate(albumId);
             }
 
-            await _albumRepository.UpdatePriceForAlbums(albumIds, newPrice);
+            await _albumRepository.UpdatePriceForAlbums(albumPrices);
         }
 
         public async Task<bool> DeleteAlbum(Guid id)
