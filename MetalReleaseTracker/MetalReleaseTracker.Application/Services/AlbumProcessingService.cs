@@ -102,22 +102,22 @@ namespace MetalReleaseTracker.Application.Services
 
         private async Task UpdateAlbumPrice(Album existingAlbum, AlbumDto albumDto)
         {
-            var albumPriceUpdates = new Dictionary<Guid, float>();
+            var updatedAlbumPrices = new Dictionary<Guid, float>();
 
             if (existingAlbum.Price != albumDto.Price && albumDto.Price > 0)
             {
                 existingAlbum.Price = albumDto.Price;
                 existingAlbum.ModificationTime = DateTime.UtcNow;
 
-                albumPriceUpdates[existingAlbum.Id] = existingAlbum.Price;
+                updatedAlbumPrices[existingAlbum.Id] = existingAlbum.Price;
             }
 
-            if (albumPriceUpdates.Any())
+            if (updatedAlbumPrices.Any())
             {
-                var albumIds = albumPriceUpdates.Keys;
-                var newPrices = albumPriceUpdates;
-
-                await _albumService.UpdatePriceForAlbums(albumIds, newPrices[existingAlbum.Id]);
+                foreach (var albumPrice in updatedAlbumPrices)
+                {
+                    await _albumService.UpdatePriceForAlbums(new List<Guid> { albumPrice.Key }, albumPrice.Value);
+                }
             }
         }
 
