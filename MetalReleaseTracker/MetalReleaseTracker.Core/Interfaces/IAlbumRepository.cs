@@ -1,4 +1,5 @@
 ﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Filters;
 
 namespace MetalReleaseTracker.Core.Interfaces
@@ -13,7 +14,7 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<bool> Update(Album album);
 
-        Task<bool> UpdateAlbumsStatus(IEnumerable<Guid> albumsIds);
+        Task<bool> UpdateAlbumsStatus(IEnumerable<Guid> albumsIds, AlbumStatus status);
 
         Task<bool> UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice);
 

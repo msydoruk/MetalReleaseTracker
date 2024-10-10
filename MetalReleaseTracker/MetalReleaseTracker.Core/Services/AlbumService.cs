@@ -1,4 +1,5 @@
 ﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
@@ -44,14 +45,14 @@ namespace MetalReleaseTracker.Сore.Services
             return await _albumRepository.Update(album);
         }
 
-        public async Task UpdateAlbumsStatus(IEnumerable<Guid> albumsIds)
+        public async Task UpdateAlbumsStatus(IEnumerable<Guid> albumsIds, AlbumStatus status)
         {
             foreach (var albumId in albumsIds)
             {
                 _validationService.Validate(albumId);
             }
 
-            await _albumRepository.UpdateAlbumsStatus(albumsIds);
+            await _albumRepository.UpdateAlbumsStatus(albumsIds, status);
         }
 
         public async Task UpdatePriceForAlbums(IEnumerable<Guid> albumIds, float newPrice)

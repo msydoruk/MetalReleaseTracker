@@ -68,13 +68,13 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<bool> UpdateAlbumsStatus(IEnumerable<Guid> albumsIds)
+        public async Task<bool> UpdateAlbumsStatus(IEnumerable<Guid> albumsIds, AlbumStatus status)
         {
             var albumIdList = albumsIds.ToList();
 
             var changes = await _dbContext.Albums
                 .Where(album => albumIdList.Contains(album.Id)).ExecuteUpdateAsync(albumDb => albumDb
-                    .SetProperty(existingAlbum => existingAlbum.Status, status => AlbumStatus.Unavailable)
+                    .SetProperty(existingAlbum => existingAlbum.Status, newStatus => status)
                     .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
 
             return changes > 0;

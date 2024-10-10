@@ -50,7 +50,7 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock.Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
             _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
@@ -93,7 +93,7 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock.Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
             _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
@@ -136,7 +136,7 @@ namespace MetalReleaseTracker.Tests.Services
             };
 
             var parserMock = new Mock<IParser>();
-            parserMock .Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
+            parserMock .Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
             _parserFactoryMock .Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
@@ -152,7 +152,7 @@ namespace MetalReleaseTracker.Tests.Services
                 .Where(album => album.SKU != "SKU1")
                 .Select(album => album.Id);
 
-            _albumServiceMock.Verify(albumService => albumService.UpdateAlbumsStatus(It.Is<IEnumerable<Guid>>(ids => ids.SequenceEqual(expectedAlbumIds))), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.UpdateAlbumsStatus(It.Is<IEnumerable<Guid>>(ids => ids.SequenceEqual(expectedAlbumIds)), AlbumStatus.Unavailable), Times.Once);
         }
 
         [Fact]
@@ -175,7 +175,7 @@ namespace MetalReleaseTracker.Tests.Services
             var existingAlbums = new List<Album>();
 
             var parserMock = new Mock<IParser>();
-            parserMock.Setup(parser => parser.ParseAlbums(distributor.ParsingUrl)).ReturnsAsync(parsedAlbums);
+            parserMock.Setup(parser => parser.ParseAlbums(It.IsAny<string>())).ReturnsAsync(parsedAlbums);
 
             _parserFactoryMock.Setup(factory => factory.CreateParser(distributor.Code)).Returns(parserMock.Object);
 
