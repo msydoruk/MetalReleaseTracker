@@ -2,7 +2,7 @@
 
 namespace MetalReleaseTracker.Application.Interfaces
 {
-    public interface IAlbumProcessingService
+    public interface IAlbumSynchronizationService
     {
         Task SynchronizeAllAlbums();
     }

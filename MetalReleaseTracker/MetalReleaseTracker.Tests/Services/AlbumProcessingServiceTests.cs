@@ -14,7 +14,7 @@ namespace MetalReleaseTracker.Tests.Services
         private readonly Mock<IAlbumService> _albumServiceMock;
         private readonly Mock<IBandService> _bandServiceMock;
         private readonly Mock<IDistributorsService> _distributorServiceMock;
-        private readonly AlbumProcessingService _service;
+        private readonly AlbumSynchronizationService _service;
 
         public AlbumProcessingServiceTests()
         {
@@ -23,7 +23,7 @@ namespace MetalReleaseTracker.Tests.Services
             _bandServiceMock = new Mock<IBandService>();
             _distributorServiceMock = new Mock<IDistributorsService>();
 
-            _service = new AlbumProcessingService(_parserFactoryMock.Object, _albumServiceMock.Object, _bandServiceMock.Object, _distributorServiceMock.Object);
+            _service = new AlbumSynchronizationService(_parserFactoryMock.Object, _albumServiceMock.Object, _bandServiceMock.Object, _distributorServiceMock.Object);
         }
 
         [Fact]
@@ -110,7 +110,7 @@ namespace MetalReleaseTracker.Tests.Services
                 { existingAlbums.First().Id, 12 }
             };
 
-            _albumServiceMock.Verify(albumService => albumService.UpdatePriceForAlbums(It.Is<Dictionary<Guid, float>>(prices => prices.Count == 1 && prices.ContainsKey(existingAlbums.First().Id) && prices[existingAlbums.First().Id] == 12)), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.UpdateAlbumPrices(It.Is<Dictionary<Guid, float>>(prices => prices.Count == 1 && prices.ContainsKey(existingAlbums.First().Id) && prices[existingAlbums.First().Id] == 12)), Times.Once);
         }
 
         [Fact]

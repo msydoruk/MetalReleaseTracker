@@ -6,14 +6,14 @@ using MetalReleaseTracker.Core.Interfaces;
 
 namespace MetalReleaseTracker.Application.Services
 {
-    public class AlbumProcessingService : IAlbumProcessingService
+    public class AlbumSynchronizationService : IAlbumSynchronizationService
     {
         private readonly IParserFactory _parserFactory;
         private readonly IAlbumService _albumService;
         private readonly IBandService _bandService;
         private readonly IDistributorsService _distributorService;
 
-        public AlbumProcessingService(
+        public AlbumSynchronizationService(
             IParserFactory parserFactory,
             IAlbumService albumService,
             IBandService bandService,
@@ -40,30 +40,28 @@ namespace MetalReleaseTracker.Application.Services
             var parser = _parserFactory.CreateParser(distributor.Code);
 
             var parsedAlbums = await parser.ParseAlbums(distributor.ParsingUrl);
-
-            var bandCache = new Dictionary<string, Band>();
-
-            var albumsToUpdate = new Dictionary<Guid, float>();
-
             var existingAlbums = await _albumService.GetAlbumsByDistributor(distributor.Id);
 
-            foreach (var album in parsedAlbums)
+            var bandCache = new Dictionary<string, Band>();
+            var albumsWithPriceChanges = new Dictionary<Guid, float>();
+
+            foreach (var parsedAlbum in parsedAlbums)
             {
-                var band = await GetOrAddBand(bandCache, album.BandName);
-                var existingAlbum = existingAlbums.FirstOrDefault(existingAlbum => existingAlbum.SKU == album.SKU);
+                var existingAlbum = existingAlbums.FirstOrDefault(existingAlbum => existingAlbum.SKU == parsedAlbum.SKU);
 
                 if (existingAlbum == null)
                 {
-                    var newAlbum = MapToAlbumFromDto(album, band);
+                    var band = await GetOrAddBand(bandCache, parsedAlbum.BandName);
+                    var newAlbum = MapParsedAlbumToEntity(parsedAlbum, band);
                     await _albumService.AddAlbum(newAlbum);
                 }
                 else
                 {
-                    AddAlbumToUpdate(existingAlbum, album, albumsToUpdate);
+                    AddAlbumToPriceChangeList(existingAlbum, parsedAlbum, albumsWithPriceChanges);
                 }
             }
 
-            await UpdateAlbumsPrices(albumsToUpdate);
+            await UpdateAlbumPrices(albumsWithPriceChanges);
 
             await MarkAlbumsAsUnavailable(existingAlbums, parsedAlbums);
         }
@@ -87,7 +85,7 @@ namespace MetalReleaseTracker.Application.Services
             return band;
         }
 
-        private Album MapToAlbumFromDto(AlbumDto albumDto, Band band)
+        private Album MapParsedAlbumToEntity(AlbumDto albumDto, Band band)
         {
             return new Album
             {
@@ -109,7 +107,7 @@ namespace MetalReleaseTracker.Application.Services
             };
         }
 
-        private void AddAlbumToUpdate(Album existingAlbum, AlbumDto parsedAlbum, Dictionary<Guid, float> albumsToUpdate)
+        private void AddAlbumToPriceChangeList(Album existingAlbum, AlbumDto parsedAlbum, Dictionary<Guid, float> albumsToUpdate)
         {
             if (existingAlbum.Price != parsedAlbum.Price)
             {
@@ -117,11 +115,11 @@ namespace MetalReleaseTracker.Application.Services
             }
         }
 
-        private async Task UpdateAlbumsPrices(Dictionary<Guid, float> albumsToUpdate)
+        private async Task UpdateAlbumPrices(Dictionary<Guid, float> albumsWithPriceChanges)
         {
-            if (albumsToUpdate.Any())
+            if (albumsWithPriceChanges.Any())
             {
-                await _albumService.UpdatePriceForAlbums(albumsToUpdate);
+                await _albumService.UpdateAlbumPrices(albumsWithPriceChanges);
             }
         }
 
@@ -129,19 +127,19 @@ namespace MetalReleaseTracker.Application.Services
         {
             var parsedAlbumsSet = new HashSet<string>(parsedAlbums.Select(album => album.SKU));
 
-            var albumsToUpdate = new List<Guid>();
+            var albumsToMarkUnavailable = new List<Guid>();
 
             foreach (var existingAlbum in existingAlbums)
             {
                 if (!parsedAlbumsSet.Contains(existingAlbum.SKU))
                 {
-                    albumsToUpdate.Add(existingAlbum.Id);
+                    albumsToMarkUnavailable.Add(existingAlbum.Id);
                 }
             }
 
-            if (albumsToUpdate.Any())
+            if (albumsToMarkUnavailable.Any())
             {
-                await _albumService.UpdateAlbumsStatus(albumsToUpdate, AlbumStatus.Unavailable);
+                await _albumService.UpdateAlbumsStatus(albumsToMarkUnavailable, AlbumStatus.Unavailable);
             }
         }
     }
