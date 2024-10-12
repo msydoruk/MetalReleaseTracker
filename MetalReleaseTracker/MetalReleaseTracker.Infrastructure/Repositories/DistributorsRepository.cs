@@ -22,7 +22,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             var distributor = await _dbContext.Distributors
                    .AsNoTracking()
-                   .FirstOrDefaultAsync(d => d.Id == id);
+                   .FirstOrDefaultAsync(distributor => distributor.Id == id);
 
             return _mapper.Map<Distributor>(distributor);
         }

@@ -8,6 +8,8 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<IEnumerable<Band>> GetAllBands();
 
+        Task<Band> GetBandByName(string bandName);
+
         Task AddBand(Band band);
 
         Task<bool> UpdateBand(Band band);

@@ -22,7 +22,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             var subscription = await _dbContext.Subscriptions
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.Id == id);
+                    .FirstOrDefaultAsync(subscription => subscription.Id == id);
 
             return _mapper.Map<Subscription>(subscription);
         }

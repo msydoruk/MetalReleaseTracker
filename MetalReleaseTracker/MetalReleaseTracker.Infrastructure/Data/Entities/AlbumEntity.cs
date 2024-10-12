@@ -34,7 +34,6 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
 
         public string Genre { get; set; }
 
-        [Range(1, float.MaxValue, ErrorMessage = "Min price is 1$")]
         public float Price { get; set; }
 
         [Url]
@@ -52,6 +51,8 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
 
         [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must contain at least 10 characters.")]
         public string Description { get; set; }
+
+        public DateTime ModificationTime { get; set; }
 
         [EnumDataType(typeof(AlbumStatus))]
         public AlbumStatus Status { get; set; }

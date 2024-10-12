@@ -1,4 +1,5 @@
 ﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
@@ -44,6 +45,26 @@ namespace MetalReleaseTracker.Сore.Services
             return await _albumRepository.Update(album);
         }
 
+        public async Task UpdateAlbumsStatus(IEnumerable<Guid> albumsIds, AlbumStatus status)
+        {
+            foreach (var albumId in albumsIds)
+            {
+                _validationService.Validate(albumId);
+            }
+
+            await _albumRepository.UpdateAlbumsStatus(albumsIds, status);
+        }
+
+        public async Task UpdateAlbumPrices(Dictionary<Guid, float> albumPrices)
+        {
+            foreach (var albumId in albumPrices.Keys)
+            {
+                _validationService.Validate(albumId);
+            }
+
+            await _albumRepository.UpdateAlbumPrices(albumPrices);
+        }
+
         public async Task<bool> DeleteAlbum(Guid id)
         {
             _validationService.Validate(id);
@@ -58,6 +79,13 @@ namespace MetalReleaseTracker.Сore.Services
             _validationService.Validate(filter);
 
             return await _albumRepository.GetByFilter(filter);
+        }
+
+        public async Task<IEnumerable<Album>> GetAlbumsByDistributor(Guid distributorId)
+        {
+            _validationService.Validate(distributorId);
+
+            return await _albumRepository.GetByDistributorId(distributorId);
         }
 
         private async Task<Album> EnsureAlbumExists(Guid id)

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using MetalReleaseTracker.Core.Entities;
+﻿using MetalReleaseTracker.Core.Entities;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
@@ -9,6 +7,8 @@ namespace MetalReleaseTracker.Core.Interfaces
         Task<Band> GetById(Guid id);
 
         Task<IEnumerable<Band>> GetAll();
+
+        Task<Band> GetByName(string bandName);
 
         Task Add(Band band);
 
