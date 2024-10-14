@@ -10,7 +10,7 @@ using Moq;
 
 namespace MetalReleaseTracker.Tests.Services
 {
-    public class AlbumProcessingServiceTests
+    public class AlbumSynchronizationServiceTests
     {
         private readonly Mock<IParserFactory> _parserFactoryMock;
         private readonly Mock<IAlbumService> _albumServiceMock;
@@ -19,7 +19,7 @@ namespace MetalReleaseTracker.Tests.Services
         private readonly Mock<ILogger<AlbumSynchronizationService>> _loggerMock;
         private readonly AlbumSynchronizationService _service;
         
-        public AlbumProcessingServiceTests()
+        public AlbumSynchronizationServiceTests()
         {
             _parserFactoryMock = new Mock<IParserFactory>();
             _albumServiceMock = new Mock<IAlbumService>();
