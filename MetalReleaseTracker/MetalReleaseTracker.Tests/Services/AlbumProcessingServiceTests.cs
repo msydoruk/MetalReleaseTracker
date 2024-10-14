@@ -4,6 +4,8 @@ using MetalReleaseTracker.Application.Services;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
+using Microsoft.Extensions.Logging;
+
 using Moq;
 
 namespace MetalReleaseTracker.Tests.Services
@@ -14,16 +16,18 @@ namespace MetalReleaseTracker.Tests.Services
         private readonly Mock<IAlbumService> _albumServiceMock;
         private readonly Mock<IBandService> _bandServiceMock;
         private readonly Mock<IDistributorsService> _distributorServiceMock;
+        private readonly Mock<ILogger<AlbumSynchronizationService>> _loggerMock;
         private readonly AlbumSynchronizationService _service;
-
+        
         public AlbumProcessingServiceTests()
         {
             _parserFactoryMock = new Mock<IParserFactory>();
             _albumServiceMock = new Mock<IAlbumService>();
             _bandServiceMock = new Mock<IBandService>();
             _distributorServiceMock = new Mock<IDistributorsService>();
+            _loggerMock =  new Mock<ILogger<AlbumSynchronizationService>>();
 
-            _service = new AlbumSynchronizationService(_parserFactoryMock.Object, _albumServiceMock.Object, _bandServiceMock.Object, _distributorServiceMock.Object);
+            _service = new AlbumSynchronizationService(_parserFactoryMock.Object, _albumServiceMock.Object, _bandServiceMock.Object, _distributorServiceMock.Object, _loggerMock.Object);
         }
 
         [Fact]
