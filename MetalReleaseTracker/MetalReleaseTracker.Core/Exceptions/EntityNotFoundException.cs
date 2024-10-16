@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MetalReleaseTracker.Core.Exceptions
+﻿namespace MetalReleaseTracker.Core.Exceptions
 {
     public class EntityNotFoundException : Exception
     {

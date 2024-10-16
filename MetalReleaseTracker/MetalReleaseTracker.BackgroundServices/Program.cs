@@ -4,13 +4,13 @@ using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Application.Services;
 using MetalReleaseTracker.BackgroundServices;
 using MetalReleaseTracker.Core.Interfaces;
-using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Factories;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Ñore.Services;
+using MetalReleaseTracker.Core.Services;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Serilog;

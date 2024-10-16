@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MetalReleaseTracker.Core.Entities
+﻿namespace MetalReleaseTracker.Core.Entities
 {
     public class Band
     {

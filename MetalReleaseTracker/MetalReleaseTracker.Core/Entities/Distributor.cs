@@ -1,6 +1,4 @@
-﻿using System;
-
-using MetalReleaseTracker.Core.Enums;
+﻿using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Core.Entities
 {
