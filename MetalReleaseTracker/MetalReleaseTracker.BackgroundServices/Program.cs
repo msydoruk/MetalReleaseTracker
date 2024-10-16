@@ -23,13 +23,14 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-builder.Configuration.AddJsonFile("settings.json", optional: false, reloadOnChange: true);
+builder.Services.Configure<AlbumSynchronizationSettings>(builder.Configuration.GetSection("AlbumSynchronizationSettings"));
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddHangfire(configuration => configuration
-    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("PostgreSqlConnection")));
+builder.Services.AddHangfire(options => 
+    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("PostgreSqlConnection")));
+
 builder.Services.AddHangfireServer();
 
 builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
@@ -42,11 +43,14 @@ builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<IAlbumSynchronizationService, AlbumSynchronizationService>();
+builder.Services.AddScoped<ITestAlbumSynchronizationService, TestAlbumSynchronizationService>();
 
 builder.Services.AddHostedService<AlbumSynchronizationWorker>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
-app.UseHangfireDashboard();
+
+app.UseHangfireDashboard("/hangfire");
+
 app.Run();

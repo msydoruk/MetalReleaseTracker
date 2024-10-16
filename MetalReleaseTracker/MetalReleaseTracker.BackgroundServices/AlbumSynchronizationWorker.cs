@@ -1,51 +1,73 @@
 using Hangfire;
 using MetalReleaseTracker.Application.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.BackgroundServices
 {
     public class AlbumSynchronizationWorker : BackgroundService
     {
         private readonly ILogger<AlbumSynchronizationWorker> _logger;
-        private readonly IAlbumSynchronizationService _albumSynchronizationService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IRecurringJobManager _recurringJobManager;
         private readonly string _cronExpression;
 
         public AlbumSynchronizationWorker(
              ILogger<AlbumSynchronizationWorker> logger,
-             IAlbumSynchronizationService albumSynchronizationService,
+             IServiceScopeFactory serviceScopeFactory,
              IRecurringJobManager recurringJobManager,
-             IConfiguration configuration
+             IOptions<AlbumSynchronizationSettings> albumSynchronizationSettings
             )
         {
             _logger = logger;
-            _albumSynchronizationService = albumSynchronizationService;
+            _serviceScopeFactory = serviceScopeFactory;
             _recurringJobManager = recurringJobManager;
-            _cronExpression = configuration["AlbumSynchronizationSettings:CronExpression"];
+            _cronExpression = albumSynchronizationSettings.Value.CronExpression;
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("AlbumSynchronizationWorker is starting.");
 
-            _recurringJobManager.AddOrUpdate("SynchronizeAllAlbumsJob", () => _albumSynchronizationService.SynchronizeAllAlbums(), _cronExpression);                     
+            try
+            {
+                _recurringJobManager.AddOrUpdate("SynchronizeAllAlbumsJob", () => RunSynchronizationJob(), _cronExpression);
 
-            _logger.LogInformation("SynchronizeAllAlbums task scheduled to run daily.");
-            return base.StartAsync(cancellationToken);
+                _logger.LogInformation("SynchronizeAllAlbums task scheduled to run based on the provided Cron expression.");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to schedule the SynchronizeAllAlbums task.");
+            }
+
+            await base.StartAsync(cancellationToken);
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogInformation($"The background service is working: {DateTimeOffset.Now}");
-                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-            }
+            return Task.CompletedTask;
         }
         
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("AlbumSynchronizationWorker stopped.");
-            return base.StopAsync(cancellationToken);
+            await base.StopAsync(cancellationToken);
+        }
+
+        public async Task RunSynchronizationJob()
+        {
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                var albumSynchronizationService = scope.ServiceProvider.GetRequiredService<ITestAlbumSynchronizationService>();
+
+                try
+                {
+                    await albumSynchronizationService.SynchronizeAllAlbums();
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Error occurred while synchronizing albums.");
+                }
+            }
         }
     }
 }
