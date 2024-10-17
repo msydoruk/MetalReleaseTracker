@@ -23,7 +23,6 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
         public BandEntity Band { get; set; }
 
         [Required]
-        [RegularExpression("^[A-Z0-9-]*$", ErrorMessage = "SKU can only contain uppercase letters, numbers and hyphens.")]
         public string SKU { get; set; }
 
         [Required(ErrorMessage = "The album name is required.")]
@@ -49,7 +48,6 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
 
         public string Press { get; set; }
 
-        [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must contain at least 10 characters.")]
         public string Description { get; set; }
 
         public DateTime ModificationTime { get; set; }

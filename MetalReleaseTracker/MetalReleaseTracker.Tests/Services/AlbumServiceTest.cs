@@ -5,7 +5,7 @@ using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
-using MetalReleaseTracker.Сore.Services;
+using MetalReleaseTracker.Core.Services;
 using Moq;
 
 namespace MetalReleaseTracker.Tests.Services

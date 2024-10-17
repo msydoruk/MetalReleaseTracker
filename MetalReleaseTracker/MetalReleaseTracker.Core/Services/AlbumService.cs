@@ -4,7 +4,7 @@ using MetalReleaseTracker.Core.Exceptions;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 
-namespace MetalReleaseTracker.Сore.Services
+namespace MetalReleaseTracker.Core.Services
 {
     public class AlbumService : IAlbumService
     {

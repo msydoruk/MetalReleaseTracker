@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MetalReleaseTracker.Core.Enums
+﻿namespace MetalReleaseTracker.Core.Enums
 {
     public enum AlbumStatus
     {

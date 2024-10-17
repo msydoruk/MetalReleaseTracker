@@ -11,7 +11,6 @@ using MetalReleaseTracker.Infrastructure.Parsers;
 using MetalReleaseTracker.Infrastructure.Providers;
 using MetalReleaseTracker.Infrastructure.Repositories;
 using MetalReleaseTracker.Infrastructure.Utils;
-using MetalReleaseTracker.Сore.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
