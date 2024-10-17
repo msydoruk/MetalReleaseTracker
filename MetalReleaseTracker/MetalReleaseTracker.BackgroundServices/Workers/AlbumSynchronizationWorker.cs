@@ -1,8 +1,11 @@
 using Hangfire;
+
 using MetalReleaseTracker.Application.Interfaces;
+using MetalReleaseTracker.BackgroundServices.Settings;
+
 using Microsoft.Extensions.Options;
 
-namespace MetalReleaseTracker.BackgroundServices
+namespace MetalReleaseTracker.BackgroundServices.Workers
 {
     public class AlbumSynchronizationWorker : BackgroundService
     {
@@ -46,7 +49,7 @@ namespace MetalReleaseTracker.BackgroundServices
         {
             return Task.CompletedTask;
         }
-        
+
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("AlbumSynchronizationWorker stopped.");

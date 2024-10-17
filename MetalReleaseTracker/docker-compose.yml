@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  metalreleasetracker.backgroundservices:
+    image: ${DOCKER_REGISTRY-}metalreleasetrackerbackgroundservices
+    build:
+      context: .
+      dockerfile: MetalReleaseTracker.BackgroundServices/Dockerfile

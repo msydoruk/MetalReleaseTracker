@@ -2,7 +2,6 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Application.Services;
-using MetalReleaseTracker.BackgroundServices;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Infrastructure.Data;
@@ -14,6 +13,8 @@ using MetalReleaseTracker.Core.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using MetalReleaseTracker.BackgroundServices.Settings;
+using MetalReleaseTracker.BackgroundServices.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,10 +27,10 @@ builder.Host.UseSerilog();
 builder.Services.Configure<AlbumSynchronizationSettings>(builder.Configuration.GetSection("AlbumSynchronizationSettings"));
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
 
 builder.Services.AddHangfire(options => 
-    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("PostgreSqlConnection")));
+    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("MetalReleaseTrackerDbBackground")));
 
 builder.Services.AddHangfireServer();
 
