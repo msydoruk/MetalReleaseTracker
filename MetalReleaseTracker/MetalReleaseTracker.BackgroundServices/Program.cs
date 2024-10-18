@@ -9,7 +9,6 @@ using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Factories;
 using MetalReleaseTracker.Infrastructure.Repositories;
 using MetalReleaseTracker.Core.Services;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
