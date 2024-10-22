@@ -1,12 +1,29 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MetalReleaseTracker.Core.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MetalReleaseTracker.API.Controllers
 {
-    public class AlbumController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AlbumController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly IAlbumService _albumService;
+
+        public AlbumController(IAlbumService albumService)
         {
-            return View();
+            _albumService = albumService;
+        }
+
+        [HttpGet("getTop10AlbumsFromDistributor")]
+        public async Task<IActionResult> GetTop10AlbumsFromDistributor(Guid distributorId)
+        {
+            var albums = await _albumService.GetAlbumsByDistributor(distributorId);
+
+            var topAlbums = albums.OrderByDescending(album => album.ReleaseDate)
+                .Take(10)
+                .ToList();
+
+            return Ok(topAlbums);
         }
     }
 }
