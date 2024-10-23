@@ -1,9 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY . .
+COPY ["MetalReleaseTracker.BackgroundServices/MetalReleaseTracker.BackgroundServices.csproj", "MetalReleaseTracker.BackgroundServices/"]
 RUN dotnet restore "./MetalReleaseTracker.BackgroundServices/MetalReleaseTracker.BackgroundServices.csproj"
 
+COPY . .
 WORKDIR "/src/MetalReleaseTracker.BackgroundServices"
 RUN dotnet build "./MetalReleaseTracker.BackgroundServices.csproj" -c Release -o /app/build
 

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MetalReleaseTracker.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/albums")]
     public class AlbumController : ControllerBase
     {
         private readonly IAlbumService _albumService;
@@ -14,7 +14,7 @@ namespace MetalReleaseTracker.API.Controllers
             _albumService = albumService;
         }
 
-        [HttpGet("getTop10AlbumsFromDistributor")]
+        [HttpGet("top10")]
         public async Task<IActionResult> GetTop10AlbumsFromDistributor(Guid distributorId)
         {
             var albums = await _albumService.GetAlbumsByDistributor(distributorId);

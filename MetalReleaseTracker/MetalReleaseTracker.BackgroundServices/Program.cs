@@ -26,7 +26,7 @@ builder.Host.UseSerilog();
 builder.Services.Configure<AlbumSynchronizationSettings>(builder.Configuration.GetSection("AlbumSynchronizationSettings"));
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
 
 builder.Services.AddHangfire(options => 
     options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("MetalReleaseTrackerDbBackground")));

@@ -7,6 +7,8 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <TypeScriptModuleKind>none</TypeScriptModuleKind>
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+    <UserSecretsId>3e7ea835-f915-4d5b-8e33-38174aa940ba</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +24,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1" />
@@ -37,6 +41,10 @@
   <ItemGroup>
     <ProjectReference Include="..\MetalReleaseTracker.Application\MetalReleaseTracker.Application.csproj" />
     <ProjectReference Include="..\MetalReleaseTracker.Infrastructure\MetalReleaseTracker.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="..\.dockerignore" />
   </ItemGroup>
 
 </Project>

@@ -10,6 +10,25 @@ services:
       ASPNETCORE_ENVIRONMENT: "Production"
       DOTNET_RUNNING_IN_CONTAINER: "true"
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
+      ConnectionStrings__MetalReleaseTrackerDb: "Host=postgres;Port=5432;Database=MetalReleaseTrackerDb;Username=metal;Password=Mtl_pswrdSl;"
+      ConnectionStrings__MetalReleaseTrackerDbBackground: "Host=postgres;Port=5432;Database=BackgroundServicesDb;Username=metalUser;Password=Mtl_EApswrd;"
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+      - seq
+
+  metalreleasetracker.api:
+    image: metalreleasetrackerapi
+    build:
+      context: .
+      dockerfile: MetalReleaseTracker.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
+      ConnectionStrings__MetalReleaseTrackerDb: "Host=postgres;Port=5432;Database=MetalReleaseTrackerDb;Username=metal;Password=Mtl_pswrdSl;"
     restart: unless-stopped
     networks:
       - app-network
