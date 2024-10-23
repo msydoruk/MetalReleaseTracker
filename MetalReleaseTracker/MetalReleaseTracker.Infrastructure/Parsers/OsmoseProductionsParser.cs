@@ -24,12 +24,16 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         public async Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl)
         {
+            _logger.LogInformation($"Starting parsing albums");
+
             var albums = new List<AlbumDto>();
             string nextPageUrl = parsingUrl;
             bool hasMorePages;
 
             do
             {
+                _logger.LogInformation($"Parse the HTML document: {nextPageUrl}");
+
                 var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
 
                 var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
@@ -43,6 +47,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
                         if (albumDetails.IsSuccess)
                         {
+                            _logger.LogInformation($"Added parsed album: {albumDetails.Data.Name}");
                             albums.Add(albumDetails.Data);
                         }
                         else
@@ -58,11 +63,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
             while (hasMorePages);
 
+            _logger.LogInformation($"Completed parsing albums");
+
             return albums;
         }
 
         private async Task<ParsingResult<AlbumDto>> ParseAlbumDetails(string albumUrl)
         {
+            _logger.LogInformation($"Parse the HTML document: {albumUrl}");
+
             var htmlDocument = await LoadAndValidateHtmlDocument(albumUrl);
 
             var bandName = ParseBandName(htmlDocument);
@@ -112,7 +121,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private (string nextPageUrl, bool hasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
         {
-            var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPagination']//a[contains(@href, 'page=') and not(contains(@href, 'javascript'))]");
+            var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//a[div[@class='GtoursPaginationButtonRightb'] and not(contains(@href, 'javascript'))]");
             if (nextPageNode != null)
             {
                 string nextPageUrl = nextPageNode.GetAttributeValue("href", null);

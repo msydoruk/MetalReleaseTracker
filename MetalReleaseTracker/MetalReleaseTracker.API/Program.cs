@@ -41,8 +41,6 @@ builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
-builder.Services.AddHttpClient();
-
 builder.Services.AddCustomValidators();
 builder.Services.AddValidationServiceWithAllValidators();
 

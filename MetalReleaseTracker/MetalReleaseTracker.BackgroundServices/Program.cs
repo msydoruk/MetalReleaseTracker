@@ -47,6 +47,7 @@ builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton<UserAgentProvider>();
 builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
 builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
