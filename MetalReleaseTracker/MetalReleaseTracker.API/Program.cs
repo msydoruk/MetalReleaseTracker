@@ -29,7 +29,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
 
 builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
 builder.Services.AddScoped<IBandRepository, BandRepository>();
@@ -43,19 +43,18 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddSingleton<UserAgentProvider>();
-
-builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
-builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
-builder.Services.AddScoped<IParserFactory, ParserFactory>();
-builder.Services.AddScoped<AlbumSynchronizationService>();
-
 builder.Services.AddCustomValidators();
 builder.Services.AddValidationServiceWithAllValidators();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MetalReleaseTrackerDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -67,8 +66,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

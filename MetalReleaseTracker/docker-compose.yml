@@ -1,34 +1,85 @@
 version: '3.8'
 
 services:
+  metalreleasetracker.api:
+    image: metalreleasetrackerapi
+    build:
+      context: .
+      dockerfile: MetalReleaseTracker.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
+      ASPNETCORE_URLS: "http://0.0.0.0:5000"
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      postgres-main:
+        condition: service_healthy
+      seq:
+        condition: service_started
+
   metalreleasetracker.backgroundservices:
     image: metalreleasetrackerbackgroundservices
     build:
       context: .
       dockerfile: MetalReleaseTracker.BackgroundServices/Dockerfile
     environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
+      DOTNET_ENVIRONMENT: "Production"
       DOTNET_RUNNING_IN_CONTAINER: "true"
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
+      ASPNETCORE_URLS: "http://0.0.0.0:5000"
+    ports:
+      - "5005:5000"
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - postgres
-      - seq
+      postgres-main:
+        condition: service_healthy
+      postgres-backgroundservices:
+        condition: service_healthy
+      seq:
+        condition: service_started
 
-  postgres:
+  postgres-main:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: MetalReleaseTrackerDb
+      POSTGRES_USER: metalUser
+      POSTGRES_PASSWORD: Mtl_EApswrd
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-main-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metalUser -d MetalReleaseTrackerDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-backgroundservices:
     image: postgres:16
     environment:
       POSTGRES_DB: BackgroundServicesDb
       POSTGRES_USER: metalUser
       POSTGRES_PASSWORD: Mtl_EApswrd
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-backgroundservices-data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metalUser -d BackgroundServicesDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   seq:
     image: datalust/seq:latest
@@ -45,4 +96,5 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
+  postgres-main-data:
+  postgres-backgroundservices-data:

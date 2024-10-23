@@ -14,6 +14,11 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using MetalReleaseTracker.BackgroundServices.Settings;
 using MetalReleaseTracker.BackgroundServices.Workers;
+using Hangfire.Dashboard;
+
+using MetalReleaseTracker.Infrastructure.Parsers;
+using MetalReleaseTracker.Infrastructure.Utils;
+using MetalReleaseTracker.Infrastructure.Providers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +31,7 @@ builder.Host.UseSerilog();
 builder.Services.Configure<AlbumSynchronizationSettings>(builder.Configuration.GetSection("AlbumSynchronizationSettings"));
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
 
 builder.Services.AddHangfire(options => 
     options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("MetalReleaseTrackerDbBackground")));
@@ -37,13 +42,16 @@ builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
 builder.Services.AddScoped<IBandRepository, BandRepository>();
 builder.Services.AddScoped<IDistributorsRepository, DistributorsRepository>();
 
-builder.Services.AddScoped<IParserFactory, ParserFactory>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
+
+builder.Services.AddSingleton<UserAgentProvider>();
+builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
+builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
+builder.Services.AddScoped<IParserFactory, ParserFactory>();
 builder.Services.AddScoped<IAlbumSynchronizationService, AlbumSynchronizationService>();
-builder.Services.AddScoped<ITestAlbumSynchronizationService, TestAlbumSynchronizationService>();
 
 builder.Services.AddHostedService<AlbumSynchronizationWorker>();
 
@@ -51,6 +59,18 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
-app.UseHangfireDashboard("/hangfire");
+app.UseHangfireDashboard("/hangfire", new DashboardOptions()
+{
+    Authorization = new[] { new AllowAllConnectionsFilter() },
+    IgnoreAntiforgeryToken = true
+});
 
 app.Run();
+
+public class AllowAllConnectionsFilter : IDashboardAuthorizationFilter
+{
+    public bool Authorize(DashboardContext context)
+    {
+        return true;
+    }
+}
