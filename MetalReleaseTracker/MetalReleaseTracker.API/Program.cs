@@ -1,16 +1,10 @@
 ﻿using MetalReleaseTracker.API.Extensions;
 using MetalReleaseTracker.API.Middleware;
-using MetalReleaseTracker.Application.Interfaces;
-using MetalReleaseTracker.Application.Services;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Services;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
-using MetalReleaseTracker.Infrastructure.Factories;
-using MetalReleaseTracker.Infrastructure.Parsers;
-using MetalReleaseTracker.Infrastructure.Providers;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -27,7 +21,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerMainConnectionString")));
 
 builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
 builder.Services.AddScoped<IBandRepository, BandRepository>();
@@ -40,13 +34,6 @@ builder.Services.AddScoped<IDistributorsService, DistributorsService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddHttpClient();
-
-builder.Services.AddSingleton<UserAgentProvider>();
-
-builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
-builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
-builder.Services.AddScoped<IParserFactory, ParserFactory>();
-builder.Services.AddScoped<AlbumSynchronizationService>();
 
 builder.Services.AddCustomValidators();
 builder.Services.AddValidationServiceWithAllValidators();

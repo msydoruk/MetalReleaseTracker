@@ -1,8 +1,6 @@
 using Hangfire;
-
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.BackgroundServices.Settings;
-
 using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.BackgroundServices.Workers
@@ -60,7 +58,7 @@ namespace MetalReleaseTracker.BackgroundServices.Workers
         {
             using (var scope = _serviceScopeFactory.CreateScope())
             {
-                var albumSynchronizationService = scope.ServiceProvider.GetRequiredService<ITestAlbumSynchronizationService>();
+                var albumSynchronizationService = scope.ServiceProvider.GetRequiredService<IAlbumSynchronizationService>();
 
                 try
                 {

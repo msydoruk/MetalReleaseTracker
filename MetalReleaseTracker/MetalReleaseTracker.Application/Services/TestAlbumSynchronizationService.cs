@@ -2,7 +2,7 @@
 
 namespace MetalReleaseTracker.Application.Services
 {
-    public class TestAlbumSynchronizationService : ITestAlbumSynchronizationService
+    public class TestAlbumSynchronizationService : IAlbumSynchronizationService
     {
         public async Task SynchronizeAllAlbums()
         {

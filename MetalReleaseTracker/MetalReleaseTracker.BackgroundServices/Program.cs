@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using MetalReleaseTracker.BackgroundServices.Settings;
 using MetalReleaseTracker.BackgroundServices.Workers;
+using MetalReleaseTracker.Infrastructure.Parsers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,10 +27,10 @@ builder.Host.UseSerilog();
 builder.Services.Configure<AlbumSynchronizationSettings>(builder.Configuration.GetSection("AlbumSynchronizationSettings"));
 
 builder.Services.AddDbContext<MetalReleaseTrackerDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MetalReleaseTrackerMainConnectionString")));
 
 builder.Services.AddHangfire(options => 
-    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("MetalReleaseTrackerDbBackground")));
+    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("MetalReleaseTrackerBackgroundConnectionString")));
 
 builder.Services.AddHangfireServer();
 
@@ -37,13 +38,13 @@ builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
 builder.Services.AddScoped<IBandRepository, BandRepository>();
 builder.Services.AddScoped<IDistributorsRepository, DistributorsRepository>();
 
+builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
 builder.Services.AddScoped<IParserFactory, ParserFactory>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IBandService, BandService>();
 builder.Services.AddScoped<IDistributorsService, DistributorsService>();
-builder.Services.AddScoped<IAlbumSynchronizationService, AlbumSynchronizationService>();
-builder.Services.AddScoped<ITestAlbumSynchronizationService, TestAlbumSynchronizationService>();
+builder.Services.AddScoped<IAlbumSynchronizationService, TestAlbumSynchronizationService>();
 
 builder.Services.AddHostedService<AlbumSynchronizationWorker>();
 

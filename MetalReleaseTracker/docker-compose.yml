@@ -10,14 +10,13 @@ services:
       ASPNETCORE_ENVIRONMENT: "Production"
       DOTNET_RUNNING_IN_CONTAINER: "true"
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
-      ConnectionStrings__MetalReleaseTrackerDb: "Host=postgres;Port=5432;Database=MetalReleaseTrackerDb;Username=metal;Password=Mtl_pswrdSl;"
-      ConnectionStrings__MetalReleaseTrackerDbBackground: "Host=postgres;Port=5432;Database=BackgroundServicesDb;Username=metalUser;Password=Mtl_EApswrd;"
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - postgres
-      - seq
+      - postgresMain
+      - postgresBackground
+      - seqBackground  
 
   metalreleasetracker.api:
     image: metalreleasetrackerapi
@@ -28,28 +27,40 @@ services:
       ASPNETCORE_ENVIRONMENT: "Production"
       DOTNET_RUNNING_IN_CONTAINER: "true"
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
-      ConnectionStrings__MetalReleaseTrackerDb: "Host=postgres;Port=5432;Database=MetalReleaseTrackerDb;Username=metal;Password=Mtl_pswrdSl;"
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - postgres
-      - seq
+      - postgresMain
+      - seqMain
 
-  postgres:
+  postgresMain:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: MetalReleaseTrackerDb
+      POSTGRES_USER: metal
+      POSTGRES_PASSWORD: Mtl_pswrdSl
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-main-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  postgresBackground:
     image: postgres:16
     environment:
       POSTGRES_DB: BackgroundServicesDb
       POSTGRES_USER: metalUser
       POSTGRES_PASSWORD: Mtl_EApswrd
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-background-data:/var/lib/postgresql/data 
     networks:
       - app-network
 
-  seq:
+  seqMain:
     image: datalust/seq:latest
     environment:
       ACCEPT_EULA: Y
@@ -59,9 +70,20 @@ services:
       - app-network
     restart: unless-stopped
 
+  seqBackground:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: Y
+    ports:
+      - "5342:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  postgres-data:
+  postgres-main-data:
+  postgres-background-data:

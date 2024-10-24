@@ -1,12 +1,13 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+USER app
 
+COPY ["MetalReleaseTracker.API/MetalReleaseTracker.API.csproj", "MetalReleaseTracker.API/"]
 RUN dotnet restore "./MetalReleaseTracker.API/./MetalReleaseTracker.API.csproj"
+
 COPY . .
 WORKDIR "/src/MetalReleaseTracker.API"
 RUN dotnet build "./MetalReleaseTracker.API.csproj" -c Release -o /app/build
@@ -14,16 +15,9 @@ RUN dotnet build "./MetalReleaseTracker.API.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "./MetalReleaseTracker.API.csproj" -c Release -o /app/publish
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
-USER appuser
-
-COPY --from=publish /app/publish .
-
-ENV ASPNETCORE_ENVIRONMENT=Production
-ENV DOTNET_RUNNING_IN_CONTAINER=true
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
+COPY --from=publish /app/publish .                 
 
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.API.dll"]
