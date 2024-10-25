@@ -24,6 +24,8 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         public async Task<IEnumerable<AlbumDto>> ParseAlbums(string parsingUrl)
         {
+            _logger.LogInformation($"Starting album parsing from URL: {parsingUrl}.");
+
             var albums = new List<AlbumDto>();
             string nextPageUrl = parsingUrl;
             bool hasMorePages;
@@ -31,6 +33,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             do
             {
                 var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
+                _logger.LogInformation($"Parsing albums from page: {nextPageUrl}.");
 
                 var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
 
@@ -51,6 +54,10 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                         }
                     }
                 }
+                else
+                {
+                    _logger.LogWarning($"No albums found on page: {nextPageUrl}.");
+                }
 
                 (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
 
@@ -58,11 +65,13 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
             while (hasMorePages);
 
+            _logger.LogInformation($"Completed album parsing from URL: {parsingUrl}. Total albums parsed: {albums.Count}.");
             return albums;
         }
 
         private async Task<ParsingResult<AlbumDto>> ParseAlbumDetails(string albumUrl)
         {
+            _logger.LogInformation($"Parsing details for album URL: {albumUrl}.");
             var htmlDocument = await LoadAndValidateHtmlDocument(albumUrl);
 
             var bandName = ParseBandName(htmlDocument);
@@ -112,16 +121,21 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private (string nextPageUrl, bool hasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
         {
-            var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPagination']//a[contains(@href, 'page=') and not(contains(@href, 'javascript'))]");
-            if (nextPageNode != null)
+            var currentPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPaginationButtonTxt on']/span");
+
+            if (currentPageNode != null && int.TryParse(currentPageNode.InnerText.Trim(), out int currentPageNumber))
             {
-                string nextPageUrl = nextPageNode.GetAttributeValue("href", null);
-                if (!string.IsNullOrEmpty(nextPageUrl))
+                var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode($".//a[contains(@href, 'page={currentPageNumber + 1}')]");
+
+                if (nextPageNode != null)
                 {
+                    string nextPageUrl = nextPageNode.GetAttributeValue("href", null);
+                    _logger.LogInformation($"Next page found: {nextPageUrl}.");
                     return (nextPageUrl, true);
                 }
             }
 
+            _logger.LogInformation("Next page not found.");
             return (null, false);
         }
 
@@ -139,11 +153,14 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private async Task<HtmlDocument> LoadAndValidateHtmlDocument(string url)
         {
+            _logger.LogInformation($"Download an HTML document from a URL: {url}.");
             var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(url);
 
             if (htmlDocument?.DocumentNode == null)
             {
-                throw new OsmoseProductionsParserException($"Failed to load or parse the HTML document {url}");
+                var error = $"Failed to load or parse the HTML document {url}.";
+                _logger.LogError(error);
+                throw new OsmoseProductionsParserException(error);
             }
 
             return htmlDocument;
