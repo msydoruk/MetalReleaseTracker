@@ -12,7 +12,7 @@ services:
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
       ASPNETCORE_URLS: "http://0.0.0.0:5000"
     ports:
-      - "5000:5000"
+      - "5001:5000"
     restart: unless-stopped
     networks:
       - app-network
@@ -40,7 +40,7 @@ services:
     depends_on:
       postgres-main:
         condition: service_healthy
-      postgres-backgroundservices:
+      postgres-background-services:
         condition: service_healthy
       seq:
         condition: service_started
@@ -63,7 +63,7 @@ services:
       timeout: 5s
       retries: 5
 
-  postgres-backgroundservices:
+  postgres-background-services:
     image: postgres:16
     environment:
       POSTGRES_DB: BackgroundServicesDb
@@ -72,7 +72,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - postgres-backgroundservices-data:/var/lib/postgresql/data
+      - postgres-background-services-data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
@@ -97,4 +97,4 @@ networks:
 
 volumes:
   postgres-main-data:
-  postgres-backgroundservices-data:
+  postgres-background-services-data:
