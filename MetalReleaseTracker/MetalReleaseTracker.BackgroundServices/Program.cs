@@ -16,6 +16,7 @@ using MetalReleaseTracker.BackgroundServices.Settings;
 using MetalReleaseTracker.BackgroundServices.Workers;
 using Hangfire.Dashboard;
 
+using MetalReleaseTracker.DependencyInjection;
 using MetalReleaseTracker.Infrastructure.Parsers;
 using MetalReleaseTracker.Infrastructure.Utils;
 using MetalReleaseTracker.Infrastructure.Providers;
@@ -38,14 +39,7 @@ builder.Services.AddHangfire(options =>
 
 builder.Services.AddHangfireServer();
 
-builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
-builder.Services.AddScoped<IBandRepository, BandRepository>();
-builder.Services.AddScoped<IDistributorsRepository, DistributorsRepository>();
-
-builder.Services.AddScoped<IValidationService, ValidationService>();
-builder.Services.AddScoped<IAlbumService, AlbumService>();
-builder.Services.AddScoped<IBandService, BandService>();
-builder.Services.AddScoped<IDistributorsService, DistributorsService>();
+builder.Services.AddSharedServices();
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<UserAgentProvider>();
@@ -53,17 +47,13 @@ builder.Services.AddScoped<IHtmlLoader, HtmlLoader>();
 builder.Services.AddScoped<IParser, OsmoseProductionsParser>();
 builder.Services.AddScoped<IParserFactory, ParserFactory>();
 builder.Services.AddScoped<IAlbumSynchronizationService, AlbumSynchronizationService>();
-
 builder.Services.AddHostedService<AlbumSynchronizationWorker>();
-
-builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions()
 {
-    Authorization = new[] { new AllowAllConnectionsFilter() },
-    IgnoreAntiforgeryToken = true
+    Authorization = new[] { new AllowAllConnectionsFilter() }
 });
 
 app.Run();

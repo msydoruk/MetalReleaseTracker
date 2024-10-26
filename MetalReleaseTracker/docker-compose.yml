@@ -33,7 +33,7 @@ services:
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
       ASPNETCORE_URLS: "http://0.0.0.0:5000"
     ports:
-      - "5005:5000"
+      - "8080:5000"
     restart: unless-stopped
     networks:
       - app-network

@@ -1,11 +1,13 @@
-﻿using System.Linq;
-using FluentValidation;
+﻿using FluentValidation;
+
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
 
-namespace MetalReleaseTracker.API.Extensions
+using Microsoft.Extensions.DependencyInjection;
+
+namespace MetalReleaseTracker.DependencyInjection
 {
     public static class FluentValidationConfigurationExtensions
     {

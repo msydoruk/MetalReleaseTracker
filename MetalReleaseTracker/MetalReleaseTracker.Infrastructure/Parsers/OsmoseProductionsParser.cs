@@ -47,7 +47,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
                         if (albumDetails.IsSuccess)
                         {
-                            _logger.LogInformation($"Added parsed album: {albumDetails.Data.Name}");
+                            _logger.LogInformation($"Added parsed album: {albumDetails.Data}");
                             albums.Add(albumDetails.Data);
                         }
                         else
