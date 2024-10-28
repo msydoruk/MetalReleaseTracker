@@ -38,9 +38,9 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
         public async Task<Band> GetByName(string bandName)
         {
-            var bands = await _dbContext.Bands
+            var bands = await _dbContext.Bands.Where(band => band.Name.ToLower() == bandName.ToLower())
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(band => band.Name.Equals(bandName, StringComparison.OrdinalIgnoreCase)); // Ігнорування регістру
+                    .FirstOrDefaultAsync();
 
             return _mapper.Map<Band>(bands);
         }

@@ -59,6 +59,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
                 (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
 
+                break;
                 await Task.Delay(PageDelayMilliseconds);
             }
             while (hasMorePages);

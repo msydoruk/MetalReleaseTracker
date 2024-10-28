@@ -40,9 +40,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
 app.MapControllers();
 
 app.Run();
