@@ -89,7 +89,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             var releaseDate = ParseReleaseDate(htmlDocument);
-            var genre = ParseGenre(htmlDocument);
             var price = ParsePrice(htmlDocument);
             var photoUrl = ParsePhotoUrl(htmlDocument);
             var media = ParseMediaType(htmlDocument);
@@ -106,7 +105,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                     SKU = sku,
                     Name = name,
                     ReleaseDate = releaseDate,
-                    Genre = genre,
                     Price = price,
                     PurchaseUrl = albumUrl,
                     PhotoUrl = photoUrl,
@@ -205,15 +203,11 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return !string.IsNullOrEmpty(releaseDateText) ? AlbumParser.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
         }
 
-        private string ParseGenre(HtmlDocument htmlDocument)
-        {
-            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Genre :')]");
-        }
-
         private float ParsePrice(HtmlDocument htmlDocument)
         {
-            var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd']");
+            var priceText = GetNodeValue(htmlDocument, "//span[@class='cufonCd ']");
             priceText = priceText?.Replace("&nbsp;", " ").Replace("EUR", " ").Trim();
+
             return AlbumParser.ParsePrice(priceText);
         }
 
@@ -240,14 +234,28 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private string ParseDescription(HtmlDocument htmlDocument)
         {
-            return GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Info :')]");
+            var descriptionNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='cufonEb' and contains(text(), 'Info :')]");
+
+            if (descriptionNode == null)
+            {
+                return null;
+            }
+
+            var descriptionHtml = descriptionNode.InnerHtml;
+
+            var descriptionText = descriptionHtml
+                .Replace("<br>", "\n")
+                .Replace("&nbsp;", " ")
+                .Trim();
+
+            return descriptionText.Replace("Info :", " ").Trim();
         }
 
         private AlbumStatus? ParseStatus(HtmlDocument htmlDocument)
         {
             var statusText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'New or Used :')]")?.Split(':').Last().Trim();
 
-            return AlbumParser.ParseAlbumStatus(statusText);
+            return !string.IsNullOrEmpty(statusText) ? AlbumParser.ParseAlbumStatus(statusText) : null;
         }
     }
 }

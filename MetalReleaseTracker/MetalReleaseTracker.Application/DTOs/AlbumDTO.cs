@@ -12,7 +12,7 @@ namespace MetalReleaseTracker.Application.DTOs
 
         public DateTime ReleaseDate { get; set; }
 
-        public string Genre { get; set; }
+        public string? Genre { get; set; }
 
         public float Price { get; set; }
 

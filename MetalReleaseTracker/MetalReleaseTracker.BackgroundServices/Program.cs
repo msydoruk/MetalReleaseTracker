@@ -20,6 +20,7 @@ using MetalReleaseTracker.Infrastructure.Utils;
 using FluentValidation;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Filters;
+using MetalReleaseTracker.BackgroundServices.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,11 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
-app.UseHangfireDashboard("/hangfire");
+var dashboardOptions = new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+};
+
+app.UseHangfireDashboard("/hangfire", dashboardOptions);
 
 app.Run();

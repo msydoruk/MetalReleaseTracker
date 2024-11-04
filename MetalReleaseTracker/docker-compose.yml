@@ -14,12 +14,13 @@ services:
     networks:
       - app-network
     depends_on:
-      - postgresMain
-      - postgresBackground
-      - seqBackground  
-
+      - postgres-main
+      - postgres-background
+      - seq-background  
+    entrypoint: /bin/bash -c "dotnet ef database update --project /src/MetalReleaseTracker.Infrastructure/MetalReleaseTracker.Infrastructure.csproj --startup-project /src/MetalReleaseTracker.API/MetalReleaseTracker.API.csproj && dotnet MetalReleaseTracker.BackgroundServices.dll"
+    
   metalreleasetracker.api:
-    image: metalreleasetrackerapi
+    image: metalreleasetrackerapi 
     build:
       context: .
       dockerfile: MetalReleaseTracker.API/Dockerfile
@@ -28,13 +29,17 @@ services:
       DOTNET_RUNNING_IN_CONTAINER: "true"
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
     restart: unless-stopped
+    ports:
+     - "8080:8080"
+     - "8081:8081"
     networks:
       - app-network
     depends_on:
-      - postgresMain
-      - seqMain
+      - postgres-main
+      - seq-main
+    entrypoint: /bin/bash -c "dotnet ef database update --project /src/MetalReleaseTracker.Infrastructure/MetalReleaseTracker.Infrastructure.csproj --startup-project /src/MetalReleaseTracker.API/MetalReleaseTracker.API.csproj && dotnet MetalReleaseTracker.API.dll"
 
-  postgresMain:
+  postgres-main:
     image: postgres:16
     environment:
       POSTGRES_DB: MetalReleaseTrackerDb
@@ -47,7 +52,7 @@ services:
     networks:
       - app-network
 
-  postgresBackground:
+  postgres-background:
     image: postgres:16
     environment:
       POSTGRES_DB: BackgroundServicesDb
@@ -60,7 +65,7 @@ services:
     networks:
       - app-network
 
-  seqMain:
+  seq-main:
     image: datalust/seq:latest
     environment:
       ACCEPT_EULA: Y
@@ -70,7 +75,7 @@ services:
       - app-network
     restart: unless-stopped
 
-  seqBackground:
+  seq-background:
     image: datalust/seq:latest
     environment:
       ACCEPT_EULA: Y
