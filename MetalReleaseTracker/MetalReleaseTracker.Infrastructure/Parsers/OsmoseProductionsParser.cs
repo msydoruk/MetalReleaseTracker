@@ -244,11 +244,12 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var descriptionHtml = descriptionNode.InnerHtml;
 
             var descriptionText = descriptionHtml
+                .Replace("Info :", " ")
                 .Replace("<br>", "\n")
                 .Replace("&nbsp;", " ")
                 .Trim();
 
-            return descriptionText.Replace("Info :", " ").Trim();
+            return descriptionText;
         }
 
         private AlbumStatus? ParseStatus(HtmlDocument htmlDocument)
