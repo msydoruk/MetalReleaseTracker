@@ -22,16 +22,19 @@ namespace MetalReleaseTracker.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<AlbumEntity>()
-                .Property(a => a.Media)
+                .Property(album => album.Media)
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
 
             modelBuilder.Entity<AlbumEntity>()
-                .Property(a => a.Status)
+                .Property(album => album.Status)
                 .HasConversion<string>()
-                .HasMaxLength(50)
-                .IsRequired();
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<AlbumEntity>()
+               .HasIndex(album => album.SKU)
+               .IsUnique();
         }
     }
 }

@@ -219,7 +219,9 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         private MediaType? ParseMediaType(HtmlDocument htmlDocument)
         {
             var mediaTypeText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'Media:')]")?.Split(':').Last().Trim();
-            return AlbumParser.ParseMediaType(mediaTypeText);
+            var mediaType = mediaTypeText?.Split(' ').FirstOrDefault();
+
+            return AlbumParser.ParseMediaType(mediaType);
         }
 
         private string ParseLabel(HtmlDocument htmlDocument)

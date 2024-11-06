@@ -71,7 +71,10 @@ namespace MetalReleaseTracker.Application.Services
                     if (existingAlbum == null)
                     {
                         var band = await GetOrAddBand(bandCache, parsedAlbum.BandName);
-                        var newAlbum = MapParsedAlbumToEntity(parsedAlbum, band);
+                        var newAlbum = MapParsedAlbumToEntity(parsedAlbum);
+                        newAlbum.DistributorId = distributor.Id;
+                        newAlbum.BandId = band.Id;
+
                         await _albumService.AddAlbum(newAlbum);
 
                         _logger.LogInformation($"Added new album {parsedAlbum.Name} for band {parsedAlbum.BandName}.");
@@ -114,12 +117,11 @@ namespace MetalReleaseTracker.Application.Services
             return band;
         }
 
-        private Album MapParsedAlbumToEntity(AlbumDto albumDto, Band band)
+        private Album MapParsedAlbumToEntity(AlbumDto albumDto)
         {
             return new Album
             {
                 Id = Guid.NewGuid(),
-                BandId = band.Id,
                 SKU = albumDto.SKU,
                 Name = albumDto.Name,
                 ReleaseDate = albumDto.ReleaseDate,
@@ -131,7 +133,7 @@ namespace MetalReleaseTracker.Application.Services
                 Label = albumDto.Label,
                 Press = albumDto.Press,
                 Description = albumDto.Description,
-                Status = (AlbumStatus)albumDto.Status,
+                Status = albumDto.Status != null ? (AlbumStatus)albumDto.Status : (AlbumStatus?)null,
                 ModificationTime = DateTime.UtcNow
             };
         }

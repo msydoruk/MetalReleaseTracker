@@ -20,7 +20,7 @@ namespace MetalReleaseTracker.Core.Entities
 
         public DateTime ReleaseDate { get; set; }
 
-        public string Genre { get; set; }
+        public string? Genre { get; set; }
 
         public float Price { get; set; }
 
@@ -36,7 +36,7 @@ namespace MetalReleaseTracker.Core.Entities
 
         public string Description { get; set; }
 
-        public AlbumStatus Status { get; set; }
+        public AlbumStatus? Status { get; set; }
 
         public DateTime ModificationTime { get; set; }
     }

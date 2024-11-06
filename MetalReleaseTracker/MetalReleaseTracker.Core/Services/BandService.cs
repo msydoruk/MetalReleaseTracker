@@ -75,13 +75,7 @@ namespace MetalReleaseTracker.Core.Services
 
         private async Task<Band> EnsureBandExistsByName(string bandName)
         {
-            var band = await _bandRepository.GetByName(bandName);
-            if (band == null)
-            {
-                throw new EntityNotFoundException($"Band with name '{bandName}' not found.");
-            }
-
-            return band;
+            return await _bandRepository.GetByName(bandName);
         }
     }
 }
