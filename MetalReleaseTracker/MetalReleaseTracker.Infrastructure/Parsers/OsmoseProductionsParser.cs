@@ -208,7 +208,9 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private string ParsePhotoUrl(HtmlDocument htmlDocument)
         {
-            return htmlDocument.DocumentNode.SelectSingleNode("//div[@class='photo_prod_container']/a").GetAttributeValue("access_url", null);
+            var photoNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='photo_prod_container']/a");
+
+            return photoNode?.GetAttributeValue("access_url", null);
         }
 
         private MediaType? ParseMediaType(HtmlDocument htmlDocument)

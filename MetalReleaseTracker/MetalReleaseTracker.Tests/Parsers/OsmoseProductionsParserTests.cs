@@ -50,7 +50,7 @@ namespace MetalReleaseTracker.Tests.Parsers
             var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() =>
                 _parser.ParseAlbums(ParsingUrl));
 
-            Assert.Equal("Failed to load or parse the HTML document http://example.com", exception.Message);
+            Assert.Equal("Failed to load or parse the HTML document http://example.com.", exception.Message);
         }
 
         [Fact]
@@ -175,6 +175,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -207,6 +210,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -239,6 +245,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var incompleteAlbumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -329,6 +338,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -358,6 +370,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -446,11 +461,10 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                         <span class='cufonEb'>Press : SR000</span>
                         <span class='cufonEb'>Year : 2022</span>
-                        <span class='cufonEb'>Genre : Metal</span>
                         <span class='cufonCd'>10 EUR</span>
                         <a class='lienor' href='http://purchase.com'>Purchase</a>
-                    <div class='column left four GshopListingALeft mobile-one'>
-                        <img src='http://example.com/photo.jpg' />
+                     <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
                     </div>
                         <span class='cufonEb'>Media: CD</span>
                         <span class='cufonEb'>Label : Label Name</span>
