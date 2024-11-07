@@ -48,6 +48,18 @@ namespace MetalReleaseTracker.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetByName_ShouldReturnBand_WhenIdExists()
+        {
+            var band = await _repository.GetAll();
+            var existingBand = band.First();
+
+            var result = await _repository.GetByName(existingBand.Name);
+
+            Assert.NotNull(result);
+            Assert.Equal(existingBand.Name, result.Name);
+        }
+
+        [Fact]
         public async Task GetById_ShouldReturnNull_WhenIdDoesNotExist()
         {
             var result = await _repository.GetById(Guid.NewGuid());

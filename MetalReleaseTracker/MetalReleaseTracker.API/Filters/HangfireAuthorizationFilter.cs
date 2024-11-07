@@ -1,6 +1,6 @@
 ﻿using Hangfire.Dashboard;
 
-namespace MetalReleaseTracker.BackgroundServices.Filters
+namespace MetalReleaseTracker.API.Filters
 {
     public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
     {

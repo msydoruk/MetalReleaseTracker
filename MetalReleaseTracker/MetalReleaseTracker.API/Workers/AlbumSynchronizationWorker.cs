@@ -1,9 +1,9 @@
 using Hangfire;
+using MetalReleaseTracker.API.Settings;
 using MetalReleaseTracker.Application.Interfaces;
-using MetalReleaseTracker.BackgroundServices.Settings;
 using Microsoft.Extensions.Options;
 
-namespace MetalReleaseTracker.BackgroundServices.Workers
+namespace MetalReleaseTracker.API.Workers
 {
     public class AlbumSynchronizationWorker : BackgroundService
     {
@@ -16,8 +16,7 @@ namespace MetalReleaseTracker.BackgroundServices.Workers
              ILogger<AlbumSynchronizationWorker> logger,
              IServiceScopeFactory serviceScopeFactory,
              IRecurringJobManager recurringJobManager,
-             IOptions<AlbumSynchronizationSettings> albumSynchronizationSettings
-            )
+             IOptions<AlbumSynchronizationSettings> albumSynchronizationSettings)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;

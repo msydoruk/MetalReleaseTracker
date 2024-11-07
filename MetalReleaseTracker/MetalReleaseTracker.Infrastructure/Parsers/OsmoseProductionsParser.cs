@@ -42,10 +42,13 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                     foreach (var node in albumNodes)
                     {
                         var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
+                        var status = ParseStatus(node);
+
                         var albumDetails = await ParseAlbumDetails(albumUrl);
 
                         if (albumDetails.IsSuccess)
                         {
+                            albumDetails.Data.Status = status;
                             albums.Add(albumDetails.Data);
                         }
                         else
@@ -95,7 +98,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var label = ParseLabel(htmlDocument);
             var press = ParsePress(htmlDocument);
             var description = ParseDescription(htmlDocument);
-            var status = ParseStatus(htmlDocument);
 
             return new ParsingResult<AlbumDto>
             {
@@ -111,8 +113,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                     Media = media,
                     Label = label,
                     Press = press,
-                    Description = description,
-                    Status = status
+                    Description = description
                 }
             };
         }
@@ -141,12 +142,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
         {
             var node = document.DocumentNode.SelectSingleNode(xPath);
             return node?.InnerText?.Trim();
-        }
-
-        private string GetNodeAttribute(HtmlNode node, string xPath, string attribute)
-        {
-            var selectedNode = node.SelectSingleNode(xPath);
-            return selectedNode?.GetAttributeValue(attribute, null)?.Trim();
         }
 
         private async Task<HtmlDocument> LoadAndValidateHtmlDocument(string url)
@@ -213,7 +208,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private string ParsePhotoUrl(HtmlDocument htmlDocument)
         {
-            return GetNodeAttribute(htmlDocument.DocumentNode, "//div[@class='column left four GshopListingALeft mobile-one']//img", "src");
+            return htmlDocument.DocumentNode.SelectSingleNode("//div[@class='photo_prod_container']/a").GetAttributeValue("access_url", null);
         }
 
         private MediaType? ParseMediaType(HtmlDocument htmlDocument)
@@ -254,11 +249,18 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return descriptionText;
         }
 
-        private AlbumStatus? ParseStatus(HtmlDocument htmlDocument)
+        private AlbumStatus? ParseStatus(HtmlNode node)
         {
-            var statusText = GetNodeValue(htmlDocument, "//span[@class='cufonEb' and contains(text(), 'New or Used :')]")?.Split(':').Last().Trim();
+            var statusNode = node.SelectSingleNode(".//span[@class='inforestock']");
 
-            return !string.IsNullOrEmpty(statusText) ? AlbumParser.ParseAlbumStatus(statusText) : null;
+            if (statusNode != null)
+            {
+                var statusText = statusNode.InnerText.Trim();
+
+                return AlbumParser.ParseAlbumStatus(statusText);
+            }
+
+            return null;
         }
     }
 }
