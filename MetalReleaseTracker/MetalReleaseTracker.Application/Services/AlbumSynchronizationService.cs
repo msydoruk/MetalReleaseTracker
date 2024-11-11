@@ -124,7 +124,7 @@ namespace MetalReleaseTracker.Application.Services
                 Id = Guid.NewGuid(),
                 SKU = albumDto.SKU,
                 Name = albumDto.Name,
-                ReleaseDate = albumDto.ReleaseDate,
+                ReleaseDate = DateTime.SpecifyKind(albumDto.ReleaseDate, DateTimeKind.Utc),
                 Genre = albumDto.Genre,
                 Price = albumDto.Price,
                 PurchaseUrl = albumDto.PurchaseUrl,

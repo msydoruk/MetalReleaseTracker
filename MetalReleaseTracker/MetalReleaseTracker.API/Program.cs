@@ -87,4 +87,10 @@ var dashboardOptions = new DashboardOptions
 
 app.UseHangfireDashboard("/hangfire", dashboardOptions);
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MetalReleaseTrackerDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.Run();

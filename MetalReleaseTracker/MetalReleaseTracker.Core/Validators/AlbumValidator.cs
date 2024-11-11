@@ -14,8 +14,7 @@ namespace MetalReleaseTracker.Core.Validators
                 .NotEmpty().WithMessage("Band ID is required.");
 
             RuleFor(album => album.SKU)
-                .NotEmpty().WithMessage("SKU is required.")
-                .Matches("^[A-Z0-9-]*$").WithMessage("SKU can only contain uppercase letters, numbers and hyphens.");
+                .NotEmpty().WithMessage("SKU is required.");
 
             RuleFor(album => album.Name)
                 .NotEmpty().WithMessage("The album name is required.");
@@ -24,8 +23,7 @@ namespace MetalReleaseTracker.Core.Validators
                 .NotEmpty().WithMessage("The release date is required.")
                 .Must(date => date != default(DateTime)).WithMessage("The release date is required.");
 
-            RuleFor(album => album.Genre)
-                .NotEmpty().WithMessage("The album genre is required.");
+            RuleFor(album => album.Genre);
 
             RuleFor(album => album.Price)
                 .GreaterThanOrEqualTo(1).WithMessage("Min price is 1$");
@@ -48,8 +46,7 @@ namespace MetalReleaseTracker.Core.Validators
                 .NotEmpty().WithMessage("The pressing information is required.");
 
             RuleFor(album => album.Description)
-                .NotEmpty().WithMessage("The album description is required.")
-                .Length(10, 500).WithMessage("Description must contain at least 10 characters.");
+                .NotEmpty().WithMessage("The album description is required.");
 
             RuleFor(album => album.Status)
                 .IsInEnum().WithMessage("Invalid album status.");

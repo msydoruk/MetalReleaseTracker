@@ -30,4 +30,10 @@
     <ProjectReference Include="..\MetalReleaseTracker.Core\MetalReleaseTracker.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\user_agents.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
