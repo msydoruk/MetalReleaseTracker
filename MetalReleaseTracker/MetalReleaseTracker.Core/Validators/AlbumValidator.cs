@@ -45,8 +45,7 @@ namespace MetalReleaseTracker.Core.Validators
             RuleFor(album => album.Press)
                 .NotEmpty().WithMessage("The pressing information is required.");
 
-            RuleFor(album => album.Description)
-                .NotEmpty().WithMessage("The album description is required.");
+            RuleFor(album => album.Description);
 
             RuleFor(album => album.Status)
                 .IsInEnum().WithMessage("Invalid album status.");

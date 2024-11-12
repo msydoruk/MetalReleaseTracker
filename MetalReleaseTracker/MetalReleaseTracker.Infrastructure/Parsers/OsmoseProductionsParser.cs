@@ -48,8 +48,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
                         if (albumDetails.IsSuccess)
                         {
-                            albumDetails.Data.Status = status;
-                            albums.Add(albumDetails.Data);
+                            if (albumDetails.Data.Media.HasValue)
+                            {
+                                albumDetails.Data.Status = status;
+                                albums.Add(albumDetails.Data);
+                            }
+                            else
+                            {
+                                _logger.LogInformation($"Album skipped due to unmatched media type: {albumUrl}");
+                            }
                         }
                         else
                         {

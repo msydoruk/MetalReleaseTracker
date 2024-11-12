@@ -66,6 +66,7 @@ namespace MetalReleaseTracker.API.Workers
                 catch (Exception exception)
                 {
                     _logger.LogError(exception, "Error occurred while synchronizing albums.");
+                    throw;
                 }
             }
         }

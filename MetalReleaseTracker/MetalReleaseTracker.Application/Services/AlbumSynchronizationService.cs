@@ -66,6 +66,14 @@ namespace MetalReleaseTracker.Application.Services
 
                 foreach (var parsedAlbum in parsedAlbums)
                 {
+                    _logger.LogInformation($"Processing album: {parsedAlbum.Name} by band {parsedAlbum.BandName}.");
+
+                    if (!Enum.IsDefined(typeof(MediaType), parsedAlbum.Media))
+                    {
+                        _logger.LogWarning($"Skipping album {parsedAlbum.Name} due to unexpected MediaType: {parsedAlbum.Media}.");
+                        continue;
+                    }
+
                     var existingAlbum = existingAlbums.FirstOrDefault(existingAlbum => existingAlbum.SKU == parsedAlbum.SKU);
 
                     if (existingAlbum == null)
@@ -129,11 +137,11 @@ namespace MetalReleaseTracker.Application.Services
                 Price = albumDto.Price,
                 PurchaseUrl = albumDto.PurchaseUrl,
                 PhotoUrl = albumDto.PhotoUrl,
-                Media = (MediaType)albumDto.Media,
+                Media = albumDto.Media ?? null,
                 Label = albumDto.Label,
                 Press = albumDto.Press,
-                Description = albumDto.Description,
-                Status = albumDto.Status != null ? (AlbumStatus)albumDto.Status : (AlbumStatus?)null,
+                Description = albumDto.Description ?? null,
+                Status = albumDto.Status ?? null,
                 ModificationTime = DateTime.UtcNow
             };
         }

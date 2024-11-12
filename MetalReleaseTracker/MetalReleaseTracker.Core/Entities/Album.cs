@@ -28,13 +28,13 @@ namespace MetalReleaseTracker.Core.Entities
 
         public string PhotoUrl { get; set; }
 
-        public MediaType Media { get; set; }
+        public MediaType? Media { get; set; }
 
         public string Label { get; set; }
 
         public string Press { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public AlbumStatus? Status { get; set; }
 
