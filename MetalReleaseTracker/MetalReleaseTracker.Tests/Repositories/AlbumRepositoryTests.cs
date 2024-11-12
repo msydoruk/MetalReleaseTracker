@@ -1,24 +1,46 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
+using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Tests.Base;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Tests.Repositories
 {
-    public class AlbumRepositoryTests : IntegrationTestBase
+    public class AlbumRepositoryTests : IAsyncLifetime
     {
+        private MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
         private readonly AlbumRepository _repository;
 
         public AlbumRepositoryTests()
         {
-            _repository = new AlbumRepository(DbContext, Mapper);
+            var configuration = new MapperConfiguration(configuration =>
+            {
+                configuration.AddProfile<MappingProfile>();
+            });
+
+            _dbContext = TestDbContextFactory.CreateDbContext();
+            _mapper = configuration.CreateMapper();
+            _repository = new AlbumRepository(_dbContext, _mapper);
         }
 
-        protected override void InitializeData(MetalReleaseTrackerDbContext context)
+        public async Task InitializeAsync()
+        {
+            await InitializeData(_dbContext);
+        }
+
+        public Task DisposeAsync()
+        {
+            TestDbContextFactory.ClearDatabase(_dbContext);
+
+            return Task.CompletedTask;
+        }
+
+        protected async Task InitializeData(MetalReleaseTrackerDbContext context)
         {
             var band = new BandEntity { Id = Guid.NewGuid(), Name = "Metallica" };
             context.Bands.Add(band);
@@ -141,11 +163,11 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Add_ShouldAddAlbum()
         {
-            var band = await DbContext.Bands.FirstAsync();
-            var distributor = await DbContext.Distributors.FirstAsync();
+            var band = await _dbContext.Bands.FirstAsync();
+            var distributor = await _dbContext.Distributors.FirstAsync();
 
-            DbContext.Entry(band).State = EntityState.Detached;
-            DbContext.Entry(distributor).State = EntityState.Detached;
+            _dbContext.Entry(band).State = EntityState.Detached;
+            _dbContext.Entry(distributor).State = EntityState.Detached;
 
             var album = new Album
             {
@@ -168,7 +190,7 @@ namespace MetalReleaseTracker.Tests.Repositories
 
             await _repository.Add(album);
 
-            var result = await DbContext.Albums.FindAsync(album.Id);
+            var result = await _dbContext.Albums.FindAsync(album.Id);
 
             Assert.NotNull(result);
             Assert.Equal(album.Name, result.Name);
@@ -195,7 +217,7 @@ namespace MetalReleaseTracker.Tests.Repositories
 
             await _repository.Add(album);
 
-            var result = await DbContext.Albums.FindAsync(album.Id);
+            var result = await _dbContext.Albums.FindAsync(album.Id);
 
             Assert.Null(result);
         }
@@ -203,14 +225,14 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Update_ShouldUpdateAlbum()
         {
-            var existingAlbum = await DbContext.Albums.FirstAsync();
-            var updatedAlbum = Mapper.Map<Album>(existingAlbum);
+            var existingAlbum = await _dbContext.Albums.FirstAsync();
+            var updatedAlbum = _mapper.Map<Album>(existingAlbum);
 
             updatedAlbum.Name = "Updated Album Name";
 
             var result = await _repository.Update(updatedAlbum);
 
-            var retrievedAlbum = await DbContext.Albums.FindAsync(updatedAlbum.Id);
+            var retrievedAlbum = await _dbContext.Albums.FindAsync(updatedAlbum.Id);
 
             Assert.True(result);
             Assert.NotNull(retrievedAlbum);
@@ -241,10 +263,10 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Delete_ShouldRemoveAlbum()
         {
-            var albumEntity = DbContext.Albums.First();
+            var albumEntity = _dbContext.Albums.First();
             var result = await _repository.Delete(albumEntity.Id);
 
-            var deletedAlbum = await DbContext.Albums.FindAsync(albumEntity.Id);
+            var deletedAlbum = await _dbContext.Albums.FindAsync(albumEntity.Id);
 
             Assert.True(result);
             Assert.Null(deletedAlbum);
