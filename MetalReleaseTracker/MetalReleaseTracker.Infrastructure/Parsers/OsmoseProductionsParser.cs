@@ -48,7 +48,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
                         if (albumDetails.IsSuccess)
                         {
-                            if (albumDetails.Data.Media.HasValue)
+                            if (albumDetails.Data.Media.HasValue && Enum.IsDefined(typeof(MediaType), albumDetails.Data.Media))
                             {
                                 albumDetails.Data.Status = status;
                                 albums.Add(albumDetails.Data);

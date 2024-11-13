@@ -64,7 +64,7 @@ namespace MetalReleaseTracker.Tests.Repositories
                     DistributorId = distributor.Id,
                     SKU = "SKU-001",
                     Name = "Master of Puppets",
-                    ReleaseDate = new DateTime(1986, 3, 3),
+                    ReleaseDate = DateTime.SpecifyKind(new DateTime(1986, 3, 3), DateTimeKind.Utc),
                     Genre = "Thrash Metal",
                     Price = 10,
                     PurchaseUrl = "http://example.com/purchase/master-of-puppets",
@@ -84,7 +84,7 @@ namespace MetalReleaseTracker.Tests.Repositories
                     DistributorId = distributor.Id,
                     SKU = "SKU-002",
                     Name = "Ride the Lightning",
-                    ReleaseDate = new DateTime(1984, 7, 27),
+                    ReleaseDate = DateTime.SpecifyKind(new DateTime(1984, 7, 27), DateTimeKind.Utc),
                     Genre = "Thrash Metal",
                     Price = 12,
                     PurchaseUrl = "http://example.com/purchase/ride-the-lightning",
@@ -106,8 +106,8 @@ namespace MetalReleaseTracker.Tests.Repositories
             var filter = new AlbumFilter
             {
                 BandName = "Metallica",
-                ReleaseDateStart = new DateTime(1984, 1, 1),
-                ReleaseDateEnd = new DateTime(1987, 1, 1)
+                ReleaseDateStart = DateTime.SpecifyKind(new DateTime(1984, 1, 1), DateTimeKind.Utc),
+                ReleaseDateEnd = DateTime.SpecifyKind(new DateTime(1987, 1, 1), DateTimeKind.Utc)
             };
 
             var result = await _repository.GetByFilter(filter);
@@ -122,8 +122,8 @@ namespace MetalReleaseTracker.Tests.Repositories
             var filter = new AlbumFilter
             {
                 BandName = "",
-                ReleaseDateStart = new DateTime(1800, 1, 1),
-                ReleaseDateEnd = new DateTime(1801, 1, 1)
+                ReleaseDateStart = DateTime.SpecifyKind(new DateTime(1800, 1, 1), DateTimeKind.Utc),
+                ReleaseDateEnd = DateTime.SpecifyKind(new DateTime(1801, 1, 1), DateTimeKind.Utc)
             };
 
             var result = await _repository.GetByFilter(filter);
@@ -199,9 +199,19 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Add_ShouldNotAddAlbum_WhenAlbumIsInvalid()
         {
+            var band = new BandEntity { Name = "Test Band" };
+            await _dbContext.Bands.AddAsync(band);
+            await _dbContext.SaveChangesAsync();
+
+            var distributor = new DistributorEntity { Name = "Test Distributor", ParsingUrl = "https://example.com/universal" };
+            await _dbContext.Distributors.AddAsync(distributor);
+            await _dbContext.SaveChangesAsync();
+
             var album = new Album
             {
                 Name = "",
+                BandId = band.Id,
+                DistributorId = distributor.Id,
                 ReleaseDate = DateTime.UtcNow,
                 Genre = "",
                 Price = 0,
