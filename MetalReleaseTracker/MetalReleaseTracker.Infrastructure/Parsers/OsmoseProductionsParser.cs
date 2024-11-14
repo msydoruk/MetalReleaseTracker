@@ -41,27 +41,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                 {
                     foreach (var node in albumNodes)
                     {
-                        var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
-                        var status = ParseStatus(node);
-
-                        var albumDetails = await ParseAlbumDetails(albumUrl);
-
-                        if (albumDetails.IsSuccess)
-                        {
-                            if (albumDetails.Data.Media.HasValue && Enum.IsDefined(typeof(MediaType), albumDetails.Data.Media))
-                            {
-                                albumDetails.Data.Status = status;
-                                albums.Add(albumDetails.Data);
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"Album skipped due to unmatched media type: {albumUrl}");
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogError($"Failed to parse album: {albumDetails.ErrorMessage}");
-                        }
+                        await ParseAlbumNode(node, albums);
                     }
                 }
                 else
@@ -102,6 +82,16 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             var price = ParsePrice(htmlDocument);
             var photoUrl = ParsePhotoUrl(htmlDocument);
             var media = ParseMediaType(htmlDocument);
+
+            if (!media.HasValue || !Enum.IsDefined(typeof(MediaType), media))
+            {
+                return new ParsingResult<AlbumDto>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Skipping album {name} due to unmatched media type: {media}."
+                };
+            }
+
             var label = ParseLabel(htmlDocument);
             var press = ParsePress(htmlDocument);
             var description = ParseDescription(htmlDocument);
@@ -270,6 +260,24 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             return null;
+        }
+
+        private async Task ParseAlbumNode(HtmlNode node, List<AlbumDto> albums)
+        {
+            var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
+            var status = ParseStatus(node);
+
+            var albumDetails = await ParseAlbumDetails(albumUrl);
+
+            if (albumDetails.IsSuccess)
+            {
+                albumDetails.Data.Status = status;
+                albums.Add(albumDetails.Data);
+            }
+            else
+            {
+                _logger.LogError($"Failed to parse album: {albumDetails.ErrorMessage}");
+            }
         }
     }
 }

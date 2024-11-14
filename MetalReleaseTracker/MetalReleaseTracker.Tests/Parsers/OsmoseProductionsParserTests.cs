@@ -5,6 +5,8 @@ using Moq;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using MetalReleaseTracker.Infrastructure.Exceptions;
+using MetalReleaseTracker.Core.Enums;
+using MetalReleaseTracker.Core.Entities;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
@@ -186,6 +188,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                         <span class='cufonEb'>Press : SR000</span>
                         <span class='cufonCd'>Invalid Price</span>
+                        <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -221,6 +224,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>Year : Invalid Date</span>
+                     <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -256,6 +260,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>Year : 2022</span>
+                    <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -317,6 +322,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                         <span class='cufonAb'>Album Name</span>
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
+                    <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -329,38 +335,6 @@ namespace MetalReleaseTracker.Tests.Parsers
             Assert.NotNull(albums);
             Assert.Equal(2, albums.Count());
             Assert.Null(albums.First().PhotoUrl);
-        }
-
-        [Fact]
-        public async Task ParseAlbumDetails_WhenUnsupportedMediaType_ShouldReturnNull()
-        {
-            var albumsHtml = GetMockAlbumsHtml();
-            var albumDetailHtml = @"
-            <html>
-                <body>
-                    <div class='photo_prod_container'>
-                        <a access_url='https://example.com/photo.jpg'></a>
-                    </div>
-                    <span class='cufonAb'>
-                        <a>Band Name</a>
-                    </span>
-                    <div class='column twelve'>
-                        <span class='cufonAb'>Album Name</span>
-                    </div>
-                    <span class='cufonEb'>Press : SR000</span>
-                    <span class='cufonEb'>Media: Unknown Media Type</span>
-                </body>
-            </html>";
-
-            SetupHtmlLoader(ParsingUrl, CreateHtmlDocument(albumsHtml));
-            SetupHtmlLoader("/album/1", CreateHtmlDocument(albumDetailHtml));
-            SetupHtmlLoader("/album/2", CreateHtmlDocument(albumDetailHtml));
-
-            var albums = await _parser.ParseAlbums(ParsingUrl);
-
-            Assert.NotNull(albums);
-            Assert.Equal(2, albums.Count());
-            Assert.Null(albums.First().Media);
         }
 
         [Fact]
@@ -381,6 +355,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>New or Used : Unknown</span>
+                    <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -393,6 +368,77 @@ namespace MetalReleaseTracker.Tests.Parsers
             Assert.NotNull(albums);
             Assert.Equal(2, albums.Count());
             Assert.Null(albums.First().Status);
+        }
+
+        [Fact]
+        public async Task ParseAlbum_WhenMediaTypeIsInvalid_ShouldReturnEmptyList()
+        {
+            var invalidMediaTypeDocument = LoadHtmlFromFile("PageWithInvalidMediaType.html");
+
+            SetupHtmlLoader(ParsingUrl, invalidMediaTypeDocument);
+
+            var parsedAlbum = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.Empty(parsedAlbum);
+        }
+
+        [Fact]
+        public async Task ParseAlbum_WhenDescriptionIsMissing_ShouldReturnAlbumsWithNullDescription()
+        {
+            var noDescriptionDocument = LoadHtmlFromFile("PageWithoutDescription.html");
+
+            SetupHtmlLoader(ParsingUrl, noDescriptionDocument);
+
+            var parsedAlbum = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(parsedAlbum);
+            Assert.All(parsedAlbum, album => Assert.Null(album.Description));
+        }
+
+        [Fact]
+        public async Task ParseAlbum_WhenDataIsValid_ShouldReturnCorrectAlbumData()
+        {
+            var pageDocument = LoadHtmlFromFile("PageWithOnlyOneAlbum.html");
+            var albumDetailDocument = LoadHtmlFromFile("PageWithValidData.html");
+
+            SetupHtmlLoader(ParsingUrl, pageDocument);
+            SetupHtmlLoader("https://www.osmoseproductions.com/item/2/94903-110402-1101-1-0/119726442/1914-eschatology-of-war.html", albumDetailDocument);
+
+            var parsedAlbum = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.Single(parsedAlbum);
+
+            var album = parsedAlbum.First();
+            Assert.Equal("Eschatology of War", album.Name);
+            Assert.Equal("1914", album.BandName);
+            Assert.Equal("NPR1006DGS - Ukraine", album.SKU);
+            Assert.Equal("Digisleeve CD + Bonustracks\n\nSince their formation in 2014, Ukrainian blackened death/doom metal visionaries 1914 have told the gruesome tales of World War I, charting this inexorable path through history with their debut album, Eschatology of War (2015). After a digital re-release in April 2021, the album will now appear via various exciting fan editions this year, including 2LP gatefold marbled crystal clear silver &amp; black and 2LP splatter gold &amp; black editions, out August 4, 2023. Inspired by the madness of war, Eschatology of War faces various events from the past, such as the Battles of Gallipoli and Verdun, the gas attack at Ypres, the Brusilovsky breakthrough, the Christmas truce and the bombing of London, just to name a few. Eschatology of War starts with the genuine intro “War In”, delivering tunes of an old military march, which was played for men going to war. “Frozen in Trenches (Christmas Truce)” presents a harmonious idyll to the melody of popular Christmas carol “Silent Night”, as the blaze of gunfire breaks in shortly after, while harsh vocals attack to transport nothing but death and decay. The album's longest song, “Ottoman Rise”, stirs up the atmosphere even more with heavy guitar lines, thunderous black metal drumming and deep screams of despair. 1914's uncompromising achievement of combining old school death and black metal, spiced with the approach of sludge and doom, can't be pigeonholed. With their debut album, followed by critically acclaimed The Blind Leading The Blind (2018) and their first full-length on Napalm Records, Where Fear and Weapons Meet (2021), the five-piece created its own remarkable world of sound, delivered in the most authentic way. Along with intense lyrics and a unique visual experience, 1914 takes their listener back into a cruel time of mankind, compelling them to face their own horrible past - never to be forgotten, while reflecting the present at the same time and paying homage to all that fell fighting the Great War.", album.Description);
+            Assert.Equal("Napalm", album.Label);
+            Assert.Equal(18, album.Price);
+            Assert.Equal(MediaType.CD, album.Media);
+        }
+
+        //[Fact]
+        //public async Task ParseAlbums_WhenDataIsValid_ShouldReturnCorrectAlbums()
+        //{
+        //    var mainPageDocument = LoadHtmlFromFile("MainPage.html");
+
+        //    SetupHtmlLoader(ParsingUrl, mainPageDocument);
+
+        //    var parsedAlbums = await _parser.ParseAlbums(ParsingUrl);
+
+        //    var restocks = parsedAlbums.Where(albums => albums.Status.ToString() == "Restock").ToList();
+
+        //    Assert.Equal(14, restocks.Count);
+        //}
+
+        private static HtmlDocument LoadHtmlFromFile(string fileName)
+        {
+            var filePath = Path.Combine("Parsers", "DataOsmose", fileName);
+            var htmlContent = File.ReadAllText(filePath);
+            var document = new HtmlDocument();
+            document.LoadHtml(htmlContent);
+            return document;
         }
 
         private void SetupHtmlLoader(string url, HtmlDocument document)

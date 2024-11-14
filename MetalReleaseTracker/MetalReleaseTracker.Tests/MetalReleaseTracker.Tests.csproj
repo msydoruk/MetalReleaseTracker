@@ -38,7 +38,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Parsers\DataOsmose\" />
+    <None Update="Parsers\DataOsmose\MainPage.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Parsers\DataOsmose\PageWithInvalidMediaType.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Parsers\DataOsmose\PageWithOnlyOneAlbum.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Parsers\DataOsmose\PageWithoutDescription.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Parsers\DataOsmose\PageWithValidData.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
