@@ -3,6 +3,7 @@ using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Infrastructure.Exceptions;
+using MetalReleaseTracker.Infrastructure.Parsers.Models;
 using MetalReleaseTracker.Infrastructure.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -34,15 +35,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             {
                 _logger.LogInformation($"Parsing albums from page: {nextPageUrl}.");
                 var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
-                var albumNodes = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
+                var parsedAlbums = ExtractAlbumsDataFromListPage(htmlDocument);
 
-                foreach (var albumNode in albumNodes)
+                foreach (var parsedAlbum in parsedAlbums)
                 {
-                    var albumDetails = await ParseAlbumDetails(albumNode.Url);
+                    var albumDetails = await ParseAlbumDetails(parsedAlbum.Url);
 
                     if (albumDetails.IsSuccess)
                     {
-                        albumDetails.Data.Status = albumNode.Status;
+                        albumDetails.Data.Status = parsedAlbum.Status;
                         albums.Add(albumDetails.Data);
                     }
                     else
@@ -265,27 +266,20 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return null;
         }
 
-        public class AlbumUrlAndStatus
+        private List<AlbumUrlAndStatus> ExtractAlbumsDataFromListPage(HtmlDocument htmlDocument)
         {
-            public string Url { get; set; }
+            var albumsData = new List<AlbumUrlAndStatus>();
 
-            public AlbumStatus? Status { get; set; }
-        }
+            var albumElements = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
 
-        private List<AlbumUrlAndStatus> ParseAlbumUrlsAndStatusesFromListPage(HtmlDocument htmlDocument)
-        {
-            var albumData = new List<AlbumUrlAndStatus>();
-
-            var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
-
-            if (albumNodes != null)
+            if (albumElements != null)
             {
-                foreach (var node in albumNodes)
+                foreach (var albumElement in albumElements)
                 {
-                    var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
-                    var status = ParseStatus(node);
+                    var albumUrl = albumElement.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
+                    var status = ParseStatus(albumElement);
 
-                    albumData.Add(new AlbumUrlAndStatus
+                    albumsData.Add(new AlbumUrlAndStatus
                     {
                         Url = albumUrl,
                         Status = status
@@ -293,7 +287,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
                 }
             }
 
-            return albumData;
+            return albumsData;
         }
     }
 }
