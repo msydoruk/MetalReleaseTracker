@@ -5,6 +5,7 @@ using Moq;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using MetalReleaseTracker.Infrastructure.Exceptions;
+using MetalReleaseTracker.Core.Enums;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
@@ -14,8 +15,9 @@ namespace MetalReleaseTracker.Tests.Parsers
         private readonly Mock<IHtmlLoader> _htmlLoaderMock;
         private readonly Mock<ILogger<OsmoseProductionsParser>> _loggerMock;
 
+        private int _callCount = 0;
         private const string ParsingUrl = "http://example.com";
-
+        
         public OsmoseProductionsParserTests()
         {
             _htmlLoaderMock = new Mock<IHtmlLoader>();
@@ -50,7 +52,7 @@ namespace MetalReleaseTracker.Tests.Parsers
             var exception = await Assert.ThrowsAsync<OsmoseProductionsParserException>(() =>
                 _parser.ParseAlbums(ParsingUrl));
 
-            Assert.Equal("Failed to load or parse the HTML document http://example.com", exception.Message);
+            Assert.Equal("Failed to load or parse the HTML document http://example.com.", exception.Message);
         }
 
         [Fact]
@@ -175,6 +177,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -183,6 +188,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                         <span class='cufonEb'>Press : SR000</span>
                         <span class='cufonCd'>Invalid Price</span>
+                        <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -207,6 +213,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -215,6 +224,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>Year : Invalid Date</span>
+                     <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -239,6 +249,9 @@ namespace MetalReleaseTracker.Tests.Parsers
             var incompleteAlbumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -247,6 +260,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>Year : 2022</span>
+                    <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -308,6 +322,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                         <span class='cufonAb'>Album Name</span>
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
+                    <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -323,41 +338,15 @@ namespace MetalReleaseTracker.Tests.Parsers
         }
 
         [Fact]
-        public async Task ParseAlbumDetails_WhenUnsupportedMediaType_ShouldReturnNull()
-        {
-            var albumsHtml = GetMockAlbumsHtml();
-            var albumDetailHtml = @"
-            <html>
-                <body>
-                    <span class='cufonAb'>
-                        <a>Band Name</a>
-                    </span>
-                    <div class='column twelve'>
-                        <span class='cufonAb'>Album Name</span>
-                    </div>
-                    <span class='cufonEb'>Press : SR000</span>
-                    <span class='cufonEb'>Media: Unknown Media Type</span>
-                </body>
-            </html>";
-
-            SetupHtmlLoader(ParsingUrl, CreateHtmlDocument(albumsHtml));
-            SetupHtmlLoader("/album/1", CreateHtmlDocument(albumDetailHtml));
-            SetupHtmlLoader("/album/2", CreateHtmlDocument(albumDetailHtml));
-
-            var albums = await _parser.ParseAlbums(ParsingUrl);
-
-            Assert.NotNull(albums);
-            Assert.Equal(2, albums.Count());
-            Assert.Null(albums.First().Media);
-        }
-
-        [Fact]
         public async Task ParseAlbumDetails_WhenUnsupportedAlbumStatus_ShouldReturnNull()
         {
             var albumsHtml = GetMockAlbumsHtml();
             var albumDetailHtml = @"
             <html>
                 <body>
+                    <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
+                    </div>
                     <span class='cufonAb'>
                         <a>Band Name</a>
                     </span>
@@ -366,6 +355,7 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                     <span class='cufonEb'>Press : SR000</span>
                     <span class='cufonEb'>New or Used : Unknown</span>
+                    <span class='cufonEb'>Media: CD</span>
                 </body>
             </html>";
 
@@ -380,11 +370,94 @@ namespace MetalReleaseTracker.Tests.Parsers
             Assert.Null(albums.First().Status);
         }
 
+        [Fact]
+        public async Task ParseAlbum_WhenMediaTypeIsInvalid_ShouldReturnEmptyList()
+        {
+            var invalidMediaTypeDocument = LoadHtmlFromFile("PageWithInvalidMediaType.html");
+
+            SetupHtmlLoader(ParsingUrl, invalidMediaTypeDocument);
+
+            var parsedAlbum = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.Empty(parsedAlbum);
+        }
+
+        [Fact]
+        public async Task ParseAlbum_WhenDescriptionIsMissing_ShouldReturnAlbumsWithNullDescription()
+        {
+            var noDescriptionDocument = LoadHtmlFromFile("PageWithoutDescription.html");
+
+            SetupHtmlLoader(ParsingUrl, noDescriptionDocument);
+
+            var parsedAlbum = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.NotNull(parsedAlbum);
+            Assert.All(parsedAlbum, album => Assert.Null(album.Description));
+        }
+
+        [Fact]
+        public async Task ParseAlbum_WhenDataIsValid_ShouldReturnCorrectAlbumData()
+        {
+            var pageDocument = LoadHtmlFromFile("PageWithOnlyOneAlbum.html");
+            var albumDetailDocument = LoadHtmlFromFile("PageWithValidData.html");
+
+            SetupHtmlLoader(ParsingUrl, pageDocument);
+            SetupHtmlLoader("https://www.osmoseproductions.com/item/2/94903-110402-1101-1-0/119726442/1914-eschatology-of-war.html", albumDetailDocument);
+
+            var parsedAlbum = await _parser.ParseAlbums(ParsingUrl);
+
+            Assert.Single(parsedAlbum);
+
+            var album = parsedAlbum.First();
+            Assert.Equal("Eschatology of War", album.Name);
+            Assert.Equal("1914", album.BandName);
+            Assert.Equal("NPR1006DGS - Ukraine", album.SKU);
+            Assert.StartsWith("Digisleeve CD + Bonustracks\n\nSince their formation in 2014", album.Description);
+            Assert.Equal("Napalm", album.Label);
+            Assert.Equal(18, album.Price);
+            Assert.Equal(MediaType.CD, album.Media);
+        }
+
+        [Fact]
+        public async Task ParseAlbums_WhenDataIsValid_ShouldReturnCorrectAlbums()
+        {
+            var mainPageDocument = LoadHtmlFromFile("MainPage.html");
+            var templateDocument = LoadHtmlFromFile("PageWithValidData.html");
+
+            SetupHtmlLoaderWithTemplateDocument(ParsingUrl, mainPageDocument, templateDocument);
+
+            var parsedAlbums = await _parser.ParseAlbums(ParsingUrl);
+
+            var restocks = parsedAlbums.Where(albums => albums.Status.ToString() == "Restock").ToList();
+
+            Assert.Equal(14, restocks.Count);
+        }
+
+        private static HtmlDocument LoadHtmlFromFile(string fileName)
+        {
+            var filePath = Path.Combine("Parsers", "DataOsmose", fileName);
+            var htmlContent = File.ReadAllText(filePath);
+            var document = new HtmlDocument();
+            document.LoadHtml(htmlContent);
+            return document;
+        }
+
         private void SetupHtmlLoader(string url, HtmlDocument document)
         {
             _htmlLoaderMock
                 .Setup(loader => loader.LoadHtmlDocumentAsync(url))
                 .ReturnsAsync(document);
+        }
+
+        private void SetupHtmlLoaderWithTemplateDocument(string url, HtmlDocument document, HtmlDocument templateDocument)
+        {
+            _htmlLoaderMock
+                .Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
+                .ReturnsAsync(() =>
+                {
+                    _callCount++;
+                    return _callCount == 1 ? document : templateDocument;
+                });
         }
 
         private HtmlDocument CreateHtmlDocument(string html)
@@ -446,11 +519,10 @@ namespace MetalReleaseTracker.Tests.Parsers
                     </div>
                         <span class='cufonEb'>Press : SR000</span>
                         <span class='cufonEb'>Year : 2022</span>
-                        <span class='cufonEb'>Genre : Metal</span>
                         <span class='cufonCd'>10 EUR</span>
                         <a class='lienor' href='http://purchase.com'>Purchase</a>
-                    <div class='column left four GshopListingALeft mobile-one'>
-                        <img src='http://example.com/photo.jpg' />
+                     <div class='photo_prod_container'>
+                        <a access_url='https://example.com/photo.jpg'></a>
                     </div>
                         <span class='cufonEb'>Media: CD</span>
                         <span class='cufonEb'>Label : Label Name</span>

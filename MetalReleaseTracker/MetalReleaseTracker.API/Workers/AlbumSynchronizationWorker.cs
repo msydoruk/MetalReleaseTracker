@@ -1,8 +1,9 @@
 using Hangfire;
+using MetalReleaseTracker.API.Settings;
 using MetalReleaseTracker.Application.Interfaces;
 using Microsoft.Extensions.Options;
 
-namespace MetalReleaseTracker.BackgroundServices
+namespace MetalReleaseTracker.API.Workers
 {
     public class AlbumSynchronizationWorker : BackgroundService
     {
@@ -15,8 +16,7 @@ namespace MetalReleaseTracker.BackgroundServices
              ILogger<AlbumSynchronizationWorker> logger,
              IServiceScopeFactory serviceScopeFactory,
              IRecurringJobManager recurringJobManager,
-             IOptions<AlbumSynchronizationSettings> albumSynchronizationSettings
-            )
+             IOptions<AlbumSynchronizationSettings> albumSynchronizationSettings)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
@@ -46,7 +46,7 @@ namespace MetalReleaseTracker.BackgroundServices
         {
             return Task.CompletedTask;
         }
-        
+
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("AlbumSynchronizationWorker stopped.");
@@ -57,7 +57,7 @@ namespace MetalReleaseTracker.BackgroundServices
         {
             using (var scope = _serviceScopeFactory.CreateScope())
             {
-                var albumSynchronizationService = scope.ServiceProvider.GetRequiredService<ITestAlbumSynchronizationService>();
+                var albumSynchronizationService = scope.ServiceProvider.GetRequiredService<IAlbumSynchronizationService>();
 
                 try
                 {
@@ -66,6 +66,7 @@ namespace MetalReleaseTracker.BackgroundServices
                 catch (Exception exception)
                 {
                     _logger.LogError(exception, "Error occurred while synchronizing albums.");
+                    throw;
                 }
             }
         }

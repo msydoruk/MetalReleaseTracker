@@ -12,7 +12,7 @@ namespace MetalReleaseTracker.Application.DTOs
 
         public DateTime ReleaseDate { get; set; }
 
-        public string Genre { get; set; }
+        public string? Genre { get; set; }
 
         public float Price { get; set; }
 
@@ -26,7 +26,7 @@ namespace MetalReleaseTracker.Application.DTOs
 
         public string Press { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public AlbumStatus? Status { get; set; }
     }

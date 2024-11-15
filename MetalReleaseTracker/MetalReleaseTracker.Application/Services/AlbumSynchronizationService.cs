@@ -66,12 +66,17 @@ namespace MetalReleaseTracker.Application.Services
 
                 foreach (var parsedAlbum in parsedAlbums)
                 {
+                    _logger.LogInformation($"Processing album: {parsedAlbum.Name} by band {parsedAlbum.BandName}.");
+
                     var existingAlbum = existingAlbums.FirstOrDefault(existingAlbum => existingAlbum.SKU == parsedAlbum.SKU);
 
                     if (existingAlbum == null)
                     {
                         var band = await GetOrAddBand(bandCache, parsedAlbum.BandName);
-                        var newAlbum = MapParsedAlbumToEntity(parsedAlbum, band);
+                        var newAlbum = MapParsedAlbumToEntity(parsedAlbum);
+                        newAlbum.DistributorId = distributor.Id;
+                        newAlbum.BandId = band.Id;
+
                         await _albumService.AddAlbum(newAlbum);
 
                         _logger.LogInformation($"Added new album {parsedAlbum.Name} for band {parsedAlbum.BandName}.");
@@ -114,24 +119,23 @@ namespace MetalReleaseTracker.Application.Services
             return band;
         }
 
-        private Album MapParsedAlbumToEntity(AlbumDto albumDto, Band band)
+        private Album MapParsedAlbumToEntity(AlbumDto albumDto)
         {
             return new Album
             {
                 Id = Guid.NewGuid(),
-                BandId = band.Id,
                 SKU = albumDto.SKU,
                 Name = albumDto.Name,
-                ReleaseDate = albumDto.ReleaseDate,
+                ReleaseDate = DateTime.SpecifyKind(albumDto.ReleaseDate, DateTimeKind.Utc),
                 Genre = albumDto.Genre,
                 Price = albumDto.Price,
                 PurchaseUrl = albumDto.PurchaseUrl,
                 PhotoUrl = albumDto.PhotoUrl,
-                Media = (MediaType)albumDto.Media,
+                Media = albumDto.Media,
                 Label = albumDto.Label,
                 Press = albumDto.Press,
                 Description = albumDto.Description,
-                Status = (AlbumStatus)albumDto.Status,
+                Status = albumDto.Status,
                 ModificationTime = DateTime.UtcNow
             };
         }

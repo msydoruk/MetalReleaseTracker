@@ -40,7 +40,8 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             var bands = await _dbContext.Bands
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(band => band.Name.Equals(bandName, StringComparison.OrdinalIgnoreCase)); // Ігнорування регістру
+                    .Where(band => band.Name.ToLower() == bandName.ToLower())
+                    .FirstOrDefaultAsync();
 
             return _mapper.Map<Band>(bands);
         }

@@ -5,32 +5,32 @@
 namespace MetalReleaseTracker.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class RemovedMandatoryRules : Migration
+    public partial class UpdateGenreToNullable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
-                name: "Description",
+                name: "Genre",
                 table: "Albums",
-                type: "nvarchar(max)",
-                nullable: false,
+                type: "text",
+                nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(500)",
-                oldMaxLength: 500);
+                oldType: "text");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
-                name: "Description",
+                name: "Genre",
                 table: "Albums",
-                type: "nvarchar(500)",
-                maxLength: 500,
+                type: "text",
                 nullable: false,
+                defaultValue: " ",
                 oldClrType: typeof(string),
-                oldType: "nvarchar(max)");
+                oldType: "text",
+                oldNullable: true);
         }
     }
 }

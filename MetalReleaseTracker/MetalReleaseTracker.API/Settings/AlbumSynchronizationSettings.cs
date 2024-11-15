@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MetalReleaseTracker.BackgroundServices
+namespace MetalReleaseTracker.API.Settings
 {
     public class AlbumSynchronizationSettings
     {

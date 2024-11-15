@@ -1,22 +1,43 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
+using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Tests.Base;
 
 namespace MetalReleaseTracker.Tests.Repositories
 {
-    public class DistributorsRepositoryTests : IntegrationTestBase
+    public class DistributorsRepositoryTests : IAsyncLifetime
     {
-
+        private MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
         private readonly DistributorsRepository _repository;
 
         public DistributorsRepositoryTests()
         {
-            _repository = new DistributorsRepository(DbContext, Mapper);
+            var configuration = new MapperConfiguration(configuration =>
+            {
+                configuration.AddProfile<MappingProfile>();
+            });
+
+            _dbContext = TestDbContextFactory.CreateDbContext();
+            _mapper = configuration.CreateMapper();
+            _repository = new DistributorsRepository(_dbContext, _mapper);
         }
 
-        protected override void InitializeData(MetalReleaseTrackerDbContext context)
+        public async Task InitializeAsync()
+        {
+            await InitializeData(_dbContext);
+        }
+
+        public Task DisposeAsync()
+        {
+            TestDbContextFactory.ClearDatabase(_dbContext);
+
+            return Task.CompletedTask;
+        }
+
+        protected async Task InitializeData(MetalReleaseTrackerDbContext context)
         {
             var distributors = new[]
             {
@@ -49,7 +70,7 @@ namespace MetalReleaseTracker.Tests.Repositories
 
             await _repository.Add(distributor);
 
-            var result = await DbContext.Distributors.FindAsync(distributor.Id);
+            var result = await _dbContext.Distributors.FindAsync(distributor.Id);
 
             Assert.NotNull(result);
             Assert.Equal(distributor.Name, result.Name);
@@ -67,7 +88,7 @@ namespace MetalReleaseTracker.Tests.Repositories
 
             await _repository.Add(distributor);
 
-            var result = await DbContext.Distributors.FindAsync(distributor.Id);
+            var result = await _dbContext.Distributors.FindAsync(distributor.Id);
 
             Assert.Null(result);
         }
@@ -83,7 +104,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task GetById_ShouldReturnDistributor_WhenIdExists()
         {
-            var distributorEntity = DbContext.Distributors.First();
+            var distributorEntity = _dbContext.Distributors.First();
             var result = await _repository.GetById(distributorEntity.Id);
 
             Assert.NotNull(result);
@@ -101,17 +122,17 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Update_ShouldUpdateDistributor()
         {
-            var distributorEntity = DbContext.Distributors.First();
-            var distributor = Mapper.Map<Distributor>(distributorEntity);
+            var distributorEntity = _dbContext.Distributors.First();
+            var distributor = _mapper.Map<Distributor>(distributorEntity);
 
             distributor.Name = "Updated Distributor";
             distributor.ParsingUrl = "https://example.com/updated";
 
-            DbContext.Entry(distributorEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+            _dbContext.Entry(distributorEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
             var result = await _repository.Update(distributor);
 
-            var updatedEntity = await DbContext.Distributors.FindAsync(distributor.Id);
+            var updatedEntity = await _dbContext.Distributors.FindAsync(distributor.Id);
 
             Assert.True(result);
             Assert.NotNull(updatedEntity);
@@ -136,10 +157,10 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Delete_ShouldRemoveDistributor()
         {
-            var distributorEntity = DbContext.Distributors.First();
+            var distributorEntity = _dbContext.Distributors.First();
             var result = await _repository.Delete(distributorEntity.Id);
 
-            var deletedEntity = await DbContext.Distributors.FindAsync(distributorEntity.Id);
+            var deletedEntity = await _dbContext.Distributors.FindAsync(distributorEntity.Id);
 
             Assert.True(result);
             Assert.Null(deletedEntity);

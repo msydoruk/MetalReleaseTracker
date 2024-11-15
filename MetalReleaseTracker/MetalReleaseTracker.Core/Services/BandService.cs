@@ -34,7 +34,7 @@ namespace MetalReleaseTracker.Core.Services
                 throw new ArgumentException("Band name cannot be empty or null.", nameof(bandName));
             }
 
-            return await EnsureBandExistsByName(bandName);
+            return await _bandRepository.GetByName(bandName);
         }
 
         public async Task AddBand(Band band)
@@ -68,17 +68,6 @@ namespace MetalReleaseTracker.Core.Services
             if (band == null)
             {
                 throw new EntityNotFoundException($"Band with ID {id} not found.");
-            }
-
-            return band;
-        }
-
-        private async Task<Band> EnsureBandExistsByName(string bandName)
-        {
-            var band = await _bandRepository.GetByName(bandName);
-            if (band == null)
-            {
-                throw new EntityNotFoundException($"Band with name '{bandName}' not found.");
             }
 
             return band;

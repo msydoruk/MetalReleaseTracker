@@ -18,6 +18,7 @@ namespace MetalReleaseTracker.Infrastructure.Data.Entities
         public string ParsingUrl { get; set; }
 
         [Required]
+        [EnumDataType(typeof(DistributorCode))]
         public DistributorCode Code { get; set; }
     }
 }

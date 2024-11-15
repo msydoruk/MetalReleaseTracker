@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using MetalReleaseTracker.Core.Enums;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -12,8 +13,8 @@ namespace MetalReleaseTracker.Infrastructure.Migrations
         {
             migrationBuilder.InsertData(
                 table: "Distributors",
-                columns: new[] { "Id", "Name", "ParsingUrl" },
-                values: new object[] { Guid.NewGuid(), "Osmose", "https://www.osmoseproductions.com/liste/index.cfm?what=all&lng=2&tete=ukraine" });
+                columns: new[] { "Id", "Name", "ParsingUrl", "Code" },
+                values: new object[] { Guid.NewGuid(), "Osmose", "https://www.osmoseproductions.com/liste/index.cfm?what=all&lng=2&tete=ukraine", (int)DistributorCode.OsmoseProductions });
         }
 
         /// <inheritdoc />

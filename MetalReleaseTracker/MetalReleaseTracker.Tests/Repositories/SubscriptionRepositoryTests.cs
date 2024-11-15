@@ -1,21 +1,43 @@
-﻿using MetalReleaseTracker.Core.Entities;
+﻿using AutoMapper;
+using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
+using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
-using MetalReleaseTracker.Tests.Base;
 
 namespace MetalReleaseTracker.Tests.Repositories
 {
-    public class SubscriptionRepositoryTests : IntegrationTestBase
+    public class SubscriptionRepositoryTests : IAsyncLifetime
     {
+        private MetalReleaseTrackerDbContext _dbContext;
+        private readonly IMapper _mapper;
         private readonly SubscriptionRepository _repository;
 
         public SubscriptionRepositoryTests()
         {
-            _repository = new SubscriptionRepository(DbContext, Mapper);
+            var configuration = new MapperConfiguration(configuration =>
+            {
+                configuration.AddProfile<MappingProfile>();
+            });
+
+            _dbContext = TestDbContextFactory.CreateDbContext();
+            _mapper = configuration.CreateMapper();
+            _repository = new SubscriptionRepository(_dbContext, _mapper);
         }
 
-        protected override void InitializeData(MetalReleaseTrackerDbContext context)
+        public async Task InitializeAsync()
+        {
+            await InitializeData(_dbContext);
+        }
+
+        public Task DisposeAsync()
+        {
+            TestDbContextFactory.ClearDatabase(_dbContext);
+
+            return Task.CompletedTask;
+        }
+
+        protected async Task InitializeData(MetalReleaseTrackerDbContext context)
         {
             var subscriptions = new[]
             {
@@ -48,7 +70,7 @@ namespace MetalReleaseTracker.Tests.Repositories
 
             await _repository.Add(subscription);
 
-            var result = await DbContext.Subscriptions.FindAsync(subscription.Id);
+            var result = await _dbContext.Subscriptions.FindAsync(subscription.Id);
 
             Assert.NotNull(result);
             Assert.Equal(subscription.Email, result.Email);
@@ -66,7 +88,7 @@ namespace MetalReleaseTracker.Tests.Repositories
 
             await _repository.Add(subscription);
 
-            var result = await DbContext.Subscriptions.FindAsync(subscription.Id);
+            var result = await _dbContext.Subscriptions.FindAsync(subscription.Id);
 
             Assert.Null(result);
         }
@@ -82,7 +104,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task GetById_ShouldReturnSubscription_WhenIdExists()
         {
-            var subscriptionEntity = DbContext.Subscriptions.First();
+            var subscriptionEntity = _dbContext.Subscriptions.First();
             var result = await _repository.GetById(subscriptionEntity.Id);
 
             Assert.NotNull(result);
@@ -102,17 +124,17 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Update_ShouldUpdateSubscription()
         {
-            var subscriptionEntity = DbContext.Subscriptions.First();
-            var subscription = Mapper.Map<Subscription>(subscriptionEntity);
+            var subscriptionEntity = _dbContext.Subscriptions.First();
+            var subscription = _mapper.Map<Subscription>(subscriptionEntity);
 
             subscription.Email = "updated@example.com";
             subscription.NotifyForNewReleases = !subscription.NotifyForNewReleases;
 
-            DbContext.Entry(subscriptionEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+            _dbContext.Entry(subscriptionEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
             var result = await _repository.Update(subscription);
 
-            var updatedEntity = await DbContext.Subscriptions.FindAsync(subscription.Id);
+            var updatedEntity = await _dbContext.Subscriptions.FindAsync(subscription.Id);
 
             Assert.True(result);
             Assert.NotNull(updatedEntity);
@@ -138,10 +160,10 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task Delete_ShouldRemoveSubscription()
         {
-            var subscriptionEntity = DbContext.Subscriptions.First();
+            var subscriptionEntity = _dbContext.Subscriptions.First();
             var result = await _repository.Delete(subscriptionEntity.Id);
 
-            var deletedEntity = await DbContext.Subscriptions.FindAsync(subscriptionEntity.Id);
+            var deletedEntity = await _dbContext.Subscriptions.FindAsync(subscriptionEntity.Id);
 
             Assert.True(result);
             Assert.Null(deletedEntity);

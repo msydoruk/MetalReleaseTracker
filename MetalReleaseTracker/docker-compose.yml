@@ -1,0 +1,52 @@
+#version: '3.8'
+
+services:
+  metalreleasetracker.api:
+    image: metalreleasetrackerapi 
+    build:
+      context: .
+      dockerfile: MetalReleaseTracker.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "true"
+    restart: unless-stopped
+    ports:
+     - "8080:8080"
+     - "8081:8081"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+      - seq
+    entrypoint: /bin/bash -c "dotnet ef database update --project /src/MetalReleaseTracker.Infrastructure/MetalReleaseTracker.Infrastructure.csproj --startup-project /src/MetalReleaseTracker.API/MetalReleaseTracker.API.csproj && dotnet MetalReleaseTracker.API.dll"
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: MetalReleaseTrackerDb
+      POSTGRES_USER: metal
+      POSTGRES_PASSWORD: Mtl_pswrdSl
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+      
+  seq:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: Y
+    ports:
+      - "5341:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
