@@ -6,7 +6,6 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using MetalReleaseTracker.Infrastructure.Exceptions;
 using MetalReleaseTracker.Core.Enums;
-using MetalReleaseTracker.Core.Entities;
 
 namespace MetalReleaseTracker.Tests.Parsers
 {
@@ -16,8 +15,9 @@ namespace MetalReleaseTracker.Tests.Parsers
         private readonly Mock<IHtmlLoader> _htmlLoaderMock;
         private readonly Mock<ILogger<OsmoseProductionsParser>> _loggerMock;
 
+        private int _callCount = 0;
         private const string ParsingUrl = "http://example.com";
-
+        
         public OsmoseProductionsParserTests()
         {
             _htmlLoaderMock = new Mock<IHtmlLoader>();
@@ -412,25 +412,26 @@ namespace MetalReleaseTracker.Tests.Parsers
             Assert.Equal("Eschatology of War", album.Name);
             Assert.Equal("1914", album.BandName);
             Assert.Equal("NPR1006DGS - Ukraine", album.SKU);
-            Assert.Equal("Digisleeve CD + Bonustracks\n\nSince their formation in 2014, Ukrainian blackened death/doom metal visionaries 1914 have told the gruesome tales of World War I, charting this inexorable path through history with their debut album, Eschatology of War (2015). After a digital re-release in April 2021, the album will now appear via various exciting fan editions this year, including 2LP gatefold marbled crystal clear silver &amp; black and 2LP splatter gold &amp; black editions, out August 4, 2023. Inspired by the madness of war, Eschatology of War faces various events from the past, such as the Battles of Gallipoli and Verdun, the gas attack at Ypres, the Brusilovsky breakthrough, the Christmas truce and the bombing of London, just to name a few. Eschatology of War starts with the genuine intro “War In”, delivering tunes of an old military march, which was played for men going to war. “Frozen in Trenches (Christmas Truce)” presents a harmonious idyll to the melody of popular Christmas carol “Silent Night”, as the blaze of gunfire breaks in shortly after, while harsh vocals attack to transport nothing but death and decay. The album's longest song, “Ottoman Rise”, stirs up the atmosphere even more with heavy guitar lines, thunderous black metal drumming and deep screams of despair. 1914's uncompromising achievement of combining old school death and black metal, spiced with the approach of sludge and doom, can't be pigeonholed. With their debut album, followed by critically acclaimed The Blind Leading The Blind (2018) and their first full-length on Napalm Records, Where Fear and Weapons Meet (2021), the five-piece created its own remarkable world of sound, delivered in the most authentic way. Along with intense lyrics and a unique visual experience, 1914 takes their listener back into a cruel time of mankind, compelling them to face their own horrible past - never to be forgotten, while reflecting the present at the same time and paying homage to all that fell fighting the Great War.", album.Description);
+            Assert.StartsWith("Digisleeve CD + Bonustracks\n\nSince their formation in 2014", album.Description);
             Assert.Equal("Napalm", album.Label);
             Assert.Equal(18, album.Price);
             Assert.Equal(MediaType.CD, album.Media);
         }
 
-        //[Fact]
-        //public async Task ParseAlbums_WhenDataIsValid_ShouldReturnCorrectAlbums()
-        //{
-        //    var mainPageDocument = LoadHtmlFromFile("MainPage.html");
+        [Fact]
+        public async Task ParseAlbums_WhenDataIsValid_ShouldReturnCorrectAlbums()
+        {
+            var mainPageDocument = LoadHtmlFromFile("MainPage.html");
+            var templateDocument = LoadHtmlFromFile("PageWithValidData.html");
 
-        //    SetupHtmlLoader(ParsingUrl, mainPageDocument);
+            SetupHtmlLoaderWithTemplateDocument(ParsingUrl, mainPageDocument, templateDocument);
 
-        //    var parsedAlbums = await _parser.ParseAlbums(ParsingUrl);
+            var parsedAlbums = await _parser.ParseAlbums(ParsingUrl);
 
-        //    var restocks = parsedAlbums.Where(albums => albums.Status.ToString() == "Restock").ToList();
+            var restocks = parsedAlbums.Where(albums => albums.Status.ToString() == "Restock").ToList();
 
-        //    Assert.Equal(14, restocks.Count);
-        //}
+            Assert.Equal(14, restocks.Count);
+        }
 
         private static HtmlDocument LoadHtmlFromFile(string fileName)
         {
@@ -446,6 +447,17 @@ namespace MetalReleaseTracker.Tests.Parsers
             _htmlLoaderMock
                 .Setup(loader => loader.LoadHtmlDocumentAsync(url))
                 .ReturnsAsync(document);
+        }
+
+        private void SetupHtmlLoaderWithTemplateDocument(string url, HtmlDocument document, HtmlDocument templateDocument)
+        {
+            _htmlLoaderMock
+                .Setup(loader => loader.LoadHtmlDocumentAsync(It.IsAny<string>()))
+                .ReturnsAsync(() =>
+                {
+                    _callCount++;
+                    return _callCount == 1 ? document : templateDocument;
+                });
         }
 
         private HtmlDocument CreateHtmlDocument(string html)

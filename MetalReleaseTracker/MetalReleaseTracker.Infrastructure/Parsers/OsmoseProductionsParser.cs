@@ -32,21 +32,23 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             do
             {
-                var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
                 _logger.LogInformation($"Parsing albums from page: {nextPageUrl}.");
+                var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
+                var albumNodes = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
 
-                var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
-
-                if (albumNodes != null)
+                foreach (var albumNode in albumNodes)
                 {
-                    foreach (var node in albumNodes)
+                    var albumDetails = await ParseAlbumDetails(albumNode.Url);
+
+                    if (albumDetails.IsSuccess)
                     {
-                        await ParseAlbumNode(node, albums);
+                        albumDetails.Data.Status = albumNode.Status;
+                        albums.Add(albumDetails.Data);
                     }
-                }
-                else
-                {
-                    _logger.LogWarning($"No albums found on page: {nextPageUrl}.");
+                    else
+                    {
+                        _logger.LogError($"Failed to parse album: {albumDetails.ErrorMessage}");
+                    }
                 }
 
                 (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
@@ -70,28 +72,20 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
             if (!CheckRequiredFields(bandName, name, sku))
             {
-                return new ParsingResult<AlbumDto>
-                {
-                    IsSuccess = false,
-                    ErrorMessage = $"Missing band name or album name or SKU in the HTML document {albumUrl}. " +
-                           $"Band: {bandName}, Album: {name}, SKU: {sku}"
-                };
+                return CreateErrorParsingResult($"Missing band name or album name or SKU in the HTML document {albumUrl}. " +
+                                                $"Band: {bandName}, Album: {name}, SKU: {sku}");
+            }
+
+            var media = ParseMediaType(htmlDocument);
+
+            if (!media.HasValue || !Enum.IsDefined(typeof(MediaType), media))
+            {
+                return CreateErrorParsingResult($"Skipping album {name} due to unmatched media type: {media}.");
             }
 
             var releaseDate = ParseReleaseDate(htmlDocument);
             var price = ParsePrice(htmlDocument);
             var photoUrl = ParsePhotoUrl(htmlDocument);
-            var media = ParseMediaType(htmlDocument);
-
-            if (!media.HasValue || !Enum.IsDefined(typeof(MediaType), media))
-            {
-                return new ParsingResult<AlbumDto>
-                {
-                    IsSuccess = false,
-                    ErrorMessage = $"Skipping album {name} due to unmatched media type: {media}."
-                };
-            }
-
             var label = ParseLabel(htmlDocument);
             var press = ParsePress(htmlDocument);
             var description = ParseDescription(htmlDocument);
@@ -164,6 +158,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             return true;
+        }
+
+        private ParsingResult<AlbumDto> CreateErrorParsingResult(string errorMessage)
+        {
+            return new ParsingResult<AlbumDto>
+            {
+                IsSuccess = false,
+                ErrorMessage = errorMessage
+            };
         }
 
         private string ParseBandName(HtmlDocument htmlDocument)
@@ -262,22 +265,35 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return null;
         }
 
-        private async Task ParseAlbumNode(HtmlNode node, List<AlbumDto> albums)
+        public class AlbumUrlAndStatus
         {
-            var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
-            var status = ParseStatus(node);
+            public string Url { get; set; }
 
-            var albumDetails = await ParseAlbumDetails(albumUrl);
+            public AlbumStatus? Status { get; set; }
+        }
 
-            if (albumDetails.IsSuccess)
+        private List<AlbumUrlAndStatus> ParseAlbumUrlsAndStatusesFromListPage(HtmlDocument htmlDocument)
+        {
+            var albumData = new List<AlbumUrlAndStatus>();
+
+            var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='row GshopListingA']//div[@class='column three mobile-four']");
+
+            if (albumNodes != null)
             {
-                albumDetails.Data.Status = status;
-                albums.Add(albumDetails.Data);
+                foreach (var node in albumNodes)
+                {
+                    var albumUrl = node.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty).Trim();
+                    var status = ParseStatus(node);
+
+                    albumData.Add(new AlbumUrlAndStatus
+                    {
+                        Url = albumUrl,
+                        Status = status
+                    });
+                }
             }
-            else
-            {
-                _logger.LogError($"Failed to parse album: {albumDetails.ErrorMessage}");
-            }
+
+            return albumData;
         }
     }
 }
