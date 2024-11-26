@@ -10,8 +10,6 @@ namespace MetalReleaseTracker.Core.Filters
 
         public DateTime? ReleaseDateEnd { get; set; }
 
-        public string Genre { get; set; }
-
         public float? MinimumPrice { get; set; }
 
         public float? MaximumPrice { get; set; }

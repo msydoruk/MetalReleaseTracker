@@ -66,6 +66,8 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
+app.UseCors(options => options.AllowAnyMethod().AllowAnyOrigin().AllowAnyHeader());
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

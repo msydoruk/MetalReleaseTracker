@@ -3,6 +3,7 @@ using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Infrastructure.Exceptions;
+using MetalReleaseTracker.Infrastructure.Parsers.Models;
 using MetalReleaseTracker.Infrastructure.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -34,15 +35,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             {
                 _logger.LogInformation($"Parsing albums from page: {nextPageUrl}.");
                 var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
-                var albumNodes = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
+                var parsedAlbums = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
 
-                foreach (var albumNode in albumNodes)
+                foreach (var parsedAlbum in parsedAlbums)
                 {
-                    var albumDetails = await ParseAlbumDetails(albumNode.Url);
+                    var albumDetails = await ParseAlbumDetails(parsedAlbum.Url);
 
                     if (albumDetails.IsSuccess)
                     {
-                        albumDetails.Data.Status = albumNode.Status;
+                        albumDetails.Data.Status = parsedAlbum.Status;
                         albums.Add(albumDetails.Data);
                     }
                     else
@@ -263,13 +264,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             }
 
             return null;
-        }
-
-        public class AlbumUrlAndStatus
-        {
-            public string Url { get; set; }
-
-            public AlbumStatus? Status { get; set; }
         }
 
         private List<AlbumUrlAndStatus> ParseAlbumUrlsAndStatusesFromListPage(HtmlDocument htmlDocument)

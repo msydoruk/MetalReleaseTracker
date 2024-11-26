@@ -154,11 +154,6 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 query = query.Where(album => album.ReleaseDate <= filter.ReleaseDateEnd.Value);
             }
 
-            if (!string.IsNullOrEmpty(filter.Genre))
-            {
-                query = query.Where(album => album.Genre.Contains(filter.Genre));
-            }
-
             if (filter.MinimumPrice.HasValue)
             {
                 query = query.Where(album => album.Price >= filter.MinimumPrice.Value);
