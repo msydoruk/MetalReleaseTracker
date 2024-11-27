@@ -32,6 +32,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return _mapper.Map<Album>(album);
         }
 
+        public async Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId)
+        {
+            var albums = await _dbContext.Albums
+                .Where(album => album.DistributorId == distributorId)
+                .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return albums;
+        }
+
         public async Task<IEnumerable<Album>> GetAll()
         {
             return await _dbContext.Albums
@@ -126,18 +137,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return albums;
         }
 
-        public async Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId)
-        {
-            var albums = await _dbContext.Albums
-                .Where(album => album.DistributorId == distributorId)
-                .ProjectTo<Album>(_mapper.ConfigurationProvider)
-                .AsNoTracking()
-                .ToListAsync();
-
-            return albums;
-        }
-
-        private IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
+        private static IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
         {
             if (!string.IsNullOrEmpty(filter.BandName))
             {
@@ -167,6 +167,11 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             if (filter.Status.HasValue)
             {
                 query = query.Where(album => album.Status == filter.Status.Value);
+            }
+
+            if (filter.Media.HasValue)
+            {
+                query = query.Where(album => album.Media == filter.Media.Value);
             }
 
             return query;

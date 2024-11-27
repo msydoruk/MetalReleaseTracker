@@ -24,6 +24,13 @@ namespace MetalReleaseTracker.Core.Services
             return await EnsureAlbumExists(id);
         }
 
+        public async Task<IEnumerable<Album>> GetAlbumsByDistributorId(Guid distributorId)
+        {
+            _validationService.Validate(distributorId);
+
+            return await _albumRepository.GetByDistributorId(distributorId);
+        }
+
         public async Task<IEnumerable<Album>> GetAllAlbums()
         {
             return await _albumRepository.GetAll();
@@ -79,13 +86,6 @@ namespace MetalReleaseTracker.Core.Services
             _validationService.Validate(filter);
 
             return await _albumRepository.GetByFilter(filter);
-        }
-
-        public async Task<IEnumerable<Album>> GetAlbumsByDistributor(Guid distributorId)
-        {
-            _validationService.Validate(distributorId);
-
-            return await _albumRepository.GetByDistributorId(distributorId);
         }
 
         private async Task<Album> EnsureAlbumExists(Guid id)

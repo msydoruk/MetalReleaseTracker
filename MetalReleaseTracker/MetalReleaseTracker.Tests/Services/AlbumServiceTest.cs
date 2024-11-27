@@ -157,8 +157,7 @@ namespace MetalReleaseTracker.Tests.Services
             {
                 BandName = "Metallica",
                 ReleaseDateStart = new DateTime(1984, 1, 1),
-                ReleaseDateEnd = new DateTime(1987, 1, 1),
-                Genre = "Thrash Metal"
+                ReleaseDateEnd = new DateTime(1987, 1, 1)
             };
 
             var albums = new List<Album>
@@ -186,8 +185,7 @@ namespace MetalReleaseTracker.Tests.Services
             {
                 BandName = "InvalidBandName",
                 ReleaseDateStart = new DateTime(1800, 1, 1),
-                ReleaseDateEnd = new DateTime(1801, 1, 1),
-                Genre = "InvalidGenre"
+                ReleaseDateEnd = new DateTime(1801, 1, 1)
             };
 
             _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(new List<Album>());

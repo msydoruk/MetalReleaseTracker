@@ -8,6 +8,8 @@ namespace MetalReleaseTracker.Core.Interfaces
     {
         Task<Album> GetAlbumById(Guid id);
 
+        Task<IEnumerable<Album>> GetAlbumsByDistributorId(Guid distributorId);
+
         Task<IEnumerable<Album>> GetAllAlbums();
 
         Task AddAlbum(Album album);
@@ -21,7 +23,5 @@ namespace MetalReleaseTracker.Core.Interfaces
         Task<bool> DeleteAlbum(Guid id);
 
         Task<IEnumerable<Album>> GetAlbumsByFilter(AlbumFilter filter);
-
-        Task<IEnumerable<Album>> GetAlbumsByDistributor(Guid distributorId);
     }
 }

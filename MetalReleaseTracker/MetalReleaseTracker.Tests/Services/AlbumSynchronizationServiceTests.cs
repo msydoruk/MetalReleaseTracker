@@ -62,7 +62,7 @@ namespace MetalReleaseTracker.Tests.Services
 
             _bandServiceMock.Setup(service => service.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(service => service.GetAlbumsByDistributorId(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
@@ -105,7 +105,7 @@ namespace MetalReleaseTracker.Tests.Services
 
             _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributorId(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
@@ -153,7 +153,7 @@ namespace MetalReleaseTracker.Tests.Services
 
             _bandServiceMock.Setup(band => band.GetBandByName(It.IsAny<string>())).ReturnsAsync(band);
 
-            _albumServiceMock.Setup(album => album.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(album => album.GetAlbumsByDistributorId(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 
@@ -192,7 +192,7 @@ namespace MetalReleaseTracker.Tests.Services
 
             _bandServiceMock.Setup(service => service.GetBandByName(It.IsAny<string>())).ReturnsAsync((Band) null);
 
-            _albumServiceMock.Setup(service => service.GetAlbumsByDistributor(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
+            _albumServiceMock.Setup(service => service.GetAlbumsByDistributorId(It.IsAny<Guid>())).ReturnsAsync(existingAlbums);
 
             await _service.SynchronizeAllAlbums();
 

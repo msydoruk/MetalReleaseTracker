@@ -59,7 +59,7 @@ namespace MetalReleaseTracker.Application.Services
                 var parser = _parserFactory.CreateParser(distributor.Code);
 
                 var parsedAlbums = await parser.ParseAlbums(distributor.ParsingUrl);
-                var existingAlbums = await _albumService.GetAlbumsByDistributor(distributor.Id);
+                var existingAlbums = await _albumService.GetAlbumsByDistributorId(distributor.Id);
 
                 var bandCache = new Dictionary<string, Band>();
                 var albumsWithPriceChanges = new Dictionary<Guid, float>();
