@@ -105,9 +105,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         {
             var filter = new AlbumFilter
             {
-                BandName = "Metallica",
-                ReleaseDateStart = DateTime.SpecifyKind(new DateTime(1984, 1, 1), DateTimeKind.Utc),
-                ReleaseDateEnd = DateTime.SpecifyKind(new DateTime(1987, 1, 1), DateTimeKind.Utc)
+                BandName = "Metallica"
             };
 
             var result = await _repository.GetByFilter(filter);
@@ -121,9 +119,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         {
             var filter = new AlbumFilter
             {
-                BandName = "",
-                ReleaseDateStart = DateTime.SpecifyKind(new DateTime(1800, 1, 1), DateTimeKind.Utc),
-                ReleaseDateEnd = DateTime.SpecifyKind(new DateTime(1801, 1, 1), DateTimeKind.Utc)
+                BandName = ""
             };
 
             var result = await _repository.GetByFilter(filter);

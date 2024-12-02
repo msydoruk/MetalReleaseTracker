@@ -10,11 +10,6 @@ namespace MetalReleaseTracker.Core.Validators
             RuleFor(filter => filter.BandName)
                .MaximumLength(100).WithMessage("Band name cannot be longer than 100 characters.");
 
-            RuleFor(filter => filter.ReleaseDateStart)
-                .LessThan(filter => filter.ReleaseDateEnd)
-                .When(filter => filter.ReleaseDateStart.HasValue && filter.ReleaseDateEnd.HasValue)
-                .WithMessage("ReleaseDateStart must be less than ReleaseDateEnd.");
-
             RuleFor(filter => filter.MinimumPrice)
                 .GreaterThan(0).WithMessage("Minimum price must be greater than 0.")
                 .LessThan(filter => filter.MaximumPrice)

@@ -1,12 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MetalReleaseTracker.Core.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MetalReleaseTracker.API.Controllers
 {
-    public class BandController : Controller
+    [ApiController]
+    [Route("api/bands")]
+    public class BandController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly IBandService _bandService;
+
+        public BandController(IBandService bandService)
         {
-            return this.View();
+            _bandService = bandService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllBands()
+        {
+            var bands = await _bandService.GetAllBands();
+
+            return Ok(bands);
         }
     }
 }

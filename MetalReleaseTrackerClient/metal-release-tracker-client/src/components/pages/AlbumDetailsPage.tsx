@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchAlbumById } from "../../services/albumService";
 import {
@@ -6,8 +6,8 @@ import {
   Typography,
   Card,
   CardContent,
-  Chip,
   Button,
+  Grid,
 } from "@mui/material";
 import { getAlbumMediaType } from "../../utils/albumUtils";
 
@@ -42,46 +42,61 @@ const AlbumDetails = () => {
   if (!album) return <div>Album not found</div>;
 
   return (
-    <Box padding={2}>
-      <Card>
-        <CardContent>
-          <Box style={{ textAlign: "center" }}>
-            <a href={album.purchaseUrl}>
-              <img
-                src={album.photoUrl}
-                alt={album.name}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "120px",
-                  objectFit: "cover",
-                }}
-              />
-            </a>
-          </Box>
-          <Typography variant="h3" gutterBottom>
-            {album.name}
-          </Typography>
-          <Typography>Band: {album.band.name}</Typography>
-          <Typography>Media: {getAlbumMediaType(album.media)}</Typography>
-          <Typography>Label: {album.label}</Typography>
-          <Typography>Press: {album.sku}</Typography>
-          <Typography>Info: {album.description}</Typography>
-          <Typography
-            variant="body1"
-            color="textPrimary"
-            style={{ marginTop: "8px" }}
-          >
-            {album.price} EUR
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            href={album.purchaseUrl}
-            style={{ marginTop: "8px" }}
-          >
-            ADD TO SHOPPING CART
-          </Button>
-        </CardContent>
+    <Box
+      padding={2}
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+    >
+      <Card style={{ display: "flex", maxWidth: "1200px", width: "100%" }}>
+        <Grid container spacing={3} style={{ padding: "20px" }}>
+          <Grid item xs={12} md={6}>
+            <CardContent>
+              <Typography variant="h3" gutterBottom>
+                {album.name}
+              </Typography>
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                Band: {album.band.name}
+              </Typography>
+              <Typography>Media: {getAlbumMediaType(album.media)}</Typography>
+              <Typography>Label: {album.label}</Typography>
+              <Typography>Press: {album.sku}</Typography>
+              <Typography>Info: {album.description}</Typography>
+              <Typography
+                variant="body1"
+                color="textPrimary"
+                style={{ marginTop: "8px" }}
+              >
+                {album.price} EUR
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                href={album.purchaseUrl}
+                style={{ marginTop: "8px" }}
+              >
+                ADD TO SHOPPING CART
+              </Button>
+            </CardContent>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <CardContent style={{ display: "flex", justifyContent: "center" }}>
+              <a href={album.purchaseUrl}>
+                <img
+                  src={album.photoUrl}
+                  alt={album.name}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "400px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
+                />
+              </a>
+            </CardContent>
+          </Grid>
+        </Grid>
       </Card>
     </Box>
   );

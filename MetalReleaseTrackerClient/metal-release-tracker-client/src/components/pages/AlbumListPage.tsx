@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   fetchAllAlbums,
   fetchFilteredAlbums,
+  fetchAvailableBands,
 } from "../../services/albumService";
 import {
   Grid,
@@ -17,12 +18,12 @@ import {
   TextField,
   FormControl,
   InputLabel,
+  Autocomplete,
 } from "@mui/material";
 import { getAlbumStatus } from "../../utils/albumUtils";
 
 const AlbumList = () => {
   const [albums, setAlbums] = useState<any[]>([]);
-  const [filteredAlbums, setFilteredAlbums] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [albumsPerPage] = useState(40);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,10 @@ const AlbumList = () => {
   const [selectedMediaType, setSelectedMediaType] = useState<number | null>(
     null
   );
+  const [bandName, setBandName] = useState("");
+  const [availableBands, setAvailableBands] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
 
   const navigate = useNavigate();
 
@@ -63,12 +68,30 @@ const AlbumList = () => {
   }, []);
 
   useEffect(() => {
+    const fetchBands = async () => {
+      try {
+        const bands = await fetchAvailableBands();
+        setAvailableBands(bands.map((band: any) => band.name));
+      } catch (error) {
+        setError("Error loading bands");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBands();
+  }, []);
+
+  useEffect(() => {
     const fetchFilteredAlbumsData = async () => {
       try {
         setLoading(true);
         const filters = {
           Media: selectedMediaType !== null ? selectedMediaType : undefined,
           Status: selectedStatus !== null ? selectedStatus : undefined,
+          BandName: bandName || undefined,
+          MinimumPrice: minPrice ? parseFloat(minPrice) : undefined,
+          MaximumPrice: maxPrice ? parseFloat(maxPrice) : undefined,
           Page: currentPage,
           PageSize: albumsPerPage,
         };
@@ -82,7 +105,14 @@ const AlbumList = () => {
     };
 
     fetchFilteredAlbumsData();
-  }, [currentPage, selectedStatus, selectedMediaType]);
+  }, [
+    currentPage,
+    selectedStatus,
+    selectedMediaType,
+    bandName,
+    minPrice,
+    maxPrice,
+  ]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
@@ -141,6 +171,45 @@ const AlbumList = () => {
               </Select>
             </FormControl>
           </Grid>
+          <Grid item xs={12} sm={3}>
+            <FormControl fullWidth>
+              <Autocomplete
+                options={availableBands}
+                getOptionLabel={(option) => option}
+                value={bandName}
+                onChange={(event, newValue) => setBandName(newValue || "")}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Band"
+                    placeholder="Select a band"
+                  />
+                )}
+                noOptionsText="No bands available"
+                isOptionEqualToValue={(option, value) => option === value}
+              />
+            </FormControl>
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField
+              label="Min Price"
+              type="number"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              fullWidth
+              placeholder="Enter minimum price"
+            />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField
+              label="Max Price"
+              type="number"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              fullWidth
+              placeholder="Enter maximum price"
+            />
+          </Grid>
         </Grid>
       </Box>
       <Grid container spacing={3}>
@@ -160,26 +229,19 @@ const AlbumList = () => {
                   }}
                 >
                   <Box style={{ flex: 1, textAlign: "center" }}>
-                    <a href={album.purchaseUrl}>
-                      <img
-                        src={album.photoUrl}
-                        alt={album.name}
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: "120px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </a>
+                    <img
+                      src={album.photoUrl}
+                      alt={album.name}
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "120px",
+                        objectFit: "cover",
+                      }}
+                    />
                   </Box>
                   <Box style={{ flex: 2, paddingLeft: "16px" }}>
                     <Typography variant="h6" gutterBottom>
-                      <a
-                        href={album.purchaseUrl}
-                        style={{ textDecoration: "none" }}
-                      >
-                        {album.name}
-                      </a>
+                      <a style={{ textDecoration: "none" }}>{album.name}</a>
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
                       {album.band.name}

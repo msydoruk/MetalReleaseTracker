@@ -27,7 +27,7 @@ namespace MetalReleaseTracker.API.Controllers
             return Ok(topAlbums);
         }
 
-        [HttpGet("albums")]
+        [HttpGet]
         public async Task<IActionResult> GetAlbumsFromDistributor(Guid distributorId)
         {
             var albums = await _albumService.GetAlbumsByDistributorId(distributorId);

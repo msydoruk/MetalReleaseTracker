@@ -6,10 +6,6 @@ namespace MetalReleaseTracker.Core.Filters
     {
         public string? BandName {  get; set; }
 
-        public DateTime? ReleaseDateStart { get; set; }
-
-        public DateTime? ReleaseDateEnd { get; set; }
-
         public float? MinimumPrice { get; set; }
 
         public float? MaximumPrice { get; set; }

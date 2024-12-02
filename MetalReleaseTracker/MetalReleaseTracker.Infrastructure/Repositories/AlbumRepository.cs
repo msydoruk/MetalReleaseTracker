@@ -141,17 +141,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
         {
             if (!string.IsNullOrEmpty(filter.BandName))
             {
-                query = query.Where(album => album.Band.Name.Contains(filter.BandName));
-            }
-
-            if (filter.ReleaseDateStart.HasValue)
-            {
-                query = query.Where(album => album.ReleaseDate >= filter.ReleaseDateStart.Value);
-            }
-
-            if (filter.ReleaseDateEnd.HasValue)
-            {
-                query = query.Where(album => album.ReleaseDate <= filter.ReleaseDateEnd.Value);
+                query = query.Where(album => album.Band.Name.ToLower().Contains(filter.BandName.ToLower()));
             }
 
             if (filter.MinimumPrice.HasValue)

@@ -155,9 +155,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var filter = new AlbumFilter
             {
-                BandName = "Metallica",
-                ReleaseDateStart = new DateTime(1984, 1, 1),
-                ReleaseDateEnd = new DateTime(1987, 1, 1)
+                BandName = "Metallica"
             };
 
             var albums = new List<Album>
@@ -183,9 +181,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var filter = new AlbumFilter
             {
-                BandName = "InvalidBandName",
-                ReleaseDateStart = new DateTime(1800, 1, 1),
-                ReleaseDateEnd = new DateTime(1801, 1, 1)
+                BandName = "InvalidBandName"
             };
 
             _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(new List<Album>());
