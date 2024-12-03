@@ -23,7 +23,7 @@ const AlbumDetails = () => {
         try {
           const data = await fetchAlbumById(id);
           setAlbum(data);
-        } catch (err) {
+        } catch (error) {
           setError("Error loading album details");
         } finally {
           setLoading(false);

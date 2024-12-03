@@ -2,15 +2,10 @@ import axios from "axios";
 
 const API_BASE_URL = "https://localhost:44354/api";
 
-export const fetchAllAlbums = async (distributorId: string) => {
-  const response = await axios.get(`${API_BASE_URL}/albums`, {
-    params: { distributorId },
-  });
-  return response.data;
-};
-
 export const fetchFilteredAlbums = async (filters: {
-  BandName?: string;
+  DistributorId?: string;
+  BandId?: string;
+  AlbumName?: string;
   Media?: number;
   Status?: number;
   Page?: number;
@@ -21,7 +16,7 @@ export const fetchFilteredAlbums = async (filters: {
 };
 
 export const fetchAlbumById = async (id: string) => {
-    const response = await axios.get(`${API_BASE_URL}/albums/album?id=${id}`);
+    const response = await axios.get(`${API_BASE_URL}/albums/${id}`);
     return response.data;
 };
 

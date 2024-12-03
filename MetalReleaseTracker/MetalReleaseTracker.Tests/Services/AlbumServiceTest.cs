@@ -155,7 +155,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var filter = new AlbumFilter
             {
-                BandName = "Metallica"
+                AlbumName = "Album 1"
             };
 
             var albums = new List<Album>
@@ -181,7 +181,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var filter = new AlbumFilter
             {
-                BandName = "InvalidBandName"
+                AlbumName = "InvalidBandName"
             };
 
             _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(new List<Album>());

@@ -4,7 +4,15 @@ namespace MetalReleaseTracker.Core.Filters
 {
     public class AlbumFilter
     {
-        public string? BandName {  get; set; }
+        public Guid? DistributorId { get; set; }
+
+        public Guid? BandId { get; set; }
+
+        public string? AlbumName {  get; set; }
+
+        public DateTime? ReleaseDateStart { get; set; }
+
+        public DateTime? ReleaseDateEnd { get; set; }
 
         public float? MinimumPrice { get; set; }
 

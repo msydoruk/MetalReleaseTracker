@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  fetchAllAlbums,
   fetchFilteredAlbums,
   fetchAvailableBands,
 } from "../../services/albumService";
@@ -32,10 +31,17 @@ const AlbumList = () => {
   const [selectedMediaType, setSelectedMediaType] = useState<number | null>(
     null
   );
-  const [bandName, setBandName] = useState("");
-  const [availableBands, setAvailableBands] = useState<string[]>([]);
+  const [band, setBand] = useState<{ id: string; name: string } | null>(null);
+  const [availableBands, setAvailableBands] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
+  const [albumName, setAlbumName] = useState("");
+  const [releaseDateFrom, setReleaseDateFrom] = useState<string>("");
+  const [releaseDateTo, setReleaseDateTo] = useState<string>("");
+  // const [sortBy, setSortBy] = useState<string>("name");
+  // const [sortOrder, setSortOrder] = useState<string>("asc");
 
   const navigate = useNavigate();
 
@@ -52,26 +58,12 @@ const AlbumList = () => {
   ];
 
   useEffect(() => {
-    const fetchInitialAlbums = async () => {
-      try {
-        const distributorId = "5a638e17-877f-49f0-a782-b03c58315c25";
-        const albums = await fetchAllAlbums(distributorId);
-        setAlbums(albums);
-      } catch {
-        setError("Error loading albums");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInitialAlbums();
-  }, []);
-
-  useEffect(() => {
     const fetchBands = async () => {
       try {
         const bands = await fetchAvailableBands();
-        setAvailableBands(bands.map((band: any) => band.name));
+        setAvailableBands(
+          bands.map((band: any) => ({ id: band.id, name: band.name }))
+        );
       } catch (error) {
         setError("Error loading bands");
       } finally {
@@ -87,11 +79,15 @@ const AlbumList = () => {
       try {
         setLoading(true);
         const filters = {
+          DistributorId: "5a638e17-877f-49f0-a782-b03c58315c25",
+          BandId: band?.id || undefined,
+          AlbumName: albumName || undefined,
           Media: selectedMediaType !== null ? selectedMediaType : undefined,
           Status: selectedStatus !== null ? selectedStatus : undefined,
-          BandName: bandName || undefined,
           MinimumPrice: minPrice ? parseFloat(minPrice) : undefined,
           MaximumPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          ReleaseDateFrom: releaseDateFrom || undefined,
+          ReleaseDateTo: releaseDateTo || undefined,
           Page: currentPage,
           PageSize: albumsPerPage,
         };
@@ -109,17 +105,41 @@ const AlbumList = () => {
     currentPage,
     selectedStatus,
     selectedMediaType,
-    bandName,
+    band,
+    albumName,
     minPrice,
     maxPrice,
+    releaseDateFrom,
+    releaseDateTo,
   ]);
+
+  // useEffect(() => {
+  //   const sortAlbums = () => {
+  //     const sortedAlbums = [...albums];
+  //     sortedAlbums.sort((firstAlbum, secondAlbum) => {
+  //       if (sortBy === "name") {
+  //         return sortOrder === "asc"
+  //           ? firstAlbum.name.localeCompare(secondAlbum.name)
+  //           : secondAlbum.name.localeCompare(firstAlbum.name);
+  //       } else if (sortBy === "price") {
+  //         return sortOrder === "asc"
+  //           ? firstAlbum.price - secondAlbum.price
+  //           : secondAlbum.price - firstAlbum.price;
+  //       }
+  //       return 0;
+  //     });
+  //     setAlbums(sortedAlbums);
+  //   };
+
+  //   sortAlbums();
+  // }, [sortBy, sortOrder, albums]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
   };
 
   const handleAlbumClick = (albumId: string) => {
-    navigate(`/album/${albumId}`);
+    navigate(`/albums/${albumId}`);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -175,9 +195,9 @@ const AlbumList = () => {
             <FormControl fullWidth>
               <Autocomplete
                 options={availableBands}
-                getOptionLabel={(option) => option}
-                value={bandName}
-                onChange={(event, newValue) => setBandName(newValue || "")}
+                getOptionLabel={(option) => option.name}
+                value={band}
+                onChange={(event, newValue) => setBand(newValue)}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -189,6 +209,15 @@ const AlbumList = () => {
                 isOptionEqualToValue={(option, value) => option === value}
               />
             </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <TextField
+              label="Album Name"
+              value={albumName}
+              onChange={(e) => setAlbumName(e.target.value)}
+              fullWidth
+              placeholder="Enter album name"
+            />
           </Grid>
           <Grid item xs={6} sm={3}>
             <TextField
@@ -210,6 +239,32 @@ const AlbumList = () => {
               placeholder="Enter maximum price"
             />
           </Grid>
+          {/* <Grid item xs={12} sm={3}>
+            <FormControl fullWidth>
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                displayEmpty
+              >
+                <MenuItem value="name">Title</MenuItem>
+                <MenuItem value="price">Price</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <FormControl fullWidth>
+              <InputLabel>Sort Order</InputLabel>
+              <Select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                displayEmpty
+              >
+                <MenuItem value="asc">Ascending</MenuItem>
+                <MenuItem value="desc">Descending</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid> */}
         </Grid>
       </Box>
       <Grid container spacing={3}>
@@ -220,7 +275,10 @@ const AlbumList = () => {
         ) : (
           currentAlbums.map((album) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={album.id}>
-              <Card onClick={() => handleAlbumClick(album.id)}>
+              <Card
+                onClick={() => handleAlbumClick(album.id)}
+                style={{ cursor: "pointer" }}
+              >
                 <Box
                   style={{
                     display: "flex",

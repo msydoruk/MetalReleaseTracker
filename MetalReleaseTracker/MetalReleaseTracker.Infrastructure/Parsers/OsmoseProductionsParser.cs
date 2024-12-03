@@ -35,15 +35,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             {
                 _logger.LogInformation($"Parsing albums from page: {nextPageUrl}.");
                 var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
-                var parsedAlbums = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
+                var albumUrlAndStatusList = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
 
-                foreach (var parsedAlbum in parsedAlbums)
+                foreach (var albumUrlAndStatus in albumUrlAndStatusList)
                 {
-                    var albumDetails = await ParseAlbumDetails(parsedAlbum.Url);
+                    var albumDetails = await ParseAlbumDetails(albumUrlAndStatus.Url);
 
                     if (albumDetails.IsSuccess)
                     {
-                        albumDetails.Data.Status = parsedAlbum.Status;
+                        albumDetails.Data.Status = albumUrlAndStatus.Status;
                         albums.Add(albumDetails.Data);
                     }
                     else

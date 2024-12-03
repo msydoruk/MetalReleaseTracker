@@ -105,7 +105,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         {
             var filter = new AlbumFilter
             {
-                BandName = "Metallica"
+                AlbumName = "Metallica"
             };
 
             var result = await _repository.GetByFilter(filter);
@@ -119,7 +119,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         {
             var filter = new AlbumFilter
             {
-                BandName = ""
+                AlbumName = ""
             };
 
             var result = await _repository.GetByFilter(filter);
@@ -139,7 +139,7 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task GetById_ShouldReturnAlbum_WhenIdExists()
         {
-            var album = await _repository.GetByFilter(new AlbumFilter { BandName = "Metallica" });
+            var album = await _repository.GetByFilter(new AlbumFilter { AlbumName = "Metallica" });
             var albumId = album.First().Id;
 
             var result = await _repository.GetById(albumId);

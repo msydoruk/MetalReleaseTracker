@@ -139,9 +139,29 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
         private static IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
         {
-            if (!string.IsNullOrEmpty(filter.BandName))
+            if (filter.BandId.HasValue)
             {
-                query = query.Where(album => album.Band.Name.ToLower().Contains(filter.BandName.ToLower()));
+                query = query.Where(album => album.BandId == filter.BandId.Value);
+            }
+
+            if (filter.DistributorId.HasValue)
+            {
+                query = query.Where(album => album.DistributorId == filter.DistributorId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(filter.AlbumName))
+            {
+                query = query.Where(album => album.Band.Name.ToLower().Contains(filter.AlbumName.ToLower()));
+            }
+
+            if (filter.ReleaseDateStart.HasValue)
+            {
+                query = query.Where(album => album.ReleaseDate >= filter.ReleaseDateStart.Value);
+            }
+
+            if (filter.ReleaseDateEnd.HasValue)
+            {
+                query = query.Where(album => album.ReleaseDate <= filter.ReleaseDateEnd.Value);
             }
 
             if (filter.MinimumPrice.HasValue)
