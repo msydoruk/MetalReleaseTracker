@@ -1,4 +1,5 @@
-﻿using MetalReleaseTracker.Core.Interfaces;
+﻿using MetalReleaseTracker.Core.Filters;
+using MetalReleaseTracker.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MetalReleaseTracker.API.Controllers
@@ -15,11 +16,11 @@ namespace MetalReleaseTracker.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllBands()
+        public async Task<IActionResult> GetFilteredBands([FromQuery] BaseFilter baseFilter)
         {
-            var bands = await _bandService.GetAllBands();
+            var albums = await _bandService.GetBandsByFilter(baseFilter);
 
-            return Ok(bands);
+            return Ok(albums);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Exceptions;
+using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 
 namespace MetalReleaseTracker.Core.Services
@@ -60,6 +61,13 @@ namespace MetalReleaseTracker.Core.Services
             await EnsureBandExists(id);
 
             return await _bandRepository.Delete(id);
+        }
+
+        public async Task<IEnumerable<Band>> GetBandsByFilter(BaseFilter filter)
+        {
+            _validationService.Validate(filter);
+
+            return await _bandRepository.GetByFilter(filter);
         }
 
         private async Task<Band> EnsureBandExists(Guid id)

@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq.Dynamic.Core;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
@@ -128,6 +129,14 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 .AsQueryable();
 
             query = ApplyFilters(query, filter);
+
+            if (!string.IsNullOrEmpty(filter.OrderBy))
+            {
+                var sortDirection = filter.Descending ? "descending" : "ascending";
+                query = query.OrderBy($"{filter.OrderBy} {sortDirection}");
+            }
+
+            query = query.Skip(filter.Skip).Take(filter.Take);
 
             var albums = await query
                 .ProjectTo<Album>(_mapper.ConfigurationProvider)
