@@ -25,6 +25,7 @@ const AlbumList = () => {
   const [albums, setAlbums] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [albumsPerPage] = useState(40);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<number | null>(null);
@@ -40,8 +41,8 @@ const AlbumList = () => {
   const [albumName, setAlbumName] = useState("");
   const [releaseDateFrom, setReleaseDateFrom] = useState<string>("");
   const [releaseDateTo, setReleaseDateTo] = useState<string>("");
-  // const [sortBy, setSortBy] = useState<string>("name");
-  // const [sortOrder, setSortOrder] = useState<string>("asc");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<string>("asc");
 
   const navigate = useNavigate();
 
@@ -60,7 +61,7 @@ const AlbumList = () => {
   useEffect(() => {
     const fetchBands = async () => {
       try {
-        const bands = await fetchAvailableBands();
+        const bands = await fetchAvailableBands(0, 40);
         setAvailableBands(
           bands.map((band: any) => ({ id: band.id, name: band.name }))
         );
@@ -88,11 +89,14 @@ const AlbumList = () => {
           MaximumPrice: maxPrice ? parseFloat(maxPrice) : undefined,
           ReleaseDateFrom: releaseDateFrom || undefined,
           ReleaseDateTo: releaseDateTo || undefined,
-          Page: currentPage,
-          PageSize: albumsPerPage,
+          Skip: (currentPage - 1) * albumsPerPage,
+          Take: albumsPerPage,
+          OrderBy: sortBy,
+          Descending: sortOrder === "desc",
         };
-        const filteredAlbums = await fetchFilteredAlbums(filters);
-        setAlbums(filteredAlbums);
+        const data = await fetchFilteredAlbums(filters);
+        setAlbums(data.albums || []);
+        setTotalCount(data.totalCount);
       } catch {
         setError("Error filtering albums");
       } finally {
@@ -111,28 +115,9 @@ const AlbumList = () => {
     maxPrice,
     releaseDateFrom,
     releaseDateTo,
+    sortBy,
+    sortOrder,
   ]);
-
-  // useEffect(() => {
-  //   const sortAlbums = () => {
-  //     const sortedAlbums = [...albums];
-  //     sortedAlbums.sort((firstAlbum, secondAlbum) => {
-  //       if (sortBy === "name") {
-  //         return sortOrder === "asc"
-  //           ? firstAlbum.name.localeCompare(secondAlbum.name)
-  //           : secondAlbum.name.localeCompare(firstAlbum.name);
-  //       } else if (sortBy === "price") {
-  //         return sortOrder === "asc"
-  //           ? firstAlbum.price - secondAlbum.price
-  //           : secondAlbum.price - firstAlbum.price;
-  //       }
-  //       return 0;
-  //     });
-  //     setAlbums(sortedAlbums);
-  //   };
-
-  //   sortAlbums();
-  // }, [sortBy, sortOrder, albums]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
@@ -144,10 +129,6 @@ const AlbumList = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
-
-  const indexOfLastAlbum = currentPage * albumsPerPage;
-  const indexOfFirstAlbum = indexOfLastAlbum - albumsPerPage;
-  const currentAlbums = albums.slice(indexOfFirstAlbum, indexOfLastAlbum);
 
   return (
     <Box padding={2}>
@@ -239,7 +220,7 @@ const AlbumList = () => {
               placeholder="Enter maximum price"
             />
           </Grid>
-          {/* <Grid item xs={12} sm={3}>
+          <Grid item xs={12} sm={3}>
             <FormControl fullWidth>
               <InputLabel>Sort By</InputLabel>
               <Select
@@ -249,6 +230,9 @@ const AlbumList = () => {
               >
                 <MenuItem value="name">Title</MenuItem>
                 <MenuItem value="price">Price</MenuItem>
+                <MenuItem value="band">Band</MenuItem>
+                <MenuItem value="label">Label</MenuItem>
+                <MenuItem value="media">Media</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -264,16 +248,16 @@ const AlbumList = () => {
                 <MenuItem value="desc">Descending</MenuItem>
               </Select>
             </FormControl>
-          </Grid> */}
+          </Grid>
         </Grid>
       </Box>
       <Grid container spacing={3}>
-        {currentAlbums.length === 0 ? (
+        {albums.length === 0 ? (
           <Typography variant="h6" color="textSecondary">
             No albums found.
           </Typography>
         ) : (
-          currentAlbums.map((album) => (
+          albums.map((album) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={album.id}>
               <Card
                 onClick={() => handleAlbumClick(album.id)}
@@ -336,7 +320,7 @@ const AlbumList = () => {
 
       <Box mt={4} display="flex" justifyContent="center">
         <Pagination
-          count={Math.ceil(albums.length / albumsPerPage)}
+          count={Math.ceil(totalCount / albumsPerPage)}
           page={currentPage}
           onChange={handlePageChange}
           color="primary"

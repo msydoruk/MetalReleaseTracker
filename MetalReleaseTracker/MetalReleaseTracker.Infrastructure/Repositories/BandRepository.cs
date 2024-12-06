@@ -91,12 +91,6 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var query = _dbContext.Bands
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(filter.OrderBy))
-            {
-                var sortDirection = filter.Descending ? "descending" : "ascending";
-                query = query.OrderBy($"{filter.OrderBy} {sortDirection}");
-            }
-
             query = query.Skip(filter.Skip).Take(filter.Take);
 
             var bands = await query

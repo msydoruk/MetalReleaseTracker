@@ -121,8 +121,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)
+        public async Task<(IEnumerable<Album>, int)> GetByFilter(AlbumFilter filter)
         {
+            var allowedSortFields = new HashSet<string>
+            {
+                nameof(Album.Band),
+                nameof(Album.Name),
+                nameof(Album.Price),
+                nameof(Album.Label),
+                nameof(Album.Media)
+            };
+
             var query = _dbContext.Albums
                 .Include(album => album.Band)
                 .Include(album => album.Distributor)
@@ -130,10 +139,13 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             query = ApplyFilters(query, filter);
 
-            if (!string.IsNullOrEmpty(filter.OrderBy))
+            var totalCount = await query.CountAsync();
+
+            if (!string.IsNullOrEmpty(filter.OrderBy) && allowedSortFields.Contains(filter.OrderBy))
             {
-                var sortDirection = filter.Descending ? "descending" : "ascending";
-                query = query.OrderBy($"{filter.OrderBy} {sortDirection}");
+                query = filter.Descending
+                    ? query.OrderByDescending(album => EF.Property<object>(album, filter.OrderBy))
+                    : query.OrderBy(album => EF.Property<object>(album, filter.OrderBy));
             }
 
             query = query.Skip(filter.Skip).Take(filter.Take);
@@ -143,7 +155,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 .AsNoTracking()
                 .ToListAsync();
 
-            return albums;
+            return (albums, totalCount);
         }
 
         private static IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)

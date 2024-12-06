@@ -26,9 +26,13 @@ namespace MetalReleaseTracker.API.Controllers
         [HttpGet("filter")]
         public async Task<IActionResult> GetFilteredAlbums([FromQuery] AlbumFilter albumFilter)
         {
-            var albums = await _albumService.GetAlbumsByFilter(albumFilter);
+            var (albums, totalCount) = await _albumService.GetAlbumsByFilter(albumFilter);
 
-            return Ok(albums);
+            return Ok(new
+            {
+                Albums = albums,
+                TotalCount = totalCount
+            });
         }
     }
 }

@@ -7,6 +7,7 @@ using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Core.Services;
 using Moq;
+using Xunit.Abstractions;
 
 namespace MetalReleaseTracker.Tests.Services
 {
@@ -19,8 +20,8 @@ namespace MetalReleaseTracker.Tests.Services
         public AlbumServiceTest()
         {
             _albumRepository = new Mock<IAlbumRepository>();
-            _validationService = new ValidationService(new List<IValidator> 
-            { 
+            _validationService = new ValidationService(new List<IValidator>
+            {
                 new AlbumValidator(),
                 new AlbumFilterValidator(),
                 new GuidValidator()
@@ -130,7 +131,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var existingAlbum = CreateSampleAlbum();
             _albumRepository.Setup(repository => repository.GetById(existingAlbum.Id)).ReturnsAsync(existingAlbum);
-            _albumRepository.Setup(repository => repository.Delete(existingAlbum.Id)).ReturnsAsync(true); 
+            _albumRepository.Setup(repository => repository.Delete(existingAlbum.Id)).ReturnsAsync(true);
 
             var result = await _albumService.DeleteAlbum(existingAlbum.Id);
 
@@ -167,11 +168,11 @@ namespace MetalReleaseTracker.Tests.Services
             albums[0].Band = new Band { Name = "Metallica" };
             albums[1].Band = new Band { Name = "Metallica" };
 
-            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(albums);
+            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync((albums, albums.Count));
 
-            var result = await _albumService.GetAlbumsByFilter(filter);
+            var result = (await _albumService.GetAlbumsByFilter(filter)).Item1;
 
-            Assert.NotEmpty(result);
+            Assert.NotNull(result);
             Assert.Equal(2, result.Count());
             _albumRepository.Verify(repository => repository.GetByFilter(filter), Times.Once);
         }
@@ -184,11 +185,12 @@ namespace MetalReleaseTracker.Tests.Services
                 AlbumName = "InvalidBandName"
             };
 
-            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(new List<Album>());
-            
+            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync((new List<Album>(), 0));
+
+
             var result = await _albumService.GetAlbumsByFilter(filter);
 
-            Assert.Empty(result);
+            Assert.Null(result);
             _albumRepository.Verify(repository => repository.GetByFilter(filter), Times.Once);
         }
 

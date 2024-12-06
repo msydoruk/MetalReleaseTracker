@@ -18,9 +18,9 @@ namespace MetalReleaseTracker.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetFilteredBands([FromQuery] BaseFilter baseFilter)
         {
-            var albums = await _bandService.GetBandsByFilter(baseFilter);
+            var bands = await _bandService.GetBandsByFilter(baseFilter);
 
-            return Ok(albums);
+            return Ok(bands);
         }
     }
 }
