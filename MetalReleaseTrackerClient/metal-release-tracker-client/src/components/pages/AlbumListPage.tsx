@@ -228,11 +228,11 @@ const AlbumList = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 displayEmpty
               >
-                <MenuItem value="name">Title</MenuItem>
-                <MenuItem value="price">Price</MenuItem>
-                <MenuItem value="band">Band</MenuItem>
-                <MenuItem value="label">Label</MenuItem>
-                <MenuItem value="media">Media</MenuItem>
+                <MenuItem value="Name">Title</MenuItem>
+                <MenuItem value="Price">Price</MenuItem>
+                <MenuItem value="Band">Band</MenuItem>
+                <MenuItem value="Label">Label</MenuItem>
+                <MenuItem value="Media">Media</MenuItem>
               </Select>
             </FormControl>
           </Grid>
