@@ -172,7 +172,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             if (!string.IsNullOrEmpty(filter.AlbumName))
             {
-                query = query.Where(album => album.Band.Name.ToLower().Contains(filter.AlbumName.ToLower()));
+                query = query.Where(album => album.Name.ToLower().Contains(filter.AlbumName.ToLower()));
             }
 
             if (filter.ReleaseDateStart.HasValue)

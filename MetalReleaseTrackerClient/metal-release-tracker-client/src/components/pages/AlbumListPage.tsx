@@ -133,9 +133,12 @@ const AlbumList = () => {
   return (
     <Box padding={2}>
       <Box mb={4}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
+        <Typography variant="h6" gutterBottom>
+          Filter by
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={6} sm={3} md={1}>
+            <FormControl fullWidth size="small">
               <InputLabel>Status</InputLabel>
               <Select
                 value={selectedStatus}
@@ -153,8 +156,8 @@ const AlbumList = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
+          <Grid item xs={6} sm={3} md={1}>
+            <FormControl fullWidth size="small">
               <InputLabel>Media Type</InputLabel>
               <Select
                 value={selectedMediaType}
@@ -172,35 +175,36 @@ const AlbumList = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
-              <Autocomplete
-                options={availableBands}
-                getOptionLabel={(option) => option.name}
-                value={band}
-                onChange={(event, newValue) => setBand(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Band"
-                    placeholder="Select a band"
-                  />
-                )}
-                noOptionsText="No bands available"
-                isOptionEqualToValue={(option, value) => option === value}
-              />
-            </FormControl>
+          <Grid item xs={12} sm={3} md={1}>
+            <Autocomplete
+              options={availableBands}
+              getOptionLabel={(option) => option.name}
+              value={band}
+              onChange={(event, newValue) => setBand(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Band"
+                  placeholder="Select a band"
+                  fullWidth
+                  size="small"
+                />
+              )}
+              noOptionsText="No bands available"
+              isOptionEqualToValue={(option, value) => option === value}
+            />
           </Grid>
-          <Grid item xs={12} sm={3}>
+          <Grid item xs={12} sm={3} md={1}>
             <TextField
               label="Album Name"
               value={albumName}
               onChange={(e) => setAlbumName(e.target.value)}
               fullWidth
               placeholder="Enter album name"
+              size="small"
             />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid item xs={6} sm={3} md={1}>
             <TextField
               label="Min Price"
               type="number"
@@ -208,9 +212,10 @@ const AlbumList = () => {
               onChange={(e) => setMinPrice(e.target.value)}
               fullWidth
               placeholder="Enter minimum price"
+              size="small"
             />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid item xs={6} sm={3} md={1}>
             <TextField
               label="Max Price"
               type="number"
@@ -218,10 +223,19 @@ const AlbumList = () => {
               onChange={(e) => setMaxPrice(e.target.value)}
               fullWidth
               placeholder="Enter maximum price"
+              size="small"
             />
           </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
+        </Grid>
+      </Box>
+
+      <Box mb={4}>
+        <Typography variant="h6" gutterBottom>
+          Sort by
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={6} sm={3} md={1}>
+            <FormControl fullWidth size="small">
               <InputLabel>Sort By</InputLabel>
               <Select
                 value={sortBy}
@@ -236,8 +250,8 @@ const AlbumList = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
+          <Grid item xs={6} sm={3} md={1}>
+            <FormControl fullWidth size="small">
               <InputLabel>Sort Order</InputLabel>
               <Select
                 value={sortOrder}
