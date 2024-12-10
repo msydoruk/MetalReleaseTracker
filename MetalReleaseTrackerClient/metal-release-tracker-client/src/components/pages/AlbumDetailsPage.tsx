@@ -76,7 +76,7 @@ const AlbumDetails = () => {
                 href={album.purchaseUrl}
                 style={{ marginTop: "8px" }}
               >
-                ADD TO SHOPPING CART
+                BUY
               </Button>
             </CardContent>
           </Grid>

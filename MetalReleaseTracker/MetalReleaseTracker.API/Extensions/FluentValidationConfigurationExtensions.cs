@@ -13,7 +13,7 @@ namespace MetalReleaseTracker.API.Extensions
             services.AddTransient<IValidator<Album>, AlbumValidator>();
             services.AddTransient<IValidator<AlbumFilter>, AlbumFilterValidator>();
             services.AddTransient<IValidator<Band>, BandValidator>();
-            services.AddTransient<IValidator<BaseFilter>, BaseFilterValidator>();
+            services.AddTransient<IValidator<PagingAndSortingFilter>, BaseFilterValidator>();
             services.AddTransient<IValidator<Distributor>, DistributorValidator>();
             services.AddTransient<IValidator<Subscription>, SubscriptionValidator>();
             services.AddTransient<IValidator<Guid>, GuidValidator>();
@@ -28,7 +28,7 @@ namespace MetalReleaseTracker.API.Extensions
                 var validators = provider.GetServices<IValidator<Album>>()
                                .Cast<IValidator>()
                                .Concat(provider.GetServices<IValidator<AlbumFilter>>())
-                               .Concat(provider.GetServices<IValidator<BaseFilter>>())
+                               .Concat(provider.GetServices<IValidator<PagingAndSortingFilter>>())
                                .Concat(provider.GetServices<IValidator<Band>>())
                                .Concat(provider.GetServices<IValidator<Distributor>>())
                                .Concat(provider.GetServices<IValidator<Subscription>>())

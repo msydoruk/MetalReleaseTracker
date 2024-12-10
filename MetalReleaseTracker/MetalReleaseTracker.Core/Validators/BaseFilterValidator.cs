@@ -3,7 +3,7 @@ using MetalReleaseTracker.Core.Filters;
 
 namespace MetalReleaseTracker.Core.Validators
 {
-    public class BaseFilterValidator : AbstractValidator<BaseFilter>
+    public class BaseFilterValidator : AbstractValidator<PagingAndSortingFilter>
     {
         public BaseFilterValidator()
         {

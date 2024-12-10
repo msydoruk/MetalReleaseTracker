@@ -7,6 +7,8 @@ using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
+using MetalReleaseTracker.Infrastructure.Extensions;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
@@ -121,17 +123,8 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<(IEnumerable<Album>, int)> GetByFilter(AlbumFilter filter)
+        public async Task<AlbumFilterResult> GetByFilter(AlbumFilter filter)
         {
-            var allowedSortFields = new HashSet<string>
-            {
-                nameof(Album.Band),
-                nameof(Album.Name),
-                nameof(Album.Price),
-                nameof(Album.Label),
-                nameof(Album.Media)
-            };
-
             var query = _dbContext.Albums
                 .Include(album => album.Band)
                 .Include(album => album.Distributor)
@@ -141,7 +134,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             var totalCount = await query.CountAsync();
 
-            if (!string.IsNullOrEmpty(filter.OrderBy) && allowedSortFields.Contains(filter.OrderBy))
+            if (!string.IsNullOrEmpty(filter.OrderBy) && AllowedSortFields.Contains(filter.OrderBy))
             {
                 query = filter.Descending
                     ? query.OrderByDescending(album => EF.Property<object>(album, filter.OrderBy))
@@ -155,55 +148,34 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                 .AsNoTracking()
                 .ToListAsync();
 
-            return (albums, totalCount);
+            return new AlbumFilterResult
+            {
+                Albums = albums,
+                TotalCount = totalCount
+            };
         }
+
+        private static readonly HashSet<string> AllowedSortFields =
+        [
+            nameof(Album.Band),
+            nameof(Album.Name),
+            nameof(Album.Price),
+            nameof(Album.Label),
+            nameof(Album.Media)
+        ];
 
         private static IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
         {
-            if (filter.BandId.HasValue)
-            {
-                query = query.Where(album => album.BandId == filter.BandId.Value);
-            }
-
-            if (filter.DistributorId.HasValue)
-            {
-                query = query.Where(album => album.DistributorId == filter.DistributorId.Value);
-            }
-
-            if (!string.IsNullOrEmpty(filter.AlbumName))
-            {
-                query = query.Where(album => album.Name.ToLower().Contains(filter.AlbumName.ToLower()));
-            }
-
-            if (filter.ReleaseDateStart.HasValue)
-            {
-                query = query.Where(album => album.ReleaseDate >= filter.ReleaseDateStart.Value);
-            }
-
-            if (filter.ReleaseDateEnd.HasValue)
-            {
-                query = query.Where(album => album.ReleaseDate <= filter.ReleaseDateEnd.Value);
-            }
-
-            if (filter.MinimumPrice.HasValue)
-            {
-                query = query.Where(album => album.Price >= filter.MinimumPrice.Value);
-            }
-
-            if (filter.MaximumPrice.HasValue)
-            {
-                query = query.Where(album => album.Price <= filter.MaximumPrice.Value);
-            }
-
-            if (filter.Status.HasValue)
-            {
-                query = query.Where(album => album.Status == filter.Status.Value);
-            }
-
-            if (filter.Media.HasValue)
-            {
-                query = query.Where(album => album.Media == filter.Media.Value);
-            }
+            query = query
+                .WhereIf(filter.BandId.HasValue, album => album.BandId == filter.BandId.Value)
+                .WhereIf(filter.DistributorId.HasValue, album => album.DistributorId == filter.DistributorId.Value)
+                .WhereIf(!string.IsNullOrEmpty(filter.AlbumName), album => album.Name.ToLower().Contains(filter.AlbumName.ToLower()))
+                .WhereIf(filter.ReleaseDateStart.HasValue, album => album.ReleaseDate >= filter.ReleaseDateStart.Value)
+                .WhereIf(filter.ReleaseDateEnd.HasValue, album => album.ReleaseDate <= filter.ReleaseDateEnd.Value)
+                .WhereIf(filter.MinimumPrice.HasValue, album => album.Price >= filter.MinimumPrice.Value)
+                .WhereIf(filter.MaximumPrice.HasValue, album => album.Price <= filter.MaximumPrice.Value)
+                .WhereIf(filter.Status.HasValue, album => album.Status == filter.Status.Value)
+                .WhereIf(filter.Media.HasValue, album => album.Media == filter.Media.Value);
 
             return query;
         }

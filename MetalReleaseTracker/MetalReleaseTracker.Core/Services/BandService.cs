@@ -63,7 +63,7 @@ namespace MetalReleaseTracker.Core.Services
             return await _bandRepository.Delete(id);
         }
 
-        public async Task<IEnumerable<Band>> GetBandsByFilter(BaseFilter filter)
+        public async Task<IEnumerable<Band>> GetBandsByFilter(PagingAndSortingFilter filter)
         {
             _validationService.Validate(filter);
 

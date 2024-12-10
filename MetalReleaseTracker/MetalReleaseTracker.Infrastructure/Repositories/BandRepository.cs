@@ -86,7 +86,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<IEnumerable<Band>> GetByFilter(BaseFilter filter)
+        public async Task<IEnumerable<Band>> GetByFilter(PagingAndSortingFilter filter)
         {
             var query = _dbContext.Bands
                 .AsQueryable();

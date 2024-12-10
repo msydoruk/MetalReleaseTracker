@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   fetchFilteredAlbums,
   fetchAvailableBands,
+  fetchAvailableDistributors,
 } from "../../services/albumService";
 import {
   Grid,
@@ -33,15 +34,24 @@ const AlbumList = () => {
     null
   );
   const [band, setBand] = useState<{ id: string; name: string } | null>(null);
+  const [selectedDistributor, setSelectedDistributor] = useState<{
+    id: string;
+    name: string;
+    parsingUrl: string;
+    code: number;
+  } | null>(null);
   const [availableBands, setAvailableBands] = useState<
     { id: string; name: string }[]
+  >([]);
+  const [availableDistributors, setAvailableDistributors] = useState<
+    { id: string; name: string; parsingUrl: string; code: number }[]
   >([]);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [albumName, setAlbumName] = useState("");
   const [releaseDateFrom, setReleaseDateFrom] = useState<string>("");
   const [releaseDateTo, setReleaseDateTo] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortBy, setSortBy] = useState<string>("Name");
   const [sortOrder, setSortOrder] = useState<string>("asc");
 
   const navigate = useNavigate();
@@ -76,34 +86,46 @@ const AlbumList = () => {
   }, []);
 
   useEffect(() => {
-    const fetchFilteredAlbumsData = async () => {
+    const fetchDistributors = async () => {
       try {
-        setLoading(true);
-        const filters = {
-          DistributorId: "5a638e17-877f-49f0-a782-b03c58315c25",
-          BandId: band?.id || undefined,
-          AlbumName: albumName || undefined,
-          Media: selectedMediaType !== null ? selectedMediaType : undefined,
-          Status: selectedStatus !== null ? selectedStatus : undefined,
-          MinimumPrice: minPrice ? parseFloat(minPrice) : undefined,
-          MaximumPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-          ReleaseDateFrom: releaseDateFrom || undefined,
-          ReleaseDateTo: releaseDateTo || undefined,
-          Skip: (currentPage - 1) * albumsPerPage,
-          Take: albumsPerPage,
-          OrderBy: sortBy,
-          Descending: sortOrder === "desc",
-        };
-        const data = await fetchFilteredAlbums(filters);
-        setAlbums(data.albums || []);
-        setTotalCount(data.totalCount);
+        const distributors = await fetchAvailableDistributors();
+        setAvailableDistributors(distributors);
       } catch {
-        setError("Error filtering albums");
-      } finally {
-        setLoading(false);
+        setError("Error loading distributors");
       }
     };
+    fetchDistributors();
+  }, []);
 
+  const fetchFilteredAlbumsData = async () => {
+    try {
+      setLoading(true);
+      const filters = {
+        DistributorId: selectedDistributor?.id || undefined,
+        BandId: band?.id || undefined,
+        AlbumName: albumName || undefined,
+        Media: selectedMediaType !== null ? selectedMediaType : undefined,
+        Status: selectedStatus !== null ? selectedStatus : undefined,
+        MinimumPrice: minPrice ? parseFloat(minPrice) : undefined,
+        MaximumPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        ReleaseDateFrom: releaseDateFrom || undefined,
+        ReleaseDateTo: releaseDateTo || undefined,
+        Skip: (currentPage - 1) * albumsPerPage,
+        Take: albumsPerPage,
+        OrderBy: sortBy,
+        Descending: sortOrder === "desc",
+      };
+      const data = await fetchFilteredAlbums(filters);
+      setAlbums(data.albums || []);
+      setTotalCount(data.totalCount);
+    } catch {
+      setError("Error filtering albums");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchFilteredAlbumsData();
   }, [
     currentPage,
@@ -118,6 +140,28 @@ const AlbumList = () => {
     sortBy,
     sortOrder,
   ]);
+
+  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value && parseFloat(value) < 0) {
+      setMinPrice("0");
+    } else {
+      setMinPrice(value);
+    }
+  };
+
+  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value && parseFloat(value) < 0) {
+      setMaxPrice("0");
+    } else {
+      setMaxPrice(value);
+    }
+  };
+
+  const handleSearchClick = () => {
+    fetchFilteredAlbumsData();
+  };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
@@ -177,6 +221,25 @@ const AlbumList = () => {
           </Grid>
           <Grid item xs={12} sm={3} md={1}>
             <Autocomplete
+              options={availableDistributors}
+              getOptionLabel={(option) => option.name}
+              value={selectedDistributor}
+              onChange={(event, newValue) => setSelectedDistributor(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Distributor"
+                  placeholder="Select a distributor"
+                  fullWidth
+                  size="small"
+                />
+              )}
+              noOptionsText="No distributors available"
+              isOptionEqualToValue={(option, value) => option.id === value?.id}
+            />
+          </Grid>
+          <Grid item xs={12} sm={3} md={1}>
+            <Autocomplete
               options={availableBands}
               getOptionLabel={(option) => option.name}
               value={band}
@@ -202,6 +265,7 @@ const AlbumList = () => {
               fullWidth
               placeholder="Enter album name"
               size="small"
+              onKeyDown={handleSearchClick}
             />
           </Grid>
           <Grid item xs={6} sm={3} md={1}>
@@ -209,10 +273,11 @@ const AlbumList = () => {
               label="Min Price"
               type="number"
               value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
+              onChange={handleMinPriceChange}
               fullWidth
               placeholder="Enter minimum price"
               size="small"
+              onKeyDown={handleSearchClick}
             />
           </Grid>
           <Grid item xs={6} sm={3} md={1}>
@@ -220,11 +285,22 @@ const AlbumList = () => {
               label="Max Price"
               type="number"
               value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              onChange={handleMaxPriceChange}
               fullWidth
               placeholder="Enter maximum price"
               size="small"
+              onKeyDown={handleSearchClick}
             />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              onClick={handleSearchClick}
+              variant="contained"
+              color="primary"
+              disabled={parseFloat(maxPrice) < parseFloat(minPrice)}
+            >
+              Search
+            </Button>
           </Grid>
         </Grid>
       </Box>
@@ -319,10 +395,9 @@ const AlbumList = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      href={album.purchaseUrl}
                       style={{ marginTop: "8px" }}
                     >
-                      Add to Cart
+                      Details
                     </Button>
                   </Box>
                 </Box>

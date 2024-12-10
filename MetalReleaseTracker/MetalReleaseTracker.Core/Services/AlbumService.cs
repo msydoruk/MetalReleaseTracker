@@ -81,7 +81,7 @@ namespace MetalReleaseTracker.Core.Services
             return await _albumRepository.Delete(id);
         }
 
-        public async Task<(IEnumerable<Album>, int)> GetAlbumsByFilter(AlbumFilter filter)
+        public async Task<AlbumFilterResult> GetAlbumsByFilter(AlbumFilter filter)
         {
             _validationService.Validate(filter);
 

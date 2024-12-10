@@ -35,3 +35,8 @@ export const fetchAvailableBands = async (skip: number, take: number) => {
     throw new Error("Error loading bands");
   }
 };
+
+export const fetchAvailableDistributors = async () => {
+  const response = await axios.get(`${API_BASE_URL}/distributors`);
+  return response.data;
+};

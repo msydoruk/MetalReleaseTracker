@@ -22,6 +22,6 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<bool> DeleteAlbum(Guid id);
 
-        Task<(IEnumerable<Album>, int)> GetAlbumsByFilter(AlbumFilter filter);
+        Task<AlbumFilterResult> GetAlbumsByFilter(AlbumFilter filter);
     }
 }

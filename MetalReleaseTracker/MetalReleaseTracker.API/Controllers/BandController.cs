@@ -16,7 +16,7 @@ namespace MetalReleaseTracker.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFilteredBands([FromQuery] BaseFilter baseFilter)
+        public async Task<IActionResult> GetFilteredBands([FromQuery] PagingAndSortingFilter baseFilter)
         {
             var bands = await _bandService.GetBandsByFilter(baseFilter);
 

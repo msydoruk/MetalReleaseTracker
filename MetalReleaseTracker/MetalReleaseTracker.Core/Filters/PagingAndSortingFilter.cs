@@ -2,7 +2,7 @@
 
 namespace MetalReleaseTracker.Core.Filters
 {
-    public class BaseFilter
+    public class PagingAndSortingFilter
     {
         public int Take { get; set; }
 

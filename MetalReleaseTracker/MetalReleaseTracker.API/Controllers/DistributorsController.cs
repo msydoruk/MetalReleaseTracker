@@ -1,12 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MetalReleaseTracker.Core.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MetalReleaseTracker.API.Controllers
 {
-    public class DistributorsController : Controller
+    [ApiController]
+    [Route("api/distributors")]
+    public class DistributorsController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly IDistributorsService _distributorsService;
+
+        public DistributorsController(IDistributorsService distributorsService)
         {
-            return this.View();
+            _distributorsService = distributorsService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllDistributors()
+        {
+            var bands = await _distributorsService.GetAllDistributors();
+
+            return Ok(bands);
         }
     }
 }

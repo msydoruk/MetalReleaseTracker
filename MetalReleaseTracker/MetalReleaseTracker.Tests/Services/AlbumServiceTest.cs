@@ -7,7 +7,6 @@ using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Core.Validators;
 using MetalReleaseTracker.Core.Services;
 using Moq;
-using Xunit.Abstractions;
 
 namespace MetalReleaseTracker.Tests.Services
 {
@@ -168,14 +167,22 @@ namespace MetalReleaseTracker.Tests.Services
             albums[0].Band = new Band { Name = "Metallica" };
             albums[1].Band = new Band { Name = "Metallica" };
 
-            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync((albums, albums.Count));
+            var filterResult = new AlbumFilterResult
+            {
+                Albums = albums,
+                TotalCount = albums.Count
+            };
 
-            var result = (await _albumService.GetAlbumsByFilter(filter)).Item1;
+            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(filterResult);
+
+            var result = await _albumService.GetAlbumsByFilter(filter);
 
             Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
+            Assert.Equal(2, result.Albums.Count());
+            Assert.Equal("Album 1", result.Albums.First().Name);
             _albumRepository.Verify(repository => repository.GetByFilter(filter), Times.Once);
         }
+
 
         [Fact]
         public async Task GetAlbumsByFilter_WhenInvalidFilterIsProvided_ShouldReturnEmpty()
@@ -185,7 +192,15 @@ namespace MetalReleaseTracker.Tests.Services
                 AlbumName = "InvalidBandName"
             };
 
-            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync((new List<Album>(), 0));
+            var emptyFilterResult = new AlbumFilterResult
+            {
+                Albums = new List<Album>(),
+                TotalCount = 0
+            };
+
+            _albumRepository
+                .Setup(repository => repository.GetByFilter(filter))
+                .ReturnsAsync(emptyFilterResult);
 
 
             var result = await _albumService.GetAlbumsByFilter(filter);

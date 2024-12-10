@@ -2,7 +2,7 @@
 
 namespace MetalReleaseTracker.Core.Filters
 {
-    public class AlbumFilter : BaseFilter
+    public class AlbumFilter : PagingAndSortingFilter
     {
         public Guid? DistributorId { get; set; }
 

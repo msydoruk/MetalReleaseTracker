@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Filters;
@@ -7,7 +6,6 @@ using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
 using MetalReleaseTracker.Infrastructure.Data.MappingProfiles;
 using MetalReleaseTracker.Infrastructure.Repositories;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Tests.Repositories
@@ -110,10 +108,10 @@ namespace MetalReleaseTracker.Tests.Repositories
                 AlbumName = "Metallica"
             };
 
-            var (albums, totalCount) = await _repository.GetByFilter(filter);
+            var result = await _repository.GetByFilter(filter);
 
-            Assert.NotNull(albums);
-            Assert.Equal(2, albums.Count());
+            Assert.NotNull(result.Albums);
+            Assert.Equal(2, result.TotalCount);
         }
 
         [Fact]
@@ -141,8 +139,8 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task GetById_ShouldReturnAlbum_WhenIdExists()
         {
-            var (albums, totalCount) = await _repository.GetByFilter(new AlbumFilter { AlbumName = "Metallica" });
-            var albumId = albums.First().Id;
+            var filterResult = await _repository.GetByFilter(new AlbumFilter { AlbumName = "Metallica" });
+            var albumId = filterResult.Albums.First().Id;
 
             var result = await _repository.GetById(albumId);
 

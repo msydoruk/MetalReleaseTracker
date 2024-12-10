@@ -17,6 +17,6 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<bool> DeleteBand(Guid id);
 
-        Task<IEnumerable<Band>> GetBandsByFilter(BaseFilter filter);
+        Task<IEnumerable<Band>> GetBandsByFilter(PagingAndSortingFilter filter);
     }
 }
