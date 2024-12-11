@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { fetchAlbumById } from "../../services/albumService";
 import {
   Box,
@@ -8,11 +8,14 @@ import {
   CardContent,
   Button,
   Grid,
+  IconButton,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { getAlbumMediaType } from "../../utils/albumUtils";
 
 const AlbumDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [album, setAlbum] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +53,17 @@ const AlbumDetails = () => {
       minHeight="100vh"
     >
       <Card style={{ display: "flex", maxWidth: "1200px", width: "100%" }}>
+        {/* Кнопка назад */}
+        <Box display="flex" alignItems="center" padding="16px">
+          <IconButton
+            color="primary"
+            onClick={() => navigate(-1)}
+            style={{ marginRight: "16px" }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h6">Back</Typography>
+        </Box>
         <Grid container spacing={3} style={{ padding: "20px" }}>
           <Grid item xs={12} md={6}>
             <CardContent>

@@ -68,6 +68,13 @@ const AlbumList = () => {
     { value: 2, label: "Preorder" },
   ];
 
+  const sortFields = [
+    { value: "Name", label: "Title" },
+    { value: "Price", label: "Price" },
+    { value: "Band", label: "Band" },
+    { value: "ReleaseDate", label: "Newest" },
+  ];
+
   useEffect(() => {
     const fetchBands = async () => {
       try {
@@ -127,19 +134,7 @@ const AlbumList = () => {
 
   useEffect(() => {
     fetchFilteredAlbumsData();
-  }, [
-    currentPage,
-    selectedStatus,
-    selectedMediaType,
-    band,
-    albumName,
-    minPrice,
-    maxPrice,
-    releaseDateFrom,
-    releaseDateTo,
-    sortBy,
-    sortOrder,
-  ]);
+  }, [sortBy, sortOrder]);
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -160,11 +155,19 @@ const AlbumList = () => {
   };
 
   const handleSearchClick = () => {
+    setCurrentPage(1);
     fetchFilteredAlbumsData();
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      handleSearchClick();
+    }
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
+    fetchFilteredAlbumsData();
   };
 
   const handleAlbumClick = (albumId: string) => {
@@ -265,7 +268,7 @@ const AlbumList = () => {
               fullWidth
               placeholder="Enter album name"
               size="small"
-              onKeyDown={handleSearchClick}
+              onKeyDown={handleKeyPress}
             />
           </Grid>
           <Grid item xs={6} sm={3} md={1}>
@@ -277,7 +280,7 @@ const AlbumList = () => {
               fullWidth
               placeholder="Enter minimum price"
               size="small"
-              onKeyDown={handleSearchClick}
+              onKeyDown={handleKeyPress}
             />
           </Grid>
           <Grid item xs={6} sm={3} md={1}>
@@ -289,7 +292,29 @@ const AlbumList = () => {
               fullWidth
               placeholder="Enter maximum price"
               size="small"
-              onKeyDown={handleSearchClick}
+              onKeyDown={handleKeyPress}
+            />
+          </Grid>
+          <Grid item xs={6} sm={3} md={1}>
+            <TextField
+              label="Release Date From"
+              type="date"
+              value={releaseDateFrom}
+              onChange={(e) => setReleaseDateFrom(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={6} sm={3} md={1}>
+            <TextField
+              label="Release Date To"
+              type="date"
+              value={releaseDateTo}
+              onChange={(e) => setReleaseDateTo(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              size="small"
             />
           </Grid>
           <Grid item xs={12}>
@@ -318,11 +343,11 @@ const AlbumList = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 displayEmpty
               >
-                <MenuItem value="Name">Title</MenuItem>
-                <MenuItem value="Price">Price</MenuItem>
-                <MenuItem value="Band">Band</MenuItem>
-                <MenuItem value="Label">Label</MenuItem>
-                <MenuItem value="Media">Media</MenuItem>
+                {sortFields.map((field) => (
+                  <MenuItem key={field.value} value={field.value}>
+                    {field.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>

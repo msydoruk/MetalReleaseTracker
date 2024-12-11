@@ -8,7 +8,6 @@ using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
 using MetalReleaseTracker.Infrastructure.Extensions;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
@@ -134,7 +133,13 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             var totalCount = await query.CountAsync();
 
-            if (!string.IsNullOrEmpty(filter.OrderBy) && AllowedSortFields.Contains(filter.OrderBy))
+            if (filter.OrderBy == nameof(Album.Band))
+            {
+                query = filter.Descending
+                    ? query.OrderByDescending(a => a.Band.Name)
+                    : query.OrderBy(a => a.Band.Name);
+            }
+            else if (!string.IsNullOrEmpty(filter.OrderBy) && AllowedSortFields.Contains(filter.OrderBy))
             {
                 query = filter.Descending
                     ? query.OrderByDescending(album => EF.Property<object>(album, filter.OrderBy))
@@ -161,7 +166,8 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             nameof(Album.Name),
             nameof(Album.Price),
             nameof(Album.Label),
-            nameof(Album.Media)
+            nameof(Album.Media),
+            nameof(Album.ReleaseDate)
         ];
 
         private static IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)

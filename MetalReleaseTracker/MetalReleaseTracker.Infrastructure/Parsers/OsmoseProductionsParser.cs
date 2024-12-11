@@ -138,7 +138,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private async Task<HtmlDocument> LoadAndValidateHtmlDocument(string url)
         {
-            _logger.LogInformation($"Download an HTML document from a URL: {url}.");
             var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(url);
 
             if (htmlDocument?.DocumentNode == null)
@@ -254,13 +253,17 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private AlbumStatus? ParseStatus(HtmlNode node)
         {
-            var statusNode = node.SelectSingleNode(".//span[@class='inforestock']");
+            var statusClasses = new[] { "inforestock", "infonew" };
 
-            if (statusNode != null)
+            foreach (var statusClass in statusClasses)
             {
-                var statusText = statusNode.InnerText.Trim();
+                var statusNode = node.SelectSingleNode($".//span[@class='{statusClass}']");
 
-                return AlbumParser.ParseAlbumStatus(statusText);
+                if (statusNode != null)
+                {
+                    var statusText = statusNode.InnerText.Trim();
+                    return AlbumParser.ParseAlbumStatus(statusText);
+                }
             }
 
             return null;
