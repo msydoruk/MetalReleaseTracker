@@ -49,8 +49,8 @@ const AlbumList = () => {
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [albumName, setAlbumName] = useState("");
-  const [releaseDateFrom, setReleaseDateFrom] = useState<string>("");
-  const [releaseDateTo, setReleaseDateTo] = useState<string>("");
+  const [releaseDateStart, setReleaseDateStart] = useState<string>("");
+  const [releaseDateEnd, setReleaseDateEnd] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("Name");
   const [sortOrder, setSortOrder] = useState<string>("asc");
 
@@ -115,8 +115,12 @@ const AlbumList = () => {
         Status: selectedStatus !== null ? selectedStatus : undefined,
         MinimumPrice: minPrice ? parseFloat(minPrice) : undefined,
         MaximumPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-        ReleaseDateFrom: releaseDateFrom || undefined,
-        ReleaseDateTo: releaseDateTo || undefined,
+        ReleaseDateStart: releaseDateStart
+          ? new Date(releaseDateStart).toISOString()
+          : undefined,
+        ReleaseDateEnd: releaseDateEnd
+          ? new Date(releaseDateEnd).toISOString()
+          : undefined,
         Skip: (currentPage - 1) * albumsPerPage,
         Take: albumsPerPage,
         OrderBy: sortBy,
@@ -135,6 +139,12 @@ const AlbumList = () => {
   useEffect(() => {
     fetchFilteredAlbumsData();
   }, [sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (releaseDateStart || releaseDateEnd) {
+      fetchFilteredAlbumsData();
+    }
+  }, [releaseDateStart, releaseDateEnd]);
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -299,10 +309,9 @@ const AlbumList = () => {
             <TextField
               label="Release Date From"
               type="date"
-              value={releaseDateFrom}
-              onChange={(e) => setReleaseDateFrom(e.target.value)}
+              value={releaseDateStart}
+              onChange={(e) => setReleaseDateStart(e.target.value)}
               fullWidth
-              InputLabelProps={{ shrink: true }}
               size="small"
             />
           </Grid>
@@ -310,10 +319,9 @@ const AlbumList = () => {
             <TextField
               label="Release Date To"
               type="date"
-              value={releaseDateTo}
-              onChange={(e) => setReleaseDateTo(e.target.value)}
+              value={releaseDateEnd}
+              onChange={(e) => setReleaseDateEnd(e.target.value)}
               fullWidth
-              InputLabelProps={{ shrink: true }}
               size="small"
             />
           </Grid>

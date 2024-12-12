@@ -7,6 +7,8 @@ export const fetchFilteredAlbums = async (filters: {
   BandId?: string;
   AlbumName?: string;
   Media?: number;
+  ReleaseDateStart?: string;
+  ReleaseDateEnd?: string; 
   Status?: number;
   Take?: number; 
   Skip?: number; 
