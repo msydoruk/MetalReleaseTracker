@@ -94,17 +94,28 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<bool> UpdateAlbumPrices(Dictionary<Guid, float> albumPrices)
+        public async Task<bool> UpdateAlbumPricesAndStatuses(Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)> albumPricesAndStatuses)
         {
-            var albumIdList = albumPrices.Keys.ToHashSet();
+            if (!albumPricesAndStatuses.Any())
+            {
+                return false;
+            }
 
-            var changes = await _dbContext.Albums
-                .Where(album => albumIdList.Contains(album.Id))
-                .ExecuteUpdateAsync(albumDb => albumDb
-                    .SetProperty(existingAlbum => existingAlbum.Price, album => albumPrices[album.Id])
-                    .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
+            foreach (var album in albumPricesAndStatuses)
+            {
+                var albumId = album.Key;
+                var newPrice = album.Value.newPrice;
+                var newStatus = album.Value.newStatus;
 
-            return changes > 0;
+                var changes = await _dbContext.Albums
+                    .Where(album => album.Id == albumId)
+                    .ExecuteUpdateAsync(albumDb => albumDb
+                        .SetProperty(existingAlbum => existingAlbum.Price, price => newPrice)
+                        .SetProperty(existingAlbum => existingAlbum.Status, status => newStatus)
+                        .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
+            }
+
+            return true;
         }
 
         public async Task<bool> Delete(Guid id)
@@ -133,17 +144,20 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             var totalCount = await query.CountAsync();
 
-            if (filter.OrderBy == nameof(Album.Band))
+            if (!string.IsNullOrEmpty(filter.OrderBy) && AllowedSortFields.Contains(filter.OrderBy))
             {
-                query = filter.Descending
-                    ? query.OrderByDescending(a => a.Band.Name)
-                    : query.OrderBy(a => a.Band.Name);
-            }
-            else if (!string.IsNullOrEmpty(filter.OrderBy) && AllowedSortFields.Contains(filter.OrderBy))
-            {
-                query = filter.Descending
-                    ? query.OrderByDescending(album => EF.Property<object>(album, filter.OrderBy))
-                    : query.OrderBy(album => EF.Property<object>(album, filter.OrderBy));
+                if (filter.OrderBy == nameof(Album.Band))
+                {
+                    query = filter.Descending
+                        ? query.OrderByDescending(a => a.Band.Name)
+                        : query.OrderBy(a => a.Band.Name);
+                }
+                else
+                {
+                    query = filter.Descending
+                        ? query.OrderByDescending(album => EF.Property<object>(album, filter.OrderBy))
+                        : query.OrderBy(album => EF.Property<object>(album, filter.OrderBy));
+                }
             }
 
             query = query.Skip(filter.Skip).Take(filter.Take);

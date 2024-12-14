@@ -53,7 +53,6 @@ const AlbumDetails = () => {
       minHeight="100vh"
     >
       <Card style={{ display: "flex", maxWidth: "1200px", width: "100%" }}>
-        {/* Кнопка назад */}
         <Box display="flex" alignItems="center" padding="16px">
           <IconButton
             color="primary"

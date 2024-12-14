@@ -28,11 +28,7 @@ namespace MetalReleaseTracker.API.Controllers
         {
             var filterResult = await _albumService.GetAlbumsByFilter(albumFilter);
 
-            return Ok(new
-            {
-                Albums = filterResult.Albums,
-                TotalCount = filterResult.TotalCount
-            });
+            return Ok(filterResult);
         }
     }
 }

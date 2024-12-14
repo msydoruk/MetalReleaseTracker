@@ -411,13 +411,13 @@ const AlbumList = () => {
                     <Typography variant="body2" color="textSecondary">
                       {album.band.name}
                     </Typography>
-                    {album.status && (
+                    {getAlbumStatus(album.status) ? (
                       <Chip
                         label={getAlbumStatus(album.status)}
                         color="primary"
                         style={{ marginTop: "8px" }}
                       />
-                    )}
+                    ) : null}
                     <Typography
                       variant="body2"
                       color="textPrimary"

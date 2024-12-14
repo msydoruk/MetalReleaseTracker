@@ -5,7 +5,6 @@ using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-
 using Moq;
 
 namespace MetalReleaseTracker.Tests.Services
@@ -109,12 +108,13 @@ namespace MetalReleaseTracker.Tests.Services
 
             await _service.SynchronizeAllAlbums();
 
-            var expectedAlbumPrices = new Dictionary<Guid, float>
+            var expectedAlbumPrices = new Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)>
             {
-                { existingAlbums.First().Id, 12 }
+                { existingAlbums.First().Id, (12, AlbumStatus.New) }
             };
 
-            _albumServiceMock.Verify(albumService => albumService.UpdateAlbumPrices(It.Is<Dictionary<Guid, float>>(prices => prices.Count == 1 && prices.ContainsKey(existingAlbums.First().Id) && prices[existingAlbums.First().Id] == 12)), Times.Once);
+            _albumServiceMock.Verify(albumService => albumService.UpdateAlbumPricesAndStatuses(It.Is<Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)>>(prices => prices.Count == 1 && prices.ContainsKey(existingAlbums.First().Id) && prices[existingAlbums.First().Id].newPrice == 12 && prices[existingAlbums.First().Id].newStatus == AlbumStatus.New)), Times.Once);
+
         }
 
         [Fact]
