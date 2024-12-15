@@ -21,7 +21,7 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             return mediaType switch
             {
                 "CD" => MediaType.CD,
-                "LP" => MediaType.LP,
+                "LP" or "7inch x 1" => MediaType.LP,
                 "Tape" => MediaType.Tape,
                 _ => null
             };

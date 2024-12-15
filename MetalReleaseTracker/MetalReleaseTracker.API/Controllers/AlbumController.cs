@@ -1,4 +1,5 @@
-﻿using MetalReleaseTracker.Core.Interfaces;
+﻿using MetalReleaseTracker.Core.Filters;
+using MetalReleaseTracker.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MetalReleaseTracker.API.Controllers
@@ -14,16 +15,20 @@ namespace MetalReleaseTracker.API.Controllers
             _albumService = albumService;
         }
 
-        [HttpGet("top10")]
-        public async Task<IActionResult> GetTop10AlbumsFromDistributor(Guid distributorId)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAlbumById(Guid id)
         {
-            var albums = await _albumService.GetAlbumsByDistributor(distributorId);
+            var albums = await _albumService.GetAlbumById(id);
 
-            var topAlbums = albums.OrderByDescending(album => album.ReleaseDate)
-                .Take(10)
-                .ToList();
+            return Ok(albums);
+        }
 
-            return Ok(topAlbums);
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetFilteredAlbums([FromQuery] AlbumFilter albumFilter)
+        {
+            var filterResult = await _albumService.GetAlbumsByFilter(albumFilter);
+
+            return Ok(filterResult);
         }
     }
 }

@@ -105,15 +105,13 @@ namespace MetalReleaseTracker.Tests.Repositories
         {
             var filter = new AlbumFilter
             {
-                BandName = "Metallica",
-                ReleaseDateStart = DateTime.SpecifyKind(new DateTime(1984, 1, 1), DateTimeKind.Utc),
-                ReleaseDateEnd = DateTime.SpecifyKind(new DateTime(1987, 1, 1), DateTimeKind.Utc)
+                AlbumName = "Metallica"
             };
 
             var result = await _repository.GetByFilter(filter);
 
-            Assert.NotEmpty(result);
-            Assert.Equal(2, result.Count());
+            Assert.NotNull(result.Albums);
+            Assert.Equal(2, result.TotalCount);
         }
 
         [Fact]
@@ -121,14 +119,12 @@ namespace MetalReleaseTracker.Tests.Repositories
         {
             var filter = new AlbumFilter
             {
-                BandName = "",
-                ReleaseDateStart = DateTime.SpecifyKind(new DateTime(1800, 1, 1), DateTimeKind.Utc),
-                ReleaseDateEnd = DateTime.SpecifyKind(new DateTime(1801, 1, 1), DateTimeKind.Utc)
+                AlbumName = ""
             };
 
             var result = await _repository.GetByFilter(filter);
 
-            Assert.Empty(result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -143,8 +139,8 @@ namespace MetalReleaseTracker.Tests.Repositories
         [Fact]
         public async Task GetById_ShouldReturnAlbum_WhenIdExists()
         {
-            var album = await _repository.GetByFilter(new AlbumFilter { BandName = "Metallica" });
-            var albumId = album.First().Id;
+            var filterResult = await _repository.GetByFilter(new AlbumFilter { AlbumName = "Metallica" });
+            var albumId = filterResult.Albums.First().Id;
 
             var result = await _repository.GetById(albumId);
 

@@ -59,10 +59,10 @@ namespace MetalReleaseTracker.Application.Services
                 var parser = _parserFactory.CreateParser(distributor.Code);
 
                 var parsedAlbums = await parser.ParseAlbums(distributor.ParsingUrl);
-                var existingAlbums = await _albumService.GetAlbumsByDistributor(distributor.Id);
+                var existingAlbums = await _albumService.GetAlbumsByDistributorId(distributor.Id);
 
                 var bandCache = new Dictionary<string, Band>();
-                var albumsWithPriceChanges = new Dictionary<Guid, float>();
+                var albumsWithPriceAndStatusChanges = new Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)>();
 
                 foreach (var parsedAlbum in parsedAlbums)
                 {
@@ -83,11 +83,11 @@ namespace MetalReleaseTracker.Application.Services
                     }
                     else
                     {
-                        AddAlbumToPriceChangeList(existingAlbum, parsedAlbum, albumsWithPriceChanges);
+                        AddAlbumToPriceAndStatusChangeList(existingAlbum, parsedAlbum, albumsWithPriceAndStatusChanges);
                     }
                 }
 
-                await UpdateAlbumPrices(albumsWithPriceChanges);
+                await UpdateAlbumPricesAndStatuses(albumsWithPriceAndStatusChanges);
 
                 await MarkAlbumsAsUnavailable(existingAlbums, parsedAlbums);
 
@@ -140,21 +140,35 @@ namespace MetalReleaseTracker.Application.Services
             };
         }
 
-        private void AddAlbumToPriceChangeList(Album existingAlbum, AlbumDto parsedAlbum, Dictionary<Guid, float> albumsToUpdate)
+        private void AddAlbumToPriceAndStatusChangeList(Album existingAlbum, AlbumDto parsedAlbum, Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)> albumsToUpdate)
         {
+            bool hasChanges = false;
+
             if (existingAlbum.Price != parsedAlbum.Price)
             {
-                albumsToUpdate.Add(existingAlbum.Id, parsedAlbum.Price);
-                _logger.LogInformation($"Detected price change for album {existingAlbum.Name}. Added to the list for price update: old price = {existingAlbum.Price}, new price = {parsedAlbum.Price}.");
+                hasChanges = true;
+                _logger.LogInformation($"Price change detected for album {existingAlbum.Name}: Old price = {existingAlbum.Price}, New price = {parsedAlbum.Price}.");
+            }
+
+            if (existingAlbum.Status != parsedAlbum.Status)
+            {
+                hasChanges = true;
+                _logger.LogInformation($"Detected status change for album {existingAlbum.Name}. Added to the list for status update: old status = {existingAlbum.Status}, new status = {parsedAlbum.Status}.");
+            }
+
+            if (hasChanges)
+            {
+                _logger.LogInformation($"Adding album {existingAlbum.Name} to update list.");
+                albumsToUpdate[existingAlbum.Id] = (parsedAlbum.Price, parsedAlbum.Status);
             }
         }
 
-        private async Task UpdateAlbumPrices(Dictionary<Guid, float> albumsWithPriceChanges)
+        private async Task UpdateAlbumPricesAndStatuses(Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)> albumsWithPriceAndStatusChanges)
         {
-            if (albumsWithPriceChanges.Any())
+            if (albumsWithPriceAndStatusChanges.Any())
             {
-                await _albumService.UpdateAlbumPrices(albumsWithPriceChanges);
-                _logger.LogInformation($"Updated prices for {albumsWithPriceChanges.Count} albums.");
+                await _albumService.UpdateAlbumPricesAndStatuses(albumsWithPriceAndStatusChanges);
+                _logger.LogInformation($"Updated prices or/and statuses for {albumsWithPriceAndStatusChanges.Count} albums.");
             }
         }
 

@@ -8,6 +8,8 @@ namespace MetalReleaseTracker.Core.Interfaces
     {
         Task<Album> GetById(Guid id);
 
+        Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId);
+
         Task<IEnumerable<Album>> GetAll();
 
         Task Add(Album album);
@@ -16,12 +18,10 @@ namespace MetalReleaseTracker.Core.Interfaces
 
         Task<bool> UpdateAlbumsStatus(IEnumerable<Guid> albumsIds, AlbumStatus status);
 
-        Task<bool> UpdateAlbumPrices(Dictionary<Guid, float> albumPrices);
+        Task<bool> UpdateAlbumPricesAndStatuses(Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)> albumPricesAndStatuses);
 
         Task<bool> Delete(Guid id);
 
-        Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter);
-
-        Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId);
+        Task<AlbumFilterResult> GetByFilter(AlbumFilter filter);
     }
 }

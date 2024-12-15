@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq.Dynamic.Core;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MetalReleaseTracker.Core.Entities;
 using MetalReleaseTracker.Core.Enums;
@@ -6,6 +7,7 @@ using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
+using MetalReleaseTracker.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.Infrastructure.Repositories
@@ -30,6 +32,17 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
                     .FirstOrDefaultAsync(album => album.Id == id);
 
             return _mapper.Map<Album>(album);
+        }
+
+        public async Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId)
+        {
+            var albums = await _dbContext.Albums
+                .Where(album => album.DistributorId == distributorId)
+                .ProjectTo<Album>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return albums;
         }
 
         public async Task<IEnumerable<Album>> GetAll()
@@ -81,17 +94,28 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<bool> UpdateAlbumPrices(Dictionary<Guid, float> albumPrices)
+        public async Task<bool> UpdateAlbumPricesAndStatuses(Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)> albumPricesAndStatuses)
         {
-            var albumIdList = albumPrices.Keys.ToHashSet();
+            if (!albumPricesAndStatuses.Any())
+            {
+                return false;
+            }
 
-            var changes = await _dbContext.Albums
-                .Where(album => albumIdList.Contains(album.Id))
-                .ExecuteUpdateAsync(albumDb => albumDb
-                    .SetProperty(existingAlbum => existingAlbum.Price, album => albumPrices[album.Id])
-                    .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
+            foreach (var album in albumPricesAndStatuses)
+            {
+                var albumId = album.Key;
+                var newPrice = album.Value.newPrice;
+                var newStatus = album.Value.newStatus;
 
-            return changes > 0;
+                var changes = await _dbContext.Albums
+                    .Where(album => album.Id == albumId)
+                    .ExecuteUpdateAsync(albumDb => albumDb
+                        .SetProperty(existingAlbum => existingAlbum.Price, price => newPrice)
+                        .SetProperty(existingAlbum => existingAlbum.Status, status => newStatus)
+                        .SetProperty(existingAlbum => existingAlbum.ModificationTime, time => DateTime.UtcNow));
+            }
+
+            return true;
         }
 
         public async Task<bool> Delete(Guid id)
@@ -109,7 +133,7 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             return changes > 0;
         }
 
-        public async Task<IEnumerable<Album>> GetByFilter(AlbumFilter filter)
+        public async Task<AlbumFilterResult> GetByFilter(AlbumFilter filter)
         {
             var query = _dbContext.Albums
                 .Include(album => album.Band)
@@ -118,61 +142,60 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
 
             query = ApplyFilters(query, filter);
 
+            var totalCount = await query.CountAsync();
+
+            if (!string.IsNullOrEmpty(filter.OrderBy) && AllowedSortFields.Contains(filter.OrderBy))
+            {
+                if (filter.OrderBy == nameof(Album.Band))
+                {
+                    query = filter.Descending
+                        ? query.OrderByDescending(a => a.Band.Name)
+                        : query.OrderBy(a => a.Band.Name);
+                }
+                else
+                {
+                    query = filter.Descending
+                        ? query.OrderByDescending(album => EF.Property<object>(album, filter.OrderBy))
+                        : query.OrderBy(album => EF.Property<object>(album, filter.OrderBy));
+                }
+            }
+
+            query = query.Skip(filter.Skip).Take(filter.Take);
+
             var albums = await query
                 .ProjectTo<Album>(_mapper.ConfigurationProvider)
                 .AsNoTracking()
                 .ToListAsync();
 
-            return albums;
+            return new AlbumFilterResult
+            {
+                Albums = albums,
+                TotalCount = totalCount
+            };
         }
 
-        public async Task<IEnumerable<Album>> GetByDistributorId(Guid distributorId)
+        private static readonly HashSet<string> AllowedSortFields =
+        [
+            nameof(Album.Band),
+            nameof(Album.Name),
+            nameof(Album.Price),
+            nameof(Album.Label),
+            nameof(Album.Media),
+            nameof(Album.ReleaseDate)
+        ];
+
+        private static IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
         {
-            var albums = await _dbContext.Albums
-                .Where(album => album.DistributorId == distributorId)
-                .ProjectTo<Album>(_mapper.ConfigurationProvider)
-                .AsNoTracking()
-                .ToListAsync();
-
-            return albums;
-        }
-
-        private IQueryable<AlbumEntity> ApplyFilters(IQueryable<AlbumEntity> query, AlbumFilter filter)
-        {
-            if (!string.IsNullOrEmpty(filter.BandName))
-            {
-                query = query.Where(album => album.Band.Name.Contains(filter.BandName));
-            }
-
-            if (filter.ReleaseDateStart.HasValue)
-            {
-                query = query.Where(album => album.ReleaseDate >= filter.ReleaseDateStart.Value);
-            }
-
-            if (filter.ReleaseDateEnd.HasValue)
-            {
-                query = query.Where(album => album.ReleaseDate <= filter.ReleaseDateEnd.Value);
-            }
-
-            if (!string.IsNullOrEmpty(filter.Genre))
-            {
-                query = query.Where(album => album.Genre.Contains(filter.Genre));
-            }
-
-            if (filter.MinimumPrice.HasValue)
-            {
-                query = query.Where(album => album.Price >= filter.MinimumPrice.Value);
-            }
-
-            if (filter.MaximumPrice.HasValue)
-            {
-                query = query.Where(album => album.Price <= filter.MaximumPrice.Value);
-            }
-
-            if (filter.Status.HasValue)
-            {
-                query = query.Where(album => album.Status == filter.Status.Value);
-            }
+            query = query
+                .WhereIf(filter.BandId.HasValue, album => album.BandId == filter.BandId.Value)
+                .WhereIf(filter.DistributorId.HasValue, album => album.DistributorId == filter.DistributorId.Value)
+                .WhereIf(!string.IsNullOrEmpty(filter.AlbumName), album => album.Name.ToLower().Contains(filter.AlbumName.ToLower()))
+                .WhereIf(filter.ReleaseDateStart.HasValue, album => album.ReleaseDate >= filter.ReleaseDateStart.Value)
+                .WhereIf(filter.ReleaseDateEnd.HasValue, album => album.ReleaseDate <= filter.ReleaseDateEnd.Value)
+                .WhereIf(filter.MinimumPrice.HasValue, album => album.Price >= filter.MinimumPrice.Value)
+                .WhereIf(filter.MaximumPrice.HasValue, album => album.Price <= filter.MaximumPrice.Value)
+                .WhereIf(filter.Status.HasValue, album => album.Status == filter.Status.Value)
+                .WhereIf(filter.Media.HasValue, album => album.Media == filter.Media.Value);
 
             return query;
         }

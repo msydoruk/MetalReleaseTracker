@@ -1,4 +1,5 @@
 ﻿using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Filters;
 
 namespace MetalReleaseTracker.Core.Interfaces
 {
@@ -15,5 +16,7 @@ namespace MetalReleaseTracker.Core.Interfaces
         Task<bool> Update(Band band);
 
         Task<bool> Delete(Guid id);
+
+        Task<IEnumerable<Band>> GetByFilter(PagingAndSortingFilter filter);
     }
 }

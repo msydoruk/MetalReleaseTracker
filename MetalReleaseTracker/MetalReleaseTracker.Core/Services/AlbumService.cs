@@ -24,6 +24,13 @@ namespace MetalReleaseTracker.Core.Services
             return await EnsureAlbumExists(id);
         }
 
+        public async Task<IEnumerable<Album>> GetAlbumsByDistributorId(Guid distributorId)
+        {
+            _validationService.Validate(distributorId);
+
+            return await _albumRepository.GetByDistributorId(distributorId);
+        }
+
         public async Task<IEnumerable<Album>> GetAllAlbums()
         {
             return await _albumRepository.GetAll();
@@ -55,14 +62,14 @@ namespace MetalReleaseTracker.Core.Services
             await _albumRepository.UpdateAlbumsStatus(albumsIds, status);
         }
 
-        public async Task UpdateAlbumPrices(Dictionary<Guid, float> albumPrices)
+        public async Task UpdateAlbumPricesAndStatuses(Dictionary<Guid, (float? newPrice, AlbumStatus? newStatus)> albumPricesAndStatuses)
         {
-            foreach (var albumId in albumPrices.Keys)
+            foreach (var albumId in albumPricesAndStatuses.Keys)
             {
                 _validationService.Validate(albumId);
             }
 
-            await _albumRepository.UpdateAlbumPrices(albumPrices);
+            await _albumRepository.UpdateAlbumPricesAndStatuses(albumPricesAndStatuses);
         }
 
         public async Task<bool> DeleteAlbum(Guid id)
@@ -74,18 +81,11 @@ namespace MetalReleaseTracker.Core.Services
             return await _albumRepository.Delete(id);
         }
 
-        public async Task<IEnumerable<Album>> GetAlbumsByFilter(AlbumFilter filter)
+        public async Task<AlbumFilterResult> GetAlbumsByFilter(AlbumFilter filter)
         {
             _validationService.Validate(filter);
 
             return await _albumRepository.GetByFilter(filter);
-        }
-
-        public async Task<IEnumerable<Album>> GetAlbumsByDistributor(Guid distributorId)
-        {
-            _validationService.Validate(distributorId);
-
-            return await _albumRepository.GetByDistributorId(distributorId);
         }
 
         private async Task<Album> EnsureAlbumExists(Guid id)

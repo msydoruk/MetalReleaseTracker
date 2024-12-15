@@ -1,5 +1,8 @@
-﻿using AutoMapper;
+﻿using System.Linq.Dynamic.Core;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using MetalReleaseTracker.Core.Entities;
+using MetalReleaseTracker.Core.Filters;
 using MetalReleaseTracker.Core.Interfaces;
 using MetalReleaseTracker.Infrastructure.Data;
 using MetalReleaseTracker.Infrastructure.Data.Entities;
@@ -32,7 +35,6 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var bands = await _dbContext.Bands
                     .AsNoTracking()
                     .ToListAsync();
-
             return _mapper.Map<IEnumerable<Band>>(bands);
         }
 
@@ -82,6 +84,21 @@ namespace MetalReleaseTracker.Infrastructure.Repositories
             var changes = await _dbContext.SaveChangesAsync();
 
             return changes > 0;
+        }
+
+        public async Task<IEnumerable<Band>> GetByFilter(PagingAndSortingFilter filter)
+        {
+            var query = _dbContext.Bands
+                .AsQueryable();
+
+            query = query.Skip(filter.Skip).Take(filter.Take);
+
+            var bands = await query
+                .ProjectTo<Band>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return bands;
         }
     }
 }

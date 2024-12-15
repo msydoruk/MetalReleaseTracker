@@ -19,8 +19,8 @@ namespace MetalReleaseTracker.Tests.Services
         public AlbumServiceTest()
         {
             _albumRepository = new Mock<IAlbumRepository>();
-            _validationService = new ValidationService(new List<IValidator> 
-            { 
+            _validationService = new ValidationService(new List<IValidator>
+            {
                 new AlbumValidator(),
                 new AlbumFilterValidator(),
                 new GuidValidator()
@@ -130,7 +130,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var existingAlbum = CreateSampleAlbum();
             _albumRepository.Setup(repository => repository.GetById(existingAlbum.Id)).ReturnsAsync(existingAlbum);
-            _albumRepository.Setup(repository => repository.Delete(existingAlbum.Id)).ReturnsAsync(true); 
+            _albumRepository.Setup(repository => repository.Delete(existingAlbum.Id)).ReturnsAsync(true);
 
             var result = await _albumService.DeleteAlbum(existingAlbum.Id);
 
@@ -155,10 +155,7 @@ namespace MetalReleaseTracker.Tests.Services
         {
             var filter = new AlbumFilter
             {
-                BandName = "Metallica",
-                ReleaseDateStart = new DateTime(1984, 1, 1),
-                ReleaseDateEnd = new DateTime(1987, 1, 1),
-                Genre = "Thrash Metal"
+                AlbumName = "Album 1"
             };
 
             var albums = new List<Album>
@@ -170,31 +167,45 @@ namespace MetalReleaseTracker.Tests.Services
             albums[0].Band = new Band { Name = "Metallica" };
             albums[1].Band = new Band { Name = "Metallica" };
 
-            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(albums);
+            var filterResult = new AlbumFilterResult
+            {
+                Albums = albums,
+                TotalCount = albums.Count
+            };
+
+            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(filterResult);
 
             var result = await _albumService.GetAlbumsByFilter(filter);
 
-            Assert.NotEmpty(result);
-            Assert.Equal(2, result.Count());
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Albums.Count());
+            Assert.Equal("Album 1", result.Albums.First().Name);
             _albumRepository.Verify(repository => repository.GetByFilter(filter), Times.Once);
         }
+
 
         [Fact]
         public async Task GetAlbumsByFilter_WhenInvalidFilterIsProvided_ShouldReturnEmpty()
         {
             var filter = new AlbumFilter
             {
-                BandName = "InvalidBandName",
-                ReleaseDateStart = new DateTime(1800, 1, 1),
-                ReleaseDateEnd = new DateTime(1801, 1, 1),
-                Genre = "InvalidGenre"
+                AlbumName = "InvalidBandName"
             };
 
-            _albumRepository.Setup(repository => repository.GetByFilter(filter)).ReturnsAsync(new List<Album>());
-            
+            var emptyFilterResult = new AlbumFilterResult
+            {
+                Albums = new List<Album>(),
+                TotalCount = 0
+            };
+
+            _albumRepository
+                .Setup(repository => repository.GetByFilter(filter))
+                .ReturnsAsync(emptyFilterResult);
+
+
             var result = await _albumService.GetAlbumsByFilter(filter);
 
-            Assert.Empty(result);
+            Assert.Null(result);
             _albumRepository.Verify(repository => repository.GetByFilter(filter), Times.Once);
         }
 

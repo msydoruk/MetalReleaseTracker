@@ -3,6 +3,7 @@ using MetalReleaseTracker.Application.DTOs;
 using MetalReleaseTracker.Application.Interfaces;
 using MetalReleaseTracker.Core.Enums;
 using MetalReleaseTracker.Infrastructure.Exceptions;
+using MetalReleaseTracker.Infrastructure.Parsers.Models;
 using MetalReleaseTracker.Infrastructure.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -34,15 +35,15 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
             {
                 _logger.LogInformation($"Parsing albums from page: {nextPageUrl}.");
                 var htmlDocument = await LoadAndValidateHtmlDocument(nextPageUrl);
-                var albumNodes = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
+                var albumUrlAndStatusList = ParseAlbumUrlsAndStatusesFromListPage(htmlDocument);
 
-                foreach (var albumNode in albumNodes)
+                foreach (var albumUrlAndStatus in albumUrlAndStatusList)
                 {
-                    var albumDetails = await ParseAlbumDetails(albumNode.Url);
+                    var albumDetails = await ParseAlbumDetails(albumUrlAndStatus.Url);
 
                     if (albumDetails.IsSuccess)
                     {
-                        albumDetails.Data.Status = albumNode.Status;
+                        albumDetails.Data.Status = albumUrlAndStatus.Status;
                         albums.Add(albumDetails.Data);
                     }
                     else
@@ -137,7 +138,6 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private async Task<HtmlDocument> LoadAndValidateHtmlDocument(string url)
         {
-            _logger.LogInformation($"Download an HTML document from a URL: {url}.");
             var htmlDocument = await _htmlLoader.LoadHtmlDocumentAsync(url);
 
             if (htmlDocument?.DocumentNode == null)
@@ -253,23 +253,20 @@ namespace MetalReleaseTracker.Infrastructure.Parsers
 
         private AlbumStatus? ParseStatus(HtmlNode node)
         {
-            var statusNode = node.SelectSingleNode(".//span[@class='inforestock']");
+            var statusClasses = new[] { "inforestock", "infonew" };
 
-            if (statusNode != null)
+            foreach (var statusClass in statusClasses)
             {
-                var statusText = statusNode.InnerText.Trim();
+                var statusNode = node.SelectSingleNode($".//span[@class='{statusClass}']");
 
-                return AlbumParser.ParseAlbumStatus(statusText);
+                if (statusNode != null)
+                {
+                    var statusText = statusNode.InnerText.Trim();
+                    return AlbumParser.ParseAlbumStatus(statusText);
+                }
             }
 
             return null;
-        }
-
-        public class AlbumUrlAndStatus
-        {
-            public string Url { get; set; }
-
-            public AlbumStatus? Status { get; set; }
         }
 
         private List<AlbumUrlAndStatus> ParseAlbumUrlsAndStatusesFromListPage(HtmlDocument htmlDocument)
