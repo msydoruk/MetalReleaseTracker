@@ -46,5 +46,4 @@ msbuild.err
 msbuild.wrn
 
 node_modules
-
-appsettings.Development
+appsettings.Development.json
