@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Processing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid #b71c1c;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .message {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .error {
+      color: #f44336;
+      max-width: 80%;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading">
+    <div class="spinner"></div>
+    <h2>Processing authentication...</h2>
+    <p>Please wait while we complete your sign-in.</p>
+  </div>
+  <div id="status" class="message"></div>
+  
+  <script>
+    (function() {
+      // Функція для отримання параметрів з хеша URL
+      function getHashParams() {
+        const hash = window.location.hash.substr(1);
+        const params = {};
+        
+        hash.split('&').forEach(part => {
+          const [key, value] = part.split('=');
+          params[key] = decodeURIComponent(value || '');
+        });
+        
+        return params;
+      }
+      
+      // Функція для збереження даних у localStorage
+      function storeData(key, value) {
+        try {
+          localStorage.setItem(key, value);
+          console.log(`Stored ${key}, length: ${value.length}`);
+          return true;
+        } catch (e) {
+          console.error(`Error storing ${key}:`, e);
+          return false;
+        }
+      }
+      
+      // Функція для логування статусу
+      function updateStatus(message, isError = false) {
+        const statusElement = document.getElementById('status');
+        statusElement.textContent = message;
+        statusElement.className = isError ? 'message error' : 'message';
+        console.log(`Status: ${message}`);
+      }
+      
+      // Головна функція обробки токена
+      async function processToken() {
+        try {
+          // Отримання параметрів з URL хеша
+          const params = getHashParams();
+          const { code, code_verifier, redirect_uri, attempt_id } = params;
+          
+          console.log('Processing token with params:', {
+            hasCode: !!code,
+            codeLength: code?.length || 0,
+            hasVerifier: !!code_verifier,
+            verifierLength: code_verifier?.length || 0,
+            redirectUri: redirect_uri,
+            attemptId: attempt_id
+          });
+          
+          if (!code || !code_verifier) {
+            updateStatus('Missing required parameters', true);
+            setTimeout(() => window.location.href = '/', 3000);
+            return;
+          }
+          
+          updateStatus('Exchanging authorization code for token...');
+          
+          // Створення форми для запиту токена
+          const formData = new URLSearchParams();
+          formData.append('client_id', 'metal-release-ui');
+          formData.append('grant_type', 'authorization_code');
+          formData.append('code', code);
+          formData.append('redirect_uri', redirect_uri);
+          formData.append('code_verifier', code_verifier);
+          
+          console.log('Token request prepared, sending to endpoint...');
+          
+          // Виконання запиту для отримання токена
+          const response = await fetch('https://localhost:5001/connect/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData
+          });
+          
+          console.log('Token response received:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+          });
+          
+          // Обробка відповіді
+          if (!response.ok) {
+            const error = await response.text();
+            console.error('Token exchange failed:', error);
+            
+            // Спеціальна обробка для invalid_grant
+            if (error.includes('invalid_grant')) {
+              console.log('Handling invalid_grant error - likely code reuse or expiration');
+              
+              // Зберігаємо інформацію про помилку
+              storeData('auth_error', 'invalid_grant');
+              storeData('auth_error_time', Date.now().toString());
+              
+              // Зберігаємо прапорець для перенаправлення на повторну автентифікацію
+              storeData('auth_needs_relogin', 'true');
+              
+              updateStatus('Authorization code expired. Redirecting to login...', true);
+              
+              // Перенаправляємо користувача на головну сторінку через коротку затримку
+              setTimeout(() => window.location.href = '/', 2000);
+              return;
+            }
+            
+            updateStatus(`Token exchange failed: ${error}`, true);
+            setTimeout(() => window.location.href = '/', 3000);
+            return;
+          }
+          
+          // Парсинг токена
+          const responseText = await response.text();
+          console.log('Raw response:', responseText.substring(0, 100) + '...');
+          
+          let tokenData;
+          try {
+            tokenData = JSON.parse(responseText);
+            console.log('Token data parsed:', {
+              hasAccessToken: !!tokenData.access_token,
+              hasIdToken: !!tokenData.id_token,
+              expiresIn: tokenData.expires_in,
+              tokenType: tokenData.token_type
+            });
+          } catch (parseError) {
+            console.error('Failed to parse token response:', parseError);
+            updateStatus('Failed to parse token response', true);
+            setTimeout(() => window.location.href = '/', 3000);
+            return;
+          }
+          
+          // Збереження токена та даних профілю
+          if (tokenData.access_token) {
+            updateStatus('Token received. Saving authentication data...');
+            
+            // Збереження токена
+            storeData('auth_token', tokenData.access_token);
+            storeData('login_timestamp', Date.now().toString());
+            
+            // Парсинг JWT для отримання даних користувача
+            if (tokenData.id_token) {
+              try {
+                const profile = parseJwt(tokenData.id_token);
+                console.log('Extracted profile:', {
+                  email: profile.email,
+                  name: profile.name,
+                  sub: profile.sub
+                });
+                
+                const user = {
+                  id_token: tokenData.id_token,
+                  access_token: tokenData.access_token,
+                  refresh_token: tokenData.refresh_token || '',
+                  token_type: tokenData.token_type,
+                  scope: tokenData.scope,
+                  expires_at: Math.floor(Date.now() / 1000) + tokenData.expires_in,
+                  profile: profile
+                };
+                
+                // Збереження даних користувача
+                const userJson = JSON.stringify(user);
+                storeData('user_data', userJson);
+                
+                // Додаткова перевірка, що дані збереглися
+                const storedData = localStorage.getItem('user_data');
+                console.log('User data storage verification:', {
+                  stored: !!storedData,
+                  lengthMatch: storedData?.length === userJson.length
+                });
+              } catch (e) {
+                console.error('Error parsing ID token:', e);
+              }
+            }
+            
+            // Відзначаємо успішну автентифікацію
+            storeData('auth_success', 'true');
+            storeData('auth_state_updated', Date.now().toString());
+            
+            // Додатково перевіримо весь стан автентифікації
+            console.log('Final authentication state:', {
+              hasToken: !!localStorage.getItem('auth_token'),
+              hasUserData: !!localStorage.getItem('user_data'),
+              hasSuccess: localStorage.getItem('auth_success') === 'true',
+              timestamp: localStorage.getItem('login_timestamp')
+            });
+            
+            updateStatus('Authentication successful! Redirecting...');
+            setTimeout(() => window.location.href = '/', 1000);
+          } else {
+            updateStatus('Invalid token response', true);
+            setTimeout(() => window.location.href = '/', 3000);
+          }
+        } catch (error) {
+          updateStatus(`Authentication error: ${error.message}`, true);
+          console.error('Token processing error:', error);
+          setTimeout(() => window.location.href = '/', 3000);
+        }
+      }
+      
+      // Функція для декодування JWT токена
+      function parseJwt(token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          return JSON.parse(atob(base64));
+        } catch (e) {
+          console.error('Error parsing JWT:', e);
+          return {};
+        }
+      }
+      
+      // Запуск обробки після завантаження сторінки
+      window.addEventListener('DOMContentLoaded', processToken);
+    })();
+  </script>
+</body>
+</html> 

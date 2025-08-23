@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - '2181:2181'
+    networks:
+      - kafka_network
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9093
+      - KAFKA_ADVERTISED_LISTENERS=INSIDE://kafka:9092,OUTSIDE://localhost:9093
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka_network
+
+  kafdrop:
+    image: 'obsidiandynamics/kafdrop'
+    restart: 'always'
+    environment:
+      KAFKA_BROKER_CONNECT: 'kafka:9092'
+      KAFKA_PROPERTIES: "security.protocol=PLAINTEXT"
+    ports:
+      - '9003:9000'
+    depends_on:
+      - kafka
+    networks:
+      - kafka_network
+
+  seq:
+    image: 'datalust/seq'
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - '5341:80'
+    networks:
+      - default
+
+  postgres:
+    image: 'postgres:15'
+    environment:
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD: 'rS46GCvc93'
+      POSTGRES_DB: 'ParserServiceDb'
+    ports:
+      - '5434:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+
+  minio:
+    image: 'minio/minio:latest'
+    environment:
+      MINIO_ROOT_USER: 'admin'
+      MINIO_ROOT_PASSWORD: 'S3cur3P@ssw0rd!'
+    command: server --address :9001 --console-address :9002 /data
+    ports:
+      - '9001:9001'
+      - '9002:9002'
+    volumes:
+      - minio_data:/data
+    networks:
+      - minio_network
+
+networks:
+  kafka_network:
+  minio_network:
+  default:
+
+volumes:
+  postgres_data:
+  minio_data:
