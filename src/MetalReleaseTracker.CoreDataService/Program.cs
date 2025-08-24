@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddSerilogLogging();
 
 builder.Services
+    .AddAppSettings(builder.Configuration)
     .AddApplicationServices(builder.Configuration)
     .AddApplicationDatabases(builder.Configuration)
     .AddApplicationAuthentication(builder.Configuration)

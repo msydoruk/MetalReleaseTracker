@@ -3,17 +3,16 @@ using Autofac.Extensions.DependencyInjection;
 using Hangfire;
 using Hangfire.PostgreSql;
 using MetalReleaseTracker.ParserService.Aplication.Services;
-using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Common.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Repositories;
-using MetalReleaseTracker.ParserService.Infrastructure.Http;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Extensions;
+using MetalReleaseTracker.ParserService.Infrastructure.Images;
+using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using MetalReleaseTracker.ParserService.Infrastructure.Messaging.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Extensions;
-using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
 using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +44,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
     containerBuilder.AddParsers();
 });
 
+builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 builder.Services.AddTransient<AlbumParsingJob>();
 builder.Services.AddHostedService<ParserSchedulerService>();

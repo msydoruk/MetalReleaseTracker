@@ -3,6 +3,7 @@ using MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Implementation;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
+using MetalReleaseTracker.SharedLibraries.Minio;
 
 namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
 {
@@ -14,16 +15,18 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddAutoMapper(typeof(MappingProfile));
             services.AddControllers();
             services.AddEndpointsApiExplorer();
+            services.AddMinio();
             services.AddKafka(configuration);
 
-            services.RegisterRepositories()
-                .RegisterDomainServices()
+            services.AddCommonServices()
+                .AddRepositories()
+                .AddDomainServices()
                 .AddAuthServices();
 
             return services;
         }
 
-        private static IServiceCollection RegisterRepositories(this IServiceCollection services)
+        private static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IAlbumRepository, AlbumRepository>();
             services.AddScoped<IBandRepository, BandRepository>();
@@ -33,7 +36,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             return services;
         }
 
-        private static IServiceCollection RegisterDomainServices(this IServiceCollection services)
+        private static IServiceCollection AddDomainServices(this IServiceCollection services)
         {
             services.AddScoped<IAlbumService, AlbumService>();
             services.AddScoped<IBandService, BandService>();
@@ -46,6 +49,12 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
         {
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IJwtService, JwtService>();
+            return services;
+        }
+
+        private static IServiceCollection AddCommonServices(this IServiceCollection services)
+        {
+            services.AddScoped<IFileStorageService, MinioFileStorageService>();
             return services;
         }
     }

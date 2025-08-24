@@ -1,5 +1,6 @@
 ﻿using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Configuration;
+using MetalReleaseTracker.ParserService.Infrastructure.Images.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.SharedLibraries.Minio;
@@ -12,6 +13,7 @@ public static class AppSettingsRegistrationExtension
     {
         services.Configure<GeneralParserSettings>(configuration.GetSection("GeneralParserSettings"));
         services.Configure<HttpRequestSettings>(configuration.GetSection("HttpRequestSettings"));
+        services.Configure<ImageUploadSettings>(configuration.GetSection("ImageUploadSettings"));
         services.Configure<AlbumParsedPublisherJobSettings>(configuration.GetSection("AlbumParsedPublisherJob"));
         services.Configure<List<ParserDataSource>>(configuration.GetSection("ParserDataSources"));
         services.Configure<MinioFileStorageConfig>(configuration.GetSection("Minio"));

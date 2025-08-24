@@ -5,6 +5,7 @@ using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.Enums;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Repositories;
+using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using MetalReleaseTracker.ParserService.Tests.Factories;
 using MetalReleaseTracker.ParserService.Tests.Fixtures;
@@ -21,6 +22,7 @@ public class AlbumParsingJobTests : IClassFixture<TestPostgresDatabaseFixture>, 
     private readonly AlbumParsedEventRepository _albumParsedEventRepository;
     private readonly Mock<ILogger<AlbumParsingJob>> _albumParsingJobLoggerMock = new();
     private readonly Mock<ILogger<ParsingSessionRepository>> _parsingSessionRepositoryLoggerMock = new();
+    private readonly Mock<IImageUploadService> _imageUploadServiceMock = new();
     private readonly AlbumParsingJob _albumParsingJob;
     private readonly ParserDataSource _parserDataSource;
     private Mock<IParser> _parserMock = new();
@@ -40,6 +42,7 @@ public class AlbumParsingJobTests : IClassFixture<TestPostgresDatabaseFixture>, 
             _ => _parserMock.Object,
             _parsingSessionRepository,
             _albumParsedEventRepository,
+            _imageUploadServiceMock.Object,
             _albumParsingJobLoggerMock.Object);
     }
 

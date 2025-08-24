@@ -4,6 +4,7 @@ using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Repositories;
+using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using MetalReleaseTracker.ParserService.Tests.Factories;
 using MetalReleaseTracker.ParserService.Tests.Fixtures;
@@ -20,6 +21,7 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         private ParsingSessionRepository _parsingSessionRepo;
         private AlbumParsedEventRepository _albumParsedEventRepo;
         private Mock<IParser> _parserMock;
+        private Mock<IImageUploadService> _imageUploadServiceMock;
         private Mock<ILogger<AlbumParsingJob>> _loggerMock;
         private AlbumParsingJob _job;
         private ParserDataSource _dataSource;
@@ -35,9 +37,10 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
             
             _parsingSessionRepo = new ParsingSessionRepository(_fixture.DbContext, new Mock<ILogger<ParsingSessionRepository>>().Object);
             _albumParsedEventRepo = new AlbumParsedEventRepository(_fixture.DbContext);
+            _imageUploadServiceMock = new Mock<IImageUploadService>();
             _loggerMock = new Mock<ILogger<AlbumParsingJob>>();
             _parserMock = new Mock<IParser>();
-            _job = new AlbumParsingJob(_ => _parserMock.Object, _parsingSessionRepo, _albumParsedEventRepo, _loggerMock.Object);
+            _job = new AlbumParsingJob(_ => _parserMock.Object, _parsingSessionRepo, _albumParsedEventRepo, _imageUploadServiceMock.Object, _loggerMock.Object);
             _dataSource = new ParserDataSource { DistributorCode = DistributorCode.OsmoseProductions, ParsingUrl = "https://test.com" };
             
             ClearDatabase().GetAwaiter().GetResult();

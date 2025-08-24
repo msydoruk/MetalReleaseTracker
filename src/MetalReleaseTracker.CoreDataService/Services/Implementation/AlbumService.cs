@@ -2,17 +2,20 @@
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
+using MetalReleaseTracker.SharedLibraries.Minio;
 
 namespace MetalReleaseTracker.CoreDataService.Services.Implementation;
 
 public class AlbumService : IAlbumService
 {
     private readonly IAlbumRepository _albumRepository;
+    private readonly IFileStorageService _fileStorageService;
     private readonly IMapper _mapper;
 
-    public AlbumService(IAlbumRepository albumRepository, IMapper mapper)
+    public AlbumService(IAlbumRepository albumRepository, IFileStorageService fileStorageService, IMapper mapper)
     {
         _albumRepository = albumRepository;
+        _fileStorageService = fileStorageService;
         _mapper = mapper;
     }
 
@@ -22,7 +25,7 @@ public class AlbumService : IAlbumService
 
         var pagedDtos = new PagedResultDto<AlbumDto>
         {
-            Items = _mapper.Map<List<AlbumDto>>(result.Items),
+            Items = _mapper.Map<List<AlbumDto>>(result),
             TotalCount = result.TotalCount,
             PageCount = result.PageCount,
             PageSize = result.PageSize,
