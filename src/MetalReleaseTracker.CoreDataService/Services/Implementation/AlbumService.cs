@@ -23,9 +23,17 @@ public class AlbumService : IAlbumService
     {
         var result = await _albumRepository.GetFilteredAlbumsAsync(filter, cancellationToken);
 
+        var albumDtos = new List<AlbumDto>();
+        foreach (var album in result.Items)
+        {
+            var albumDto = _mapper.Map<AlbumDto>(album);
+            albumDto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+            albumDtos.Add(albumDto);
+        }
+
         var pagedDtos = new PagedResultDto<AlbumDto>
         {
-            Items = _mapper.Map<List<AlbumDto>>(result),
+            Items = albumDtos,
             TotalCount = result.TotalCount,
             PageCount = result.PageCount,
             PageSize = result.PageSize,

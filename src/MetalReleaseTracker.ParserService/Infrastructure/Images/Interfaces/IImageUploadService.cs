@@ -4,5 +4,5 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 
 public interface IImageUploadService
 {
-    Task<string> UploadAlbumImageAndGetUrlAsync(ImageUploadRequest request, CancellationToken cancellationToken);
+    Task<ImageUploadResult> UploadAlbumImageAsync(ImageUploadRequest request, CancellationToken cancellationToken);
 }

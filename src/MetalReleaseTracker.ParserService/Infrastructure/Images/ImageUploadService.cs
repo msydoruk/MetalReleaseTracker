@@ -3,7 +3,6 @@ using Flurl.Http;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Configuration;
-using MetalReleaseTracker.ParserService.Infrastructure.Images.Exeptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Models;
 using MetalReleaseTracker.SharedLibraries.Minio;
@@ -30,37 +29,45 @@ public class ImageUploadService : IImageUploadService
         _settings = options.Value;
     }
 
-    public async Task<string> UploadAlbumImageAndGetUrlAsync(ImageUploadRequest request, CancellationToken cancellationToken)
+    public async Task<ImageUploadResult> UploadAlbumImageAsync(ImageUploadRequest request,
+        CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(request.ImageUrl))
+        {
+            return ImageUploadResult.Failure("Image URL is empty", request.ImageUrl);
+        }
+
+        var blobPath = GenerateBlobPath(request.DistributorCode, request.AlbumSku, request.ImageUrl);
+        if (await _fileStorageService.FileExistsAsync(blobPath, cancellationToken))
+        {
+            _logger.LogInformation("Image already exists for album {AlbumSku} at {BlobPath}", request.AlbumSku, blobPath);
+            return ImageUploadResult.Success(blobPath, request.ImageUrl);
+        }
+
         try
         {
-            var blobPath = GenerateBlobPath(request.DistributorCode, request.AlbumSku, request.ImageUrl);
-
-            if (await _fileStorageService.FileExistsAsync(blobPath, cancellationToken))
-            {
-                _logger.LogInformation("Image already exists for album {AlbumSku} at {BlobPath}", request.AlbumSku, blobPath);
-                return await _fileStorageService.GetFileUrlAsync(blobPath, cancellationToken);
-            }
-
             var imageBytes = await DownloadImageAsync(request.ImageUrl, cancellationToken);
             if (imageBytes == null || !IsValidImage(imageBytes))
             {
                 _logger.LogWarning("Invalid image for album {AlbumSku} from {ImageUrl}", request.AlbumSku, request.ImageUrl);
-                throw new HttpRequestException($"Invalid image format or empty content for album {request.AlbumSku} from {request.ImageUrl}");
+                return ImageUploadResult.Failure("Invalid image format or empty content", request.ImageUrl);
             }
 
             using var imageStream = new MemoryStream(imageBytes);
             await _fileStorageService.UploadFileAsync(blobPath, imageStream, cancellationToken);
 
-            var presignedUrl = await _fileStorageService.GetFileUrlAsync(blobPath, cancellationToken);
-
-            _logger.LogInformation("Uploaded image for album {AlbumSku} and generated URL", request.AlbumSku);
-            return presignedUrl;
+            _logger.LogInformation("Uploaded image for album {AlbumSku} to {BlobPath}", request.AlbumSku, blobPath);
+            return ImageUploadResult.Success(blobPath, request.ImageUrl);
+        }
+        catch (FlurlHttpException httpException)
+        {
+            _logger.LogWarning("HTTP error {StatusCode} downloading image for album {AlbumSku} from {ImageUrl}", httpException.StatusCode, request.AlbumSku, request.ImageUrl);
+            return ImageUploadResult.Failure($"HTTP error: {httpException.StatusCode}", request.ImageUrl);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Failed to upload image for album {AlbumSku} from {ImageUrl}", request.AlbumSku, request.ImageUrl);
-            throw new ImageUploadException(request.AlbumSku, request.ImageUrl, $"Failed to upload image: {exception.Message}", exception);
+            return ImageUploadResult.Failure(exception.Message, request.ImageUrl);
         }
     }
 

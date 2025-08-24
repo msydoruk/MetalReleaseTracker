@@ -87,8 +87,7 @@ public class AlbumParsingJob
     {
         foreach (var albumParsedEvent in parsedAlbums)
         {
-            if (!string.IsNullOrEmpty(albumParsedEvent.PhotoUrl))
-                await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
+            await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
 
             await _albumParsedEventRepository.AddAsync(
                 parsingSessionId,
@@ -105,12 +104,17 @@ public class AlbumParsingJob
         var imageUploadRequest = new ImageUploadRequest
         {
             ImageUrl = albumParsedEvent.PhotoUrl,
-            AlbumSku = albumParsedEvent.SKU,
+            AlbumSku = albumParsedEvent.SKU ?? Guid.NewGuid().ToString(),
             DistributorCode = albumParsedEvent.DistributorCode,
             AlbumName = albumParsedEvent.Name,
             BandName = albumParsedEvent.BandName
         };
 
-        albumParsedEvent.PhotoUrl = await _imageUploadService.UploadAlbumImageAndGetUrlAsync(imageUploadRequest, cancellationToken);
+        var uploadResult = await _imageUploadService.UploadAlbumImageAsync(imageUploadRequest, cancellationToken);
+
+        if (uploadResult.IsSuccess)
+        {
+            albumParsedEvent.PhotoUrl = uploadResult.BlobPath;
+        }
     }
 }

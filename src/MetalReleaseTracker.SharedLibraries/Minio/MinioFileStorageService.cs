@@ -65,8 +65,9 @@ public class MinioFileStorageService : IFileStorageService
         {
             var presignedUrl = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
                 .WithBucket(_config.BucketName)
-                .WithObject(filePath));
-       
+                .WithObject(filePath)
+                .WithExpiry(60 * 60 * 24 * _config.PresignedUrlExpiryDays));
+            
             return System.Web.HttpUtility.UrlDecode(presignedUrl);
         }
         catch
