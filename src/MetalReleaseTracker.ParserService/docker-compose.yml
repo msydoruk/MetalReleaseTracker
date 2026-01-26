@@ -8,7 +8,12 @@ services:
     ports:
       - '2181:2181'
     networks:
-      - kafka_network
+      - parser-service-network
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: 'bitnami/kafka:latest'
@@ -24,9 +29,15 @@ services:
       - '9092:9092'
       - '9093:9093'
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     networks:
-      - kafka_network
+      - parser-service-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server=localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafdrop:
     image: 'obsidiandynamics/kafdrop'
@@ -37,37 +48,46 @@ services:
     ports:
       - '9003:9000'
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
-      - kafka_network
+      - parser-service-network
 
   seq:
     image: 'datalust/seq'
     environment:
       - ACCEPT_EULA=Y
+      - SEQ_API_KEY=${SEQ_API_KEY:-}
     ports:
       - '5341:80'
+    volumes:
+      - seq_data:/data
     networks:
-      - default
+      - parser-service-network
 
   postgres:
     image: 'postgres:15'
     environment:
-      POSTGRES_USER: 'admin'
-      POSTGRES_PASSWORD: 'rS46GCvc93'
-      POSTGRES_DB: 'ParserServiceDb'
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-ParserServiceDb}
     ports:
       - '5434:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - default
+      - parser-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: 'minio/minio:latest'
     environment:
-      MINIO_ROOT_USER: 'admin'
-      MINIO_ROOT_PASSWORD: 'S3cur3P@ssw0rd!'
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server --address :9001 --console-address :9002 /data
     ports:
       - '9001:9001'
@@ -75,13 +95,51 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - minio_network
+      - parser-service-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  parser-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB:-ParserServiceDb};Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - Kafka__BootstrapServers=kafka:9092
+      - MinIO__Endpoint=minio:9001
+      - MinIO__AccessKey=${MINIO_ROOT_USER:-admin}
+      - MinIO__SecretKey=${MINIO_ROOT_PASSWORD}
+      - MinIO__BucketName=${MINIO_BUCKET_NAME:-metal-release-tracker}
+      - MinIO__Region=us-east-1
+      - TickerQ__Dashboard__Enabled=${TICKERQ_DASHBOARD_ENABLED:-true}
+      - TickerQ__Dashboard__BasePath=${TICKERQ_DASHBOARD_BASEPATH:-/tickerq/dashboard}
+      - TickerQ__Dashboard__Username=${TICKERQ_DASHBOARD_USERNAME:-admin}
+      - TickerQ__Dashboard__Password=${TICKERQ_DASHBOARD_PASSWORD}
+    ports:
+      - '5000:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    networks:
+      - parser-service-network
+    restart: unless-stopped
 
 networks:
-  kafka_network:
-  minio_network:
-  default:
+  parser-service-network:
+    driver: bridge
 
 volumes:
   postgres_data:
   minio_data:
+  seq_data:

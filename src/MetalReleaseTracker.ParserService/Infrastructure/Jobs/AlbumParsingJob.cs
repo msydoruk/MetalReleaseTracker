@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using MetalReleaseTracker.ParserService.Domain.Interfaces;
+﻿using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
@@ -34,7 +33,6 @@ public class AlbumParsingJob
         _logger = logger;
     }
 
-    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunParserJob(ParserDataSource parserDataSource, CancellationToken cancellationToken)
     {
         try

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Hangfire;
 using MassTransit;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
@@ -40,7 +39,6 @@ public class AlbumParsedPublisherJob
         _albumParsedPublisherSettings = options.Value;
     }
 
-    [AutomaticRetry(Attempts = 10, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunPublisherJob(CancellationToken cancellationToken)
     {
         try

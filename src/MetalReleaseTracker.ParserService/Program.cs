@@ -1,7 +1,5 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Hangfire;
-using Hangfire.PostgreSql;
 using MetalReleaseTracker.ParserService.Aplication.Services;
 using MetalReleaseTracker.ParserService.Infrastructure.Common.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
@@ -13,10 +11,12 @@ using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using MetalReleaseTracker.ParserService.Infrastructure.Messaging.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Extensions;
+using MetalReleaseTracker.ParserService.Infrastructure.Scheduling.Extensions;
 using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using TickerQ.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,13 +28,12 @@ builder.Services.AddKafka(builder.Configuration);
 builder.Services.AddMinio();
 
 var parserServiceConnectionString = builder.Configuration.GetConnectionString("ParserServiceConnectionString");
-builder.Services.AddHangfire(options => options.UsePostgreSqlStorage(parserServiceConnectionString));
-builder.Services.AddHangfireServer();
 builder.Services.AddDbContext<ParserServiceDbContext>(options =>
 {
     options.UseNpgsql(parserServiceConnectionString);
 });
 
+builder.Services.AddTickerQScheduler(builder.Configuration);
 builder.Services.AddHttpServices();
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
@@ -46,8 +45,10 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
-builder.Services.AddTransient<AlbumParsingJob>();
-builder.Services.AddHostedService<ParserSchedulerService>();
+builder.Services.AddScoped<AlbumParsingJob>();
+builder.Services.AddScoped<AlbumParsedPublisherJob>();
+builder.Services.AddScoped<MetalReleaseTracker.ParserService.Infrastructure.Jobs.TickerQ.TickerQJobFunctions>();
+builder.Services.AddHostedService<TickerQSchedulerService>();
 
 var app = builder.Build();
 
@@ -57,5 +58,5 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-app.UseHangfireDashboard();
+app.UseTickerQ();
 app.Run();
