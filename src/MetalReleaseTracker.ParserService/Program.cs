@@ -54,8 +54,11 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ParserServiceDbContext>();
-    dbContext.Database.Migrate();
+    var parserServiceDbContext = scope.ServiceProvider.GetRequiredService<ParserServiceDbContext>();
+    parserServiceDbContext.Database.Migrate();
+
+    var parserServiceTickerQDbContext = scope.ServiceProvider.GetRequiredService<ParserServiceTickerQDbContext>();
+    parserServiceTickerQDbContext.Database.Migrate();
 }
 
 app.UseTickerQ();
