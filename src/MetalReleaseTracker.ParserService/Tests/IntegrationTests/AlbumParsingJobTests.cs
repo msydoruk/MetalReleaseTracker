@@ -42,7 +42,7 @@ public class AlbumParsingJobTests : IClassFixture<TestPostgresDatabaseFixture>, 
             _ => _parserMock.Object,
             _parsingSessionRepository,
             _albumParsedEventRepository,
-            _imageUploadServiceMock.Object,
+           // _imageUploadServiceMock.Object,
             _albumParsingJobLoggerMock.Object);
     }
 

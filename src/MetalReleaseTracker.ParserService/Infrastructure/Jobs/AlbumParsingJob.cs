@@ -16,20 +16,20 @@ public class AlbumParsingJob
     private readonly Func<DistributorCode, IParser> _parserResolver;
     private readonly IParsingSessionRepository _parsingSessionRepository;
     private readonly IAlbumParsedEventRepository _albumParsedEventRepository;
-    private readonly IImageUploadService _imageUploadService;
+    //private readonly IImageUploadService _imageUploadService;
     private readonly ILogger<AlbumParsingJob> _logger;
 
     public AlbumParsingJob(
         Func<DistributorCode, IParser> parserResolver,
         IParsingSessionRepository parsingSessionRepository,
         IAlbumParsedEventRepository albumParsedEventRepository,
-        IImageUploadService imageUploadService,
+        //IImageUploadService imageUploadService,
         ILogger<AlbumParsingJob> logger)
     {
         _parserResolver = parserResolver;
         _parsingSessionRepository = parsingSessionRepository;
         _albumParsedEventRepository = albumParsedEventRepository;
-        _imageUploadService = imageUploadService;
+        //_imageUploadService = imageUploadService;
         _logger = logger;
     }
 
@@ -108,11 +108,11 @@ public class AlbumParsingJob
             BandName = albumParsedEvent.BandName
         };
 
-        var uploadResult = await _imageUploadService.UploadAlbumImageAsync(imageUploadRequest, cancellationToken);
+        //var uploadResult = await _imageUploadService.UploadAlbumImageAsync(imageUploadRequest, cancellationToken);
 
-        if (uploadResult.IsSuccess)
-        {
-            albumParsedEvent.PhotoUrl = uploadResult.BlobPath;
-        }
+        //if (uploadResult.IsSuccess)
+        //{
+        //    albumParsedEvent.PhotoUrl = uploadResult.BlobPath;
+        //}
     }
 }

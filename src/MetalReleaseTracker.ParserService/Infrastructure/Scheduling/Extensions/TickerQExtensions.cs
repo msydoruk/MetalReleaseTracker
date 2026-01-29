@@ -23,6 +23,15 @@ public static class TickerQExtensions
 
         services.AddTickerQ<CustomTimeTicker, CustomCronTicker>(tickerOptions =>
         {
+            tickerOptions.ConfigureScheduler(schedulerOptions =>
+            {
+                schedulerOptions.MaxConcurrency = 10;
+                schedulerOptions.NodeIdentifier = "production-server-01";
+                schedulerOptions.IdleWorkerTimeOut = TimeSpan.FromMinutes(2);
+                schedulerOptions.FallbackIntervalChecker = TimeSpan.FromSeconds(30);
+                schedulerOptions.SchedulerTimeZone = TimeZoneInfo.Utc;
+            });
+
             if (dashboardEnabled)
             {
                 tickerOptions.AddDashboard(dashboard =>

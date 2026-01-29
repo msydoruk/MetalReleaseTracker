@@ -7,7 +7,7 @@ public static class HttpSevicesRegistrationExtension
 {
     public static IServiceCollection AddHttpServices(this IServiceCollection services)
     {
-        services.AddSingleton<IUserAgentProvider, UserAgentProvider>();
+        // services.AddSingleton<IUserAgentProvider, UserAgentProvider>();
         services.AddSingleton<IHttpRequestService, FlurlHttpRequestService>();
 
         return services;
