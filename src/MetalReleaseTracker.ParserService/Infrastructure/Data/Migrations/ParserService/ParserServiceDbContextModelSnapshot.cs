@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MetalReleaseTracker.ParserService.Migrations
+namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.ParserService
 {
     [DbContext(typeof(ParserServiceDbContext))]
     partial class ParserServiceDbContextModelSnapshot : ModelSnapshot
@@ -17,12 +17,12 @@ namespace MetalReleaseTracker.ParserService.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MetalReleaseTracker.ParserService.Data.Entities.AlbumParsedEventEntity", b =>
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.AlbumParsedEventEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,7 +45,7 @@ namespace MetalReleaseTracker.ParserService.Migrations
                     b.ToTable("AlbumParsedEvents");
                 });
 
-            modelBuilder.Entity("MetalReleaseTracker.ParserService.Data.Entities.ParsingSessionEntity", b =>
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.ParsingSessionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,9 +69,9 @@ namespace MetalReleaseTracker.ParserService.Migrations
                     b.ToTable("ParsingSessions");
                 });
 
-            modelBuilder.Entity("MetalReleaseTracker.ParserService.Data.Entities.AlbumParsedEventEntity", b =>
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.AlbumParsedEventEntity", b =>
                 {
-                    b.HasOne("MetalReleaseTracker.ParserService.Data.Entities.ParsingSessionEntity", "ParsingSession")
+                    b.HasOne("MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.ParsingSessionEntity", "ParsingSession")
                         .WithMany()
                         .HasForeignKey("ParsingSessionId")
                         .OnDelete(DeleteBehavior.Cascade)

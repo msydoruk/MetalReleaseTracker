@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.TickerQ
 {
     [DbContext(typeof(ParserServiceTickerQDbContext))]
-    [Migration("20260128215620_InitialTickerQ")]
+    [Migration("20260129164629_InitialTickerQ")]
     partial class InitialTickerQ
     {
         /// <inheritdoc />
