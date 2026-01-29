@@ -41,4 +41,8 @@
   <ItemGroup>
     <ProjectReference Include="..\MetalReleaseTracker.SharedLibraries\MetalReleaseTracker.SharedLibraries.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Infrastructure\Data\Migrations\" />
+  </ItemGroup>
 </Project>

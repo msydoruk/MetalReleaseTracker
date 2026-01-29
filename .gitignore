@@ -52,3 +52,5 @@ appsettings.Development.json
 .env
 .env.local
 .env.*.local
+
+settings.local.json
