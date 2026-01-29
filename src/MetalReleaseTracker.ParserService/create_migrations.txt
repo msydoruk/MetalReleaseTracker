@@ -1,0 +1,1 @@
+dotnet ef migrations add InitialTickerQ --context ParserServiceTickerQDbContext --project MetalReleaseTracker.ParserService.csproj --output-dir Infrastructure/Data/Migrations/TickerQ

@@ -1,4 +1,5 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
 using Microsoft.Extensions.Options;
 using TickerQ;
@@ -10,35 +11,54 @@ namespace MetalReleaseTracker.ParserService.Aplication.Services;
 public class TickerQSchedulerService : BackgroundService
 {
     private readonly ICronTickerManager<CustomCronTicker> _cronTickerManager;
+    private readonly ParserServiceTickerQDbContext _parserServiceTickerQDbContext;
     private readonly List<ParserDataSource> _parserDataSources;
     private readonly ILogger<TickerQSchedulerService> _logger;
 
     public TickerQSchedulerService(
         ICronTickerManager<CustomCronTicker> cronTickerManager,
+        ParserServiceTickerQDbContext parserServiceTickerQDbContext,
         IOptions<List<ParserDataSource>> parserDataSources,
         ILogger<TickerQSchedulerService> logger)
     {
         _cronTickerManager = cronTickerManager;
+        _parserServiceTickerQDbContext = parserServiceTickerQDbContext;
         _parserDataSources = parserDataSources.Value;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+        await RegisterAlbumParsingJobs(cancellationToken);
+        await RegisterParsedPublisherJob(cancellationToken);
+    }
 
+    private async Task RegisterAlbumParsingJobs(CancellationToken cancellationToken = default)
+    {
         foreach (var parserDataSource in _parserDataSources)
         {
             try
             {
+                var functionName = "AlbumParsingJob";
+                var request = TickerHelper.CreateTickerRequest(parserDataSource);
+                var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
+                    .FirstOrDefault(job => job.Function == functionName && job.Request == request);
+
+                if (existingJob != null)
+                {
+                    _logger.LogDebug($"Skipping job {functionName} with request {request}");
+                    continue;
+                }
+
                 await _cronTickerManager.AddAsync(
                     new CustomCronTicker
                     {
-                        Function = "AlbumParsingJob",
-                        Request = TickerHelper.CreateTickerRequest(parserDataSource),
+                        Function = functionName,
+                        Request = request,
                         Expression = "0 0 0 * * *",
                         Description = $"Daily album parsing for {parserDataSource.Name}",
-                        Retries = 0
+                        Retries = 3,
+                        RetryIntervals = [300, 900, 1800]
                     },
                     cancellationToken);
 
@@ -46,32 +66,45 @@ public class TickerQSchedulerService : BackgroundService
                     "Scheduled album parsing job for distributor: {DistributorCode}",
                     parserDataSource.DistributorCode);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex,
+                _logger.LogError(exception,
                     "Failed to schedule album parsing job for distributor: {DistributorCode}",
                     parserDataSource.DistributorCode);
             }
         }
+    }
 
+    private async Task RegisterParsedPublisherJob(CancellationToken cancellationToken = default)
+    {
         try
         {
+            var functionName = "AlbumParsedPublisherJob";
+            var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
+                .FirstOrDefault(job => job.Function == functionName);
+
+            if (existingJob != null)
+            {
+                _logger.LogDebug($"Skipping job {functionName}");
+                return;
+            }
+
             await _cronTickerManager.AddAsync(
                 new CustomCronTicker
                 {
-                    Function = "AlbumParsedPublisherJob",
+                    Function = functionName,
                     Expression = "0 0 0 * * *",
                     Description = "Daily album publishing job",
-                    Retries = 10,
-                    RetryIntervals = [60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800]
+                    Retries = 3,
+                    RetryIntervals = [300, 900, 1800]
                 },
                 cancellationToken);
 
             _logger.LogInformation("Scheduled album parsed publisher job");
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, "Failed to schedule album parsed publisher job");
+            _logger.LogError(exception, "Failed to schedule album parsed publisher job");
         }
     }
 }

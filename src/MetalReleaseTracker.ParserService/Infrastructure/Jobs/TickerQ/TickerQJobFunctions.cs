@@ -21,6 +21,7 @@ public class TickerQJobFunctions
         TickerFunctionContext<ParserDataSource> context,
         CancellationToken cancellationToken)
     {
+        context.CronOccurrenceOperations.SkipIfAlreadyRunning();
         await _albumParsingJob.RunParserJob(context.Request, cancellationToken);
     }
 
@@ -29,6 +30,7 @@ public class TickerQJobFunctions
         TickerFunctionContext context,
         CancellationToken cancellationToken)
     {
+        context.CronOccurrenceOperations.SkipIfAlreadyRunning();
         await _albumParsedPublisherJob.RunPublisherJob(cancellationToken);
     }
 }
