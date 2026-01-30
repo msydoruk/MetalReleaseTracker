@@ -1,0 +1,115 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: metalrelease-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - '2181:2181'
+    networks:
+      - metalrelease_shared_net
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: metalrelease-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://${PUBLIC_IP:-localhost}:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - metalrelease_shared_net
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kafdrop:
+    image: 'obsidiandynamics/kafdrop'
+    container_name: metalrelease-kafdrop
+    environment:
+      KAFKA_BROKER_CONNECT: 'kafka:9092'
+      KAFKA_PROPERTIES: "security.protocol=PLAINTEXT"
+    ports:
+      - '9003:9000'
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+  seq:
+    image: 'datalust/seq'
+    container_name: metalrelease-seq
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD}
+    ports:
+      - '5341:80'
+    volumes:
+      - seq_data:/data
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+  minio:
+    image: 'minio/minio:latest'
+    container_name: metalrelease-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server --address :9001 --console-address :9002 /data
+    ports:
+      - '9001:9001'
+      - '9002:9002'
+    volumes:
+      - minio_data:/data
+    networks:
+      - metalrelease_shared_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  metalrelease_shared_net:
+    name: metalrelease_shared_net
+    driver: bridge
+
+volumes:
+  zookeeper_data:
+    name: metalrelease_zookeeper_data
+  zookeeper_logs:
+    name: metalrelease_zookeeper_logs
+  kafka_data:
+    name: metalrelease_kafka_data
+  seq_data:
+    name: metalrelease_seq_data
+  minio_data:
+    name: metalrelease_minio_data
