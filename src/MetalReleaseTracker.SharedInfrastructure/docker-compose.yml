@@ -80,7 +80,9 @@ services:
     image: 'mcr.microsoft.com/dotnet/aspire-dashboard:9.0'
     container_name: metalrelease-aspire-dashboard
     environment:
-      - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+      - DASHBOARD__FRONTEND__AUTHMODE=BrowserToken
+      - DASHBOARD__FRONTEND__BROWSERTOKEN=${ASPIRE_DASHBOARD_TOKEN}
+      - DASHBOARD__OTLP__AUTHMODE=Unsecured
     ports:
       - '18888:18888'
       - '18889:18889'
