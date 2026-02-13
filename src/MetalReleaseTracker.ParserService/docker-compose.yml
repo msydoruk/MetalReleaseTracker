@@ -34,8 +34,8 @@ services:
       - Minio__Region=us-east-1
       - OpenTelemetry__OtlpEndpoint=http://otel-collector:4317
       - Serilog__WriteTo__1__Name=OpenTelemetry
-      - Serilog__WriteTo__1__Args__Endpoint=http://otel-collector:4317
-      - Serilog__WriteTo__1__Args__Protocol=Grpc
+      - Serilog__WriteTo__1__Args__Endpoint=http://otel-collector:4318
+      - Serilog__WriteTo__1__Args__Protocol=HttpProtobuf
       - TickerQ__Dashboard__Enabled=true
       - TickerQ__Dashboard__BasePath=/tickerq/dashboard
       - TickerQ__Dashboard__Username=${TICKERQ_DASHBOARD_USERNAME}
