@@ -1,0 +1,3 @@
+# Environment files with secrets
+.env
+.env.prod

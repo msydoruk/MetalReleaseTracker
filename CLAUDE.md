@@ -61,10 +61,17 @@ dotnet ef database update --context IdentityServerDbContext
 ```
 
 ### Infrastructure (Docker Compose)
-Each service has its own docker-compose.yml with required infrastructure:
 
+**Shared Infrastructure** (Required - Start First)
 ```bash
-# Start infrastructure for ParserService (Kafka, PostgreSQL, MinIO, Seq)
+# Start shared infrastructure (Kafka, Seq, MinIO)
+cd MetalReleaseTracker.SharedInfrastructure
+docker-compose up -d
+```
+
+**Service-Specific Infrastructure** (Start After Shared Infrastructure)
+```bash
+# Start infrastructure for ParserService (PostgreSQL, TickerQ)
 cd MetalReleaseTracker.ParserService
 docker-compose up -d
 
@@ -78,10 +85,15 @@ docker-compose up -d
 ```
 
 **Infrastructure Ports:**
+
+*Shared Infrastructure:*
 - Kafka: 9093 (external), 9092 (internal)
 - Kafdrop (Kafka UI): http://localhost:9003
 - Seq (Logging): http://localhost:5341
 - MinIO: 9001 (API), 9002 (Console) - http://localhost:9002
+- Zookeeper: 2181
+
+*Service-Specific:*
 - PostgreSQL (ParserService): 5434
 - PostgreSQL (CatalogSyncService Hangfire): 5435
 - PostgreSQL (CoreDataService): 5436

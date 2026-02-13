@@ -1,18 +1,60 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:15
-    container_name: postgres-code-data
+    container_name: metalrelease_postgres_coredata
     restart: always
     environment:
-      POSTGRES_DB: CoreDataServiceDb
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: rS46GCvc93
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - coredata-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  coredata-service:
+    build:
+      context: ..
+      dockerfile: MetalReleaseTracker.CoreDataService/Dockerfile
+    container_name: metalrelease_coredata_service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__CoreDataServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__CatalogSyncServiceConsumerGroup=albums-processed-consumer-group
+      - Kafka__CatalogSyncServiceTopic=albums-processed-topic
+      - Minio__Endpoint=minio:9001
+      - Minio__AccessKey=${MINIO_ROOT_USER}
+      - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Minio__BucketName=${MINIO_BUCKET_NAME}
+      - Minio__Region=us-east-1
+      - Minio__PresignedUrlExpiryDays=1
+      - Authentication__Google__ClientId=${GOOGLE_CLIENT_ID}
+      - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - Authentication__Jwt__Key=${JWT_KEY}
+    ports:
+      - '5002:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - coredata-service-network
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+networks:
+  coredata-service-network:
+    driver: bridge
+  metalrelease_shared_net:
+    external: true
 
 volumes:
   postgres_data:

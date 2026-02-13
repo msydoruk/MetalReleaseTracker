@@ -1,29 +1,79 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:15
-    container_name: postgres
+    container_name: metalrelease_postgres_catalogsync
     restart: always
     environment:
-      POSTGRES_DB: CatalogSyncServiceDb
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: rS46GCvc93
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - catalogsync-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:6.0
-    container_name: mongodb
+    container_name: metalrelease_mongodb_catalogsync
     restart: always
     environment:
-      MONGO_INITDB_DATABASE: CatalogSyncServiceDb
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - catalogsync-service-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  catalogsync-service:
+    build:
+      context: ..
+      dockerfile: MetalReleaseTracker.CatalogSyncService/Dockerfile
+    container_name: metalrelease_catalogsync_service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__ParserServiceConsumerGroup=albums-parsed-consumer-group
+      - Kafka__ParserServiceTopic=albums-parsed-topic
+      - Kafka__CatalogSyncServiceTopic=albums-processed-topic
+      - MongoDb__ConnectionString=mongodb://mongo:27017
+      - MongoDb__DatabaseName=${MONGO_DB}
+      - Minio__Endpoint=minio:9001
+      - Minio__AccessKey=${MINIO_ROOT_USER}
+      - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Minio__BucketName=${MINIO_BUCKET_NAME}
+      - Minio__Region=us-east-1
+    ports:
+      - '5001:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    networks:
+      - catalogsync-service-network
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+networks:
+  catalogsync-service-network:
+    driver: bridge
+  metalrelease_shared_net:
+    external: true
 
 volumes:
   mongo_data:
