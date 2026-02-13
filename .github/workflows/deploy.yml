@@ -1,0 +1,89 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy'
+        required: true
+        type: choice
+        options:
+          - all
+          - shared-infrastructure
+          - parser-service
+
+env:
+  DEPLOY_DIR: /home/ubuntu/metaltracker
+  SSH_OPTS: -o StrictHostKeyChecking=no
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Sync files to server
+        run: |
+          rsync -avz --delete \
+            -e "ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key" \
+            --include='src/MetalReleaseTracker.SharedInfrastructure/***' \
+            --include='src/MetalReleaseTracker.ParserService/***' \
+            --include='src/MetalReleaseTracker.SharedLibraries/***' \
+            --include='src/MetalReleaseTracker.sln' \
+            --include='src/' \
+            --exclude='*' \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.DEPLOY_DIR }}/
+
+      - name: Write .env files
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          echo '${{ secrets.ENV_SHARED_INFRA }}' > ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.SharedInfrastructure/.env
+          echo '${{ secrets.ENV_PARSER_SERVICE }}' > ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.ParserService/.env
+          SCRIPT
+
+      - name: Deploy shared-infrastructure
+        if: inputs.service == 'shared-infrastructure' || inputs.service == 'all'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.SharedInfrastructure
+          docker compose up -d
+          echo "Waiting for services to be healthy..."
+          sleep 15
+          docker compose ps
+          SCRIPT
+
+      - name: Deploy parser-service
+        if: inputs.service == 'parser-service' || inputs.service == 'all'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.ParserService
+          docker compose up -d --build
+          echo "Waiting for services to start..."
+          sleep 20
+          docker compose ps
+          SCRIPT
+
+      - name: Verify deployment
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          echo "=== All containers ==="
+          docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          echo ""
+          echo "=== Disk usage ==="
+          df -h /
+          SCRIPT
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
