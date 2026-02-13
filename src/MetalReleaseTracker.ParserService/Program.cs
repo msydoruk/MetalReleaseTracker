@@ -15,6 +15,9 @@ using MetalReleaseTracker.ParserService.Infrastructure.Scheduling.Extensions;
 using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 using TickerQ.DependencyInjection;
 
@@ -22,6 +25,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
+
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"];
+if (!string.IsNullOrEmpty(otlpEndpoint))
+{
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(resource => resource.AddService("ParserService"))
+        .WithTracing(tracing =>
+        {
+            tracing
+                .AddSource("MassTransit")
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint));
+        })
+        .WithMetrics(metrics =>
+        {
+            metrics
+                .AddHttpClientInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint));
+        });
+}
 
 builder.Services.AddAppSettings(builder.Configuration);
 builder.Services.AddKafka(builder.Configuration);
