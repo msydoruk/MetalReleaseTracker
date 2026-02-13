@@ -28,11 +28,11 @@ services:
       - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
       - Kafka__BootstrapServers=kafka:9092
-      - MinIO__Endpoint=minio:9001
-      - MinIO__AccessKey=${MINIO_ROOT_USER}
-      - MinIO__SecretKey=${MINIO_ROOT_PASSWORD}
-      - MinIO__BucketName=${MINIO_BUCKET_NAME}
-      - MinIO__Region=us-east-1
+      - Minio__Endpoint=minio:9001
+      - Minio__AccessKey=${MINIO_ROOT_USER}
+      - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Minio__BucketName=${MINIO_BUCKET_NAME}
+      - Minio__Region=us-east-1
       - TickerQ__Dashboard__Enabled=true
       - TickerQ__Dashboard__BasePath=/tickerq/dashboard
       - TickerQ__Dashboard__Username=${TICKERQ_DASHBOARD_USERNAME}

@@ -1,8 +1,6 @@
-﻿using MetalReleaseTracker.ParserService.Infrastructure.Http.Configuration;
+using System.Reflection;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Exceptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Interfaces;
-using MetalReleaseTracker.SharedLibraries.Minio;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Http;
 
@@ -10,12 +8,10 @@ public class UserAgentProvider : IUserAgentProvider
 {
     private readonly Random _random = new();
     private readonly IReadOnlyList<string> _userAgents;
-    private readonly IFileStorageService _fileStorageService;
 
-    public UserAgentProvider(IOptions<HttpRequestSettings> options, IFileStorageService fileStorageService)
+    public UserAgentProvider()
     {
-        _fileStorageService = fileStorageService;
-        _userAgents = InitializeUserAgents(options.Value.UserAgentsFilePath);
+        _userAgents = LoadUserAgentsFromEmbeddedResource();
     }
 
     public string GetRandomUserAgent()
@@ -23,15 +19,45 @@ public class UserAgentProvider : IUserAgentProvider
         return _userAgents[_random.Next(_userAgents.Count)];
     }
 
-    private List<string> InitializeUserAgents(string filePath)
+    private static List<string> LoadUserAgentsFromEmbeddedResource()
     {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = assembly.GetManifestResourceNames()
+            .FirstOrDefault(name => name.EndsWith("user-agents.txt", StringComparison.OrdinalIgnoreCase));
+
+        if (resourceName is null)
+        {
+            throw new UserAgentProviderException("Embedded resource 'user-agents.txt' was not found.");
+        }
+
         try
         {
-            return _fileStorageService.DownloadFileAsListAsync(filePath).GetAwaiter().GetResult();
+            using var stream = assembly.GetManifestResourceStream(resourceName)!;
+            using var reader = new StreamReader(stream);
+
+            var userAgents = new List<string>();
+            while (reader.ReadLine() is { } line)
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    userAgents.Add(line.Trim());
+                }
+            }
+
+            if (userAgents.Count == 0)
+            {
+                throw new UserAgentProviderException("Embedded resource 'user-agents.txt' is empty.");
+            }
+
+            return userAgents;
+        }
+        catch (UserAgentProviderException)
+        {
+            throw;
         }
         catch (Exception exception)
         {
-            throw new UserAgentProviderException("Failed to load user agents from the specified file.", exception);
+            throw new UserAgentProviderException("Failed to load user agents from embedded resource.", exception);
         }
     }
 }
