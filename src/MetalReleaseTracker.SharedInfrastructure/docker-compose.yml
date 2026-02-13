@@ -84,7 +84,7 @@ services:
     restart: unless-stopped
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.115.0
+    image: otel/opentelemetry-collector-contrib:0.145.0
     container_name: metalrelease-otel-collector
     command: ["--config", "/etc/otel-collector-config.yml"]
     volumes:
