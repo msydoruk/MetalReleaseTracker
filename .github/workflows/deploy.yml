@@ -18,7 +18,7 @@ concurrency:
 
 env:
   DEPLOY_DIR: /home/ubuntu/metaltracker
-  SSH_OPTS: -o StrictHostKeyChecking=no
+  SSH_OPTS: -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=20
 
 jobs:
   deploy:
