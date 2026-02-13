@@ -80,10 +80,12 @@ public class MinioFileStorageService : IFileStorageService
     {
         try
         {
+            await EnsureBucketExistsAsync(cancellationToken);
+
             await _minioClient.StatObjectAsync(new StatObjectArgs()
                 .WithBucket(_config.BucketName)
                 .WithObject(filePath), cancellationToken);
-        
+
             return true;
         }
         catch (ObjectNotFoundException)
