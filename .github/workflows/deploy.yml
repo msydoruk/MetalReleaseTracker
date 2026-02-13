@@ -12,6 +12,10 @@ on:
           - shared-infrastructure
           - parser-service
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 env:
   DEPLOY_DIR: /home/ubuntu/metaltracker
   SSH_OPTS: -o StrictHostKeyChecking=no
