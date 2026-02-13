@@ -62,35 +62,6 @@ services:
       - metalrelease_shared_net
     restart: unless-stopped
 
-  seq:
-    image: 'datalust/seq'
-    container_name: metalrelease-seq
-    environment:
-      - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD}
-    ports:
-      - '5341:80'
-    volumes:
-      - seq_data:/data
-    networks:
-      - metalrelease_shared_net
-    restart: unless-stopped
-
-  aspire-dashboard:
-    image: 'mcr.microsoft.com/dotnet/aspire-dashboard:9.0'
-    container_name: metalrelease-aspire-dashboard
-    environment:
-      - DASHBOARD__FRONTEND__AUTHMODE=BrowserToken
-      - DASHBOARD__FRONTEND__BROWSERTOKEN=${ASPIRE_DASHBOARD_TOKEN}
-      - DASHBOARD__OTLP__AUTHMODE=Unsecured
-    ports:
-      - '18888:18888'
-    expose:
-      - '18889'
-    networks:
-      - metalrelease_shared_net
-    restart: unless-stopped
-
   minio:
     image: 'minio/minio:latest'
     container_name: metalrelease-minio
@@ -112,6 +83,74 @@ services:
       retries: 5
     restart: unless-stopped
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.115.0
+    container_name: metalrelease-otel-collector
+    command: ["--config", "/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+    ports:
+      - '4317:4317'
+      - '4318:4318'
+    networks:
+      - metalrelease_shared_net
+    depends_on:
+      - tempo
+      - loki
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: metalrelease-tempo
+    command: ["-config.file=/etc/tempo-config.yml"]
+    volumes:
+      - ./tempo-config.yml:/etc/tempo-config.yml:ro
+      - tempo_data:/var/tempo
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: metalrelease-loki
+    command: ["-config.file=/etc/loki/loki-config.yml"]
+    volumes:
+      - ./loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: metalrelease-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: metalrelease-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
 networks:
   metalrelease_shared_net:
     name: metalrelease_shared_net
@@ -124,7 +163,13 @@ volumes:
     name: metalrelease_zookeeper_logs
   kafka_data:
     name: metalrelease_kafka_data
-  seq_data:
-    name: metalrelease_seq_data
+  tempo_data:
+    name: metalrelease_tempo_data
+  loki_data:
+    name: metalrelease_loki_data
+  prometheus_data:
+    name: metalrelease_prometheus_data
+  grafana_data:
+    name: metalrelease_grafana_data
   minio_data:
     name: metalrelease_minio_data

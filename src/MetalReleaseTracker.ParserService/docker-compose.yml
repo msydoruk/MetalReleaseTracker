@@ -26,17 +26,16 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
       - Kafka__BootstrapServers=kafka:9092
       - Minio__Endpoint=minio:9001
       - Minio__AccessKey=${MINIO_ROOT_USER}
       - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
       - Minio__BucketName=${MINIO_BUCKET_NAME}
       - Minio__Region=us-east-1
-      - OpenTelemetry__OtlpEndpoint=http://aspire-dashboard:18889
-      - Serilog__WriteTo__2__Name=OpenTelemetry
-      - Serilog__WriteTo__2__Args__Endpoint=http://aspire-dashboard:18889
-      - Serilog__WriteTo__2__Args__Protocol=Grpc
+      - OpenTelemetry__OtlpEndpoint=http://otel-collector:4317
+      - Serilog__WriteTo__1__Name=OpenTelemetry
+      - Serilog__WriteTo__1__Args__Endpoint=http://otel-collector:4317
+      - Serilog__WriteTo__1__Args__Protocol=Grpc
       - TickerQ__Dashboard__Enabled=true
       - TickerQ__Dashboard__BasePath=/tickerq/dashboard
       - TickerQ__Dashboard__Username=${TICKERQ_DASHBOARD_USERNAME}

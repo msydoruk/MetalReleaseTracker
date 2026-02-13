@@ -55,7 +55,7 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 0 * * *",
+                        Expression = "0 0 */4 * * *",
                         Description = $"Daily album parsing for {parserDataSource.Name}",
                         Retries = 3,
                         RetryIntervals = [300, 900, 1800]
@@ -93,7 +93,7 @@ public class TickerQSchedulerService : BackgroundService
                 new CustomCronTicker
                 {
                     Function = functionName,
-                    Expression = "0 0 0 * * *",
+                    Expression = "0 0 */1 * * *",
                     Description = "Daily album publishing job",
                     Retries = 3,
                     RetryIntervals = [300, 900, 1800]
