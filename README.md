@@ -146,6 +146,8 @@ dotnet ef migrations add <Name> --context IdentityServerDbContext
 
 ## Deploy
 
+**Production**: https://metal-release.com
+
 GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
 - `all` | `shared-infrastructure` | `parser-service` | `catalog-sync-service` | `core-data-service` | `frontend`
 
@@ -160,6 +162,14 @@ GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
 | `ENV_PARSER_SERVICE` | ParserService .env |
 | `ENV_CATALOG_SYNC` | CatalogSyncService .env |
 | `ENV_CORE_DATA` | CoreDataService .env |
+
+### SSL Certificate
+
+- **Provider**: Let's Encrypt (certbot)
+- **Domain**: metal-release.com, www.metal-release.com
+- **Auto-renewal**: certbot timer (systemd)
+- **Nginx reverse proxy**: `/etc/nginx/sites-enabled/metaltracker` → localhost:3001
+- **Renewal check**: `sudo certbot renew --dry-run`
 
 ## Technology Stack
 
