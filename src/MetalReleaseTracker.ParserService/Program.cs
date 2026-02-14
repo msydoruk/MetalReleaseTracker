@@ -71,7 +71,7 @@ builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 builder.Services.AddScoped<AlbumParsingJob>();
 builder.Services.AddScoped<AlbumParsedPublisherJob>();
-builder.Services.AddScoped<MetalReleaseTracker.ParserService.Infrastructure.Jobs.TickerQ.TickerQJobFunctions>();
+builder.Services.AddScoped<TickerQJobFunctions>();
 builder.Services.AddHostedService<TickerQSchedulerService>();
 
 var app = builder.Build();

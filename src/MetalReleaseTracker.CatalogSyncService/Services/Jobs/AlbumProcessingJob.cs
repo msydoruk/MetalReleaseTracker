@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FluentValidation;
-using Hangfire;
 using MetalReleaseTracker.CatalogSyncService.Configurations;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities.Enums;
@@ -31,7 +30,6 @@ public class AlbumProcessingJob
         _logger = logger;
     }
 
-    [AutomaticRetry(Attempts = 10, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunProcessingJob(CancellationToken cancellationToken)
     {
         try

@@ -1,7 +1,7 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using TickerQ.Utilities.Base;
 
-namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs.TickerQ;
+namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
 public class TickerQJobFunctions
 {

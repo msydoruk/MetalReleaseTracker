@@ -1,11 +1,11 @@
-using MetalReleaseTracker.ParserService.Infrastructure.Data;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
+using MetalReleaseTracker.CatalogSyncService.Data;
+using MetalReleaseTracker.CatalogSyncService.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
 
-namespace MetalReleaseTracker.ParserService.Infrastructure.Scheduling.Extensions;
+namespace MetalReleaseTracker.CatalogSyncService.ServiceExtensions;
 
 public static class TickerQExtensions
 {
@@ -26,7 +26,7 @@ public static class TickerQExtensions
             tickerOptions.ConfigureScheduler(schedulerOptions =>
             {
                 schedulerOptions.MaxConcurrency = 10;
-                schedulerOptions.NodeIdentifier = "production-server-01";
+                schedulerOptions.NodeIdentifier = "catalogsync-server-01";
                 schedulerOptions.IdleWorkerTimeOut = TimeSpan.FromMinutes(2);
                 schedulerOptions.FallbackIntervalChecker = TimeSpan.FromSeconds(30);
                 schedulerOptions.SchedulerTimeZone = TimeZoneInfo.Utc;
@@ -50,7 +50,7 @@ public static class TickerQExtensions
 
             tickerOptions.AddOperationalStore(storeOptions =>
             {
-                storeOptions.UseTickerQDbContext<ParserServiceTickerQDbContext>(dbContextOptions =>
+                storeOptions.UseTickerQDbContext<CatalogSyncTickerQDbContext>(dbContextOptions =>
                 {
                     dbContextOptions.UseNpgsql(connectionString, cfg =>
                     {

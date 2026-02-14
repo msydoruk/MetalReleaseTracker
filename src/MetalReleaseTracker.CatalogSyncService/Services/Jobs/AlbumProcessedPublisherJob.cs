@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Hangfire;
 using MassTransit;
 using MetalReleaseTracker.CatalogSyncService.Configurations;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities;
@@ -32,7 +31,6 @@ public class AlbumProcessedPublisherJob
         _processedPublisherJobSettings = options.Value;
     }
 
-    [AutomaticRetry(Attempts = 10, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunPublisherJob(CancellationToken cancellationToken)
     {
         try

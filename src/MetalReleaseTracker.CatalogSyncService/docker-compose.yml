@@ -1,24 +1,4 @@
 services:
-  postgres:
-    image: postgres:15
-    container_name: metalrelease_postgres_catalogsync
-    restart: always
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - catalogsync-service-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   mongo:
     image: mongo:6.0
     container_name: metalrelease_mongodb_catalogsync
@@ -37,6 +17,26 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres:
+    image: 'postgres:15'
+    container_name: metalrelease_postgres_catalogsync
+    environment:
+      POSTGRES_USER: ${TICKERQ_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TICKERQ_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TICKERQ_POSTGRES_DB}
+    ports:
+      - '5435:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - catalogsync-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TICKERQ_POSTGRES_USER} -d ${TICKERQ_POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   catalogsync-service:
     build:
       context: ..
@@ -44,8 +44,7 @@ services:
     container_name: metalrelease_catalogsync_service
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - ConnectionStrings__TickerQConnectionString=Host=postgres;Port=5432;Database=${TICKERQ_POSTGRES_DB};Username=${TICKERQ_POSTGRES_USER};Password=${TICKERQ_POSTGRES_PASSWORD}
       - Kafka__BootstrapServers=kafka:9092
       - Kafka__ParserServiceConsumerGroup=albums-parsed-consumer-group
       - Kafka__ParserServiceTopic=albums-parsed-topic
@@ -57,12 +56,20 @@ services:
       - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
       - Minio__BucketName=${MINIO_BUCKET_NAME}
       - Minio__Region=us-east-1
+      - OpenTelemetry__OtlpEndpoint=http://otel-collector:4317
+      - Serilog__WriteTo__1__Name=OpenTelemetry
+      - Serilog__WriteTo__1__Args__Endpoint=http://otel-collector:4318
+      - Serilog__WriteTo__1__Args__Protocol=HttpProtobuf
+      - TickerQ__Dashboard__Enabled=true
+      - TickerQ__Dashboard__BasePath=/tickerq/dashboard
+      - TickerQ__Dashboard__Username=${TICKERQ_DASHBOARD_USERNAME}
+      - TickerQ__Dashboard__Password=${TICKERQ_DASHBOARD_PASSWORD}
     ports:
       - '5001:8080'
     depends_on:
-      postgres:
-        condition: service_healthy
       mongo:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     networks:
       - catalogsync-service-network

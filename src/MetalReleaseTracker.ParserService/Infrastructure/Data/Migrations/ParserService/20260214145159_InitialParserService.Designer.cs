@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.ParserService
 {
     [DbContext(typeof(ParserServiceDbContext))]
-    [Migration("20260129164735_InitialParserService")]
+    [Migration("20260214145159_InitialParserService")]
     partial class InitialParserService
     {
         /// <inheritdoc />

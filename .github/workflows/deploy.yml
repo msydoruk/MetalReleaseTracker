@@ -11,6 +11,9 @@ on:
           - all
           - shared-infrastructure
           - parser-service
+          - catalog-sync-service
+          - core-data-service
+          - frontend
 
 concurrency:
   group: deploy-production
@@ -39,6 +42,9 @@ jobs:
             -e "ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key" \
             --include='src/MetalReleaseTracker.SharedInfrastructure/***' \
             --include='src/MetalReleaseTracker.ParserService/***' \
+            --include='src/MetalReleaseTracker.CatalogSyncService/***' \
+            --include='src/MetalReleaseTracker.CoreDataService/***' \
+            --include='src/MetalReleaseTracker.Frontend/***' \
             --include='src/MetalReleaseTracker.SharedLibraries/***' \
             --include='src/MetalReleaseTracker.sln' \
             --include='src/' \
@@ -51,6 +57,8 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           echo '${{ secrets.ENV_SHARED_INFRA }}' > ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.SharedInfrastructure/.env
           echo '${{ secrets.ENV_PARSER_SERVICE }}' > ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.ParserService/.env
+          echo '${{ secrets.ENV_CATALOG_SYNC }}' > ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CatalogSyncService/.env
+          echo '${{ secrets.ENV_CORE_DATA }}' > ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService/.env
           SCRIPT
 
       - name: Deploy shared-infrastructure
@@ -76,6 +84,48 @@ jobs:
           docker compose up -d --build
           echo "Waiting for services to start..."
           sleep 20
+          docker compose ps
+          SCRIPT
+
+      - name: Deploy catalog-sync-service
+        if: inputs.service == 'catalog-sync-service' || inputs.service == 'all'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CatalogSyncService
+          docker compose down --remove-orphans
+          docker system prune -af
+          docker compose up -d --build
+          echo "Waiting for services to start..."
+          sleep 20
+          docker compose ps
+          SCRIPT
+
+      - name: Deploy core-data-service
+        if: inputs.service == 'core-data-service' || inputs.service == 'all'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService
+          docker compose down --remove-orphans
+          docker system prune -af
+          docker compose up -d --build
+          echo "Waiting for services to start..."
+          sleep 20
+          docker compose ps
+          SCRIPT
+
+      - name: Deploy frontend
+        if: inputs.service == 'frontend' || inputs.service == 'all'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
+          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.Frontend
+          docker compose down --remove-orphans
+          docker system prune -af
+          docker compose up -d --build
+          echo "Waiting for services to start..."
+          sleep 10
           docker compose ps
           SCRIPT
 

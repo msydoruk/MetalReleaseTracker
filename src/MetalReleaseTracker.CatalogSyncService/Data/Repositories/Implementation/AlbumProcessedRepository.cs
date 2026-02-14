@@ -1,5 +1,4 @@
-﻿using Hangfire.States;
-using MetalReleaseTracker.CatalogSyncService.Configurations;
+﻿using MetalReleaseTracker.CatalogSyncService.Configurations;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities.Enums;
 using MetalReleaseTracker.CatalogSyncService.Data.Repositories.Interfaces;

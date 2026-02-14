@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metalrelease_frontend
+    ports:
+      - '3001:80'
+    networks:
+      - metalrelease_shared_net
+    restart: unless-stopped
+
+networks:
+  metalrelease_shared_net:
+    external: true

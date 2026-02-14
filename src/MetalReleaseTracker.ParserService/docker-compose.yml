@@ -26,6 +26,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__TickerQConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - Kafka__BootstrapServers=kafka:9092
       - Minio__Endpoint=minio:9001
       - Minio__AccessKey=${MINIO_ROOT_USER}

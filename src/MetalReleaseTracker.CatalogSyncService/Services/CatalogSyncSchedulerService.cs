@@ -1,38 +1,104 @@
-using Hangfire;
-using MetalReleaseTracker.CatalogSyncService.Services.Jobs;
+using MetalReleaseTracker.CatalogSyncService.Data;
+using MetalReleaseTracker.CatalogSyncService.Data.Entities;
+using TickerQ.Utilities.Interfaces.Managers;
 
 namespace MetalReleaseTracker.CatalogSyncService.Services
 {
     public class CatalogSyncSchedulerService : BackgroundService
     {
-        private const string AlbumProcessingJobId = "AlbumProcessingJob";
-        private const string AlbumProcessedPublisherJobId = "AlbumProcessedPublisherJob";
-        private readonly IRecurringJobManager _recurringJobManager;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<CatalogSyncSchedulerService> _logger;
 
         public CatalogSyncSchedulerService(
-            IRecurringJobManager recurringJobManager)
+            IServiceScopeFactory serviceScopeFactory,
+            ILogger<CatalogSyncSchedulerService> logger)
         {
-            _recurringJobManager = recurringJobManager;
+            _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            _recurringJobManager.AddOrUpdate<AlbumProcessingJob>(
-                AlbumProcessingJobId,
-                job => job.RunProcessingJob(cancellationToken),
-                Cron.Daily);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var cronTickerManager = scope.ServiceProvider.GetRequiredService<ICronTickerManager<CustomCronTicker>>();
+            var tickerQDbContext = scope.ServiceProvider.GetRequiredService<CatalogSyncTickerQDbContext>();
 
-            _recurringJobManager.AddOrUpdate<AlbumProcessedPublisherJob>(
-                AlbumProcessedPublisherJobId,
-                job => job.RunPublisherJob(cancellationToken),
-                Cron.Daily);
-
-            return base.StartAsync(cancellationToken);
+            await RegisterAlbumProcessingJob(cronTickerManager, tickerQDbContext, cancellationToken);
+            await RegisterAlbumProcessedPublisherJob(cronTickerManager, tickerQDbContext, cancellationToken);
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        private async Task RegisterAlbumProcessingJob(
+            ICronTickerManager<CustomCronTicker> cronTickerManager,
+            CatalogSyncTickerQDbContext tickerQDbContext,
+            CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            try
+            {
+                var functionName = "AlbumProcessingJob";
+
+                var existingJob = tickerQDbContext.Set<CustomCronTicker>()
+                    .FirstOrDefault(job => job.Function == functionName);
+
+                if (existingJob != null)
+                {
+                    _logger.LogDebug("Skipping job {FunctionName} - already registered", functionName);
+                    return;
+                }
+
+                await cronTickerManager.AddAsync(
+                    new CustomCronTicker
+                    {
+                        Function = functionName,
+                        Expression = "0 0 */4 * * *",
+                        Description = "Album processing job - runs every 4 hours",
+                        Retries = 3,
+                        RetryIntervals = [300, 900, 1800]
+                    },
+                    cancellationToken);
+
+                _logger.LogInformation("Scheduled album processing job");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to schedule album processing job");
+            }
+        }
+
+        private async Task RegisterAlbumProcessedPublisherJob(
+            ICronTickerManager<CustomCronTicker> cronTickerManager,
+            CatalogSyncTickerQDbContext tickerQDbContext,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var functionName = "AlbumProcessedPublisherJob";
+
+                var existingJob = tickerQDbContext.Set<CustomCronTicker>()
+                    .FirstOrDefault(job => job.Function == functionName);
+
+                if (existingJob != null)
+                {
+                    _logger.LogDebug("Skipping job {FunctionName} - already registered", functionName);
+                    return;
+                }
+
+                await cronTickerManager.AddAsync(
+                    new CustomCronTicker
+                    {
+                        Function = functionName,
+                        Expression = "0 0 */1 * * *",
+                        Description = "Album processed publisher job - runs every hour",
+                        Retries = 3,
+                        RetryIntervals = [300, 900, 1800]
+                    },
+                    cancellationToken);
+
+                _logger.LogInformation("Scheduled album processed publisher job");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to schedule album processed publisher job");
+            }
         }
     }
 }

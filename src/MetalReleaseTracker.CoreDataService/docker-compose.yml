@@ -27,7 +27,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__CoreDataServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - OpenTelemetry__OtlpEndpoint=http://otel-collector:4317
+      - Serilog__WriteTo__1__Name=OpenTelemetry
+      - Serilog__WriteTo__1__Args__Endpoint=http://otel-collector:4318
+      - Serilog__WriteTo__1__Args__Protocol=HttpProtobuf
       - Kafka__BootstrapServers=kafka:9092
       - Kafka__CatalogSyncServiceConsumerGroup=albums-processed-consumer-group
       - Kafka__CatalogSyncServiceTopic=albums-processed-topic
