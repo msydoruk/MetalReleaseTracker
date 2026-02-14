@@ -49,7 +49,7 @@ namespace MetalReleaseTracker.CatalogSyncService.Services
                     new CustomCronTicker
                     {
                         Function = functionName,
-                        Expression = "0 0 */4 * * *",
+                        Expression = "0 0 */1 * * *",
                         Description = "Album processing job - runs every 4 hours",
                         Retries = 3,
                         RetryIntervals = [300, 900, 1800]
