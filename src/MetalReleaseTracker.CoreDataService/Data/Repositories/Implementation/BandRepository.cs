@@ -20,7 +20,7 @@ public class BandRepository : IBandRepository
         var existingBandEntity =
             await _dbContext.Bands
                 .AsNoTracking()
-                .FirstOrDefaultAsync(band => band.Name == bandName, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(band => band.Name.ToUpper() == bandName.ToUpper(), cancellationToken: cancellationToken);
 
         if (existingBandEntity != null)
         {
