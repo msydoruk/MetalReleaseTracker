@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
@@ -82,16 +83,17 @@ public class DrakkarParser : IParser
         private async Task<AlbumParsedEvent> ParseAlbumDetails(string albumUrl, CancellationToken cancellationToken)
         {
             var htmlDocument = await LoadHtmlDocument(albumUrl, cancellationToken);
+            var jsonLd = ExtractJsonLd(htmlDocument);
 
             var (bandName, albumName, mediaTypeRaw) = ParseTitle(htmlDocument);
-            var sku = ParseSku(htmlDocument, albumUrl);
+            var sku = ParseSku(jsonLd, htmlDocument, albumUrl);
             var price = ParsePrice(htmlDocument);
-            var photoUrl = ParsePhotoUrl(htmlDocument);
+            var photoUrl = ParsePhotoUrl(jsonLd, htmlDocument);
             var media = ParseDrakkarMediaType(mediaTypeRaw);
-            var label = ParseLabel(htmlDocument);
+            var label = ParseLabel(jsonLd, htmlDocument);
             var genre = ParseGenre(htmlDocument);
             var releaseDate = ParseReleaseDate(htmlDocument);
-            var description = ParseDescription(htmlDocument);
+            var description = ParseDescription(jsonLd, htmlDocument);
 
             return new AlbumParsedEvent
             {
@@ -110,6 +112,54 @@ public class DrakkarParser : IParser
                 Description = description,
                 Status = null
             };
+        }
+
+        private JsonElement? ExtractJsonLd(HtmlDocument htmlDocument)
+        {
+            var scriptNodes = htmlDocument.DocumentNode.SelectNodes("//script[@type='application/ld+json']");
+            if (scriptNodes == null)
+            {
+                return null;
+            }
+
+            foreach (var scriptNode in scriptNodes)
+            {
+                var json = scriptNode.InnerText?.Trim();
+                if (string.IsNullOrEmpty(json))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var doc = JsonDocument.Parse(json);
+                    var root = doc.RootElement;
+
+                    if (root.TryGetProperty("@type", out var typeElement) &&
+                        typeElement.GetString() == "Product")
+                    {
+                        return root;
+                    }
+
+                    if (root.TryGetProperty("@graph", out var graph) &&
+                        graph.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in graph.EnumerateArray())
+                        {
+                            if (item.TryGetProperty("@type", out var itemType) &&
+                                itemType.GetString() == "Product")
+                            {
+                                return item;
+                            }
+                        }
+                    }
+                }
+                catch (JsonException)
+                {
+                }
+            }
+
+            return null;
         }
 
         private (string BandName, string AlbumName, string MediaTypeRaw) ParseTitle(HtmlDocument htmlDocument)
@@ -216,8 +266,20 @@ public class DrakkarParser : IParser
             return match.Success ? AlbumParsingHelper.ParsePrice(match.Value.Replace(',', '.')) : 0.0f;
         }
 
-        private string ParseSku(HtmlDocument htmlDocument, string albumUrl)
+        private string ParseSku(JsonElement? jsonLd, HtmlDocument htmlDocument, string albumUrl)
         {
+            if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("sku", out var skuElement))
+            {
+                var skuValue = skuElement.ValueKind == JsonValueKind.Number
+                    ? skuElement.GetInt64().ToString()
+                    : skuElement.GetString();
+
+                if (!string.IsNullOrEmpty(skuValue))
+                {
+                    return skuValue;
+                }
+            }
+
             var skuNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='sku']");
             var sku = skuNode?.InnerText?.Trim();
 
@@ -230,24 +292,33 @@ public class DrakkarParser : IParser
             return slugMatch.Success ? slugMatch.Groups[1].Value : albumUrl;
         }
 
-        private string ParsePhotoUrl(HtmlDocument htmlDocument)
+        private string ParsePhotoUrl(JsonElement? jsonLd, HtmlDocument htmlDocument)
         {
-            var galleryLink = htmlDocument.DocumentNode.SelectSingleNode(
-                "//div[contains(@class,'woocommerce-product-gallery__image')]//a");
-            var href = galleryLink?.GetAttributeValue("href", null);
-
-            if (!string.IsNullOrEmpty(href))
+            if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("image", out var imageElement))
             {
-                return href;
+                var imageUrl = imageElement.ValueKind == JsonValueKind.Array
+                    ? imageElement[0].GetString()
+                    : imageElement.GetString();
+
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    return imageUrl;
+                }
             }
 
             var imgNode = htmlDocument.DocumentNode.SelectSingleNode(
-                "//div[contains(@class,'woocommerce-product-gallery__image')]//img");
-            var src = imgNode?.GetAttributeValue("src", null);
+                "//div[contains(@class,'woocommerce-product-gallery')]//img");
 
-            if (!string.IsNullOrEmpty(src))
+            if (imgNode != null)
             {
-                return Regex.Replace(src, @"-\d+x\d+(?=\.\w+$)", string.Empty);
+                var dataSrc = imgNode.GetAttributeValue("data-src", null)
+                    ?? imgNode.GetAttributeValue("data-large_image", null)
+                    ?? imgNode.GetAttributeValue("src", null);
+
+                if (!string.IsNullOrEmpty(dataSrc) && !dataSrc.StartsWith("data:"))
+                {
+                    return Regex.Replace(dataSrc, @"-\d+x\d+(?=\.\w+$)", string.Empty);
+                }
             }
 
             return string.Empty;
@@ -255,71 +326,75 @@ public class DrakkarParser : IParser
 
         private string ParseGenre(HtmlDocument htmlDocument)
         {
-            var attributeRows = htmlDocument.DocumentNode.SelectNodes(
-                "//table[contains(@class,'woocommerce-product-attributes')]//tr");
+            var lines = GetStructuredTextLines(htmlDocument,
+                "//div[contains(@class,'woocommerce-product-details__short-description')]");
 
-            if (attributeRows != null)
+            foreach (var line in lines)
             {
-                foreach (var row in attributeRows)
+                if (!string.IsNullOrWhiteSpace(line)
+                    && !line.Contains("Origin", StringComparison.OrdinalIgnoreCase)
+                    && !line.Contains("Label", StringComparison.OrdinalIgnoreCase)
+                    && !line.Contains("Release Year", StringComparison.OrdinalIgnoreCase)
+                    && !line.Contains("Weight", StringComparison.OrdinalIgnoreCase))
                 {
-                    var text = HtmlEntity.DeEntitize(row.InnerText?.Trim() ?? string.Empty);
-                    if (!text.Contains("Origin", StringComparison.OrdinalIgnoreCase)
-                        && !text.Contains("Label", StringComparison.OrdinalIgnoreCase)
-                        && !text.Contains("Release Year", StringComparison.OrdinalIgnoreCase)
-                        && !text.Contains("Weight", StringComparison.OrdinalIgnoreCase)
-                        && !string.IsNullOrWhiteSpace(text))
-                    {
-                        return text;
-                    }
+                    return line.Trim();
                 }
             }
 
-            var shortDesc = GetShortDescriptionText(htmlDocument);
-            if (!string.IsNullOrEmpty(shortDesc))
+            var attrLines = GetStructuredTextLines(htmlDocument,
+                "//table[contains(@class,'woocommerce-product-attributes')]");
+
+            foreach (var line in attrLines)
             {
-                var lines = shortDesc.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
+                if (!string.IsNullOrWhiteSpace(line)
+                    && !line.Contains("Origin", StringComparison.OrdinalIgnoreCase)
+                    && !line.Contains("Label", StringComparison.OrdinalIgnoreCase)
+                    && !line.Contains("Release Year", StringComparison.OrdinalIgnoreCase)
+                    && !line.Contains("Weight", StringComparison.OrdinalIgnoreCase))
                 {
-                    var trimmed = line.Trim();
-                    if (!string.IsNullOrEmpty(trimmed)
-                        && !trimmed.StartsWith("Origin", StringComparison.OrdinalIgnoreCase)
-                        && !trimmed.StartsWith("Label", StringComparison.OrdinalIgnoreCase)
-                        && !trimmed.StartsWith("Release", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return trimmed;
-                    }
+                    return line.Trim();
                 }
             }
 
             return string.Empty;
         }
 
-        private string ParseLabel(HtmlDocument htmlDocument)
+        private string ParseLabel(JsonElement? jsonLd, HtmlDocument htmlDocument)
         {
-            var pageText = HtmlEntity.DeEntitize(htmlDocument.DocumentNode.InnerText ?? string.Empty);
-            var match = Regex.Match(pageText, @"Label\s*:\s*(.+?)(?:\n|\r|$)", RegexOptions.IgnoreCase);
-
-            if (match.Success)
+            if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("brand", out var brandElement))
             {
-                return match.Groups[1].Value.Trim();
-            }
-
-            var attributeRows = htmlDocument.DocumentNode.SelectNodes(
-                "//table[contains(@class,'woocommerce-product-attributes')]//tr");
-
-            if (attributeRows != null)
-            {
-                foreach (var row in attributeRows)
+                if (brandElement.ValueKind == JsonValueKind.Array && brandElement.GetArrayLength() > 0)
                 {
-                    var text = HtmlEntity.DeEntitize(row.InnerText?.Trim() ?? string.Empty);
-                    if (text.Contains("Label", StringComparison.OrdinalIgnoreCase))
+                    var firstBrand = brandElement[0];
+                    if (firstBrand.TryGetProperty("name", out var nameElement))
                     {
-                        var labelMatch = Regex.Match(text, @"Label\s*:\s*(.+)", RegexOptions.IgnoreCase);
-                        if (labelMatch.Success)
+                        var brandName = nameElement.GetString();
+                        if (!string.IsNullOrEmpty(brandName))
                         {
-                            return labelMatch.Groups[1].Value.Trim();
+                            return brandName;
                         }
                     }
+                }
+                else if (brandElement.ValueKind == JsonValueKind.Object &&
+                         brandElement.TryGetProperty("name", out var nameEl))
+                {
+                    var brandName = nameEl.GetString();
+                    if (!string.IsNullOrEmpty(brandName))
+                    {
+                        return brandName;
+                    }
+                }
+            }
+
+            var lines = GetStructuredTextLines(htmlDocument,
+                "//div[contains(@class,'woocommerce-product-details__short-description')]");
+
+            foreach (var line in lines)
+            {
+                var match = Regex.Match(line, @"Label\s*:\s*(.+)", RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    return match.Groups[1].Value.Trim();
                 }
             }
 
@@ -328,12 +403,18 @@ public class DrakkarParser : IParser
 
         private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
         {
-            var pageText = HtmlEntity.DeEntitize(htmlDocument.DocumentNode.InnerText ?? string.Empty);
-            var match = Regex.Match(pageText, @"Release Year\s*:\s*(\d{4})", RegexOptions.IgnoreCase);
+            var allLines = GetStructuredTextLines(htmlDocument,
+                "//div[contains(@class,'woocommerce-product-details__short-description')]");
+            allLines.AddRange(GetStructuredTextLines(htmlDocument,
+                "//table[contains(@class,'woocommerce-product-attributes')]"));
 
-            if (match.Success)
+            foreach (var line in allLines)
             {
-                return AlbumParsingHelper.ParseYear(match.Groups[1].Value);
+                var match = Regex.Match(line, @"Release Year\s*:\s*(\d{4})", RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    return AlbumParsingHelper.ParseYear(match.Groups[1].Value);
+                }
             }
 
             var categoryLinks = htmlDocument.DocumentNode.SelectNodes("//span[@class='posted_in']//a");
@@ -352,8 +433,17 @@ public class DrakkarParser : IParser
             return DateTime.MinValue;
         }
 
-        private string ParseDescription(HtmlDocument htmlDocument)
+        private string ParseDescription(JsonElement? jsonLd, HtmlDocument htmlDocument)
         {
+            if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("description", out var descElement))
+            {
+                var description = descElement.GetString();
+                if (!string.IsNullOrEmpty(description))
+                {
+                    return HtmlEntity.DeEntitize(description.Trim());
+                }
+            }
+
             var descNode = htmlDocument.DocumentNode.SelectSingleNode(
                 "//div[contains(@class,'woocommerce-product-details__short-description')]");
 
@@ -364,12 +454,6 @@ public class DrakkarParser : IParser
                 {
                     return text;
                 }
-            }
-
-            var tabDesc = htmlDocument.DocumentNode.SelectSingleNode("//div[@id='tab-description']");
-            if (tabDesc != null)
-            {
-                return HtmlEntity.DeEntitize(tabDesc.InnerText?.Trim() ?? string.Empty);
             }
 
             return string.Empty;
@@ -398,17 +482,27 @@ public class DrakkarParser : IParser
             return (null, false)!;
         }
 
-        private string GetShortDescriptionText(HtmlDocument htmlDocument)
+        private List<string> GetStructuredTextLines(HtmlDocument htmlDocument, string xpath)
         {
-            var descNode = htmlDocument.DocumentNode.SelectSingleNode(
-                "//div[contains(@class,'woocommerce-product-details__short-description')]");
-
-            if (descNode != null)
+            var node = htmlDocument.DocumentNode.SelectSingleNode(xpath);
+            if (node == null)
             {
-                return HtmlEntity.DeEntitize(descNode.InnerText?.Trim() ?? string.Empty);
+                return new List<string>();
             }
 
-            return string.Empty;
+            var html = node.InnerHtml;
+            html = Regex.Replace(
+                html,
+                @"<\s*/?\s*(p|div|br|li|tr|th|td|h[1-6])\b[^>]*>",
+                "\n",
+                RegexOptions.IgnoreCase);
+            html = Regex.Replace(html, @"<[^>]+>", string.Empty);
+            html = HtmlEntity.DeEntitize(html);
+
+            return html.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .ToList();
         }
 
         private async Task<HtmlDocument> LoadHtmlDocument(string url, CancellationToken cancellationToken)
