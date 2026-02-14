@@ -17,6 +17,22 @@ public class DrakkarParser : IParser
     {
         private static readonly char[] TitleSeparators = { '\u2013', '\u2014', '-' };
 
+        private static string StripHtml(string html)
+        {
+            if (string.IsNullOrEmpty(html))
+            {
+                return html;
+            }
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+            var text = doc.DocumentNode.InnerText ?? string.Empty;
+            text = HtmlEntity.DeEntitize(text);
+            text = Regex.Replace(text, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", string.Empty);
+
+            return text.Trim();
+        }
+
         private static string CapitalizeFirstLetter(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -450,7 +466,7 @@ public class DrakkarParser : IParser
                 var description = descElement.GetString();
                 if (!string.IsNullOrEmpty(description))
                 {
-                    return HtmlEntity.DeEntitize(description.Trim());
+                    return StripHtml(description);
                 }
             }
 
