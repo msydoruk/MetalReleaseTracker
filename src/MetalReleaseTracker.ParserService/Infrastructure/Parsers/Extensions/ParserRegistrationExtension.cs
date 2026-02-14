@@ -22,6 +22,10 @@ public static class ParserRegistrationExtension
             .As<IParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.OsmoseProductions));
 
+        builder.RegisterType<DrakkarParser>()
+            .As<IParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.Drakkar));
+
         builder.Register<Func<DistributorCode, IParser>>(context =>
         {
             var metaParsers = context.Resolve<IEnumerable<Meta<IParser, ParserMetadata>>>();
