@@ -47,6 +47,22 @@ services:
       retries: 5
     restart: unless-stopped
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: metalrelease-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - metalrelease_shared_net
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        kafka-topics --create --if-not-exists --topic albums-parsed-topic --partitions 1 --replication-factor 1 --bootstrap-server kafka:9092
+        kafka-topics --create --if-not-exists --topic albums-processed-topic --partitions 1 --replication-factor 1 --bootstrap-server kafka:9092
+        echo 'Topics created successfully'
+    restart: "no"
+
   kafdrop:
     image: 'obsidiandynamics/kafdrop'
     container_name: metalrelease-kafdrop
