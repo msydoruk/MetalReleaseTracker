@@ -17,6 +17,16 @@ public class DrakkarParser : IParser
     {
         private static readonly char[] TitleSeparators = { '\u2013', '\u2014', '-' };
 
+        private static string CapitalizeFirstLetter(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            return char.ToUpper(text[0]) + text[1..];
+        }
+
         private readonly IHtmlDocumentLoader _htmlDocumentLoader;
         private readonly GeneralParserSettings _generalParserSettings;
         private readonly ILogger<DrakkarParser> _logger;
@@ -210,10 +220,10 @@ public class DrakkarParser : IParser
 
             if (parts.Length == 2)
             {
-                return (bandName, mediaTypeRaw, string.Empty);
+                return (bandName, CapitalizeFirstLetter(mediaTypeRaw), string.Empty);
             }
 
-            var albumName = string.Join(" - ", parts[1..^1]).Trim();
+            var albumName = CapitalizeFirstLetter(string.Join(" - ", parts[1..^1]).Trim());
             return (bandName, albumName, mediaTypeRaw);
         }
 
