@@ -160,46 +160,20 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth/callback" element={<GoogleCallback />} />
             
+            {/* Public catalog routes */}
+            <Route path="/" element={<Navigate to="/albums" replace />} />
+            <Route path="/albums" element={<AlbumsPage />} />
+            <Route path="/bands" element={<BandsPage />} />
+            <Route path="/distributors" element={<DistributorsPage />} />
+
             {/* Protected routes */}
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Navigate to="/albums" replace />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/albums" 
-              element={
-                <ProtectedRoute>
-                  <AlbumsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/bands" 
-              element={
-                <ProtectedRoute>
-                  <BandsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/distributors" 
-              element={
-                <ProtectedRoute>
-                  <DistributorsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
+            <Route
+              path="/profile"
               element={
                 <ProtectedRoute>
                   <ProfilePage />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="/signin-callback" element={<LoginCallback />} />
           </Routes>

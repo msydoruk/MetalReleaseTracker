@@ -11,7 +11,6 @@ public static class EndpointExtensions
     {
         MapAuthenticationEndpoints(app);
         var catalogGroup = app.MapGroup(string.Empty);
-        catalogGroup.RequireAuthorization();
         MapCatalogEndpoints(catalogGroup);
 
         return app;

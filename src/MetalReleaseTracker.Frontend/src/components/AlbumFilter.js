@@ -244,7 +244,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
             >
               Release Date Range
             </FormLabel>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
               <DatePicker
                 label="From"
                 value={filters.releaseDateFrom}
@@ -582,12 +582,13 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
             >
               Sort By
             </FormLabel>
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               gap: 2,
-              alignItems: 'center'
+              alignItems: { xs: 'stretch', sm: 'center' },
+              flexDirection: { xs: 'column', sm: 'row' }
             }}>
-              <Box sx={{ 
+              <Box sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 p: 1.5,
                 borderRadius: 1,
@@ -599,7 +600,9 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                   value={filters.sortBy}
                   onChange={handleInputChange}
                   sx={{
-                    justifyContent: 'space-between',
+                    justifyContent: { xs: 'flex-start', sm: 'space-between' },
+                    flexWrap: 'wrap',
+                    gap: { xs: 0.5, sm: 0 },
                     '& .MuiFormControlLabel-root': {
                       margin: 0,
                     },

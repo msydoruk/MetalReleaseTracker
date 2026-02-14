@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Menu, 
-  MenuItem, 
-  Box, 
-  Avatar, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Box,
+  Avatar,
   Container,
   Drawer,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Divider,
@@ -182,20 +182,14 @@ const Header = () => {
       
       <List>
         {navItems.map((item) => (
-          <ListItem 
-            button 
-            key={item.title} 
-            component={Link} 
+          <ListItemButton
+            key={item.title}
+            component={Link}
             to={item.path}
-            sx={{
-              '&:hover': {
-                bgcolor: 'action.hover'
-              }
-            }}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.title} />
-          </ListItem>
+          </ListItemButton>
         ))}
       </List>
       
@@ -203,63 +197,28 @@ const Header = () => {
         <>
           <Divider />
           <List>
-            <ListItem 
-              button 
-              component={Link}
-              to="/profile"
-              sx={{
-                '&:hover': {
-                  bgcolor: 'action.hover'
-                }
-              }}
-            >
+            <ListItemButton component={Link} to="/profile">
               <ListItemIcon><AccountCircleIcon /></ListItemIcon>
               <ListItemText primary="Profile" />
-            </ListItem>
-            <ListItem 
-              button 
-              onClick={handleLogout}
-              sx={{
-                '&:hover': {
-                  bgcolor: 'action.hover'
-                }
-              }}
-            >
+            </ListItemButton>
+            <ListItemButton onClick={handleLogout}>
               <ListItemIcon><LogoutIcon color="error" /></ListItemIcon>
               <ListItemText primary="Sign Out" primaryTypographyProps={{ color: 'error' }} />
-            </ListItem>
+            </ListItemButton>
           </List>
         </>
       ) : (
         <>
           <Divider />
           <List>
-            <ListItem 
-              button 
-              component={Link}
-              to="/login"
-              sx={{
-                '&:hover': {
-                  bgcolor: 'action.hover'
-                }
-              }}
-            >
+            <ListItemButton component={Link} to="/login">
               <ListItemIcon><LoginIcon /></ListItemIcon>
               <ListItemText primary="Log In" />
-            </ListItem>
-            <ListItem 
-              button 
-              component={Link}
-              to="/register"
-              sx={{
-                '&:hover': {
-                  bgcolor: 'action.hover'
-                }
-              }}
-            >
+            </ListItemButton>
+            <ListItemButton component={Link} to="/register">
               <ListItemIcon><RegisterIcon /></ListItemIcon>
               <ListItemText primary="Sign Up" />
-            </ListItem>
+            </ListItemButton>
           </List>
         </>
       )}
@@ -379,7 +338,8 @@ const Header = () => {
                 display: 'flex',
                 fontFamily: 'monospace',
                 fontWeight: 700,
-                letterSpacing: '.1rem',
+                letterSpacing: { xs: 0, sm: '.1rem' },
+                fontSize: { xs: '0.85rem', sm: '1.25rem' },
                 color: 'inherit',
                 textDecoration: 'none',
               }}
