@@ -40,6 +40,7 @@ services:
       - Minio__BucketName=${MINIO_BUCKET_NAME}
       - Minio__Region=us-east-1
       - Minio__PresignedUrlExpiryDays=1
+      - Minio__PublicEndpoint=/storage
       - Authentication__Google__ClientId=${GOOGLE_CLIENT_ID}
       - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
       - Authentication__Jwt__Key=${JWT_KEY}

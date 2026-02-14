@@ -11,6 +11,8 @@ public class MinioFileStorageConfig
     public string BucketName { get; set; }
 
     public string Region { get; set; }
-    
+
+    public string PublicEndpoint { get; set; }
+
     public int PresignedUrlExpiryDays { get; set; }
 }
