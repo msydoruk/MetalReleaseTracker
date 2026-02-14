@@ -71,6 +71,8 @@ jobs:
           ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.ParserService
+          docker compose down --remove-orphans
+          docker system prune -af
           docker compose up -d --build
           echo "Waiting for services to start..."
           sleep 20
