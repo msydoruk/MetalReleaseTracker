@@ -55,7 +55,7 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 */4 * * *",
+                        Expression = "0 0 */24 * * *",
                         Description = $"Daily album parsing for {parserDataSource.Name}",
                         Retries = 3,
                         RetryIntervals = [300, 900, 1800]
