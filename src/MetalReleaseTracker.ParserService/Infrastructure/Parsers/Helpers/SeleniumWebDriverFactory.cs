@@ -1,5 +1,6 @@
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
+using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
@@ -8,10 +9,19 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
 {
     private readonly IUserAgentProvider _userAgentProvider;
+    private readonly ILogger<SeleniumWebDriverFactory> _logger;
 
-    public SeleniumWebDriverFactory(IUserAgentProvider userAgentProvider)
+    private static readonly string[] ChromeDriverSearchPaths =
+    [
+        "/usr/bin/chromedriver",
+        "/usr/lib/chromium/chromedriver",
+        "/usr/lib/chromium-browser/chromedriver"
+    ];
+
+    public SeleniumWebDriverFactory(IUserAgentProvider userAgentProvider, ILogger<SeleniumWebDriverFactory> logger)
     {
         _userAgentProvider = userAgentProvider;
+        _logger = logger;
     }
 
     public IWebDriver CreateDriver()
@@ -22,6 +32,7 @@ public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
         if (!string.IsNullOrEmpty(chromeBin))
         {
             options.BinaryLocation = chromeBin;
+            _logger.LogInformation("Using Chrome binary: {ChromeBin}", chromeBin);
         }
 
         options.AddArgument("--headless=new");
@@ -34,15 +45,20 @@ public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
         options.AddArgument("--disable-extensions");
         options.AddArgument("--window-size=1920,1080");
 
-        var driverPath = Environment.GetEnvironmentVariable("CHROMEDRIVER_PATH");
+        var driverPath = FindChromeDriver();
         ChromeDriver driver;
-        if (!string.IsNullOrEmpty(driverPath))
+
+        if (driverPath != null)
         {
-            var service = ChromeDriverService.CreateDefaultService(Path.GetDirectoryName(driverPath)!, Path.GetFileName(driverPath));
+            _logger.LogInformation("Using ChromeDriver at: {DriverPath}", driverPath);
+            var service = ChromeDriverService.CreateDefaultService(
+                Path.GetDirectoryName(driverPath)!,
+                Path.GetFileName(driverPath));
             driver = new ChromeDriver(service, options);
         }
         else
         {
+            _logger.LogInformation("ChromeDriver not found at known paths, using Selenium auto-detection.");
             driver = new ChromeDriver(options);
         }
 
@@ -50,5 +66,24 @@ public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
 
         return driver;
+    }
+
+    private string? FindChromeDriver()
+    {
+        var envPath = Environment.GetEnvironmentVariable("CHROMEDRIVER_PATH");
+        if (!string.IsNullOrEmpty(envPath) && File.Exists(envPath))
+        {
+            return envPath;
+        }
+
+        foreach (var path in ChromeDriverSearchPaths)
+        {
+            if (File.Exists(path))
+            {
+                return path;
+            }
+        }
+
+        return null;
     }
 }
