@@ -163,7 +163,7 @@ function App() {
             <Route path="/auth/callback" element={<GoogleCallback />} />
             
             {/* Public catalog routes */}
-            <Route path="/" element={<Navigate to="/albums" replace />} />
+            <Route path="/" element={<AlbumsPage isHome />} />
             <Route path="/albums" element={<AlbumsPage />} />
             <Route path="/bands" element={<BandsPage />} />
             <Route path="/distributors" element={<DistributorsPage />} />

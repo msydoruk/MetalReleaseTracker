@@ -9,9 +9,10 @@ import {
   Paper,
   Drawer,
   IconButton,
-  Button
+  Button,
+  Divider
 } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import AlbumCard from '../components/AlbumCard';
@@ -21,8 +22,13 @@ import { fetchAlbums } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
 
-const AlbumsPage = () => {
-  usePageMeta('Albums — Ukrainian Metal Releases', 'Browse Ukrainian metal releases available from foreign distributors. Filter by band, format, price. Vinyl, CD, cassette — order directly from the source.');
+const AlbumsPage = ({ isHome = false }) => {
+  usePageMeta(
+    isHome
+      ? 'Metal Release Tracker — Ukrainian Metal Releases from Foreign Distributors'
+      : 'Albums — Ukrainian Metal Releases',
+    'Browse Ukrainian metal releases available from foreign distributors. Filter by band, format, price. Vinyl, CD, cassette — order directly from the source.'
+  );
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -105,8 +111,29 @@ const AlbumsPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
+      {isHome && (
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mb: 1.5 }}>
+            Metal Release Tracker {'\uD83C\uDDFA\uD83C\uDDE6'}
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto', mb: 2, lineHeight: 1.6 }}>
+            Ukrainian metal releases from foreign distributors and labels — all in one place.
+            Find vinyl, CD, and tape releases and order directly from the source.
+          </Typography>
+          <Button
+            component={Link}
+            to="/about"
+            variant="text"
+            color="primary"
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            Learn more about the project
+          </Button>
+          <Divider sx={{ mt: 2 }} />
+        </Box>
+      )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
+        <Typography variant="h4" component={isHome ? 'h2' : 'h1'}>
           Metal Releases
         </Typography>
         <Button 
