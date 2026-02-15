@@ -328,24 +328,39 @@ const Header = () => {
             </IconButton>
             
             {/* Logo and title */}
-            <Typography
-              variant="h6"
-              noWrap
-              component={Link}
-              to="/"
-              sx={{
-                mr: 2,
-                display: 'flex',
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                letterSpacing: { xs: 0, sm: '.1rem' },
-                fontSize: { xs: '0.85rem', sm: '1.25rem' },
-                color: 'inherit',
-                textDecoration: 'none',
-              }}
-            >
-              METAL RELEASE TRACKER
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+              <Typography
+                variant="h6"
+                noWrap
+                component={Link}
+                to="/"
+                sx={{
+                  display: 'flex',
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  letterSpacing: { xs: 0, sm: '.1rem' },
+                  fontSize: { xs: '0.85rem', sm: '1.25rem' },
+                  color: 'inherit',
+                  textDecoration: 'none',
+                }}
+              >
+                METAL RELEASE TRACKER
+              </Typography>
+              <Tooltip title="Ukrainian metal releases sold by foreign distributors">
+                <Box
+                  component="span"
+                  sx={{
+                    ml: 1.5,
+                    fontSize: { xs: '1.2rem', sm: '1.5rem' },
+                    lineHeight: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {'\uD83C\uDDFA\uD83C\uDDE6'}
+                </Box>
+              </Tooltip>
+            </Box>
             
             {/* Desktop navigation */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>

@@ -34,12 +34,9 @@ const mediaTypeLabels = {
 };
 
 const AlbumCard = ({ album }) => {
-  // Extract year from releaseDate
-  const releaseYear = new Date(album.releaseDate).getFullYear();
-  
-  // Get status label
-  const statusLabel = statusLabels[album.status] || 'Unknown';
-  
+  // Get status label (skip rendering if not in known statuses)
+  const statusLabel = statusLabels[album.status];
+
   // Get media type label
   const mediaTypeLabel = mediaTypeLabels[album.media] || 'Unknown';
   
@@ -74,14 +71,14 @@ const AlbumCard = ({ album }) => {
             }
           }}
         />
-        {album.status !== undefined && (
-          <Chip 
-            label={statusLabel} 
-            size="small" 
-            color={statusColors[album.status] || 'default'} 
-            sx={{ 
-              position: 'absolute', 
-              top: 10, 
+        {statusLabel && (
+          <Chip
+            label={statusLabel}
+            size="small"
+            color={statusColors[album.status] || 'default'}
+            sx={{
+              position: 'absolute',
+              top: 10,
               right: 10,
               fontWeight: 'bold',
               boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
@@ -100,16 +97,12 @@ const AlbumCard = ({ album }) => {
       }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Chip 
-              label={mediaTypeLabel} 
-              size="small" 
-              color="primary" 
+            <Chip
+              label={mediaTypeLabel}
+              size="small"
+              color="primary"
               variant="outlined"
-              sx={{ mr: 1 }}
             />
-            <Typography variant="caption" color="text.secondary">
-              {releaseYear}
-            </Typography>
           </Box>
           <Typography gutterBottom variant="h6" component="div" sx={{ 
             overflow: 'hidden',
@@ -144,7 +137,7 @@ const AlbumCard = ({ album }) => {
           borderTop: '1px solid rgba(0,0,0,0.05)'
         }}>
           <Typography variant="body1" color="text.primary" sx={{ fontWeight: 'bold' }}>
-            ${album.price.toFixed(2)}
+            {'\u20AC'}{album.price.toFixed(2)}
           </Typography>
           <Button 
             size="small" 
