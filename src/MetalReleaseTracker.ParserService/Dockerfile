@@ -31,6 +31,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
+# Verify Chromium and ChromeDriver installed correctly
+RUN chromium --version && chromedriver --version
+
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 
