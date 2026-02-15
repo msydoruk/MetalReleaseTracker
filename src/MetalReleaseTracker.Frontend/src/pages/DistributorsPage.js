@@ -24,6 +24,22 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { fetchDistributorsWithAlbumCount } from '../services/api';
 import DefaultDistributorImage from '../components/DefaultDistributorImage';
 
+const distributorLogos = {
+  'osmose productions': '/logos/osmose.png',
+  'drakkar': '/logos/drakkar.png',
+  'black metal vendor': '/logos/black-metal-vendor.png',
+  'black-metal-vendor.com': '/logos/black-metal-vendor.png',
+};
+
+const getDistributorLogo = (distributor) => {
+  if (distributor.logoUrl) return distributor.logoUrl;
+  const name = (distributor.name || '').toLowerCase();
+  for (const [key, logo] of Object.entries(distributorLogos)) {
+    if (name.includes(key)) return logo;
+  }
+  return null;
+};
+
 const DistributorsPage = () => {
   const [distributors, setDistributors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,13 +134,13 @@ const DistributorsPage = () => {
                   justifyContent: 'center'
                 }}
               >
-                {distributor.logoUrl ? (
+                {getDistributorLogo(distributor) ? (
                   <img
-                    src={distributor.logoUrl}
+                    src={getDistributorLogo(distributor)}
                     alt={distributor.name}
                     style={{
-                      width: '100%',
-                      height: '100%',
+                      maxWidth: '80%',
+                      maxHeight: '80%',
                       objectFit: 'contain'
                     }}
                   />
