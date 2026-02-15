@@ -19,23 +19,20 @@ RUN dotnet publish "MetalReleaseTracker.ParserService.csproj" -c Release -o /app
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 
-# Install Chromium and ChromeDriver for Selenium-based parsing
+# Install Google Chrome stable (Debian snap packages for chromium don't work in Docker)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-driver \
-    fonts-liberation \
-    libnss3 \
-    libxss1 \
-    libasound2t64 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
+    wget gnupg2 \
+    fonts-liberation libnss3 libxss1 libasound2t64 \
+    libatk-bridge2.0-0 libgtk-3-0 xdg-utils \
+    && wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y --no-install-recommends /tmp/google-chrome.deb \
+    && rm /tmp/google-chrome.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Find where Chromium and ChromeDriver binaries are installed
-RUN echo "=== Chromium files ===" && dpkg -L chromium 2>/dev/null | head -30 || true && \
-    echo "=== ChromeDriver files ===" && dpkg -L chromium-driver 2>/dev/null | head -30 || true && \
-    echo "=== Chromium binaries ===" && find / -name "chromium*" -type f 2>/dev/null || true && \
-    echo "=== ChromeDriver binaries ===" && find / -name "chromedriver*" -type f 2>/dev/null || true
+# Verify Chrome is installed
+RUN google-chrome --version
+
+ENV CHROME_BIN=/usr/bin/google-chrome
 
 WORKDIR /app
 EXPOSE 8080
