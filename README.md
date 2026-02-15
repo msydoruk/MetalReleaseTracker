@@ -1,6 +1,6 @@
-# Metal Release Tracker
+# Metal Release Tracker :ukraine:
 
-Event-driven microservices system for tracking metal album releases. Scrapes distributor websites, processes data through Kafka pipeline, and provides REST API for frontend.
+Aggregator for physical releases (vinyl, CD, tape) of Ukrainian metal bands sold by foreign distributors and labels. Automatically scrapes distributor catalogs, processes data through a Kafka event pipeline, and presents everything in a single searchable catalog with direct links to stores.
 
 ## Architecture
 
@@ -11,10 +11,10 @@ ParserService → Kafka → CatalogSyncService → Kafka → CoreDataService →
 ### Services
 
 **ParserService** (Worker)
-- Scrapes album data from distributor websites
+- Scrapes album data from distributor websites (HtmlAgilityPack + Selenium for anti-bot protected sites)
 - Uploads album covers to MinIO
 - Publishes to `albums-parsed-topic` via transactional outbox
-- Stack: PostgreSQL (EF Core), TickerQ, Kafka (MassTransit)
+- Stack: PostgreSQL (EF Core), TickerQ, Selenium WebDriver, Kafka (MassTransit)
 
 **CatalogSyncService** (Worker)
 - Validates and transforms raw album data
@@ -182,7 +182,7 @@ GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
 | Scheduling | TickerQ 10.1.1 |
 | Storage | MinIO (S3-compatible) |
 | Observability | OpenTelemetry, Grafana, Tempo, Loki, Prometheus |
-| Scraping | HtmlAgilityPack |
+| Scraping | HtmlAgilityPack, Selenium WebDriver (headless Chrome) |
 | Validation | FluentValidation |
 | Frontend | React 19, Material-UI 7, nginx |
 | Testing | xUnit, Testcontainers |
