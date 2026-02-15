@@ -154,7 +154,7 @@ const AlbumCard = ({ album }) => {
               textTransform: 'none'
             }}
           >
-            Buy Now
+            View in Store
           </Button>
         </Box>
       </CardContent>
