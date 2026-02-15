@@ -23,6 +23,7 @@ services:
       context: ..
       dockerfile: MetalReleaseTracker.ParserService/Dockerfile
     container_name: metalrelease_parser_service
+    shm_size: '2gb'
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__ParserServiceConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}

@@ -10,6 +10,6 @@ public enum DistributorCode
     [Display(Name = "Drakkar Records")]
     Drakkar = 2,
 
-    [Display(Name = "Dark Than Black Records")]
-    DarkThanBlackRecords = 3
+    [Display(Name = "Black Metal Vendor")]
+    BlackMetalVendor = 3
 }

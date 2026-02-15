@@ -18,6 +18,22 @@ RUN dotnet publish "MetalReleaseTracker.ParserService.csproj" -c Release -o /app
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
+# Install Chromium and ChromeDriver for Selenium-based parsing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    chromium-driver \
+    fonts-liberation \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081

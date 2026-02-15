@@ -18,6 +18,10 @@ public static class ParserRegistrationExtension
             .As<IHtmlDocumentLoader>()
             .SingleInstance();
 
+        builder.RegisterType<SeleniumWebDriverFactory>()
+            .As<ISeleniumWebDriverFactory>()
+            .SingleInstance();
+
         builder.RegisterType<OsmoseProductionsParser>()
             .As<IParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.OsmoseProductions));
@@ -25,6 +29,10 @@ public static class ParserRegistrationExtension
         builder.RegisterType<DrakkarParser>()
             .As<IParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.Drakkar));
+
+        builder.RegisterType<BlackMetalVendorParser>()
+            .As<IParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.BlackMetalVendor));
 
         builder.Register<Func<DistributorCode, IParser>>(context =>
         {
