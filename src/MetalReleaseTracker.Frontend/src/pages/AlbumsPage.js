@@ -123,13 +123,13 @@ const AlbumsPage = ({ isHome = false }) => {
           <Button
             component={Link}
             to="/about"
-            variant="text"
+            variant="outlined"
             color="primary"
-            sx={{ textTransform: 'none', fontWeight: 600 }}
+            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 5, px: 3 }}
           >
             Learn more about the project
           </Button>
-          <Divider sx={{ mt: 2 }} />
+          <Divider sx={{ mt: 3 }} />
         </Box>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
