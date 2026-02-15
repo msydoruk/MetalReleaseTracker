@@ -29,7 +29,7 @@ const features = [
   {
     icon: <LocalShippingIcon sx={{ fontSize: 40 }} />,
     title: 'Order Direct',
-    description: 'Go straight to the distributor\'s store page and order physical releases directly from the source — no middlemen.'
+    description: 'Go straight to the distributor\'s store page and order physical releases directly from the source - no middlemen.'
   },
   {
     icon: <TrackChangesIcon sx={{ fontSize: 40 }} />,
@@ -39,7 +39,7 @@ const features = [
   {
     icon: <LibraryMusicIcon sx={{ fontSize: 40 }} />,
     title: 'All Formats',
-    description: 'Vinyl, CD, cassette — browse releases across all physical media formats in one unified catalog.'
+    description: 'Vinyl, CD, cassette - browse releases across all physical media formats in one unified catalog.'
   },
   {
     icon: <GroupsIcon sx={{ fontSize: 40 }} />,
@@ -49,7 +49,7 @@ const features = [
 ];
 
 const AboutPage = () => {
-  usePageMeta('About — Ukrainian Metal Release Tracker', 'Metal Release Tracker aggregates Ukrainian metal releases from foreign distributors and labels into one searchable catalog. Find vinyl, CD, and tape releases and order directly.');
+  usePageMeta('About - Ukrainian Metal Release Tracker', 'Metal Release Tracker aggregates Ukrainian metal releases from foreign distributors and labels into one searchable catalog. Find vinyl, CD, and tape releases and order directly.');
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -70,7 +70,7 @@ const AboutPage = () => {
           The Problem
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3, lineHeight: 1.8 }}>
-          Ukrainian metal bands are releasing incredible music — but their physical releases (vinyl, CD, tape) are often
+          Ukrainian metal bands are releasing incredible music - but their physical releases (vinyl, CD, tape) are often
           distributed exclusively through foreign labels and distros scattered across Europe. For fans in Ukraine and
           worldwide, finding where to buy these releases means manually checking dozens of online shops, many of which
           have no search filters for Ukrainian bands. Releases come and go, and by the time you find out about one,
@@ -83,7 +83,7 @@ const AboutPage = () => {
           Metal Release Tracker automatically scans the catalogs of foreign distributors and labels, extracts every
           Ukrainian metal release it finds, and presents them in a single, searchable catalog. Each release links
           directly to the distributor's product page so you can order it immediately. New releases, restocks, and
-          pre-orders are tracked continuously — so you'll always know what's available and where to get it.
+          pre-orders are tracked continuously - so you'll always know what's available and where to get it.
         </Typography>
       </Paper>
 

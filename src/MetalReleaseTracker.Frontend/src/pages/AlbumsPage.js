@@ -25,9 +25,9 @@ import usePageMeta from '../hooks/usePageMeta';
 const AlbumsPage = ({ isHome = false }) => {
   usePageMeta(
     isHome
-      ? 'Metal Release Tracker — Ukrainian Metal Releases from Foreign Distributors'
-      : 'Albums — Ukrainian Metal Releases',
-    'Browse Ukrainian metal releases available from foreign distributors. Filter by band, format, price. Vinyl, CD, cassette — order directly from the source.'
+      ? 'Metal Release Tracker - Ukrainian Metal Releases from Foreign Distributors'
+      : 'Albums - Ukrainian Metal Releases',
+    'Browse Ukrainian metal releases available from foreign distributors. Filter by band, format, price. Vinyl, CD, cassette - order directly from the source.'
   );
   const location = useLocation();
   const [loading, setLoading] = useState(true);
@@ -117,7 +117,7 @@ const AlbumsPage = ({ isHome = false }) => {
             Metal Release Tracker {'\uD83C\uDDFA\uD83C\uDDE6'}
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto', mb: 2, lineHeight: 1.6 }}>
-            Ukrainian metal releases from foreign distributors and labels — all in one place.
+            Ukrainian metal releases from foreign distributors and labels - all in one place.
             Find vinyl, CD, and tape releases and order directly from the source.
           </Typography>
           <Button

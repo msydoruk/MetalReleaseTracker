@@ -42,7 +42,7 @@ const getDistributorLogo = (distributor) => {
 };
 
 const DistributorsPage = () => {
-  usePageMeta('Distributors — Foreign Metal Labels & Shops', 'Foreign distributors and labels selling Ukrainian metal releases. Osmose Productions, Drakkar, Black Metal Vendor and more.');
+  usePageMeta('Distributors - Foreign Metal Labels & Shops', 'Foreign distributors and labels selling Ukrainian metal releases. Osmose Productions, Drakkar, Black Metal Vendor and more.');
   const [distributors, setDistributors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
