@@ -31,11 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify Chromium and ChromeDriver installed correctly
-RUN chromium --version && chromedriver --version
-
-ENV CHROME_BIN=/usr/bin/chromium
-ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+# Find where Chromium and ChromeDriver binaries are installed
+RUN echo "=== Chromium files ===" && dpkg -L chromium 2>/dev/null | head -30 || true && \
+    echo "=== ChromeDriver files ===" && dpkg -L chromium-driver 2>/dev/null | head -30 || true && \
+    echo "=== Chromium binaries ===" && find / -name "chromium*" -type f 2>/dev/null || true && \
+    echo "=== ChromeDriver binaries ===" && find / -name "chromedriver*" -type f 2>/dev/null || true
 
 WORKDIR /app
 EXPOSE 8080
