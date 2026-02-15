@@ -10,6 +10,8 @@ import GoogleCallback from './pages/GoogleCallback';
 import ProfilePage from './pages/ProfilePage';
 import BandsPage from './pages/BandsPage';
 import DistributorsPage from './pages/DistributorsPage';
+import AboutPage from './pages/AboutPage';
+import AboutUaPage from './pages/AboutUaPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
@@ -165,6 +167,8 @@ function App() {
             <Route path="/albums" element={<AlbumsPage />} />
             <Route path="/bands" element={<BandsPage />} />
             <Route path="/distributors" element={<DistributorsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/about/ua" element={<AboutUaPage />} />
 
             {/* Protected routes */}
             <Route

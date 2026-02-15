@@ -23,6 +23,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { fetchDistributorsWithAlbumCount } from '../services/api';
 import DefaultDistributorImage from '../components/DefaultDistributorImage';
+import usePageMeta from '../hooks/usePageMeta';
 
 const distributorLogos = {
   'osmose productions': '/logos/osmose.png',
@@ -41,6 +42,7 @@ const getDistributorLogo = (distributor) => {
 };
 
 const DistributorsPage = () => {
+  usePageMeta('Distributors — Foreign Metal Labels & Shops', 'Foreign distributors and labels selling Ukrainian metal releases. Osmose Productions, Drakkar, Black Metal Vendor and more.');
   const [distributors, setDistributors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

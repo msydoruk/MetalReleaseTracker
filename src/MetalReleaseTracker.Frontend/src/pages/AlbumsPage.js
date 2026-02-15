@@ -19,8 +19,10 @@ import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
 import { fetchAlbums } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
+import usePageMeta from '../hooks/usePageMeta';
 
 const AlbumsPage = () => {
+  usePageMeta('Albums — Ukrainian Metal Releases', 'Browse Ukrainian metal releases available from foreign distributors. Filter by band, format, price. Vinyl, CD, cassette — order directly from the source.');
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

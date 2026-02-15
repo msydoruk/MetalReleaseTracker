@@ -30,7 +30,8 @@ import {
   AccountCircle as AccountCircleIcon,
   Email as EmailIcon,
   Login as LoginIcon,
-  AppRegistration as RegisterIcon
+  AppRegistration as RegisterIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
@@ -132,7 +133,8 @@ const Header = () => {
     { title: 'Home', path: '/', icon: <HomeIcon /> },
     { title: 'Albums', path: '/albums', icon: <AlbumIcon /> },
     { title: 'Bands', path: '/bands', icon: <MusicNoteIcon /> },
-    { title: 'Distributors', path: '/distributors', icon: <StoreIcon /> }
+    { title: 'Distributors', path: '/distributors', icon: <StoreIcon /> },
+    { title: 'About', path: '/about', icon: <InfoIcon /> }
   ];
   
   const getInitials = (name) => {

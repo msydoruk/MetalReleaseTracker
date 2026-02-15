@@ -20,8 +20,10 @@ import { fetchBandsWithAlbumCount } from '../services/api';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumIcon from '@mui/icons-material/Album';
 import DefaultBandImage from '../components/DefaultBandImage';
+import usePageMeta from '../hooks/usePageMeta';
 
 const BandsPage = () => {
+  usePageMeta('Bands — Ukrainian Metal Bands', 'Explore Ukrainian metal bands whose physical releases are sold by foreign distributors and labels worldwide.');
   const [bands, setBands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
