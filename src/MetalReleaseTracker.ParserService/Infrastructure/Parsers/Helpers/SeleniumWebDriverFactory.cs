@@ -18,6 +18,12 @@ public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
     {
         var options = new ChromeOptions();
 
+        var chromeBin = Environment.GetEnvironmentVariable("CHROME_BIN");
+        if (!string.IsNullOrEmpty(chromeBin))
+        {
+            options.BinaryLocation = chromeBin;
+        }
+
         options.AddArgument("--headless=new");
         options.AddArgument("--no-sandbox");
         options.AddArgument("--disable-dev-shm-usage");
@@ -28,7 +34,17 @@ public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
         options.AddArgument("--disable-extensions");
         options.AddArgument("--window-size=1920,1080");
 
-        var driver = new ChromeDriver(options);
+        var driverPath = Environment.GetEnvironmentVariable("CHROMEDRIVER_PATH");
+        ChromeDriver driver;
+        if (!string.IsNullOrEmpty(driverPath))
+        {
+            var service = ChromeDriverService.CreateDefaultService(Path.GetDirectoryName(driverPath)!, Path.GetFileName(driverPath));
+            driver = new ChromeDriver(service, options);
+        }
+        else
+        {
+            driver = new ChromeDriver(options);
+        }
 
         driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
