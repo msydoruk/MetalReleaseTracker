@@ -13,10 +13,19 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
 public class OsmoseProductionsParser : IListingParser, IAlbumDetailParser
     {
+        private static readonly string[] CategoryUrls =
+        [
+            "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=11",
+            "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=990001",
+            "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=16"
+        ];
+
         private readonly IHtmlDocumentLoader _htmlDocumentLoader;
         private readonly GeneralParserSettings _generalParserSettings;
         private readonly ILogger<OsmoseProductionsParser> _logger;
         private readonly Random _random = new();
+        private Queue<string> _pendingCategoryUrls = new();
+        private bool _categoryQueueInitialized;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
@@ -32,14 +41,27 @@ public class OsmoseProductionsParser : IListingParser, IAlbumDetailParser
 
         public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
         {
-            var htmlDocument = await LoadHtmlDocument(url, cancellationToken);
+            var pageUrl = url;
+
+            if (!_categoryQueueInitialized)
+            {
+                pageUrl = InitializeCategoryQueue(url);
+                _categoryQueueInitialized = true;
+            }
+
+            _logger.LogInformation("Crawling OsmoseProductions page: {Url}.", pageUrl);
+
+            var htmlDocument = await LoadHtmlDocument(pageUrl, cancellationToken);
             var listings = ParseAlbumListings(htmlDocument, cancellationToken);
-            var (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
+
+            _logger.LogInformation("Parsed {Count} products from page.", listings.Count);
+
+            var nextPageUrl = ResolveNextPageUrl(htmlDocument);
 
             return new ListingPageResult
             {
                 Listings = listings,
-                NextPageUrl = hasMorePages ? nextPageUrl : null
+                NextPageUrl = nextPageUrl
             };
         }
 
@@ -141,7 +163,29 @@ public class OsmoseProductionsParser : IListingParser, IAlbumDetailParser
             return string.Empty;
         }
 
-        private (string NextPageUrl, bool HasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
+        private string InitializeCategoryQueue(string initialUrl)
+        {
+            var urls = new List<string>();
+
+            foreach (var categoryUrl in CategoryUrls)
+            {
+                if (!string.Equals(categoryUrl, initialUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    urls.Add(categoryUrl);
+                }
+            }
+
+            _pendingCategoryUrls = new Queue<string>(urls);
+
+            _logger.LogInformation(
+                "Initialized OsmoseProductions category queue. Starting with {Url}, {Remaining} categories remaining.",
+                initialUrl,
+                _pendingCategoryUrls.Count);
+
+            return initialUrl;
+        }
+
+        private string? ResolveNextPageUrl(HtmlDocument htmlDocument)
         {
             var currentPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPaginationButtonTxt on']/span");
 
@@ -151,15 +195,23 @@ public class OsmoseProductionsParser : IListingParser, IAlbumDetailParser
 
                 if (nextPageNode != null)
                 {
-                    string nextPageUrl = nextPageNode.GetAttributeValue("href", null);
-                    _logger.LogInformation("Next page found: {NextPageUrl}.", nextPageUrl);
-
-                    return (nextPageUrl, true);
+                    var nextPageUrl = nextPageNode.GetAttributeValue("href", string.Empty).Trim();
+                    if (!string.IsNullOrEmpty(nextPageUrl))
+                    {
+                        return nextPageUrl;
+                    }
                 }
             }
 
-            _logger.LogInformation("Next page not found.");
-            return (null, false)!;
+            if (_pendingCategoryUrls.Count > 0)
+            {
+                var nextCategory = _pendingCategoryUrls.Dequeue();
+                _logger.LogInformation("Moving to next category: {Url}.", nextCategory);
+                return nextCategory;
+            }
+
+            _logger.LogInformation("All OsmoseProductions categories crawled.");
+            return null;
         }
 
         private string GetNodeValue(HtmlDocument document, string xPath)
