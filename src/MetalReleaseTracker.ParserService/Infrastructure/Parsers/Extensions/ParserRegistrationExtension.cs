@@ -35,6 +35,26 @@ public static class ParserRegistrationExtension
             .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.BlackMetalVendor));
 
+        builder.RegisterType<BlackMetalStoreParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.BlackMetalStore));
+
+        builder.RegisterType<NapalmRecordsParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.NapalmRecords));
+
+        builder.RegisterType<SeasonOfMistParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.SeasonOfMist));
+
+        builder.RegisterType<ParagonRecordsParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.ParagonRecords));
+
         builder.Register<Func<DistributorCode, IListingParser>>(context =>
         {
             var metaParsers = context.Resolve<IEnumerable<Meta<IListingParser, ParserMetadata>>>();
