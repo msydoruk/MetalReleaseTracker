@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
@@ -11,12 +11,21 @@ using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
-public class OsmoseProductionsParser : IParser
+public class OsmoseProductionsParser : IListingParser, IAlbumDetailParser
     {
+        private static readonly string[] CategoryUrls =
+        [
+            "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=11",
+            "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=990001",
+            "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=16"
+        ];
+
         private readonly IHtmlDocumentLoader _htmlDocumentLoader;
         private readonly GeneralParserSettings _generalParserSettings;
         private readonly ILogger<OsmoseProductionsParser> _logger;
         private readonly Random _random = new();
+        private Queue<string> _pendingCategoryUrls = new();
+        private bool _categoryQueueInitialized;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
 
@@ -30,79 +39,72 @@ public class OsmoseProductionsParser : IParser
             _logger = logger;
         }
 
-        public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
+        public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
         {
-            var nextPageUrl = parsingUrl;
-            var htmlDocument = await LoadHtmlDocument(nextPageUrl, cancellationToken);
-            var albumUrlsWithStatus = ParseAlbumUrlsWithStatus(htmlDocument, cancellationToken);
+            var pageUrl = url;
 
-            var parsedAlbums = new List<AlbumParsedEvent>();
-            foreach (var (url, status) in albumUrlsWithStatus)
+            if (!_categoryQueueInitialized)
             {
-                AlbumParsedEvent albumParsedEvent = await ParseAlbumDetails(url, cancellationToken);
-                albumParsedEvent.Status = status;
-                parsedAlbums.Add(albumParsedEvent);
-                _logger.LogInformation($"Parsed album: {albumParsedEvent.Name} by {albumParsedEvent.BandName}.");
-
-                await DelayBetweenRequests(cancellationToken);
+                pageUrl = InitializeCategoryQueue(url);
+                _categoryQueueInitialized = true;
             }
 
-            (nextPageUrl, bool hasMorePages) = GetNextPageUrl(htmlDocument);
+            _logger.LogInformation("Crawling OsmoseProductions page: {Url}.", pageUrl);
 
-            return new PageParsedResult
+            var htmlDocument = await LoadHtmlDocument(pageUrl, cancellationToken);
+            var listings = ParseAlbumListings(htmlDocument, cancellationToken);
+
+            _logger.LogInformation("Parsed {Count} products from page.", listings.Count);
+
+            var nextPageUrl = ResolveNextPageUrl(htmlDocument);
+
+            return new ListingPageResult
             {
-                ParsedAlbums = parsedAlbums,
-                NextPageUrl = hasMorePages ? nextPageUrl : null
+                Listings = listings,
+                NextPageUrl = nextPageUrl
             };
         }
 
-        private List<(string Url, AlbumStatus? Status)> ParseAlbumUrlsWithStatus(HtmlDocument htmlDocument,
-            CancellationToken cancellationToken)
+        public async Task<AlbumParsedEvent> ParseAlbumDetailAsync(string detailUrl, CancellationToken cancellationToken)
         {
-            var results = new List<(string Url, AlbumStatus? Status)>();
+            await DelayBetweenRequests(cancellationToken);
+            return await ParseAlbumDetails(detailUrl, cancellationToken);
+        }
+
+        private List<ListingItem> ParseAlbumListings(HtmlDocument htmlDocument, CancellationToken cancellationToken)
+        {
+            var results = new List<ListingItem>();
             var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='GshopListingABorder']");
 
-            if (albumNodes != null)
+            if (albumNodes == null)
             {
-                foreach (var albumNode in albumNodes)
+                return results;
+            }
+
+            foreach (var albumNode in albumNodes)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var anchorNode = albumNode.SelectSingleNode(".//div[contains(@class,'GshopListingARightInfo')]//a");
+                if (anchorNode == null)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var anchorNode = albumNode.SelectSingleNode(".//a");
-                    if (anchorNode == null) continue;
-
-                    var albumUrl = anchorNode.GetAttributeValue("href", string.Empty).Trim();
-                    if (string.IsNullOrEmpty(albumUrl)) continue;
-
-                    var statusText = ExtractStatusText(albumNode);
-                    var status = string.IsNullOrEmpty(statusText)
-                        ? null
-                        : AlbumParsingHelper.ParseAlbumStatus(statusText);
-
-                    results.Add((albumUrl, status));
+                    continue;
                 }
+
+                var albumUrl = anchorNode.GetAttributeValue("href", string.Empty).Trim();
+                if (string.IsNullOrEmpty(albumUrl))
+                {
+                    continue;
+                }
+
+                var bandName = anchorNode.SelectSingleNode(".//span[@class='TtypeC TcolorC']")?.InnerText?.Trim() ?? string.Empty;
+                var albumTitle = anchorNode.SelectSingleNode(".//span[@class='TtypeH TcolorC']")?.InnerText?.Trim() ?? string.Empty;
+                var rawTitle = string.IsNullOrEmpty(albumTitle) ? bandName : $"{bandName} - {albumTitle}";
+
+                results.Add(new ListingItem(bandName, albumTitle, albumUrl, rawTitle));
             }
 
             return results;
-        }
-
-        private string ExtractStatusText(HtmlNode albumNode)
-        {
-            var infoElements = albumNode.SelectNodes(".//*[contains(@class, 'info')]");
-
-            if (infoElements != null)
-            {
-                foreach (var element in infoElements)
-                {
-                    var innerText = element.InnerText.Trim();
-                    if (!string.IsNullOrEmpty(innerText))
-                    {
-                        return innerText;
-                    }
-                }
-            }
-
-            return string.Empty;
         }
 
         private async Task<AlbumParsedEvent> ParseAlbumDetails(string albumUrl, CancellationToken cancellationToken)
@@ -119,6 +121,10 @@ public class OsmoseProductionsParser : IParser
             var label = ParseLabel(htmlDocument);
             var press = ParsePress(htmlDocument);
             var description = ParseDescription(htmlDocument);
+            var statusText = ExtractStatusFromDetailPage(htmlDocument);
+            var status = string.IsNullOrEmpty(statusText)
+                ? null
+                : AlbumParsingHelper.ParseAlbumStatus(statusText);
 
             return new AlbumParsedEvent
             {
@@ -133,11 +139,53 @@ public class OsmoseProductionsParser : IParser
                 Media = media,
                 Label = label,
                 Press = press,
-                Description = description
+                Description = description,
+                Status = status
             };
         }
 
-        private (string nextPageUrl, bool hasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
+        private string ExtractStatusFromDetailPage(HtmlDocument htmlDocument)
+        {
+            var infoElements = htmlDocument.DocumentNode.SelectNodes(".//*[contains(@class, 'info')]");
+
+            if (infoElements != null)
+            {
+                foreach (var element in infoElements)
+                {
+                    var innerText = element.InnerText.Trim();
+                    if (!string.IsNullOrEmpty(innerText))
+                    {
+                        return innerText;
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private string InitializeCategoryQueue(string initialUrl)
+        {
+            var urls = new List<string>();
+
+            foreach (var categoryUrl in CategoryUrls)
+            {
+                if (!string.Equals(categoryUrl, initialUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    urls.Add(categoryUrl);
+                }
+            }
+
+            _pendingCategoryUrls = new Queue<string>(urls);
+
+            _logger.LogInformation(
+                "Initialized OsmoseProductions category queue. Starting with {Url}, {Remaining} categories remaining.",
+                initialUrl,
+                _pendingCategoryUrls.Count);
+
+            return initialUrl;
+        }
+
+        private string? ResolveNextPageUrl(HtmlDocument htmlDocument)
         {
             var currentPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPaginationButtonTxt on']/span");
 
@@ -147,15 +195,23 @@ public class OsmoseProductionsParser : IParser
 
                 if (nextPageNode != null)
                 {
-                    string nextPageUrl = nextPageNode.GetAttributeValue("href", null);
-                    _logger.LogInformation($"Next page found: {nextPageUrl}.");
-
-                    return (nextPageUrl, true);
+                    var nextPageUrl = nextPageNode.GetAttributeValue("href", string.Empty).Trim();
+                    if (!string.IsNullOrEmpty(nextPageUrl))
+                    {
+                        return nextPageUrl;
+                    }
                 }
             }
 
-            _logger.LogInformation("Next page not found.");
-            return (null, false)!;
+            if (_pendingCategoryUrls.Count > 0)
+            {
+                var nextCategory = _pendingCategoryUrls.Dequeue();
+                _logger.LogInformation("Moving to next category: {Url}.", nextCategory);
+                return nextCategory;
+            }
+
+            _logger.LogInformation("All OsmoseProductions categories crawled.");
+            return null;
         }
 
         private string GetNodeValue(HtmlDocument document, string xPath)

@@ -18,11 +18,22 @@ public class FlurlHttpRequestService : IHttpRequestService
 
     public async Task<string> GetStringWithUserAgentAsync(string url, CancellationToken cancellationToken = default)
     {
+        return await GetStringWithUserAgentAsync(url, new Dictionary<string, string>(), cancellationToken);
+    }
+
+    public async Task<string> GetStringWithUserAgentAsync(string url, IDictionary<string, string> additionalHeaders, CancellationToken cancellationToken = default)
+    {
         var userAgent = _userAgentProvider.GetRandomUserAgent();
 
-        var response = await url.WithTimeout(TimeSpan.FromSeconds(_requestTimeoutSeconds))
-            .WithHeader("User-Agent", userAgent)
-            .GetAsync(cancellationToken: cancellationToken);
+        var request = url.WithTimeout(TimeSpan.FromSeconds(_requestTimeoutSeconds))
+            .WithHeader("User-Agent", userAgent);
+
+        foreach (var header in additionalHeaders)
+        {
+            request = request.WithHeader(header.Key, header.Value);
+        }
+
+        var response = await request.GetAsync(cancellationToken: cancellationToken);
 
         return await response.GetStringAsync();
     }

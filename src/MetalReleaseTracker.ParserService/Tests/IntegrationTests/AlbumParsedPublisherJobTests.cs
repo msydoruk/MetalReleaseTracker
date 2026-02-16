@@ -36,7 +36,7 @@ public class AlbumParsedPublisherJobTests : IClassFixture<TestPostgresDatabaseFi
     public async Task RunPublisherJob_WhenSessionIsParsed_ShouldPublishAndUpdateSession()
     {
         // Arrange
-        var parsingSession = await _parsingSessionRepository.AddAsync(DistributorCode.OsmoseProductions, "https://www.test.com", CancellationToken.None);
+        var parsingSession = await _parsingSessionRepository.AddAsync(DistributorCode.OsmoseProductions, CancellationToken.None);
 
         var eventPayload = JsonConvert.SerializeObject(new AlbumParsedEvent
         {
@@ -73,7 +73,7 @@ public class AlbumParsedPublisherJobTests : IClassFixture<TestPostgresDatabaseFi
     public async Task RunPublisherJob_WhenEventExceedsMaxChunkSize_ShouldUploadTwoFiles()
     {
         // Arrange
-        var parsingSession = await _parsingSessionRepository.AddAsync(DistributorCode.OsmoseProductions, "https://www.test.com", CancellationToken.None);
+        var parsingSession = await _parsingSessionRepository.AddAsync(DistributorCode.OsmoseProductions, CancellationToken.None);
 
         var eventPayload1 = JsonSerializer.Serialize(new AlbumParsedEvent
         {

@@ -39,13 +39,12 @@ public class ParsingSessionRepository : IParsingSessionRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ParsingSessionEntity> AddAsync(DistributorCode distributorCode, string nextPageToProcess, CancellationToken cancellationToken)
+    public async Task<ParsingSessionEntity> AddAsync(DistributorCode distributorCode, CancellationToken cancellationToken)
     {
         var parsingSessionEntity = new ParsingSessionEntity
         {
             Id = Guid.NewGuid(),
             DistributorCode = distributorCode,
-            PageToProcess = nextPageToProcess,
             LastUpdatedDate = DateTime.UtcNow
         };
 
@@ -53,24 +52,6 @@ public class ParsingSessionRepository : IParsingSessionRepository
         await _context.SaveChangesAsync(cancellationToken);
 
         return parsingSessionEntity;
-    }
-
-    public async Task<bool> UpdateNextPageToProcessAsync(Guid id, string nextPageToProcess, CancellationToken cancellationToken)
-    {
-        var parsingSessionEntity = await _context.ParsingSessions.FirstOrDefaultAsync(state => state.Id == id, cancellationToken);
-
-        if (parsingSessionEntity == null)
-        {
-            return false;
-        }
-
-        parsingSessionEntity.PageToProcess = nextPageToProcess;
-        parsingSessionEntity.LastUpdatedDate = DateTime.UtcNow;
-
-        _context.ParsingSessions.Update(parsingSessionEntity);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return true;
     }
 
     public async Task<bool> UpdateParsingStatus(Guid id, AlbumParsingStatus parsingStatus, CancellationToken cancellationToken)

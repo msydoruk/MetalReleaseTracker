@@ -11,5 +11,17 @@ public enum DistributorCode
     Drakkar = 2,
 
     [Display(Name = "Black Metal Vendor")]
-    BlackMetalVendor = 3
+    BlackMetalVendor = 3,
+
+    [Display(Name = "Black Metal Store")]
+    BlackMetalStore = 4,
+
+    [Display(Name = "Napalm Records")]
+    NapalmRecords = 5,
+
+    [Display(Name = "Season of Mist")]
+    SeasonOfMist = 6,
+
+    [Display(Name = "Paragon Records")]
+    ParagonRecords = 7
 }

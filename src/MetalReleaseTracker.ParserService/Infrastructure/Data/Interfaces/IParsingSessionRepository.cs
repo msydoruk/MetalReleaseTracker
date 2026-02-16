@@ -12,9 +12,7 @@ public interface IParsingSessionRepository
 
     Task<List<ParsingSessionEntity>> GetParsedAsync(CancellationToken cancellationToken);
 
-    Task<ParsingSessionEntity> AddAsync(DistributorCode distributorCode, string nextPageToProcess, CancellationToken cancellationToken);
-
-    Task<bool> UpdateNextPageToProcessAsync(Guid parsingSessionId, string nextPageToProcess, CancellationToken cancellationToken);
+    Task<ParsingSessionEntity> AddAsync(DistributorCode distributorCode, CancellationToken cancellationToken);
 
     Task<bool> UpdateParsingStatus(Guid parsingSessionId, AlbumParsingStatus parsingStatus, CancellationToken cancellationToken);
 }
