@@ -1,10 +1,8 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Features.Metadata;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
-using MetalReleaseTracker.ParserService.Infrastructure.Http;
-using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Exceptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
 
@@ -23,25 +21,37 @@ public static class ParserRegistrationExtension
             .SingleInstance();
 
         builder.RegisterType<OsmoseProductionsParser>()
-            .As<IParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.OsmoseProductions));
 
         builder.RegisterType<DrakkarParser>()
-            .As<IParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.Drakkar));
 
         builder.RegisterType<BlackMetalVendorParser>()
-            .As<IParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.BlackMetalVendor));
 
-        builder.Register<Func<DistributorCode, IParser>>(context =>
+        builder.Register<Func<DistributorCode, IListingParser>>(context =>
         {
-            var metaParsers = context.Resolve<IEnumerable<Meta<IParser, ParserMetadata>>>();
+            var metaParsers = context.Resolve<IEnumerable<Meta<IListingParser, ParserMetadata>>>();
             return distributorCode =>
             {
                 var parser = metaParsers.FirstOrDefault(p => p.Metadata.DistributorCode == distributorCode);
+                return parser?.Value ?? throw new NotSupportedException($"Listing parser for distributor '{distributorCode}' not found.");
+            };
+        });
 
-                return parser?.Value ?? throw new NotSupportedException($"Parser for distributor '{distributorCode}' not found.");
+        builder.Register<Func<DistributorCode, IAlbumDetailParser>>(context =>
+        {
+            var metaParsers = context.Resolve<IEnumerable<Meta<IAlbumDetailParser, ParserMetadata>>>();
+            return distributorCode =>
+            {
+                var parser = metaParsers.FirstOrDefault(p => p.Metadata.DistributorCode == distributorCode);
+                return parser?.Value ?? throw new NotSupportedException($"Album detail parser for distributor '{distributorCode}' not found.");
             };
         });
     }

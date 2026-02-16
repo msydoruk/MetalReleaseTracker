@@ -1,7 +1,8 @@
-﻿using MassTransit;
+using MassTransit;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs.Configuration;
 using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.Extensions.Options;
@@ -11,16 +12,27 @@ namespace MetalReleaseTracker.ParserService.Tests.Factories;
 
 public static class MocksFactory
 {
-    public static Mock<IParser> CreateParserMock(IEnumerable<AlbumParsedEvent> fakeAlbumParsedEvents)
+    public static Mock<IAlbumDetailParser> CreateAlbumDetailParserMock(IEnumerable<AlbumParsedEvent> fakeAlbumParsedEvents)
     {
-        var parserMock = new Mock<IParser>();
+        var parserMock = new Mock<IAlbumDetailParser>();
+        var eventQueue = new Queue<AlbumParsedEvent>(fakeAlbumParsedEvents);
 
-        parserMock.Setup(x => x.ParseAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(new PageParsedResult
+        parserMock.Setup(x => x.ParseAlbumDetailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => eventQueue.Dequeue());
+
+        return parserMock;
+    }
+
+    public static Mock<IListingParser> CreateListingParserMock(IEnumerable<ListingItem> fakeListings)
+    {
+        var parserMock = new Mock<IListingParser>();
+
+        parserMock.Setup(x => x.ParseListingsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ListingPageResult
             {
-                ParsedAlbums = fakeAlbumParsedEvents,
+                Listings = fakeListings.ToList(),
                 NextPageUrl = null
-            }));
+            });
 
         return parserMock;
     }

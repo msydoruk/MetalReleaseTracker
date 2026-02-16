@@ -1,0 +1,137 @@
+using MetalReleaseTracker.ParserService.Domain.Interfaces;
+using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
+using Microsoft.Extensions.Options;
+
+namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
+
+public class CatalogueIndexJob
+{
+    private readonly Func<DistributorCode, IListingParser> _listingParserResolver;
+    private readonly ICatalogueIndexRepository _catalogueIndexRepository;
+    private readonly IBandReferenceRepository _bandReferenceRepository;
+    private readonly GeneralParserSettings _generalParserSettings;
+    private readonly ILogger<CatalogueIndexJob> _logger;
+    private readonly Random _random = new();
+
+    public CatalogueIndexJob(
+        Func<DistributorCode, IListingParser> listingParserResolver,
+        ICatalogueIndexRepository catalogueIndexRepository,
+        IBandReferenceRepository bandReferenceRepository,
+        IOptions<GeneralParserSettings> generalParserSettings,
+        ILogger<CatalogueIndexJob> logger)
+    {
+        _listingParserResolver = listingParserResolver;
+        _catalogueIndexRepository = catalogueIndexRepository;
+        _bandReferenceRepository = bandReferenceRepository;
+        _generalParserSettings = generalParserSettings.Value;
+        _logger = logger;
+    }
+
+    public async Task RunCatalogueIndexJob(ParserDataSource parserDataSource, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ExecuteIndexingAsync(parserDataSource, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning(
+                "Catalogue indexing was cancelled for distributor: {DistributorCode}.",
+                parserDataSource.DistributorCode);
+            throw;
+        }
+        catch (ObjectDisposedException)
+        {
+            _logger.LogWarning(
+                "Catalogue indexing was interrupted (CancellationTokenSource disposed) for distributor: {DistributorCode}.",
+                parserDataSource.DistributorCode);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Error occurred while indexing catalogue for distributor: {DistributorCode}.",
+                parserDataSource.DistributorCode);
+            throw;
+        }
+    }
+
+    private async Task ExecuteIndexingAsync(ParserDataSource parserDataSource, CancellationToken cancellationToken)
+    {
+        var parser = _listingParserResolver(parserDataSource.DistributorCode);
+        var currentUrl = parserDataSource.ParsingUrl;
+        var totalIndexed = 0;
+
+        var bandReferences = await _bandReferenceRepository.GetAllAsync(cancellationToken);
+        var ukrainianBandNames = new HashSet<string>(
+            bandReferences.Select(b => b.BandName),
+            StringComparer.OrdinalIgnoreCase);
+
+        _logger.LogInformation(
+            "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian band names for matching.",
+            parserDataSource.DistributorCode,
+            ukrainianBandNames.Count);
+
+        do
+        {
+            _logger.LogInformation(
+                "Parsing listing page for {DistributorCode}: {Url}.",
+                parserDataSource.DistributorCode,
+                currentUrl);
+
+            var result = await parser.ParseListingsAsync(currentUrl, cancellationToken);
+
+            foreach (var listing in result.Listings)
+            {
+                var status = ukrainianBandNames.Contains(listing.BandName)
+                    ? CatalogueIndexStatus.Relevant
+                    : CatalogueIndexStatus.NotRelevant;
+
+                var entity = new CatalogueIndexEntity
+                {
+                    DistributorCode = parserDataSource.DistributorCode,
+                    BandName = listing.BandName,
+                    AlbumTitle = listing.AlbumTitle,
+                    RawTitle = listing.RawTitle,
+                    DetailUrl = listing.DetailUrl,
+                    Status = status
+                };
+
+                await _catalogueIndexRepository.UpsertAsync(entity, cancellationToken);
+                totalIndexed++;
+            }
+
+            _logger.LogInformation(
+                "Indexed {Count} listings from page. Total so far: {Total}.",
+                result.Listings.Count,
+                totalIndexed);
+
+            if (result.HasMorePages)
+            {
+                currentUrl = result.NextPageUrl;
+                await DelayBetweenPages(cancellationToken);
+            }
+            else
+            {
+                currentUrl = null;
+            }
+        }
+        while (!string.IsNullOrEmpty(currentUrl));
+
+        _logger.LogInformation(
+            "Catalogue indexing completed for {DistributorCode}. Total entries: {Total}.",
+            parserDataSource.DistributorCode,
+            totalIndexed);
+    }
+
+    private async Task DelayBetweenPages(CancellationToken cancellationToken)
+    {
+        var delaySeconds = _random.Next(
+            _generalParserSettings.MinDelayBetweenRequestsSeconds,
+            _generalParserSettings.MaxDelayBetweenRequestsSeconds);
+
+        await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+    }
+}

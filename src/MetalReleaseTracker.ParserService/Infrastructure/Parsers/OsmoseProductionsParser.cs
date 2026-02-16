@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
-public class OsmoseProductionsParser : IParser
+public class OsmoseProductionsParser : IListingParser, IAlbumDetailParser
     {
         private readonly IHtmlDocumentLoader _htmlDocumentLoader;
         private readonly GeneralParserSettings _generalParserSettings;
@@ -30,79 +30,59 @@ public class OsmoseProductionsParser : IParser
             _logger = logger;
         }
 
-        public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
+        public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
         {
-            var nextPageUrl = parsingUrl;
-            var htmlDocument = await LoadHtmlDocument(nextPageUrl, cancellationToken);
-            var albumUrlsWithStatus = ParseAlbumUrlsWithStatus(htmlDocument, cancellationToken);
+            var htmlDocument = await LoadHtmlDocument(url, cancellationToken);
+            var listings = ParseAlbumListings(htmlDocument, cancellationToken);
+            var (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
 
-            var parsedAlbums = new List<AlbumParsedEvent>();
-            foreach (var (url, status) in albumUrlsWithStatus)
+            return new ListingPageResult
             {
-                AlbumParsedEvent albumParsedEvent = await ParseAlbumDetails(url, cancellationToken);
-                albumParsedEvent.Status = status;
-                parsedAlbums.Add(albumParsedEvent);
-                _logger.LogInformation($"Parsed album: {albumParsedEvent.Name} by {albumParsedEvent.BandName}.");
-
-                await DelayBetweenRequests(cancellationToken);
-            }
-
-            (nextPageUrl, bool hasMorePages) = GetNextPageUrl(htmlDocument);
-
-            return new PageParsedResult
-            {
-                ParsedAlbums = parsedAlbums,
+                Listings = listings,
                 NextPageUrl = hasMorePages ? nextPageUrl : null
             };
         }
 
-        private List<(string Url, AlbumStatus? Status)> ParseAlbumUrlsWithStatus(HtmlDocument htmlDocument,
-            CancellationToken cancellationToken)
+        public async Task<AlbumParsedEvent> ParseAlbumDetailAsync(string detailUrl, CancellationToken cancellationToken)
         {
-            var results = new List<(string Url, AlbumStatus? Status)>();
+            await DelayBetweenRequests(cancellationToken);
+            return await ParseAlbumDetails(detailUrl, cancellationToken);
+        }
+
+        private List<ListingItem> ParseAlbumListings(HtmlDocument htmlDocument, CancellationToken cancellationToken)
+        {
+            var results = new List<ListingItem>();
             var albumNodes = htmlDocument.DocumentNode.SelectNodes(".//div[@class='GshopListingABorder']");
 
-            if (albumNodes != null)
+            if (albumNodes == null)
             {
-                foreach (var albumNode in albumNodes)
+                return results;
+            }
+
+            foreach (var albumNode in albumNodes)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var anchorNode = albumNode.SelectSingleNode(".//div[contains(@class,'GshopListingARightInfo')]//a");
+                if (anchorNode == null)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var anchorNode = albumNode.SelectSingleNode(".//a");
-                    if (anchorNode == null) continue;
-
-                    var albumUrl = anchorNode.GetAttributeValue("href", string.Empty).Trim();
-                    if (string.IsNullOrEmpty(albumUrl)) continue;
-
-                    var statusText = ExtractStatusText(albumNode);
-                    var status = string.IsNullOrEmpty(statusText)
-                        ? null
-                        : AlbumParsingHelper.ParseAlbumStatus(statusText);
-
-                    results.Add((albumUrl, status));
+                    continue;
                 }
+
+                var albumUrl = anchorNode.GetAttributeValue("href", string.Empty).Trim();
+                if (string.IsNullOrEmpty(albumUrl))
+                {
+                    continue;
+                }
+
+                var bandName = anchorNode.SelectSingleNode(".//span[@class='TtypeC TcolorC']")?.InnerText?.Trim() ?? string.Empty;
+                var albumTitle = anchorNode.SelectSingleNode(".//span[@class='TtypeH TcolorC']")?.InnerText?.Trim() ?? string.Empty;
+                var rawTitle = string.IsNullOrEmpty(albumTitle) ? bandName : $"{bandName} - {albumTitle}";
+
+                results.Add(new ListingItem(bandName, albumTitle, albumUrl, rawTitle));
             }
 
             return results;
-        }
-
-        private string ExtractStatusText(HtmlNode albumNode)
-        {
-            var infoElements = albumNode.SelectNodes(".//*[contains(@class, 'info')]");
-
-            if (infoElements != null)
-            {
-                foreach (var element in infoElements)
-                {
-                    var innerText = element.InnerText.Trim();
-                    if (!string.IsNullOrEmpty(innerText))
-                    {
-                        return innerText;
-                    }
-                }
-            }
-
-            return string.Empty;
         }
 
         private async Task<AlbumParsedEvent> ParseAlbumDetails(string albumUrl, CancellationToken cancellationToken)
@@ -119,6 +99,10 @@ public class OsmoseProductionsParser : IParser
             var label = ParseLabel(htmlDocument);
             var press = ParsePress(htmlDocument);
             var description = ParseDescription(htmlDocument);
+            var statusText = ExtractStatusFromDetailPage(htmlDocument);
+            var status = string.IsNullOrEmpty(statusText)
+                ? null
+                : AlbumParsingHelper.ParseAlbumStatus(statusText);
 
             return new AlbumParsedEvent
             {
@@ -133,11 +117,31 @@ public class OsmoseProductionsParser : IParser
                 Media = media,
                 Label = label,
                 Press = press,
-                Description = description
+                Description = description,
+                Status = status
             };
         }
 
-        private (string nextPageUrl, bool hasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
+        private string ExtractStatusFromDetailPage(HtmlDocument htmlDocument)
+        {
+            var infoElements = htmlDocument.DocumentNode.SelectNodes(".//*[contains(@class, 'info')]");
+
+            if (infoElements != null)
+            {
+                foreach (var element in infoElements)
+                {
+                    var innerText = element.InnerText.Trim();
+                    if (!string.IsNullOrEmpty(innerText))
+                    {
+                        return innerText;
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private (string NextPageUrl, bool HasMorePages) GetNextPageUrl(HtmlDocument htmlDocument)
         {
             var currentPageNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[@class='GtoursPaginationButtonTxt on']/span");
 
@@ -148,7 +152,7 @@ public class OsmoseProductionsParser : IParser
                 if (nextPageNode != null)
                 {
                     string nextPageUrl = nextPageNode.GetAttributeValue("href", null);
-                    _logger.LogInformation($"Next page found: {nextPageUrl}.");
+                    _logger.LogInformation("Next page found: {NextPageUrl}.", nextPageUrl);
 
                     return (nextPageUrl, true);
                 }

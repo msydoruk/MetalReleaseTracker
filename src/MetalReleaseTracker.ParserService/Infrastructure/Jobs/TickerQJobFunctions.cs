@@ -5,24 +5,48 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
 public class TickerQJobFunctions
 {
-    private readonly AlbumParsingJob _albumParsingJob;
+    private readonly BandReferenceSyncJob _bandReferenceSyncJob;
+    private readonly CatalogueIndexJob _catalogueIndexJob;
+    private readonly AlbumDetailParsingJob _albumDetailParsingJob;
     private readonly AlbumParsedPublisherJob _albumParsedPublisherJob;
 
     public TickerQJobFunctions(
-        AlbumParsingJob albumParsingJob,
+        BandReferenceSyncJob bandReferenceSyncJob,
+        CatalogueIndexJob catalogueIndexJob,
+        AlbumDetailParsingJob albumDetailParsingJob,
         AlbumParsedPublisherJob albumParsedPublisherJob)
     {
-        _albumParsingJob = albumParsingJob;
+        _bandReferenceSyncJob = bandReferenceSyncJob;
+        _catalogueIndexJob = catalogueIndexJob;
+        _albumDetailParsingJob = albumDetailParsingJob;
         _albumParsedPublisherJob = albumParsedPublisherJob;
     }
 
-    [TickerFunction("AlbumParsingJob")]
-    public async Task RunAlbumParsingJob(
+    [TickerFunction("BandReferenceSyncJob")]
+    public async Task RunBandReferenceSyncJob(
+        TickerFunctionContext context,
+        CancellationToken cancellationToken)
+    {
+        context.CronOccurrenceOperations.SkipIfAlreadyRunning();
+        await _bandReferenceSyncJob.RunSyncJob(cancellationToken);
+    }
+
+    [TickerFunction("CatalogueIndexJob")]
+    public async Task RunCatalogueIndexJob(
         TickerFunctionContext<ParserDataSource> context,
         CancellationToken cancellationToken)
     {
         context.CronOccurrenceOperations.SkipIfAlreadyRunning();
-        await _albumParsingJob.RunParserJob(context.Request, cancellationToken);
+        await _catalogueIndexJob.RunCatalogueIndexJob(context.Request, cancellationToken);
+    }
+
+    [TickerFunction("AlbumDetailParsingJob")]
+    public async Task RunAlbumDetailParsingJob(
+        TickerFunctionContext<ParserDataSource> context,
+        CancellationToken cancellationToken)
+    {
+        context.CronOccurrenceOperations.SkipIfAlreadyRunning();
+        await _albumDetailParsingJob.RunDetailParsingJob(context.Request, cancellationToken);
     }
 
     [TickerFunction("AlbumParsedPublisherJob")]

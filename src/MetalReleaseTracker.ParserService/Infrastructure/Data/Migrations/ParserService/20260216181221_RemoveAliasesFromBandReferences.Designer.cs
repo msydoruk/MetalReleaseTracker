@@ -3,6 +3,7 @@ using System;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.ParserService
 {
     [DbContext(typeof(ParserServiceDbContext))]
-    partial class ParserServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260216181221_RemoveAliasesFromBandReferences")]
+    partial class RemoveAliasesFromBandReferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,6 +139,10 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.Parse
 
                     b.Property<DateTime>("LastUpdatedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PageToProcess")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("ParsingStatus")
                         .HasColumnType("integer");

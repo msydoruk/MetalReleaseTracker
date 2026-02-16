@@ -1,6 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using MetalReleaseTracker.ParserService.Aplication.Services;
+using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Common.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Interfaces;
@@ -12,6 +13,7 @@ using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using MetalReleaseTracker.ParserService.Infrastructure.Messaging.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Scheduling.Extensions;
+using MetalReleaseTracker.ParserService.Infrastructure.Services;
 using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -64,12 +66,17 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     containerBuilder.RegisterType<ParsingSessionRepository>().As<IParsingSessionRepository>().InstancePerLifetimeScope();
     containerBuilder.RegisterType<AlbumParsedEventRepository>().As<IAlbumParsedEventRepository>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<BandReferenceRepository>().As<IBandReferenceRepository>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<CatalogueIndexRepository>().As<ICatalogueIndexRepository>().InstancePerLifetimeScope();
     containerBuilder.AddParsers();
 });
 
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
-builder.Services.AddScoped<AlbumParsingJob>();
+builder.Services.AddScoped<IBandReferenceService, BandReferenceService>();
+builder.Services.AddScoped<BandReferenceSyncJob>();
+builder.Services.AddScoped<CatalogueIndexJob>();
+builder.Services.AddScoped<AlbumDetailParsingJob>();
 builder.Services.AddScoped<AlbumParsedPublisherJob>();
 builder.Services.AddScoped<TickerQJobFunctions>();
 builder.Services.AddHostedService<TickerQSchedulerService>();

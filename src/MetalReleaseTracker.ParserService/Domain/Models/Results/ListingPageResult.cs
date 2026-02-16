@@ -1,10 +1,10 @@
-﻿using MetalReleaseTracker.ParserService.Domain.Models.Events;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Domain.Models.Results;
 
-public class PageParsedResult
+public class ListingPageResult
 {
-    public IEnumerable<AlbumParsedEvent> ParsedAlbums { get; set; }
+    public List<ListingItem> Listings { get; set; } = [];
 
     public string NextPageUrl { get; set; }
 

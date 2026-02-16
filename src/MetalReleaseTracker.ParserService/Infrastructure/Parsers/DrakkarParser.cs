@@ -5,6 +5,7 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Http.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Exceptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
@@ -13,36 +14,9 @@ using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
-public class DrakkarParser : IParser
+public class DrakkarParser : IListingParser, IAlbumDetailParser
     {
-        private static readonly char[] TitleSeparators = { '\u2013', '\u2014', '-' };
-
-        private static string StripHtml(string html)
-        {
-            if (string.IsNullOrEmpty(html))
-            {
-                return html;
-            }
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-            var text = doc.DocumentNode.InnerText ?? string.Empty;
-            text = HtmlEntity.DeEntitize(text);
-            text = Regex.Replace(text, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", string.Empty);
-
-            return text.Trim();
-        }
-
-        private static string CapitalizeFirstLetter(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return text;
-            }
-
-            return char.ToUpper(text[0]) + text[1..];
-        }
-
+        private readonly IHttpRequestService _httpRequestService;
         private readonly IHtmlDocumentLoader _htmlDocumentLoader;
         private readonly GeneralParserSettings _generalParserSettings;
         private readonly ILogger<DrakkarParser> _logger;
@@ -51,59 +25,108 @@ public class DrakkarParser : IParser
         public DistributorCode DistributorCode => DistributorCode.Drakkar;
 
         public DrakkarParser(
+            IHttpRequestService httpRequestService,
             IHtmlDocumentLoader htmlDocumentLoader,
-            IOptions<GeneralParserSettings> generalParserSettings,
+            IOptions<GeneralParserSettings> generalSettings,
             ILogger<DrakkarParser> logger)
         {
+            _httpRequestService = httpRequestService;
             _htmlDocumentLoader = htmlDocumentLoader;
-            _generalParserSettings = generalParserSettings.Value;
+            _generalParserSettings = generalSettings.Value;
             _logger = logger;
         }
 
-        public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
+        public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
         {
-            var htmlDocument = await LoadHtmlDocument(parsingUrl, cancellationToken);
-            var productUrls = ParseProductUrls(htmlDocument, cancellationToken);
+            var baseUri = new Uri(url);
+            var ajaxUrl = $"{baseUri.Scheme}://{baseUri.Host}{AjaxPath}";
 
-            var parsedAlbums = new List<AlbumParsedEvent>();
-            foreach (var url in productUrls)
+            _logger.LogInformation("Fetching all Drakkar products via AJAX endpoint.");
+
+            var html = await FetchAlphabetPageAsync(ajaxUrl, 'A', cancellationToken);
+
+            if (string.IsNullOrEmpty(html) || html == "0")
             {
-                var albumParsedEvent = await ParseAlbumDetails(url, cancellationToken);
-                parsedAlbums.Add(albumParsedEvent);
-                _logger.LogInformation($"Parsed album: {albumParsedEvent.Name} by {albumParsedEvent.BandName}.");
-
-                await DelayBetweenRequests(cancellationToken);
+                _logger.LogInformation("No products returned from Drakkar AJAX endpoint.");
+                return new ListingPageResult
+                {
+                    Listings = new List<ListingItem>(),
+                    NextPageUrl = null
+                };
             }
 
-            var (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument, parsingUrl);
+            var processedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var listings = ParseProductsFromHtml(html, processedUrls, cancellationToken);
 
-            return new PageParsedResult
+            _logger.LogInformation("Fetched {Count} Drakkar products.", listings.Count);
+
+            return new ListingPageResult
             {
-                ParsedAlbums = parsedAlbums,
-                NextPageUrl = hasMorePages ? nextPageUrl : null
+                Listings = listings,
+                NextPageUrl = null
             };
         }
 
-        private List<string> ParseProductUrls(HtmlDocument htmlDocument, CancellationToken cancellationToken)
+        public async Task<AlbumParsedEvent> ParseAlbumDetailAsync(string detailUrl, CancellationToken cancellationToken)
         {
-            var urls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var anchorNodes = htmlDocument.DocumentNode.SelectNodes("//a[contains(@href, '/product/')]");
+            await DelayBetweenRequests(cancellationToken);
+            return await ParseAlbumDetails(detailUrl, cancellationToken);
+        }
 
-            if (anchorNodes != null)
+        private async Task<string> FetchAlphabetPageAsync(string ajaxUrl, char letter, CancellationToken cancellationToken)
+        {
+            var url = $"{ajaxUrl}?action=filter_products_by_alphabet&letter={letter}&category=";
+            var headers = new Dictionary<string, string>
             {
-                foreach (var anchorNode in anchorNodes)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+                { "X-Requested-With", "XMLHttpRequest" },
+                { "Referer", "https://www.drakkar666.com/shop/" },
+                { "Accept", "text/html, */*; q=0.01" }
+            };
 
-                    var href = anchorNode.GetAttributeValue("href", string.Empty).Trim();
-                    if (!string.IsNullOrEmpty(href) && href.Contains("/product/") && !href.Contains("add-to-cart"))
-                    {
-                        urls.Add(href);
-                    }
-                }
+            return await _httpRequestService.GetStringWithUserAgentAsync(url, headers, cancellationToken);
+        }
+
+        private List<ListingItem> ParseProductsFromHtml(string html, HashSet<string> processedUrls, CancellationToken cancellationToken)
+        {
+            var results = new List<ListingItem>();
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var productNodes = doc.DocumentNode.SelectNodes("//li[contains(@class,'product-warp-item')]")
+                ?? doc.DocumentNode.SelectNodes("//div[contains(@class,'type-product')]");
+
+            if (productNodes == null)
+            {
+                return results;
             }
 
-            return urls.ToList();
+            foreach (var productNode in productNodes)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var anchorNode = productNode.SelectSingleNode(".//a[contains(@href,'/product/')]");
+                if (anchorNode == null)
+                {
+                    continue;
+                }
+
+                var href = anchorNode.GetAttributeValue("href", string.Empty).Trim();
+                if (string.IsNullOrEmpty(href) || !processedUrls.Add(href))
+                {
+                    continue;
+                }
+
+                var titleNode = productNode.SelectSingleNode(".//a[contains(@class,'woocommerce-loop-product__title')]");
+                var titleText = titleNode != null
+                    ? HtmlEntity.DeEntitize(titleNode.InnerText?.Trim() ?? string.Empty)
+                    : string.Empty;
+
+                var (bandName, albumTitle, _) = ParseTitleParts(titleText);
+
+                results.Add(new ListingItem(bandName, albumTitle, href, titleText));
+            }
+
+            return results;
         }
 
         private async Task<AlbumParsedEvent> ParseAlbumDetails(string albumUrl, CancellationToken cancellationToken)
@@ -199,48 +222,7 @@ public class DrakkarParser : IParser
             }
 
             titleText = HtmlEntity.DeEntitize(titleText);
-
-            string[] parts = null;
-            foreach (var separator in TitleSeparators)
-            {
-                var separatorWithSpaces = $" {separator} ";
-                var splitParts = titleText.Split(new[] { separatorWithSpaces }, StringSplitOptions.None);
-                if (splitParts.Length >= 3)
-                {
-                    parts = splitParts;
-                    break;
-                }
-            }
-
-            if (parts == null || parts.Length < 3)
-            {
-                foreach (var separator in TitleSeparators)
-                {
-                    var separatorWithSpaces = $" {separator} ";
-                    var splitParts = titleText.Split(new[] { separatorWithSpaces }, StringSplitOptions.None);
-                    if (splitParts.Length == 2)
-                    {
-                        parts = splitParts;
-                        break;
-                    }
-                }
-            }
-
-            if (parts == null || parts.Length < 2)
-            {
-                return (titleText, titleText, string.Empty);
-            }
-
-            var bandName = parts[0].Trim();
-            var mediaTypeRaw = parts[^1].Trim();
-
-            if (parts.Length == 2)
-            {
-                return (bandName, CapitalizeFirstLetter(mediaTypeRaw), string.Empty);
-            }
-
-            var albumName = CapitalizeFirstLetter(string.Join(" - ", parts[1..^1]).Trim());
-            return (bandName, albumName, mediaTypeRaw);
+            return ParseTitleParts(titleText);
         }
 
         private AlbumMediaType? ParseDrakkarMediaType(string rawMediaType)
@@ -485,29 +467,6 @@ public class DrakkarParser : IParser
             return string.Empty;
         }
 
-        private (string NextPageUrl, bool HasMorePages) GetNextPageUrl(HtmlDocument htmlDocument, string currentUrl)
-        {
-            var currentPage = 1;
-            var pageMatch = Regex.Match(currentUrl, @"/page/(\d+)/");
-            if (pageMatch.Success)
-            {
-                currentPage = int.Parse(pageMatch.Groups[1].Value);
-            }
-
-            var nextPage = currentPage + 1;
-            var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode($"//a[contains(@href, '/page/{nextPage}/')]");
-
-            if (nextPageNode != null)
-            {
-                var nextPageUrl = nextPageNode.GetAttributeValue("href", null);
-                _logger.LogInformation($"Next page found: {nextPageUrl}.");
-                return (nextPageUrl, true);
-            }
-
-            _logger.LogInformation("Next page not found.");
-            return (null, false)!;
-        }
-
         private List<string> GetStructuredTextLines(HtmlDocument htmlDocument, string xpath)
         {
             var node = htmlDocument.DocumentNode.SelectSingleNode(xpath);
@@ -551,5 +510,84 @@ public class DrakkarParser : IParser
                 _generalParserSettings.MaxDelayBetweenRequestsSeconds);
 
             await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+        }
+
+        private static readonly char[] TitleSeparators = ['\u2013', '\u2014', '-'];
+        private static readonly string AjaxPath = "/wp-admin/admin-ajax.php";
+
+        private static string StripHtml(string html)
+        {
+            if (string.IsNullOrEmpty(html))
+            {
+                return html;
+            }
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+            var text = doc.DocumentNode.InnerText ?? string.Empty;
+            text = HtmlEntity.DeEntitize(text);
+            text = Regex.Replace(text, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", string.Empty);
+
+            return text.Trim();
+        }
+
+        private static string CapitalizeFirstLetter(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            return char.ToUpper(text[0]) + text[1..];
+        }
+
+        private static (string BandName, string AlbumTitle, string MediaTypeRaw) ParseTitleParts(string titleText)
+        {
+            if (string.IsNullOrEmpty(titleText))
+            {
+                return (string.Empty, string.Empty, string.Empty);
+            }
+
+            string[] parts = null;
+            foreach (var separator in TitleSeparators)
+            {
+                var separatorWithSpaces = $" {separator} ";
+                var splitParts = titleText.Split(new[] { separatorWithSpaces }, StringSplitOptions.None);
+                if (splitParts.Length >= 3)
+                {
+                    parts = splitParts;
+                    break;
+                }
+            }
+
+            if (parts == null || parts.Length < 3)
+            {
+                foreach (var separator in TitleSeparators)
+                {
+                    var separatorWithSpaces = $" {separator} ";
+                    var splitParts = titleText.Split(new[] { separatorWithSpaces }, StringSplitOptions.None);
+                    if (splitParts.Length == 2)
+                    {
+                        parts = splitParts;
+                        break;
+                    }
+                }
+            }
+
+            if (parts == null || parts.Length < 2)
+            {
+                return (titleText, titleText, string.Empty);
+            }
+
+            var bandName = parts[0].Trim();
+            var mediaTypeRaw = parts[^1].Trim();
+
+            if (parts.Length == 2)
+            {
+                return (bandName, CapitalizeFirstLetter(mediaTypeRaw), string.Empty);
+            }
+
+            var albumName = CapitalizeFirstLetter(string.Join(" - ", parts[1..^1]).Trim());
+            return (bandName, albumName, mediaTypeRaw);
         }
     }

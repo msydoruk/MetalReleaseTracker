@@ -29,24 +29,59 @@ public class TickerQSchedulerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await RegisterAlbumParsingJobs(cancellationToken);
+        await RegisterBandReferenceSyncJob(cancellationToken);
+        await RegisterCatalogueIndexJobs(cancellationToken);
+        await RegisterAlbumDetailParsingJobs(cancellationToken);
         await RegisterParsedPublisherJob(cancellationToken);
     }
 
-    private async Task RegisterAlbumParsingJobs(CancellationToken cancellationToken = default)
+    private async Task RegisterBandReferenceSyncJob(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var functionName = "BandReferenceSyncJob";
+            var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
+                .FirstOrDefault(job => job.Function == functionName);
+
+            if (existingJob != null)
+            {
+                _logger.LogDebug("Skipping job {FunctionName}.", functionName);
+                return;
+            }
+
+            await _cronTickerManager.AddAsync(
+                new CustomCronTicker
+                {
+                    Function = functionName,
+                    Expression = "0 0 0 * * 0",
+                    Description = "Weekly Ukrainian bands sync from Metal Archives",
+                    Retries = 3,
+                    RetryIntervals = [300, 900, 1800]
+                },
+                cancellationToken);
+
+            _logger.LogInformation("Scheduled band reference sync job (weekly).");
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to schedule band reference sync job.");
+        }
+    }
+
+    private async Task RegisterCatalogueIndexJobs(CancellationToken cancellationToken = default)
     {
         foreach (var parserDataSource in _parserDataSources)
         {
             try
             {
-                var functionName = "AlbumParsingJob";
+                var functionName = "CatalogueIndexJob";
                 var request = TickerHelper.CreateTickerRequest(parserDataSource);
                 var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
                     .FirstOrDefault(job => job.Function == functionName && job.Request == request);
 
                 if (existingJob != null)
                 {
-                    _logger.LogDebug($"Skipping job {functionName} with request {request}");
+                    _logger.LogDebug("Skipping job {FunctionName} with request {Request}.", functionName, request);
                     continue;
                 }
 
@@ -55,21 +90,64 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 */24 * * *",
-                        Description = $"Daily album parsing for {parserDataSource.Name}",
+                        Expression = "0 0 0 * * *",
+                        Description = $"Daily catalogue index for {parserDataSource.Name}",
                         Retries = 3,
                         RetryIntervals = [300, 900, 1800]
                     },
                     cancellationToken);
 
                 _logger.LogInformation(
-                    "Scheduled album parsing job for distributor: {DistributorCode}",
+                    "Scheduled catalogue index job for distributor: {DistributorCode}.",
                     parserDataSource.DistributorCode);
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception,
-                    "Failed to schedule album parsing job for distributor: {DistributorCode}",
+                    "Failed to schedule catalogue index job for distributor: {DistributorCode}.",
+                    parserDataSource.DistributorCode);
+            }
+        }
+    }
+
+    private async Task RegisterAlbumDetailParsingJobs(CancellationToken cancellationToken = default)
+    {
+        foreach (var parserDataSource in _parserDataSources)
+        {
+            try
+            {
+                var functionName = "AlbumDetailParsingJob";
+                var request = TickerHelper.CreateTickerRequest(parserDataSource);
+                var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
+                    .FirstOrDefault(job => job.Function == functionName && job.Request == request);
+
+                if (existingJob != null)
+                {
+                    _logger.LogDebug("Skipping job {FunctionName} with request {Request}.", functionName, request);
+                    continue;
+                }
+
+                await _cronTickerManager.AddAsync(
+                    new CustomCronTicker
+                    {
+                        Function = functionName,
+                        Request = request,
+                        Expression = "0 0 6 * * *",
+                        Description = $"Daily album detail parsing for {parserDataSource.Name}",
+                        Retries = 3,
+                        RetryIntervals = [300, 900, 1800]
+                    },
+                    cancellationToken);
+
+                _logger.LogInformation(
+                    "Scheduled album detail parsing job for distributor: {DistributorCode}.",
+                    parserDataSource.DistributorCode);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Failed to schedule album detail parsing job for distributor: {DistributorCode}.",
                     parserDataSource.DistributorCode);
             }
         }
@@ -85,7 +163,7 @@ public class TickerQSchedulerService : BackgroundService
 
             if (existingJob != null)
             {
-                _logger.LogDebug($"Skipping job {functionName}");
+                _logger.LogDebug("Skipping job {FunctionName}.", functionName);
                 return;
             }
 
@@ -94,17 +172,17 @@ public class TickerQSchedulerService : BackgroundService
                 {
                     Function = functionName,
                     Expression = "0 0 */1 * * *",
-                    Description = "Daily album publishing job",
+                    Description = "Hourly album publishing job",
                     Retries = 3,
                     RetryIntervals = [300, 900, 1800]
                 },
                 cancellationToken);
 
-            _logger.LogInformation("Scheduled album parsed publisher job");
+            _logger.LogInformation("Scheduled album parsed publisher job.");
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Failed to schedule album parsed publisher job");
+            _logger.LogError(exception, "Failed to schedule album parsed publisher job.");
         }
     }
 }

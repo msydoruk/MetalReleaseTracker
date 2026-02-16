@@ -11,38 +11,52 @@ using OpenQA.Selenium;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
-public class BlackMetalVendorParser : IParser
+public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
 {
+    private readonly IHtmlDocumentLoader _htmlDocumentLoader;
     private readonly ISeleniumWebDriverFactory _webDriverFactory;
     private readonly ILogger<BlackMetalVendorParser> _logger;
+    private Queue<string> _pendingSubcategoryUrls = new();
 
     public DistributorCode DistributorCode => DistributorCode.BlackMetalVendor;
 
     public BlackMetalVendorParser(
+        IHtmlDocumentLoader htmlDocumentLoader,
         ISeleniumWebDriverFactory webDriverFactory,
         ILogger<BlackMetalVendorParser> logger)
     {
+        _htmlDocumentLoader = htmlDocumentLoader;
         _webDriverFactory = webDriverFactory;
         _logger = logger;
     }
 
-    public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
+    public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
     {
-        IWebDriver? driver = null;
         try
         {
-            driver = _webDriverFactory.CreateDriver();
-            _logger.LogInformation("Created Selenium WebDriver for BlackMetalVendor parsing.");
+            var pageUrl = url;
 
-            var htmlDocument = await LoadPageWithSelenium(driver, parsingUrl, cancellationToken);
-            var parsedAlbums = ParseAlbumsFromListing(htmlDocument, cancellationToken);
-            var nextPageUrl = GetNextPageUrl(htmlDocument, parsingUrl);
-
-            _logger.LogInformation($"Parsed {parsedAlbums.Count} albums from listing page.");
-
-            return new PageParsedResult
+            if (IsMainCategoryPage(url))
             {
-                ParsedAlbums = parsedAlbums,
+                pageUrl = await DiscoverSubcategoriesAsync(url, cancellationToken);
+                if (pageUrl == null)
+                {
+                    return new ListingPageResult { Listings = [], NextPageUrl = null };
+                }
+            }
+
+            _logger.LogInformation("Crawling BlackMetalVendor page: {Url}.", pageUrl);
+
+            var htmlDocument = await _htmlDocumentLoader.LoadHtmlDocumentAsync(pageUrl, cancellationToken);
+            var listings = ParseListingsFromPage(htmlDocument);
+
+            _logger.LogInformation("Parsed {Count} products from page.", listings.Count);
+
+            var nextPageUrl = ResolveNextPageUrl(htmlDocument);
+
+            return new ListingPageResult
+            {
+                Listings = listings,
                 NextPageUrl = nextPageUrl
             };
         }
@@ -54,27 +68,205 @@ public class BlackMetalVendorParser : IParser
         {
             throw;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, $"Error during BlackMetalVendor parsing for URL: {parsingUrl}");
-            throw new BlackMetalVendorParserException($"Failed to parse BlackMetalVendor page: {parsingUrl}", ex);
+            _logger.LogError(exception, "Error during BlackMetalVendor catalogue crawl for URL: {Url}.", url);
+            throw new BlackMetalVendorParserException($"Failed to crawl BlackMetalVendor catalogue: {url}", exception);
+        }
+    }
+
+    public async Task<AlbumParsedEvent> ParseAlbumDetailAsync(string detailUrl, CancellationToken cancellationToken)
+    {
+        IWebDriver? driver = null;
+        try
+        {
+            driver = _webDriverFactory.CreateDriver();
+            _logger.LogInformation("Created Selenium WebDriver for BlackMetalVendor detail parse.");
+
+            var htmlDocument = await LoadPageWithSelenium(driver, detailUrl, cancellationToken);
+            return ParseAlbumFromDetailPage(htmlDocument, detailUrl);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (BlackMetalVendorParserException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error during BlackMetalVendor detail parse for URL: {Url}.", detailUrl);
+            throw new BlackMetalVendorParserException($"Failed to parse BlackMetalVendor detail page: {detailUrl}", exception);
         }
         finally
         {
-            if (driver != null)
+            DisposeDriver(driver);
+        }
+    }
+
+    private async Task<string?> DiscoverSubcategoriesAsync(string mainPageUrl, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Loading BlackMetalVendor main catalogue page: {Url}.", mainPageUrl);
+
+        var mainPage = await _htmlDocumentLoader.LoadHtmlDocumentAsync(mainPageUrl, cancellationToken);
+        var subcategoryUrls = ExtractSubcategoryUrls(mainPage);
+
+        _logger.LogInformation("Found {Count} subcategories to crawl.", subcategoryUrls.Count);
+
+        _pendingSubcategoryUrls = new Queue<string>(subcategoryUrls);
+
+        return _pendingSubcategoryUrls.Count > 0
+            ? _pendingSubcategoryUrls.Dequeue()
+            : null;
+    }
+
+    private string? ResolveNextPageUrl(HtmlDocument htmlDocument)
+    {
+        var nextPageInSubcategory = GetNextPageUrl(htmlDocument);
+
+        if (!string.IsNullOrEmpty(nextPageInSubcategory))
+        {
+            return nextPageInSubcategory;
+        }
+
+        if (_pendingSubcategoryUrls.Count > 0)
+        {
+            var nextSubcategory = _pendingSubcategoryUrls.Dequeue();
+            _logger.LogInformation("Moving to next subcategory: {Url}.", nextSubcategory);
+            return nextSubcategory;
+        }
+
+        _logger.LogInformation("All subcategories crawled.");
+        return null;
+    }
+
+    private List<string> ExtractSubcategoryUrls(HtmlDocument htmlDocument)
+    {
+        var subcategoryUrls = new List<string>();
+        var categoryLinks = htmlDocument.DocumentNode.SelectNodes(
+            "//a[contains(@href, ':::2_')]");
+
+        if (categoryLinks == null)
+        {
+            _logger.LogWarning("No subcategory links found matching ':::2_' pattern.");
+            return subcategoryUrls;
+        }
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var link in categoryLinks)
+        {
+            var href = HtmlEntity.DeEntitize(link.GetAttributeValue("href", string.Empty).Trim());
+
+            if (string.IsNullOrEmpty(href) || !seen.Add(href))
             {
-                try
-                {
-                    driver.Quit();
-                    driver.Dispose();
-                    _logger.LogInformation("Disposed Selenium WebDriver for BlackMetalVendor.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error disposing Selenium WebDriver.");
-                }
+                continue;
+            }
+
+            if (href.Contains("/Audio-Tape:::") ||
+                href.Contains("/Compact-Disc:::") ||
+                href.Contains("/Vinyl:::"))
+            {
+                subcategoryUrls.Add(href);
+                _logger.LogInformation("Found subcategory: {Url}.", href);
             }
         }
+
+        return subcategoryUrls;
+    }
+
+    private string? GetNextPageUrl(HtmlDocument htmlDocument)
+    {
+        var nextPageLink = htmlDocument.DocumentNode.SelectSingleNode(
+            "//a[@class='pageResults' and contains(@title, 'chste Seite')]");
+
+        if (nextPageLink != null)
+        {
+            var nextUrl = HtmlEntity.DeEntitize(nextPageLink.GetAttributeValue("href", string.Empty).Trim());
+            if (!string.IsNullOrEmpty(nextUrl))
+            {
+                return nextUrl;
+            }
+        }
+
+        return null;
+    }
+
+    private List<ListingItem> ParseListingsFromPage(HtmlDocument htmlDocument)
+    {
+        var results = new List<ListingItem>();
+
+        var listingBoxes = htmlDocument.DocumentNode.SelectNodes("//div[@class='listingbox']");
+        if (listingBoxes == null)
+        {
+            return results;
+        }
+
+        foreach (var box in listingBoxes)
+        {
+            var listing = ParseListingFromBox(box);
+            if (listing != null)
+            {
+                results.Add(listing);
+            }
+        }
+
+        return results;
+    }
+
+    private ListingItem? ParseListingFromBox(HtmlNode box)
+    {
+        var titleLink = box.SelectSingleNode(".//div[@class='lb_title']//h2//a");
+        if (titleLink == null)
+        {
+            return null;
+        }
+
+        var href = HtmlEntity.DeEntitize(titleLink.GetAttributeValue("href", string.Empty).Trim());
+        var titleText = HtmlEntity.DeEntitize(titleLink.InnerText?.Trim() ?? string.Empty);
+
+        if (string.IsNullOrEmpty(href) || string.IsNullOrEmpty(titleText))
+        {
+            return null;
+        }
+
+        var (bandName, albumName, _) = SplitTitle(titleText);
+
+        return new ListingItem(bandName, albumName, href, titleText);
+    }
+
+    private AlbumParsedEvent ParseAlbumFromDetailPage(HtmlDocument htmlDocument, string detailUrl)
+    {
+        var titleNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='lb_title']//h2//a")
+            ?? htmlDocument.DocumentNode.SelectSingleNode("//h1");
+        var titleText = titleNode != null
+            ? HtmlEntity.DeEntitize(titleNode.InnerText?.Trim() ?? string.Empty)
+            : string.Empty;
+
+        var (bandName, albumName, mediaTypeRaw) = SplitTitle(titleText);
+        var sku = ParseSku(detailUrl);
+        var price = ParsePriceFromPage(htmlDocument);
+        var photoUrl = ParsePhotoUrlFromPage(htmlDocument);
+        var media = ParseMediaType(mediaTypeRaw);
+
+        return new AlbumParsedEvent
+        {
+            DistributorCode = DistributorCode,
+            BandName = bandName,
+            SKU = sku,
+            Name = albumName,
+            ReleaseDate = DateTime.MinValue,
+            Genre = string.Empty,
+            Price = price,
+            PurchaseUrl = detailUrl,
+            PhotoUrl = photoUrl,
+            Media = media,
+            Label = string.Empty,
+            Press = sku,
+            Description = string.Empty,
+            Status = null
+        };
     }
 
     private async Task<HtmlDocument> LoadPageWithSelenium(IWebDriver driver, string url, CancellationToken cancellationToken)
@@ -106,73 +298,29 @@ public class BlackMetalVendorParser : IParser
         return htmlDocument;
     }
 
-    private List<AlbumParsedEvent> ParseAlbumsFromListing(HtmlDocument htmlDocument, CancellationToken cancellationToken)
+    private void DisposeDriver(IWebDriver? driver)
     {
-        var results = new List<AlbumParsedEvent>();
-
-        var listingBoxes = htmlDocument.DocumentNode.SelectNodes("//div[@class='listingbox']");
-        if (listingBoxes == null)
+        if (driver != null)
         {
-            _logger.LogWarning("No listing boxes found on page.");
-            return results;
-        }
-
-        foreach (var box in listingBoxes)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var album = ParseAlbumFromListingBox(box);
-            if (album != null)
+            try
             {
-                results.Add(album);
+                driver.Quit();
+                driver.Dispose();
+                _logger.LogInformation("Disposed Selenium WebDriver for BlackMetalVendor.");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Error disposing Selenium WebDriver.");
             }
         }
-
-        return results;
     }
 
-    private AlbumParsedEvent? ParseAlbumFromListingBox(HtmlNode box)
+    private static bool IsMainCategoryPage(string url)
     {
-        var titleLink = box.SelectSingleNode(".//div[@class='lb_title']//h2//a");
-        if (titleLink == null)
-        {
-            return null;
-        }
-
-        var href = HtmlEntity.DeEntitize(titleLink.GetAttributeValue("href", string.Empty).Trim());
-        var titleText = HtmlEntity.DeEntitize(titleLink.InnerText?.Trim() ?? string.Empty);
-
-        if (string.IsNullOrEmpty(href) || string.IsNullOrEmpty(titleText))
-        {
-            return null;
-        }
-
-        var (bandName, albumName, mediaTypeRaw) = SplitTitle(titleText);
-        var sku = ParseSku(href);
-        var price = ParsePriceFromListing(box);
-        var photoUrl = ParsePhotoUrlFromListing(box);
-        var media = ParseMediaType(mediaTypeRaw);
-
-        return new AlbumParsedEvent
-        {
-            DistributorCode = DistributorCode,
-            BandName = bandName,
-            SKU = sku,
-            Name = albumName,
-            ReleaseDate = DateTime.MinValue,
-            Genre = string.Empty,
-            Price = price,
-            PurchaseUrl = href,
-            PhotoUrl = photoUrl,
-            Media = media,
-            Label = string.Empty,
-            Press = sku,
-            Description = string.Empty,
-            Status = null
-        };
+        return !url.Contains(":::2_");
     }
 
-    private (string BandName, string AlbumName, string MediaTypeRaw) SplitTitle(string title)
+    private static (string BandName, string AlbumName, string MediaTypeRaw) SplitTitle(string title)
     {
         if (string.IsNullOrEmpty(title))
         {
@@ -187,7 +335,7 @@ public class BlackMetalVendorParser : IParser
             title = title[..mediaMatch.Index].Trim();
         }
 
-        char[] separators = { '\u2013', '\u2014', '-' };
+        char[] separators = ['\u2013', '\u2014', '-'];
         foreach (var separator in separators)
         {
             var separatorWithSpaces = $" {separator} ";
@@ -201,7 +349,7 @@ public class BlackMetalVendorParser : IParser
         return (title, title, mediaTypeRaw);
     }
 
-    private string ParseSku(string albumUrl)
+    private static string ParseSku(string albumUrl)
     {
         var idMatch = Regex.Match(albumUrl, @"::(\d+)\.html");
         if (idMatch.Success)
@@ -218,9 +366,11 @@ public class BlackMetalVendorParser : IParser
         return albumUrl;
     }
 
-    private float ParsePriceFromListing(HtmlNode box)
+    private static float ParsePriceFromPage(HtmlDocument htmlDocument)
     {
-        var priceNode = box.SelectSingleNode(".//span[@class='value_price']");
+        var priceNode = htmlDocument.DocumentNode.SelectSingleNode(".//span[@class='value_price']")
+            ?? htmlDocument.DocumentNode.SelectSingleNode("//span[contains(@class,'price')]");
+
         if (priceNode != null)
         {
             var priceText = HtmlEntity.DeEntitize(priceNode.InnerText?.Trim() ?? string.Empty);
@@ -234,9 +384,11 @@ public class BlackMetalVendorParser : IParser
         return 0.0f;
     }
 
-    private string ParsePhotoUrlFromListing(HtmlNode box)
+    private static string ParsePhotoUrlFromPage(HtmlDocument htmlDocument)
     {
-        var imgNode = box.SelectSingleNode(".//div[contains(@class,'prod_image')]//img");
+        var imgNode = htmlDocument.DocumentNode.SelectSingleNode(".//div[contains(@class,'prod_image')]//img")
+            ?? htmlDocument.DocumentNode.SelectSingleNode("//img[contains(@class,'product')]");
+
         if (imgNode != null)
         {
             var src = imgNode.GetAttributeValue("src", null)
@@ -253,7 +405,7 @@ public class BlackMetalVendorParser : IParser
         return string.Empty;
     }
 
-    private AlbumMediaType? ParseMediaType(string mediaTypeRaw)
+    private static AlbumMediaType? ParseMediaType(string mediaTypeRaw)
     {
         if (string.IsNullOrWhiteSpace(mediaTypeRaw))
         {
@@ -277,35 +429,6 @@ public class BlackMetalVendorParser : IParser
             return AlbumMediaType.Tape;
         }
 
-        return null;
-    }
-
-    private string? GetNextPageUrl(HtmlDocument htmlDocument, string currentUrl)
-    {
-        var currentPage = 1;
-        var pageMatch = Regex.Match(currentUrl, @"[&?]page=(\d+)");
-        if (pageMatch.Success)
-        {
-            currentPage = int.Parse(pageMatch.Groups[1].Value);
-        }
-
-        var nextPage = currentPage + 1;
-
-        var nextPageNode = htmlDocument.DocumentNode.SelectSingleNode(
-            $"//a[@class='pageResults' and contains(@href, 'page={nextPage}')]");
-
-        if (nextPageNode != null)
-        {
-            var nextPageUrl = nextPageNode.GetAttributeValue("href", null);
-            if (!string.IsNullOrEmpty(nextPageUrl))
-            {
-                nextPageUrl = HtmlEntity.DeEntitize(nextPageUrl);
-                _logger.LogInformation($"Next page found: {nextPageUrl}.");
-                return nextPageUrl;
-            }
-        }
-
-        _logger.LogInformation("Next page not found.");
         return null;
     }
 }

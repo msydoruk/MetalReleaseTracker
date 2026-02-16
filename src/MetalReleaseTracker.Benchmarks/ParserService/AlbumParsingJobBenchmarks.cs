@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
@@ -6,10 +6,11 @@ using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Repositories;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
-using MetalReleaseTracker.ParserService.Tests.Factories;
+using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Tests.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MetalReleaseTracker.Benchmarks.ParserService
@@ -20,11 +21,11 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         private TestPostgresDatabaseFixture _fixture;
         private ParsingSessionRepository _parsingSessionRepo;
         private AlbumParsedEventRepository _albumParsedEventRepo;
-        private Mock<IParser> _parserMock;
+        private CatalogueIndexRepository _catalogueIndexRepo;
+        private Mock<IAlbumDetailParser> _detailParserMock;
         private Mock<IImageUploadService> _imageUploadServiceMock;
-        private Mock<ILogger<AlbumParsingJob>> _loggerMock;
-        private AlbumParsingJob _job;
-        private ParserDataSource _dataSource;
+        private Mock<ILogger<AlbumDetailParsingJob>> _loggerMock;
+        private AlbumDetailParsingJob _job;
 
         [Params(10, 100, 1000)]
         public int DataSize { get; set; }
@@ -34,15 +35,30 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         {
             _fixture = new TestPostgresDatabaseFixture();
             _fixture.InitializeAsync().GetAwaiter().GetResult();
-            
+
             _parsingSessionRepo = new ParsingSessionRepository(_fixture.DbContext, new Mock<ILogger<ParsingSessionRepository>>().Object);
             _albumParsedEventRepo = new AlbumParsedEventRepository(_fixture.DbContext);
+            _catalogueIndexRepo = new CatalogueIndexRepository(_fixture.DbContext);
             _imageUploadServiceMock = new Mock<IImageUploadService>();
-            _loggerMock = new Mock<ILogger<AlbumParsingJob>>();
-            _parserMock = new Mock<IParser>();
-            _job = new AlbumParsingJob(_ => _parserMock.Object, _parsingSessionRepo, _albumParsedEventRepo, _imageUploadServiceMock.Object, _loggerMock.Object);
-            _dataSource = new ParserDataSource { DistributorCode = DistributorCode.OsmoseProductions, ParsingUrl = "https://test.com" };
-            
+            _loggerMock = new Mock<ILogger<AlbumDetailParsingJob>>();
+            _detailParserMock = new Mock<IAlbumDetailParser>();
+
+            var generalParserSettingsMock = new Mock<IOptions<GeneralParserSettings>>();
+            generalParserSettingsMock.Setup(x => x.Value).Returns(new GeneralParserSettings
+            {
+                MinDelayBetweenRequestsSeconds = 0,
+                MaxDelayBetweenRequestsSeconds = 1
+            });
+
+            _job = new AlbumDetailParsingJob(
+                _ => _detailParserMock.Object,
+                _catalogueIndexRepo,
+                _parsingSessionRepo,
+                _albumParsedEventRepo,
+                _imageUploadServiceMock.Object,
+                generalParserSettingsMock.Object,
+                _loggerMock.Object);
+
             ClearDatabase().GetAwaiter().GetResult();
         }
 
@@ -50,18 +66,40 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         public void IterationSetup()
         {
             ClearDatabase().GetAwaiter().GetResult();
-            var fakeAlbums = new List<AlbumParsedEvent>();
+
+            var entries = new List<CatalogueIndexEntity>();
             for (int i = 0; i < DataSize; i++)
             {
-                fakeAlbums.Add(new AlbumParsedEvent { SKU = $"SKU_{i}", DistributorCode = DistributorCode.OsmoseProductions });
+                entries.Add(new CatalogueIndexEntity
+                {
+                    Id = Guid.NewGuid(),
+                    DistributorCode = DistributorCode.OsmoseProductions,
+                    BandName = $"Band_{i}",
+                    AlbumTitle = $"Album_{i}",
+                    RawTitle = $"Band_{i} - Album_{i}",
+                    DetailUrl = $"https://test.com/album/{i}",
+                    Status = CatalogueIndexStatus.Relevant,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
             }
-            _parserMock = MocksFactory.CreateParserMock(fakeAlbums);
+
+            _fixture.DbContext.CatalogueIndex.AddRange(entries);
+            _fixture.DbContext.SaveChanges();
+
+            _detailParserMock
+                .Setup(x => x.ParseAlbumDetailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new AlbumParsedEvent
+                {
+                    SKU = "SKU_BENCH",
+                    DistributorCode = DistributorCode.OsmoseProductions
+                });
         }
 
         [Benchmark]
-        public void RunParserJob()
+        public void RunDetailParsingJob()
         {
-            _job.RunParserJob(_dataSource, CancellationToken.None).GetAwaiter().GetResult();
+            _job.RunDetailParsingJob(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         [GlobalCleanup]
@@ -74,7 +112,7 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         private async Task ClearDatabase()
         {
             await _fixture.DbContext.Database.ExecuteSqlRawAsync(
-                "TRUNCATE TABLE \"AlbumParsedEvents\", \"ParsingSessions\" RESTART IDENTITY CASCADE;"
+                "TRUNCATE TABLE \"AlbumParsedEvents\", \"ParsingSessions\", \"CatalogueIndex\", \"BandReferences\" RESTART IDENTITY CASCADE;"
             );
         }
     }

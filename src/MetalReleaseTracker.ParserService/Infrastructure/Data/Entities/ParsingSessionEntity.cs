@@ -13,9 +13,6 @@ public class ParsingSessionEntity
     public DistributorCode DistributorCode { get; set; }
 
     [Required]
-    public string PageToProcess { get; set; }
-
-    [Required]
     public DateTime LastUpdatedDate { get; set; }
 
     public AlbumParsingStatus ParsingStatus { get; set; }
