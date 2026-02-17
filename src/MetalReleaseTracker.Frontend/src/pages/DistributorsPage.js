@@ -30,6 +30,11 @@ const distributorLogos = {
   'drakkar': '/logos/drakkar.png',
   'black metal vendor': '/logos/black-metal-vendor.png',
   'black-metal-vendor.com': '/logos/black-metal-vendor.png',
+  'paragon': '/logos/paragon-records.jpg',
+  'season of mist': '/logos/season-of-mist.png',
+  'napalm': '/logos/napalm-records.png',
+  'blackmetalstore': '/logos/black-metal-store.webp',
+  'black metal store': '/logos/black-metal-store.webp',
 };
 
 const getDistributorLogo = (distributor) => {

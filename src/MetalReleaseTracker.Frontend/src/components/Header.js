@@ -19,11 +19,11 @@ import {
   Tooltip,
   Chip
 } from '@mui/material';
-import { 
-  Menu as MenuIcon, 
+import {
+  Menu as MenuIcon,
   Person as PersonIcon,
   Home as HomeIcon,
-  Album as AlbumIcon, 
+  Album as AlbumIcon,
   MusicNote as MusicNoteIcon,
   Store as StoreIcon,
   Logout as LogoutIcon,
@@ -31,18 +31,22 @@ import {
   Email as EmailIcon,
   Login as LoginIcon,
   AppRegistration as RegisterIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Newspaper as NewspaperIcon,
+  Language as LanguageIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const Header = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  
+
   const navigate = useNavigate();
+  const { language, toggleLanguage, t } = useLanguage();
   
   const checkUserStatus = async () => {
     try {
@@ -130,11 +134,12 @@ const Header = () => {
   };
   
   const navItems = [
-    { title: 'Home', path: '/', icon: <HomeIcon /> },
-    { title: 'Albums', path: '/albums', icon: <AlbumIcon /> },
-    { title: 'Bands', path: '/bands', icon: <MusicNoteIcon /> },
-    { title: 'Distributors', path: '/distributors', icon: <StoreIcon /> },
-    { title: 'About', path: '/about', icon: <InfoIcon /> }
+    { title: t('nav.home'), path: '/', icon: <HomeIcon /> },
+    { title: t('nav.albums'), path: '/albums', icon: <AlbumIcon /> },
+    { title: t('nav.bands'), path: '/bands', icon: <MusicNoteIcon /> },
+    { title: t('nav.distributors'), path: '/distributors', icon: <StoreIcon /> },
+    { title: t('nav.news'), path: '/news', icon: <NewspaperIcon /> },
+    { title: t('nav.about'), path: '/about', icon: <InfoIcon /> }
   ];
   
   const getInitials = (name) => {
@@ -195,39 +200,14 @@ const Header = () => {
         ))}
       </List>
       
-      {user ? (
-        <>
-          <Divider />
-          <List>
-            <ListItemButton component={Link} to="/profile">
-              <ListItemIcon><AccountCircleIcon /></ListItemIcon>
-              <ListItemText primary="Profile" />
-            </ListItemButton>
-            <ListItemButton onClick={handleLogout}>
-              <ListItemIcon><LogoutIcon color="error" /></ListItemIcon>
-              <ListItemText primary="Sign Out" primaryTypographyProps={{ color: 'error' }} />
-            </ListItemButton>
-          </List>
-        </>
-      ) : (
-        <>
-          <Divider />
-          <List>
-            <ListItemButton component={Link} to="/login">
-              <ListItemIcon><LoginIcon /></ListItemIcon>
-              <ListItemText primary="Log In" />
-            </ListItemButton>
-            <ListItemButton component={Link} to="/register">
-              <ListItemIcon><RegisterIcon /></ListItemIcon>
-              <ListItemText primary="Sign Up" />
-            </ListItemButton>
-          </List>
-        </>
-      )}
+      {/* Auth UI hidden for now — will be enabled later */}
     </Box>
   );
   
   const renderAuthButtons = () => {
+    // Auth UI hidden for now — will be enabled later
+    return null;
+
     if (user) {
       return (
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
@@ -378,9 +358,19 @@ const Header = () => {
               ))}
             </Box>
             
-            {/* Auth buttons */}
+            {/* Language toggle + Auth buttons */}
             {!loading && (
               <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
+                <Tooltip title={language === 'en' ? 'Українська' : 'English'}>
+                  <Button
+                    color="inherit"
+                    onClick={toggleLanguage}
+                    sx={{ minWidth: 'auto', px: 1, mr: 1 }}
+                    startIcon={<LanguageIcon />}
+                  >
+                    {language === 'en' ? 'UA' : 'EN'}
+                  </Button>
+                </Tooltip>
                 {renderAuthButtons()}
               </Box>
             )}

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
+
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import AlbumsPage from './pages/AlbumsPage';
 import LoginCallback from './pages/LoginCallback';
 import GoogleCallback from './pages/GoogleCallback';
@@ -11,10 +13,11 @@ import ProfilePage from './pages/ProfilePage';
 import BandsPage from './pages/BandsPage';
 import DistributorsPage from './pages/DistributorsPage';
 import AboutPage from './pages/AboutPage';
-import AboutUaPage from './pages/AboutUaPage';
+import NewsPage from './pages/NewsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
+import { LanguageProvider } from './i18n/LanguageContext';
 
 // Create a dark theme for the metal music theme
 const theme = createTheme({
@@ -154,34 +157,41 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <Router>
-          <Header />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/auth/callback" element={<GoogleCallback />} />
-            
-            {/* Public catalog routes */}
-            <Route path="/" element={<AlbumsPage isHome />} />
-            <Route path="/albums" element={<AlbumsPage />} />
-            <Route path="/bands" element={<BandsPage />} />
-            <Route path="/distributors" element={<DistributorsPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/about/ua" element={<AboutUaPage />} />
+        <LanguageProvider>
+          <Router>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Header />
+              <Box component="main" sx={{ flexGrow: 1 }}>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/auth/callback" element={<GoogleCallback />} />
 
-            {/* Protected routes */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/signin-callback" element={<LoginCallback />} />
-          </Routes>
-        </Router>
+                  {/* Public catalog routes */}
+                  <Route path="/" element={<AlbumsPage isHome />} />
+                  <Route path="/albums" element={<AlbumsPage />} />
+                  <Route path="/bands" element={<BandsPage />} />
+                  <Route path="/distributors" element={<DistributorsPage />} />
+                  <Route path="/news" element={<NewsPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+
+                  {/* Protected routes */}
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/signin-callback" element={<LoginCallback />} />
+                </Routes>
+              </Box>
+              <Footer />
+            </Box>
+          </Router>
+        </LanguageProvider>
       </LocalizationProvider>
     </ThemeProvider>
   );
