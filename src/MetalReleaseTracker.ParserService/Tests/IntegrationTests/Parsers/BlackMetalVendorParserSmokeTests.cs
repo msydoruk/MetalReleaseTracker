@@ -15,9 +15,7 @@ public class BlackMetalVendorParserSmokeTests : ParserSmokeTestBase
     private BlackMetalVendorParser CreateParser()
     {
         var userAgentProvider = new Infrastructure.Http.UserAgentProvider();
-        var webDriverFactory = new SeleniumWebDriverFactory(
-            userAgentProvider,
-            NullLogger<SeleniumWebDriverFactory>.Instance);
+        var webDriverFactory = new SeleniumWebDriverFactory(userAgentProvider);
 
         return new BlackMetalVendorParser(
             webDriverFactory,

@@ -72,6 +72,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
     containerBuilder.AddParsers();
 });
 
+builder.Services.AddHttpClient<IFlareSolverrClient, FlareSolverrClient>();
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 builder.Services.AddScoped<IBandReferenceService, BandReferenceService>();

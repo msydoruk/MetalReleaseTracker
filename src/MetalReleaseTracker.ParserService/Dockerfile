@@ -19,12 +19,11 @@ RUN dotnet publish "MetalReleaseTracker.ParserService.csproj" -c Release -o /app
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 
-# Install Google Chrome stable + Xvfb virtual display
+# Install Google Chrome stable (Debian snap packages for chromium don't work in Docker)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget gnupg2 \
     fonts-liberation libnss3 libxss1 libasound2t64 \
     libatk-bridge2.0-0 libgtk-3-0 xdg-utils \
-    xvfb \
     && wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && apt-get install -y --no-install-recommends /tmp/google-chrome.deb \
     && rm /tmp/google-chrome.deb \
@@ -34,14 +33,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN google-chrome --version
 
 ENV CHROME_BIN=/usr/bin/google-chrome
-ENV DISPLAY=:99
 
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
 COPY --from=publish /app/publish .
-COPY ["MetalReleaseTracker.ParserService/entrypoint.sh", "entrypoint.sh"]
-RUN chmod +x entrypoint.sh
-
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["dotnet", "MetalReleaseTracker.ParserService.dll"]

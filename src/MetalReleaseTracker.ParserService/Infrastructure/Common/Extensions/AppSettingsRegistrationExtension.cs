@@ -19,6 +19,7 @@ public static class AppSettingsRegistrationExtension
         services.Configure<List<ParserDataSource>>(configuration.GetSection("ParserDataSources"));
         services.Configure<MinioFileStorageConfig>(configuration.GetSection("Minio"));
         services.Configure<BandReferenceSettings>(configuration.GetSection("BandReference"));
+        services.Configure<FlareSolverrSettings>(configuration.GetSection("FlareSolverr"));
 
         return services;
     }

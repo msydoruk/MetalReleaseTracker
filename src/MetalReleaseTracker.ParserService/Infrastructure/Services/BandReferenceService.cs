@@ -3,24 +3,19 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
-using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Services.Configuration;
 using Microsoft.Extensions.Options;
-using OpenQA.Selenium;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Services;
 
 public class BandReferenceService : IBandReferenceService
 {
     private const int PageSize = 200;
-    private const int CloudflareWaitSeconds = 15;
-    private const int MaxFetchRetries = 5;
-    private const int RetryDelayMs = 5000;
-    private const int PageLoadWaitSeconds = 3;
+    private const int MaxFetchRetries = 3;
 
     private readonly IBandReferenceRepository _bandReferenceRepository;
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
-    private readonly ISeleniumWebDriverFactory _webDriverFactory;
+    private readonly IFlareSolverrClient _flareSolverrClient;
     private readonly BandReferenceSettings _settings;
     private readonly ILogger<BandReferenceService> _logger;
     private readonly Random _random = new();
@@ -28,13 +23,13 @@ public class BandReferenceService : IBandReferenceService
     public BandReferenceService(
         IBandReferenceRepository bandReferenceRepository,
         IBandDiscographyRepository bandDiscographyRepository,
-        ISeleniumWebDriverFactory webDriverFactory,
+        IFlareSolverrClient flareSolverrClient,
         IOptions<BandReferenceSettings> settings,
         ILogger<BandReferenceService> logger)
     {
         _bandReferenceRepository = bandReferenceRepository;
         _bandDiscographyRepository = bandDiscographyRepository;
-        _webDriverFactory = webDriverFactory;
+        _flareSolverrClient = flareSolverrClient;
         _settings = settings.Value;
         _logger = logger;
     }
@@ -43,14 +38,10 @@ public class BandReferenceService : IBandReferenceService
     {
         _logger.LogInformation("Starting Ukrainian bands sync from Metal Archives.");
 
-        IWebDriver? driver = null;
+        var sessionId = await _flareSolverrClient.CreateSessionAsync(cancellationToken);
+
         try
         {
-            driver = _webDriverFactory.CreateDriver();
-            _logger.LogInformation("Created Selenium WebDriver for Metal Archives sync.");
-
-            await PassCloudflareChallenge(driver, cancellationToken);
-
             var totalProcessed = 0;
             var offset = 0;
             int totalRecords;
@@ -60,7 +51,7 @@ public class BandReferenceService : IBandReferenceService
                 var url = BuildSearchUrl(offset);
                 _logger.LogInformation("Fetching Metal Archives page at offset {Offset}.", offset);
 
-                var json = await FetchPageWithRetry(driver, url, cancellationToken);
+                var json = await FetchJsonWithRetry(url, sessionId, cancellationToken);
                 var (bands, total) = ParseMetalArchivesResponse(json);
                 totalRecords = total;
 
@@ -87,23 +78,15 @@ public class BandReferenceService : IBandReferenceService
 
             _logger.LogInformation("Ukrainian bands sync completed. Total bands processed: {Total}.", totalProcessed);
 
-            await SyncDiscographiesAsync(driver, cancellationToken);
+            await SyncDiscographiesAsync(sessionId, cancellationToken);
         }
         finally
         {
-            DisposeDriver(driver);
+            await _flareSolverrClient.DestroySessionAsync(sessionId, cancellationToken);
         }
     }
 
-    private async Task PassCloudflareChallenge(IWebDriver driver, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Navigating to Metal Archives to pass Cloudflare challenge.");
-        await Task.Run(() => driver.Navigate().GoToUrl(_settings.MetalArchivesBaseUrl), cancellationToken);
-        _logger.LogInformation("Waiting {Seconds}s for Cloudflare challenge to resolve.", CloudflareWaitSeconds);
-        await Task.Delay(TimeSpan.FromSeconds(CloudflareWaitSeconds), cancellationToken);
-    }
-
-    private async Task SyncDiscographiesAsync(IWebDriver driver, CancellationToken cancellationToken)
+    private async Task SyncDiscographiesAsync(string sessionId, CancellationToken cancellationToken)
     {
         var bands = await _bandReferenceRepository.GetAllAsync(cancellationToken);
         _logger.LogInformation("Starting discography sync for {Count} bands.", bands.Count);
@@ -115,7 +98,7 @@ public class BandReferenceService : IBandReferenceService
             try
             {
                 var url = $"{_settings.MetalArchivesBaseUrl}/band/discography/id/{band.MetalArchivesId}/tab/all";
-                var html = await LoadPageContent(driver, url, cancellationToken);
+                var html = await _flareSolverrClient.GetPageContentAsync(url, sessionId, cancellationToken);
                 var entries = ParseDiscographyHtml(html, band.Id);
 
                 await _bandDiscographyRepository.ReplaceForBandAsync(band.Id, entries, cancellationToken);
@@ -146,36 +129,21 @@ public class BandReferenceService : IBandReferenceService
         _logger.LogInformation("Discography sync completed. Synced {Count}/{Total} bands.", syncedCount, bands.Count);
     }
 
-    private async Task<string> LoadPageContent(IWebDriver driver, string url, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        await Task.Run(() => driver.Navigate().GoToUrl(url), cancellationToken);
-        await Task.Delay(TimeSpan.FromSeconds(PageLoadWaitSeconds), cancellationToken);
-
-        var pageSource = driver.PageSource;
-        if (string.IsNullOrEmpty(pageSource))
-        {
-            throw new InvalidOperationException($"Empty page source from Metal Archives: {url}");
-        }
-
-        return ExtractBodyText(driver, pageSource);
-    }
-
-    private async Task<string> FetchPageWithRetry(IWebDriver driver, string url, CancellationToken cancellationToken)
+    private async Task<string> FetchJsonWithRetry(string url, string sessionId, CancellationToken cancellationToken)
     {
         for (var attempt = 1; attempt <= MaxFetchRetries; attempt++)
         {
             try
             {
-                var content = await LoadPageContent(driver, url, cancellationToken);
+                var html = await _flareSolverrClient.GetPageContentAsync(url, sessionId, cancellationToken);
+                var json = ExtractJsonFromHtml(html);
 
-                if (content.TrimStart().StartsWith('{'))
+                if (json.TrimStart().StartsWith('{'))
                 {
-                    return content;
+                    return json;
                 }
 
-                var preview = content.Length > 200 ? content[..200] : content;
+                var preview = json.Length > 200 ? json[..200] : json;
                 _logger.LogWarning(
                     "Metal Archives returned non-JSON response (attempt {Attempt}/{MaxRetries}). Preview: {Preview}",
                     attempt,
@@ -190,7 +158,7 @@ public class BandReferenceService : IBandReferenceService
             {
                 _logger.LogWarning(
                     exception,
-                    "Failed to load Metal Archives page (attempt {Attempt}/{MaxRetries}): {Url}",
+                    "Failed to fetch Metal Archives page (attempt {Attempt}/{MaxRetries}): {Url}",
                     attempt,
                     MaxFetchRetries,
                     url);
@@ -198,7 +166,7 @@ public class BandReferenceService : IBandReferenceService
 
             if (attempt < MaxFetchRetries)
             {
-                await Task.Delay(RetryDelayMs * attempt, cancellationToken);
+                await Task.Delay(5000 * attempt, cancellationToken);
             }
         }
 
@@ -257,44 +225,28 @@ public class BandReferenceService : IBandReferenceService
         await Task.Delay(delayMs, cancellationToken);
     }
 
-    private void DisposeDriver(IWebDriver? driver)
+    private static string ExtractJsonFromHtml(string html)
     {
-        if (driver != null)
-        {
-            try
-            {
-                driver.Quit();
-                driver.Dispose();
-                _logger.LogInformation("Disposed Selenium WebDriver for Metal Archives sync.");
-            }
-            catch (Exception exception)
-            {
-                _logger.LogWarning(exception, "Error disposing Selenium WebDriver.");
-            }
-        }
-    }
+        var htmlDoc = new HtmlDocument();
+        htmlDoc.LoadHtml(html);
 
-    private static string ExtractBodyText(IWebDriver driver, string pageSource)
-    {
-        try
+        var preNode = htmlDoc.DocumentNode.SelectSingleNode("//pre");
+        if (preNode != null)
         {
-            var jsExecutor = (IJavaScriptExecutor)driver;
-            var bodyText = jsExecutor.ExecuteScript("return document.body.innerText")?.ToString();
-            if (!string.IsNullOrEmpty(bodyText))
+            return System.Net.WebUtility.HtmlDecode(preNode.InnerText);
+        }
+
+        var bodyNode = htmlDoc.DocumentNode.SelectSingleNode("//body");
+        if (bodyNode != null)
+        {
+            var bodyText = System.Net.WebUtility.HtmlDecode(bodyNode.InnerText).Trim();
+            if (bodyText.StartsWith('{'))
             {
                 return bodyText;
             }
         }
-        catch
-        {
-            // Fall through to HTML parsing
-        }
 
-        var htmlDoc = new HtmlDocument();
-        htmlDoc.LoadHtml(pageSource);
-        var preNode = htmlDoc.DocumentNode.SelectSingleNode("//pre");
-
-        return preNode != null ? preNode.InnerText : pageSource;
+        return html;
     }
 
     private static (string BandName, long MaId) ParseBandHtml(string html)
