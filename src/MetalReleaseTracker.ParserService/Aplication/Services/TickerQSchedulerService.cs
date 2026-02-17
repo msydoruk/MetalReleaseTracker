@@ -90,8 +90,8 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 0 * * *",
-                        Description = $"Daily catalogue index for {parserDataSource.Name}",
+                        Expression = "0 0 2 */3 * *",
+                        Description = $"Catalogue index every 3 days for {parserDataSource.Name}",
                         Retries = 3,
                         RetryIntervals = [300, 900, 1800]
                     },
@@ -132,8 +132,8 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 6 * * *",
-                        Description = $"Daily album detail parsing for {parserDataSource.Name}",
+                        Expression = "0 0 8 */3 * *",
+                        Description = $"Album detail parsing every 3 days for {parserDataSource.Name}",
                         Retries = 3,
                         RetryIntervals = [300, 900, 1800]
                     },
@@ -171,8 +171,8 @@ public class TickerQSchedulerService : BackgroundService
                 new CustomCronTicker
                 {
                     Function = functionName,
-                    Expression = "0 0 */1 * * *",
-                    Description = "Hourly album publishing job",
+                    Expression = "0 0 */6 * * *",
+                    Description = "Album publishing job every 6 hours",
                     Retries = 3,
                     RetryIntervals = [300, 900, 1800]
                 },
