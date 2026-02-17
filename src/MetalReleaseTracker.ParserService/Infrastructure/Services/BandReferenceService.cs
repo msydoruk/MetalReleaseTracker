@@ -16,6 +16,7 @@ public class BandReferenceService : IBandReferenceService
     private const int CloudflareWaitSeconds = 15;
     private const int MaxFetchRetries = 5;
     private const int RetryDelayMs = 5000;
+    private const int PageLoadWaitSeconds = 3;
 
     private readonly IBandReferenceRepository _bandReferenceRepository;
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
@@ -48,10 +49,7 @@ public class BandReferenceService : IBandReferenceService
             driver = _webDriverFactory.CreateDriver();
             _logger.LogInformation("Created Selenium WebDriver for Metal Archives sync.");
 
-            _logger.LogInformation("Navigating to Metal Archives to pass Cloudflare challenge.");
-            await Task.Run(() => driver.Navigate().GoToUrl(_settings.MetalArchivesBaseUrl), cancellationToken);
-            _logger.LogInformation("Waiting {Seconds}s for Cloudflare challenge to resolve.", CloudflareWaitSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(CloudflareWaitSeconds), cancellationToken);
+            await PassCloudflareChallenge(driver, cancellationToken);
 
             var totalProcessed = 0;
             var offset = 0;
@@ -62,7 +60,7 @@ public class BandReferenceService : IBandReferenceService
                 var url = BuildSearchUrl(offset);
                 _logger.LogInformation("Fetching Metal Archives page at offset {Offset}.", offset);
 
-                var json = await FetchJsonViaSelenium(driver, url, cancellationToken);
+                var json = await FetchPageWithRetry(driver, url, cancellationToken);
                 var (bands, total) = ParseMetalArchivesResponse(json);
                 totalRecords = total;
 
@@ -93,20 +91,16 @@ public class BandReferenceService : IBandReferenceService
         }
         finally
         {
-            if (driver != null)
-            {
-                try
-                {
-                    driver.Quit();
-                    driver.Dispose();
-                    _logger.LogInformation("Disposed Selenium WebDriver for Metal Archives sync.");
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogWarning(exception, "Error disposing Selenium WebDriver.");
-                }
-            }
+            DisposeDriver(driver);
         }
+    }
+
+    private async Task PassCloudflareChallenge(IWebDriver driver, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Navigating to Metal Archives to pass Cloudflare challenge.");
+        await Task.Run(() => driver.Navigate().GoToUrl(_settings.MetalArchivesBaseUrl), cancellationToken);
+        _logger.LogInformation("Waiting {Seconds}s for Cloudflare challenge to resolve.", CloudflareWaitSeconds);
+        await Task.Delay(TimeSpan.FromSeconds(CloudflareWaitSeconds), cancellationToken);
     }
 
     private async Task SyncDiscographiesAsync(IWebDriver driver, CancellationToken cancellationToken)
@@ -120,7 +114,10 @@ public class BandReferenceService : IBandReferenceService
         {
             try
             {
-                var entries = await FetchDiscographyAsync(driver, band, cancellationToken);
+                var url = $"{_settings.MetalArchivesBaseUrl}/band/discography/id/{band.MetalArchivesId}/tab/all";
+                var html = await LoadPageContent(driver, url, cancellationToken);
+                var entries = ParseDiscographyHtml(html, band.Id);
+
                 await _bandDiscographyRepository.ReplaceForBandAsync(band.Id, entries, cancellationToken);
                 syncedCount++;
 
@@ -149,15 +146,64 @@ public class BandReferenceService : IBandReferenceService
         _logger.LogInformation("Discography sync completed. Synced {Count}/{Total} bands.", syncedCount, bands.Count);
     }
 
-    private async Task<List<BandDiscographyEntity>> FetchDiscographyAsync(
-        IWebDriver driver,
-        BandReferenceEntity band,
-        CancellationToken cancellationToken)
+    private async Task<string> LoadPageContent(IWebDriver driver, string url, CancellationToken cancellationToken)
     {
-        var url = $"{_settings.MetalArchivesBaseUrl}/band/discography/id/{band.MetalArchivesId}/tab/all";
-        var html = await FetchHtmlViaSelenium(driver, url, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return ParseDiscographyHtml(html, band.Id);
+        await Task.Run(() => driver.Navigate().GoToUrl(url), cancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(PageLoadWaitSeconds), cancellationToken);
+
+        var pageSource = driver.PageSource;
+        if (string.IsNullOrEmpty(pageSource))
+        {
+            throw new InvalidOperationException($"Empty page source from Metal Archives: {url}");
+        }
+
+        return ExtractBodyText(driver, pageSource);
+    }
+
+    private async Task<string> FetchPageWithRetry(IWebDriver driver, string url, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; attempt <= MaxFetchRetries; attempt++)
+        {
+            try
+            {
+                var content = await LoadPageContent(driver, url, cancellationToken);
+
+                if (content.TrimStart().StartsWith('{'))
+                {
+                    return content;
+                }
+
+                var preview = content.Length > 200 ? content[..200] : content;
+                _logger.LogWarning(
+                    "Metal Archives returned non-JSON response (attempt {Attempt}/{MaxRetries}). Preview: {Preview}",
+                    attempt,
+                    MaxFetchRetries,
+                    preview);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Failed to load Metal Archives page (attempt {Attempt}/{MaxRetries}): {Url}",
+                    attempt,
+                    MaxFetchRetries,
+                    url);
+            }
+
+            if (attempt < MaxFetchRetries)
+            {
+                await Task.Delay(RetryDelayMs * attempt, cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Metal Archives did not return valid JSON after {MaxFetchRetries} attempts.");
     }
 
     private string BuildSearchUrl(int offset)
@@ -211,6 +257,46 @@ public class BandReferenceService : IBandReferenceService
         await Task.Delay(delayMs, cancellationToken);
     }
 
+    private void DisposeDriver(IWebDriver? driver)
+    {
+        if (driver != null)
+        {
+            try
+            {
+                driver.Quit();
+                driver.Dispose();
+                _logger.LogInformation("Disposed Selenium WebDriver for Metal Archives sync.");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Error disposing Selenium WebDriver.");
+            }
+        }
+    }
+
+    private static string ExtractBodyText(IWebDriver driver, string pageSource)
+    {
+        try
+        {
+            var jsExecutor = (IJavaScriptExecutor)driver;
+            var bodyText = jsExecutor.ExecuteScript("return document.body.innerText")?.ToString();
+            if (!string.IsNullOrEmpty(bodyText))
+            {
+                return bodyText;
+            }
+        }
+        catch
+        {
+            // Fall through to HTML parsing
+        }
+
+        var htmlDoc = new HtmlDocument();
+        htmlDoc.LoadHtml(pageSource);
+        var preNode = htmlDoc.DocumentNode.SelectSingleNode("//pre");
+
+        return preNode != null ? preNode.InnerText : pageSource;
+    }
+
     private static (string BandName, long MaId) ParseBandHtml(string html)
     {
         var hrefMatch = Regex.Match(html, @"href=""[^""]*?/bands/[^/]+/(\d+)""");
@@ -220,83 +306,6 @@ public class BandReferenceService : IBandReferenceService
         var bandName = nameMatch.Success ? nameMatch.Groups[1].Value.Trim() : string.Empty;
 
         return (bandName, maId);
-    }
-
-    private async Task<string> FetchJsonViaSelenium(IWebDriver driver, string url, CancellationToken cancellationToken)
-    {
-        var jsExecutor = (IJavaScriptExecutor)driver;
-
-        var script = @"
-            var callback = arguments[arguments.length - 1];
-            fetch(arguments[0], {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(function(response) { return response.text(); })
-            .then(function(text) { callback(text); })
-            .catch(function(error) { callback('ERROR: ' + error.message); });
-        ";
-
-        for (var attempt = 1; attempt <= MaxFetchRetries; attempt++)
-        {
-            var result = await Task.Run(() => jsExecutor.ExecuteAsyncScript(script, url), cancellationToken);
-            var json = result?.ToString() ?? string.Empty;
-
-            if (json.StartsWith("ERROR:", StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException($"Selenium fetch failed: {json}");
-            }
-
-            if (json.TrimStart().StartsWith('{'))
-            {
-                return json;
-            }
-
-            var preview = json.Length > 200 ? json[..200] : json;
-            _logger.LogWarning(
-                "Metal Archives returned non-JSON response (attempt {Attempt}/{MaxRetries}). Preview: {Preview}",
-                attempt,
-                MaxFetchRetries,
-                preview);
-
-            if (attempt < MaxFetchRetries)
-            {
-                await Task.Delay(RetryDelayMs * attempt, cancellationToken);
-            }
-        }
-
-        throw new InvalidOperationException(
-            $"Metal Archives did not return valid JSON after {MaxFetchRetries} attempts. Cloudflare may be blocking requests.");
-    }
-
-    private static async Task<string> FetchHtmlViaSelenium(IWebDriver driver, string url, CancellationToken cancellationToken)
-    {
-        var jsExecutor = (IJavaScriptExecutor)driver;
-
-        var script = @"
-            var callback = arguments[arguments.length - 1];
-            fetch(arguments[0], {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(function(response) { return response.text(); })
-            .then(function(text) { callback(text); })
-            .catch(function(error) { callback('ERROR: ' + error.message); });
-        ";
-
-        var result = await Task.Run(() => jsExecutor.ExecuteAsyncScript(script, url), cancellationToken);
-
-        var html = result?.ToString() ?? string.Empty;
-
-        if (html.StartsWith("ERROR:", StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException($"Selenium fetch failed: {html}");
-        }
-
-        return html;
     }
 
     private static List<BandDiscographyEntity> ParseDiscographyHtml(string html, Guid bandReferenceId)
