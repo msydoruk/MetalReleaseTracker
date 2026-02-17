@@ -68,6 +68,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
     containerBuilder.RegisterType<AlbumParsedEventRepository>().As<IAlbumParsedEventRepository>().InstancePerLifetimeScope();
     containerBuilder.RegisterType<BandReferenceRepository>().As<IBandReferenceRepository>().InstancePerLifetimeScope();
     containerBuilder.RegisterType<CatalogueIndexRepository>().As<ICatalogueIndexRepository>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<BandDiscographyRepository>().As<IBandDiscographyRepository>().InstancePerLifetimeScope();
     containerBuilder.AddParsers();
 });
 
