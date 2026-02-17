@@ -1,15 +1,16 @@
 import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  Typography, 
-  CardActions, 
-  Button, 
-  Box, 
-  Chip 
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  CardActions,
+  Button,
+  Box,
+  Chip
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // Mapping for status colors
 const statusColors = {
@@ -19,32 +20,34 @@ const statusColors = {
   Unavailable: 'error'
 };
 
-// Mapping for status labels
-const statusLabels = {
-  0: 'New',
-  1: 'Restock',
-  2: 'Pre-Order'
-};
-
-// Mapping for media type labels
-const mediaTypeLabels = {
-  0: 'CD',
-  1: 'Vinyl',
-  2: 'Cassette'
-};
-
 const AlbumCard = ({ album }) => {
+  const { t } = useLanguage();
+
+  // Mapping for status labels
+  const statusLabels = {
+    0: t('albumCard.statusNew'),
+    1: t('albumCard.statusRestock'),
+    2: t('albumCard.statusPreOrder')
+  };
+
+  // Mapping for media type labels
+  const mediaTypeLabels = {
+    0: t('albumCard.mediaCD'),
+    1: t('albumCard.mediaVinyl'),
+    2: t('albumCard.mediaCassette')
+  };
+
   // Get status label (skip rendering if not in known statuses)
   const statusLabel = statusLabels[album.status];
 
   // Get media type label
-  const mediaTypeLabel = mediaTypeLabels[album.media] || 'Unknown';
-  
+  const mediaTypeLabel = mediaTypeLabels[album.media] || t('albumCard.mediaUnknown');
+
   return (
-    <Card sx={{ 
+    <Card sx={{
       width: '100%',
       height: '100%',
-      display: 'flex', 
+      display: 'flex',
       flexDirection: 'column',
       boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
       borderRadius: 2,
@@ -63,7 +66,7 @@ const AlbumCard = ({ album }) => {
           height="220"
           image={album.photoUrl || 'https://via.placeholder.com/300x300?text=No+Image'}
           alt={album.name}
-          sx={{ 
+          sx={{
             objectFit: 'cover',
             transition: 'transform 0.3s ease',
             '&:hover': {
@@ -86,9 +89,9 @@ const AlbumCard = ({ album }) => {
           />
         )}
       </Box>
-      <CardContent sx={{ 
+      <CardContent sx={{
         flex: '1 0 auto',
-        display: 'flex', 
+        display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         p: 2,
@@ -104,7 +107,7 @@ const AlbumCard = ({ album }) => {
               variant="outlined"
             />
           </Box>
-          <Typography gutterBottom variant="h6" component="div" sx={{ 
+          <Typography gutterBottom variant="h6" component="div" sx={{
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
@@ -128,33 +131,33 @@ const AlbumCard = ({ album }) => {
             {album.bandName}
           </Typography>
         </Box>
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center', 
-          mt: 'auto', 
+          alignItems: 'center',
+          mt: 'auto',
           pt: 1,
           borderTop: '1px solid rgba(0,0,0,0.05)'
         }}>
           <Typography variant="body1" color="text.primary" sx={{ fontWeight: 'bold' }}>
             {'\u20AC'}{album.price.toFixed(2)}
           </Typography>
-          <Button 
-            size="small" 
-            component="a" 
-            href={album.purchaseUrl} 
-            target="_blank" 
+          <Button
+            size="small"
+            component="a"
+            href={album.purchaseUrl}
+            target="_blank"
             rel="noopener noreferrer"
             variant="contained"
             color="primary"
-            sx={{ 
+            sx={{
               borderRadius: 5,
               px: 2,
               fontWeight: 'bold',
               textTransform: 'none'
             }}
           >
-            View in Store
+            {t('albumCard.viewInStore')}
           </Button>
         </Box>
       </CardContent>
@@ -162,4 +165,4 @@ const AlbumCard = ({ album }) => {
   );
 };
 
-export default AlbumCard; 
+export default AlbumCard;

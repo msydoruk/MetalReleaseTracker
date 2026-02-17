@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Paper, 
-  Typography, 
-  Avatar, 
-  Box, 
-  Divider, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
+import {
+  Container,
+  Paper,
+  Typography,
+  Avatar,
+  Box,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
   ListItemText,
   Button,
   Grid,
@@ -19,23 +19,25 @@ import {
   Toolbar,
   IconButton
 } from '@mui/material';
-import { 
-  Email as EmailIcon, 
+import {
+  Email as EmailIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const ProfilePage = () => {
+  const { t } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   // Get user data directly from local storage
   const userName = localStorage.getItem('user_name') || '';
-  const userEmail = localStorage.getItem('user_email') || 'Email not provided';
+  const userEmail = localStorage.getItem('user_email') || t('profile.emailNotProvided');
   const userId = localStorage.getItem('user_id') || 'Not available';
   const loginTimestamp = localStorage.getItem('login_timestamp');
 
@@ -56,7 +58,7 @@ const ProfilePage = () => {
         setLoading(false);
       }
     };
-    
+
     checkAuthentication();
   }, [navigate]);
 
@@ -89,7 +91,7 @@ const ProfilePage = () => {
       return 'Invalid date';
     }
   };
-  
+
   // Calculate token expiration time (24 hours from login time)
   const getExpirationTime = (loginTimestamp) => {
     if (!loginTimestamp) return 'Unknown';
@@ -106,7 +108,7 @@ const ProfilePage = () => {
       <Container maxWidth="md" sx={{ pt: 8, textAlign: 'center' }}>
         <CircularProgress />
         <Typography variant="h6" mt={2}>
-          Loading profile...
+          {t('profile.loading')}
         </Typography>
       </Container>
     );
@@ -115,7 +117,7 @@ const ProfilePage = () => {
   if (!isAuthenticated) {
     return null; // User will be redirected in useEffect
   }
-  
+
   return (
     <>
       <AppBar position="static" color="default" elevation={0}>
@@ -131,13 +133,13 @@ const ProfilePage = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      
+
       <Container maxWidth="md" sx={{ py: 6 }}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Paper elevation={2} sx={{ py: 3, px: 4, mb: 3, borderRadius: 2 }}>
               <Box display="flex" alignItems="center" mb={3}>
-                <Avatar 
+                <Avatar
                   sx={{ width: 80, height: 80, bgcolor: 'primary.main', mr: 3 }}
                   alt={userName}
                 >
@@ -154,14 +156,14 @@ const ProfilePage = () => {
               </Box>
               <Divider sx={{ my: 2 }} />
               <Typography variant="h6" gutterBottom>
-                Authentication Information
+                {t('profile.authInfo')}
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Card variant="outlined">
                     <CardContent>
                       <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                        Login Time
+                        {t('profile.loginTime')}
                       </Typography>
                       <Typography variant="body1">
                         {getFormattedDate(loginTimestamp)}
@@ -173,7 +175,7 @@ const ProfilePage = () => {
                   <Card variant="outlined">
                     <CardContent>
                       <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                        Session Valid Until
+                        {t('profile.sessionValidUntil')}
                       </Typography>
                       <Typography variant="body1">
                         {getExpirationTime(loginTimestamp)}
@@ -183,13 +185,13 @@ const ProfilePage = () => {
                 </Grid>
               </Grid>
               <Box mt={4} display="flex" justifyContent="flex-end">
-                <Button 
-                  variant="contained" 
-                  color="error" 
+                <Button
+                  variant="contained"
+                  color="error"
                   startIcon={<LogoutIcon />}
                   onClick={handleLogout}
                 >
-                  Sign Out
+                  {t('profile.signOut')}
                 </Button>
               </Box>
             </Paper>
@@ -198,7 +200,7 @@ const ProfilePage = () => {
           <Grid item xs={12}>
             <Paper elevation={2} sx={{ py: 3, px: 4, borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom>
-                User Information
+                {t('profile.userInfo')}
               </Typography>
               <List>
                 <ListItem>
@@ -206,7 +208,7 @@ const ProfilePage = () => {
                     <PersonIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="User ID"
+                    primary={t('profile.userId')}
                     secondary={userId}
                   />
                 </ListItem>
@@ -215,7 +217,7 @@ const ProfilePage = () => {
                     <EmailIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Email"
+                    primary={t('profile.email')}
                     secondary={userEmail}
                   />
                 </ListItem>
@@ -224,7 +226,7 @@ const ProfilePage = () => {
                     <PersonIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Username"
+                    primary={t('profile.username')}
                     secondary={userName}
                   />
                 </ListItem>
@@ -237,4 +239,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage; 
+export default ProfilePage;

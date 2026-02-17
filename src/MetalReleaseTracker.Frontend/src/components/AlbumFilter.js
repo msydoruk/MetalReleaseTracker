@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Grid, 
-  TextField, 
-  MenuItem, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  Button, 
-  Paper, 
-  Box, 
+import {
+  Grid,
+  TextField,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  Button,
+  Paper,
+  Box,
   Typography,
   Slider,
   Divider,
@@ -23,8 +23,11 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { fetchBands, fetchDistributors } from '../services/api';
 import { ALBUM_SORT_FIELDS, SORT_FIELD_NAMES } from '../constants/albumSortFields';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
+  const { t } = useLanguage();
+
   const [filters, setFilters] = useState({
     name: initialFilters.name || '',
     bandId: initialFilters.bandId || '',
@@ -44,7 +47,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
   const [bands, setBands] = useState([]);
   const [distributors, setDistributors] = useState([]);
   const [priceRange, setPriceRange] = useState([
-    filters.minPrice || 0, 
+    filters.minPrice || 0,
     filters.maxPrice || 200
   ]);
 
@@ -56,7 +59,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
           fetchBands(),
           fetchDistributors()
         ]);
-        
+
         setBands(bandsResponse.data || []);
         setDistributors(distributorsResponse.data || []);
       } catch (error) {
@@ -83,9 +86,9 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
       releaseDateTo: initialFilters.releaseDateTo || null,
       ...initialFilters
     });
-    
+
     setPriceRange([
-      initialFilters.minPrice || 0, 
+      initialFilters.minPrice || 0,
       initialFilters.maxPrice || 200
     ]);
   }, [initialFilters]);
@@ -143,39 +146,39 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
       releaseDateFrom: null,
       releaseDateTo: null
     };
-    
+
     setFilters(resetFilters);
     setPriceRange([0, 200]);
-    
+
     if (onFilterChange) {
       onFilterChange(resetFilters);
     }
   };
 
   const sortOptions = [
-    { value: ALBUM_SORT_FIELDS.RELEASE_DATE, label: 'Date' },
-    { value: ALBUM_SORT_FIELDS.NAME, label: 'Name' },
-    { value: ALBUM_SORT_FIELDS.PRICE, label: 'Price' },
-    { value: ALBUM_SORT_FIELDS.BAND, label: 'Band' },
-    { value: ALBUM_SORT_FIELDS.DISTRIBUTOR, label: 'Distributor' }
+    { value: ALBUM_SORT_FIELDS.RELEASE_DATE, label: t('albumFilter.sortDate') },
+    { value: ALBUM_SORT_FIELDS.NAME, label: t('albumFilter.sortName') },
+    { value: ALBUM_SORT_FIELDS.PRICE, label: t('albumFilter.sortPrice') },
+    { value: ALBUM_SORT_FIELDS.BAND, label: t('albumFilter.sortBand') },
+    { value: ALBUM_SORT_FIELDS.DISTRIBUTOR, label: t('albumFilter.sortDistributor') }
   ];
 
   return (
-    <Paper sx={{ 
-      p: 3, 
-      mb: 0, 
-      borderRadius: 2, 
+    <Paper sx={{
+      p: 3,
+      mb: 0,
+      borderRadius: 2,
       bgcolor: 'background.paper',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
       border: '1px solid rgba(255, 255, 255, 0.1)'
     }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="h2" sx={{ color: 'white', fontWeight: 'bold' }}>
-          Filter Albums
+          {t('albumFilter.filterAlbums')}
         </Typography>
-        <Button 
-          variant="outlined" 
-          size="small" 
+        <Button
+          variant="outlined"
+          size="small"
           onClick={handleReset}
           color="secondary"
           sx={{
@@ -187,24 +190,24 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
             }
           }}
         >
-          Reset Filters
+          {t('albumFilter.resetFilters')}
         </Button>
       </Box>
-      
+
       <Divider sx={{ mb: 3 }} />
-      
+
       <form onSubmit={handleSubmit}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Search by name */}
           <TextField
             fullWidth
-            label="Album Name"
+            label={t('albumFilter.albumName')}
             name="name"
             value={filters.name}
             onChange={handleInputChange}
             variant="outlined"
             size="small"
-            placeholder="Search by album name..."
+            placeholder={t('albumFilter.searchPlaceholder')}
             sx={{
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
               borderRadius: 1,
@@ -231,27 +234,27 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               }
             }}
           />
-          
+
           {/* Release Date Range - updated component */}
           <Box>
-            <FormLabel 
-              component="legend" 
-              sx={{ 
-                color: 'white', 
-                mb: 1, 
-                fontWeight: 'medium' 
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
+                mb: 1,
+                fontWeight: 'medium'
               }}
             >
-              Release Date Range
+              {t('albumFilter.releaseDateRange')}
             </FormLabel>
             <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
               <DatePicker
-                label="From"
+                label={t('albumFilter.from')}
                 value={filters.releaseDateFrom}
                 onChange={(date) => handleDateChange('releaseDateFrom', date)}
                 renderInput={(params) => (
-                  <TextField 
-                    {...params} 
+                  <TextField
+                    {...params}
                     size="small"
                     fullWidth
                     sx={{
@@ -282,12 +285,12 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                 )}
               />
               <DatePicker
-                label="To"
+                label={t('albumFilter.to')}
                 value={filters.releaseDateTo}
                 onChange={(date) => handleDateChange('releaseDateTo', date)}
                 renderInput={(params) => (
-                  <TextField 
-                    {...params} 
+                  <TextField
+                    {...params}
                     size="small"
                     fullWidth
                     sx={{
@@ -319,18 +322,18 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               />
             </Box>
           </Box>
-          
+
           {/* Media type filter - using ToggleButtonGroup */}
           <Box>
-            <FormLabel 
-              component="legend" 
-              sx={{ 
-                color: 'white', 
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
                 mb: 1,
                 fontWeight: 'medium'
               }}
             >
-              Media Type
+              {t('albumFilter.mediaType')}
             </FormLabel>
             <ToggleButtonGroup
               value={filters.mediaType}
@@ -361,31 +364,31 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               }}
             >
               <ToggleButton value="" aria-label="all types">
-                All
+                {t('albumFilter.all')}
               </ToggleButton>
               <ToggleButton value="CD" aria-label="cd">
-                CD
+                {t('albumFilter.cd')}
               </ToggleButton>
               <ToggleButton value="LP" aria-label="vinyl">
-                Vinyl
+                {t('albumFilter.vinyl')}
               </ToggleButton>
               <ToggleButton value="Tape" aria-label="cassette">
-                Cassette
+                {t('albumFilter.cassette')}
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>
-          
+
           {/* Status filter - using ToggleButtonGroup */}
           <Box>
-            <FormLabel 
-              component="legend" 
-              sx={{ 
-                color: 'white', 
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
                 mb: 1,
                 fontWeight: 'medium'
               }}
             >
-              Status
+              {t('albumFilter.status')}
             </FormLabel>
             <ToggleButtonGroup
               value={filters.status}
@@ -416,37 +419,37 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               }}
             >
               <ToggleButton value="" aria-label="all statuses">
-                All
+                {t('albumFilter.all')}
               </ToggleButton>
               <ToggleButton value="New" aria-label="new">
-                New
+                {t('albumFilter.statusNew')}
               </ToggleButton>
               <ToggleButton value="Restock" aria-label="restock">
-                Restock
+                {t('albumFilter.statusRestock')}
               </ToggleButton>
               <ToggleButton value="Preorder" aria-label="preorder">
-                Preorder
+                {t('albumFilter.statusPreorder')}
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>
-          
+
           {/* Band filter - Simplified with autocomplete look */}
           <Box>
-            <FormLabel 
-              component="legend" 
-              sx={{ 
-                color: 'white', 
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
                 mb: 1,
                 fontWeight: 'medium'
               }}
             >
-              Band
+              {t('albumFilter.band')}
             </FormLabel>
-            <FormControl 
-              fullWidth 
-              size="small" 
-              variant="outlined" 
-              sx={{ 
+            <FormControl
+              fullWidth
+              size="small"
+              variant="outlined"
+              sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 width: '100%'
               }}
@@ -458,7 +461,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                 displayEmpty
                 renderValue={(selected) => {
                   if (!selected) {
-                    return <em style={{ opacity: 0.7 }}>All Bands</em>;
+                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allBands')}</em>;
                   }
                   const selectedBand = bands.find(b => b.id === selected);
                   return selectedBand ? selectedBand.name : '';
@@ -472,8 +475,8 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                     }
                   }
                 }}
-                sx={{ 
-                  '& .MuiSelect-select': { 
+                sx={{
+                  '& .MuiSelect-select': {
                     py: 1,
                     color: 'white',
                     fontWeight: 'medium',
@@ -490,7 +493,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                   height: '40px'
                 }}
               >
-                <MenuItem value="">All Bands</MenuItem>
+                <MenuItem value="">{t('albumFilter.allBands')}</MenuItem>
                 {bands.map((band) => (
                   <MenuItem key={band.id} value={band.id}>
                     {band.name}
@@ -499,24 +502,24 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               </Select>
             </FormControl>
           </Box>
-          
+
           {/* Distributor filter - Simplified with autocomplete look */}
           <Box>
-            <FormLabel 
-              component="legend" 
-              sx={{ 
-                color: 'white', 
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
                 mb: 1,
                 fontWeight: 'medium'
               }}
             >
-              Distributor
+              {t('albumFilter.distributor')}
             </FormLabel>
-            <FormControl 
-              fullWidth 
-              size="small" 
-              variant="outlined" 
-              sx={{ 
+            <FormControl
+              fullWidth
+              size="small"
+              variant="outlined"
+              sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 width: '100%'
               }}
@@ -528,7 +531,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                 displayEmpty
                 renderValue={(selected) => {
                   if (!selected) {
-                    return <em style={{ opacity: 0.7 }}>All Distributors</em>;
+                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allDistributors')}</em>;
                   }
                   const selectedDist = distributors.find(d => d.id === selected);
                   return selectedDist ? selectedDist.name : '';
@@ -542,8 +545,8 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                     }
                   }
                 }}
-                sx={{ 
-                  '& .MuiSelect-select': { 
+                sx={{
+                  '& .MuiSelect-select': {
                     py: 1,
                     color: 'white',
                     fontWeight: 'medium',
@@ -560,7 +563,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                   height: '40px'
                 }}
               >
-                <MenuItem value="">All Distributors</MenuItem>
+                <MenuItem value="">{t('albumFilter.allDistributors')}</MenuItem>
                 {distributors.map((distributor) => (
                   <MenuItem key={distributor.id} value={distributor.id}>
                     {distributor.name}
@@ -569,18 +572,18 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               </Select>
             </FormControl>
           </Box>
-          
+
           {/* Sort options - using RadioGroup for better UI */}
           <Box>
-            <FormLabel 
-              component="legend" 
-              sx={{ 
-                color: 'white', 
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
                 mb: 1,
                 fontWeight: 'medium'
               }}
             >
-              Sort By
+              {t('albumFilter.sortBy')}
             </FormLabel>
             <Box sx={{
               display: 'flex',
@@ -620,16 +623,16 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                   }}
                 >
                   {sortOptions.map(option => (
-                    <FormControlLabel 
-                      key={option.value} 
-                      value={option.value} 
-                      control={<Radio size="small" />} 
-                      label={option.label} 
+                    <FormControlLabel
+                      key={option.value}
+                      value={option.value}
+                      control={<Radio size="small" />}
+                      label={option.label}
                     />
                   ))}
                 </RadioGroup>
               </Box>
-              <Box sx={{ 
+              <Box sx={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 p: 1,
                 borderRadius: 1,
@@ -661,20 +664,20 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                   }}
                 >
                   <ToggleButton value="false" aria-label="descending">
-                    ↓ Desc
+                    {'\u2193'} {t('albumFilter.desc')}
                   </ToggleButton>
                   <ToggleButton value="true" aria-label="ascending">
-                    ↑ Asc
+                    {'\u2191'} {t('albumFilter.asc')}
                   </ToggleButton>
                 </ToggleButtonGroup>
               </Box>
             </Box>
           </Box>
-          
+
           {/* Price range filter */}
           <Box>
             <Typography sx={{ color: 'white', mb: 1, fontWeight: 'medium' }}>
-              Price Range: ${priceRange[0]} - ${priceRange[1]}
+              {t('albumFilter.priceRange')}: ${priceRange[0]} - ${priceRange[1]}
             </Typography>
             <Slider
               value={priceRange}
@@ -683,7 +686,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               valueLabelDisplay="auto"
               min={0}
               max={200}
-              sx={{ 
+              sx={{
                 mt: 1,
                 width: '100%',
                 color: 'primary.main',
@@ -702,13 +705,13 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               }}
             />
           </Box>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
             <Button
               variant="contained"
               color="primary"
               type="submit"
-              sx={{ 
+              sx={{
                 minWidth: 120,
                 fontWeight: 'bold',
                 boxShadow: 2,
@@ -717,7 +720,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                 }
               }}
             >
-              Apply Filters
+              {t('albumFilter.applyFilters')}
             </Button>
           </Box>
         </Box>
@@ -726,4 +729,4 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
   );
 };
 
-export default AlbumFilter; 
+export default AlbumFilter;

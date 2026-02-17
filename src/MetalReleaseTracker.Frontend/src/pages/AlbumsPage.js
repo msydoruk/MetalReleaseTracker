@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Grid, 
-  Typography, 
-  Box, 
-  CircularProgress, 
-  Alert, 
+import {
+  Container,
+  Grid,
+  Typography,
+  Box,
+  CircularProgress,
+  Alert,
   Paper,
   Drawer,
   IconButton,
@@ -21,8 +21,11 @@ import Pagination from '../components/Pagination';
 import { fetchAlbums } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const AlbumsPage = ({ isHome = false }) => {
+  const { t } = useLanguage();
+
   usePageMeta(
     isHome
       ? 'Metal Release Tracker - Ukrainian Metal Releases from Foreign Distributors'
@@ -36,12 +39,12 @@ const AlbumsPage = ({ isHome = false }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [pageCount, setPageCount] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   const getInitialFilters = () => {
     const searchParams = new URLSearchParams(location.search);
     const bandId = searchParams.get('bandId');
     const distributorId = searchParams.get('distributorId');
-    
+
     return {
       page: 1,
       pageSize: 20,
@@ -51,19 +54,19 @@ const AlbumsPage = ({ isHome = false }) => {
       ...(distributorId && { distributorId })
     };
   };
-  
+
   const [filters, setFilters] = useState(getInitialFilters);
 
   useEffect(() => {
     setFilters(getInitialFilters());
   }, [location.search]);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await fetchAlbums(filters);
-        
+
         if (response.data) {
           setAlbums(response.data.items || []);
           setTotalCount(response.data.totalCount || 0);
@@ -71,7 +74,7 @@ const AlbumsPage = ({ isHome = false }) => {
         }
       } catch (err) {
         console.error('Error fetching albums:', err);
-        setError('Failed to load albums. Please try again later.');
+        setError(t('albums.error'));
       } finally {
         setLoading(false);
       }
@@ -114,11 +117,10 @@ const AlbumsPage = ({ isHome = false }) => {
       {isHome && (
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mb: 1.5 }}>
-            Metal Release Tracker {'\uD83C\uDDFA\uD83C\uDDE6'}
+            {t('albums.heroTitle')} {'\uD83C\uDDFA\uD83C\uDDE6'}
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto', mb: 2, lineHeight: 1.6 }}>
-            Ukrainian metal releases from foreign distributors and labels - all in one place.
-            Find vinyl, CD, and tape releases and order directly from the source.
+            {t('albums.heroSubtitle')}
           </Typography>
           <Button
             component={Link}
@@ -127,23 +129,23 @@ const AlbumsPage = ({ isHome = false }) => {
             color="primary"
             sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 5, px: 3 }}
           >
-            Learn more about the project
+            {t('albums.learnMore')}
           </Button>
           <Divider sx={{ mt: 3 }} />
         </Box>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component={isHome ? 'h2' : 'h1'}>
-          Metal Releases
+          {t('albums.metalReleases')}
         </Typography>
-        <Button 
+        <Button
           variant="contained"
           color="primary"
           startIcon={<FilterListIcon />}
           onClick={toggleFilterDrawer}
           sx={{ fontWeight: 'bold' }}
         >
-          Filters
+          {t('albums.filters')}
         </Button>
       </Box>
 
@@ -169,10 +171,10 @@ const AlbumsPage = ({ isHome = false }) => {
               onPageSizeChange={handlePageSizeChange}
             />
           </Box>
-          
+
           <Box sx={{ width: '100%', mb: 4 }}>
-            <Grid 
-              container 
+            <Grid
+              container
               spacing={3}
               sx={{
                 display: 'grid',
@@ -188,9 +190,9 @@ const AlbumsPage = ({ isHome = false }) => {
               }}
             >
               {albums.map((album) => (
-                <Box 
+                <Box
                   key={album.id}
-                  sx={{ 
+                  sx={{
                     display: 'flex',
                     height: '100%'
                   }}
@@ -200,7 +202,7 @@ const AlbumsPage = ({ isHome = false }) => {
               ))}
             </Grid>
           </Box>
-          
+
           <Box sx={{ mt: 3, mb: 4 }}>
             <Pagination
               currentPage={filters.page}
@@ -215,10 +217,10 @@ const AlbumsPage = ({ isHome = false }) => {
       ) : (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
-            No albums found matching your criteria.
+            {t('albums.noAlbums')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Try adjusting your filters to see more results.
+            {t('albums.tryAdjusting')}
           </Typography>
         </Paper>
       )}
@@ -240,14 +242,14 @@ const AlbumsPage = ({ isHome = false }) => {
         }}
       >
         <Box sx={{ position: 'relative', p: 1 }}>
-          <IconButton 
+          <IconButton
             onClick={toggleFilterDrawer}
             sx={{ position: 'absolute', right: 8, top: 8, zIndex: 5 }}
           >
             <CloseIcon />
           </IconButton>
-          <AlbumFilter 
-            onFilterChange={handleFilterChange} 
+          <AlbumFilter
+            onFilterChange={handleFilterChange}
             initialFilters={filters}
           />
         </Box>
@@ -256,4 +258,4 @@ const AlbumsPage = ({ isHome = false }) => {
   );
 };
 
-export default AlbumsPage; 
+export default AlbumsPage;

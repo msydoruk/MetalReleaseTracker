@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Grid, 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  Button, 
-  CircularProgress, 
+import {
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
+  Button,
+  CircularProgress,
   Alert,
   Link,
   Chip,
@@ -24,6 +24,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { fetchDistributorsWithAlbumCount } from '../services/api';
 import DefaultDistributorImage from '../components/DefaultDistributorImage';
 import usePageMeta from '../hooks/usePageMeta';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const distributorLogos = {
   'osmose productions': '/logos/osmose.png',
@@ -47,6 +48,8 @@ const getDistributorLogo = (distributor) => {
 };
 
 const DistributorsPage = () => {
+  const { t } = useLanguage();
+
   usePageMeta('Distributors - Foreign Metal Labels & Shops', 'Foreign distributors and labels selling Ukrainian metal releases. Osmose Productions, Drakkar, Black Metal Vendor and more.');
   const [distributors, setDistributors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,7 @@ const DistributorsPage = () => {
         setDistributors(response.data || []);
       } catch (err) {
         console.error('Error fetching distributors:', err);
-        setError('Failed to load distributors. Please try again later.');
+        setError(t('distributors.error'));
       } finally {
         setLoading(false);
       }
@@ -79,10 +82,10 @@ const DistributorsPage = () => {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
-          Metal Distributors
+          {t('distributors.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Browse our collection of metal music distributors and shops
+          {t('distributors.subtitle')}
         </Typography>
       </Box>
 
@@ -97,8 +100,8 @@ const DistributorsPage = () => {
           <CircularProgress />
         </Box>
       ) : distributors.length > 0 ? (
-        <Grid 
-          container 
+        <Grid
+          container
           spacing={3}
           sx={{
             display: 'grid',
@@ -113,10 +116,10 @@ const DistributorsPage = () => {
           }}
         >
           {distributors.map((distributor) => (
-            <Card 
+            <Card
               key={distributor.id}
-              sx={{ 
-                height: '100%', 
+              sx={{
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.3s, box-shadow 0.3s',
@@ -158,7 +161,7 @@ const DistributorsPage = () => {
               <CardContent sx={{ flexGrow: 1, p: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <StoreIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6" component="h2" gutterBottom sx={{ 
+                  <Typography variant="h6" component="h2" gutterBottom sx={{
                     fontWeight: 'bold',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -167,7 +170,7 @@ const DistributorsPage = () => {
                     {distributor.name}
                   </Typography>
                 </Box>
-                
+
                 {distributor.location && (
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, color: 'text.secondary' }}>
                     <LocationOnIcon fontSize="small" sx={{ mr: 0.5 }} />
@@ -176,8 +179,8 @@ const DistributorsPage = () => {
                     </Typography>
                   </Box>
                 )}
-                
-                <Typography variant="body2" color="text.secondary" sx={{ 
+
+                <Typography variant="body2" color="text.secondary" sx={{
                   mb: 2,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -186,42 +189,42 @@ const DistributorsPage = () => {
                   WebkitBoxOrient: 'vertical',
                   height: '4.5em'
                 }}>
-                  {distributor.description || 'Metal music distributor and shop.'}
+                  {distributor.description || t('distributors.fallbackDescription')}
                 </Typography>
-                
-                <Box sx={{ 
-                  display: 'flex', 
+
+                <Box sx={{
+                  display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   mt: 'auto',
                   pt: 1,
                   borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                 }}>
-                  <Chip 
+                  <Chip
                     icon={<ShoppingCartIcon />}
-                    label={`${distributor.albumCount || 0} Products`}
+                    label={`${distributor.albumCount || 0} ${t('distributors.products')}`}
                     variant="outlined"
                     size="small"
                   />
                 </Box>
               </CardContent>
               <CardActions sx={{ p: 2, pt: 0 }}>
-                <Button 
-                  size="small" 
-                  variant="contained" 
+                <Button
+                  size="small"
+                  variant="contained"
                   color="primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDistributorClick(distributor.id);
                   }}
-                  sx={{ 
+                  sx={{
                     borderRadius: 5,
                     px: 2,
                     fontWeight: 'bold',
                     textTransform: 'none'
                   }}
                 >
-                  Browse Products
+                  {t('distributors.browseProducts')}
                 </Button>
                 {distributor.websiteUrl && (
                   <Button
@@ -233,13 +236,13 @@ const DistributorsPage = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     endIcon={<LaunchIcon />}
-                    sx={{ 
+                    sx={{
                       ml: 'auto',
                       borderRadius: 5,
                       textTransform: 'none'
                     }}
                   >
-                    Website
+                    {t('distributors.website')}
                   </Button>
                 )}
               </CardActions>
@@ -249,10 +252,10 @@ const DistributorsPage = () => {
       ) : (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
-            No distributors found.
+            {t('distributors.noDistributors')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Please check back later for updates.
+            {t('distributors.checkBack')}
           </Typography>
         </Paper>
       )}
@@ -260,4 +263,4 @@ const DistributorsPage = () => {
   );
 };
 
-export default DistributorsPage; 
+export default DistributorsPage;

@@ -328,7 +328,7 @@ const Header = () => {
               >
                 METAL RELEASE TRACKER
               </Typography>
-              <Tooltip title="Ukrainian metal releases sold by foreign distributors">
+              <Tooltip title={t('header.flagTooltip')}>
                 <Box
                   component="span"
                   sx={{
