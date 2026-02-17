@@ -1,27 +1,19 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
-using MetalReleaseTracker.ParserService.Domain.Models.Results;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Exceptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
+using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Selectors;
 using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
-public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
+public class ParagonRecordsParser : BaseDistributorParser
 {
     private const string BaseUrl = "https://www.paragonrecords.org";
-
-    private static readonly string[] CategoryUrls =
-    [
-        "https://www.paragonrecords.org/collections/cd",
-        "https://www.paragonrecords.org/collections/vinyl",
-        "https://www.paragonrecords.org/collections/cassette"
-    ];
 
     private static readonly string[] FormatTokens =
     [
@@ -29,149 +21,37 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
         "COLOURED", "COLORED", "DLP", "LP", "DCD", "CD", "EP", "TAPE"
     ];
 
-    private readonly IHtmlDocumentLoader _htmlDocumentLoader;
-    private readonly GeneralParserSettings _generalParserSettings;
-    private readonly ILogger<ParagonRecordsParser> _logger;
-    private readonly Random _random = new();
-    private Queue<string> _pendingCategoryUrls = new();
-    private bool _categoryQueueInitialized;
-
     public ParagonRecordsParser(
         IHtmlDocumentLoader htmlDocumentLoader,
         IOptions<GeneralParserSettings> generalParserSettings,
         ILogger<ParagonRecordsParser> logger)
+        : base(htmlDocumentLoader, generalParserSettings, logger)
     {
-        _htmlDocumentLoader = htmlDocumentLoader;
-        _generalParserSettings = generalParserSettings.Value;
-        _logger = logger;
     }
 
-    public DistributorCode DistributorCode => DistributorCode.ParagonRecords;
+    public override DistributorCode DistributorCode => DistributorCode.ParagonRecords;
 
-    public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var pageUrl = url;
+    protected override string[] CatalogueUrls =>
+    [
+        "https://www.paragonrecords.org/collections/cd",
+        "https://www.paragonrecords.org/collections/vinyl",
+        "https://www.paragonrecords.org/collections/cassette"
+    ];
 
-            if (!_categoryQueueInitialized)
-            {
-                pageUrl = InitializeCategoryQueue(url);
-                _categoryQueueInitialized = true;
-            }
+    protected override string ParserName => "ParagonRecords";
 
-            _logger.LogInformation("Crawling ParagonRecords page: {Url}.", pageUrl);
-
-            var htmlDocument = await LoadHtmlDocument(pageUrl, cancellationToken);
-            var listings = ParseListingsFromPage(htmlDocument);
-
-            _logger.LogInformation("Parsed {Count} products from page.", listings.Count);
-
-            var nextPageUrl = ResolveNextPageUrl(htmlDocument);
-
-            return new ListingPageResult
-            {
-                Listings = listings,
-                NextPageUrl = nextPageUrl
-            };
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (ParagonRecordsParserException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Error during ParagonRecords catalogue crawl for URL: {Url}.", url);
-            throw new ParagonRecordsParserException($"Failed to crawl ParagonRecords catalogue: {url}", exception);
-        }
-    }
-
-    public async Task<AlbumParsedEvent> ParseAlbumDetailAsync(string detailUrl, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await DelayBetweenRequests(cancellationToken);
-            return await ParseAlbumDetails(detailUrl, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (ParagonRecordsParserException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Error during ParagonRecords detail parse for URL: {Url}.", detailUrl);
-            throw new ParagonRecordsParserException($"Failed to parse ParagonRecords detail page: {detailUrl}", exception);
-        }
-    }
-
-    private string InitializeCategoryQueue(string initialUrl)
-    {
-        var urls = new List<string>();
-
-        foreach (var categoryUrl in CategoryUrls)
-        {
-            if (!string.Equals(categoryUrl, initialUrl, StringComparison.OrdinalIgnoreCase))
-            {
-                urls.Add(categoryUrl);
-            }
-        }
-
-        _pendingCategoryUrls = new Queue<string>(urls);
-
-        _logger.LogInformation(
-            "Initialized ParagonRecords category queue. Starting with {Url}, {Remaining} categories remaining.",
-            initialUrl,
-            _pendingCategoryUrls.Count);
-
-        return initialUrl;
-    }
-
-    private string? ResolveNextPageUrl(HtmlDocument htmlDocument)
-    {
-        var nextPageLink = htmlDocument.DocumentNode.SelectSingleNode(
-            "//ul[contains(@class,'pagination')]//a[.//span[contains(text(),'Next')]]");
-
-        if (nextPageLink != null)
-        {
-            var href = HtmlEntity.DeEntitize(nextPageLink.GetAttributeValue("href", string.Empty).Trim());
-            if (!string.IsNullOrEmpty(href))
-            {
-                return ToAbsoluteUrl(href);
-            }
-        }
-
-        if (_pendingCategoryUrls.Count > 0)
-        {
-            var nextCategory = _pendingCategoryUrls.Dequeue();
-            _logger.LogInformation("Moving to next category: {Url}.", nextCategory);
-            return nextCategory;
-        }
-
-        _logger.LogInformation("All ParagonRecords categories crawled.");
-        return null;
-    }
-
-    private List<ListingItem> ParseListingsFromPage(HtmlDocument htmlDocument)
+    protected override List<ListingItem> ParseListingsFromPage(HtmlDocument htmlDocument)
     {
         var results = new List<ListingItem>();
         var processedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        var productGrid = htmlDocument.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'grid--view-items')]");
+        var productGrid = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.ProductGrid);
         if (productGrid == null)
         {
             return results;
         }
 
-        var productItems = productGrid.SelectNodes(".//div[contains(@class,'grid__item')]");
+        var productItems = productGrid.SelectNodes(ParagonRecordsSelectors.ProductItems);
         if (productItems == null)
         {
             return results;
@@ -179,7 +59,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
 
         foreach (var item in productItems)
         {
-            var linkNode = item.SelectSingleNode(".//a[contains(@class,'grid-view-item__link')]");
+            var linkNode = item.SelectSingleNode(ParagonRecordsSelectors.ProductLink);
             if (linkNode == null)
             {
                 continue;
@@ -197,7 +77,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
                 continue;
             }
 
-            var titleNode = item.SelectSingleNode(".//div[contains(@class,'grid-view-item__title')]");
+            var titleNode = item.SelectSingleNode(ParagonRecordsSelectors.ProductTitle);
             var rawTitle = titleNode != null
                 ? HtmlEntity.DeEntitize(titleNode.InnerText?.Trim() ?? string.Empty)
                 : string.Empty;
@@ -209,13 +89,13 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
 
             var (bandName, albumTitle) = ParseProductName(rawTitle);
 
-            results.Add(new ListingItem(bandName, albumTitle, absoluteUrl, rawTitle));
+            results.Add(new ListingItem(bandName, albumTitle, absoluteUrl, rawTitle, CurrentCategoryMediaType));
         }
 
         return results;
     }
 
-    private async Task<AlbumParsedEvent> ParseAlbumDetails(string detailUrl, CancellationToken cancellationToken)
+    protected override async Task<AlbumParsedEvent> ParseAlbumDetails(string detailUrl, CancellationToken cancellationToken)
     {
         var htmlDocument = await LoadHtmlDocument(detailUrl, cancellationToken);
         var pageSource = htmlDocument.DocumentNode.OuterHtml;
@@ -226,21 +106,19 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
         var photoUrl = ParsePhotoUrl(htmlDocument);
         var genre = ParseGenre(htmlDocument);
         var label = ParseLabel(pageSource);
-        var media = InferMediaType(detailUrl, titleText);
         var status = ParseStatus(htmlDocument);
 
         return new AlbumParsedEvent
         {
             DistributorCode = DistributorCode,
             BandName = bandName,
-            SKU = string.Empty,
+            SKU = AlbumParsingHelper.GenerateSkuFromUrl(detailUrl),
             Name = albumName,
             ReleaseDate = DateTime.MinValue,
             Genre = genre,
             Price = price,
             PurchaseUrl = detailUrl,
             PhotoUrl = photoUrl,
-            Media = media,
             Label = label,
             Press = string.Empty,
             Description = string.Empty,
@@ -248,11 +126,32 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
         };
     }
 
+    protected override HtmlNode? FindNextPageLink(HtmlDocument htmlDocument)
+    {
+        return htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.NextPageLink);
+    }
+
+    protected override string TransformNextPageUrl(string url)
+    {
+        return ToAbsoluteUrl(url);
+    }
+
+    protected override Exception CreateParserException(string message, Exception? innerException = null)
+    {
+        return innerException != null
+            ? new ParagonRecordsParserException(message, innerException)
+            : new ParagonRecordsParserException(message);
+    }
+
+    protected override bool IsOwnException(Exception exception)
+    {
+        return exception is ParagonRecordsParserException;
+    }
+
     private string ParseTitle(HtmlDocument htmlDocument)
     {
-        var titleNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//h1[contains(@class,'product-single__title')]")
-            ?? htmlDocument.DocumentNode.SelectSingleNode("//h1");
+        var titleNode = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailTitle)
+            ?? htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailTitleFallback);
 
         return titleNode != null
             ? HtmlEntity.DeEntitize(titleNode.InnerText?.Trim() ?? string.Empty)
@@ -261,7 +160,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
 
     private float ParsePrice(HtmlDocument htmlDocument)
     {
-        var ogPrice = htmlDocument.DocumentNode.SelectSingleNode("//meta[@property='og:price:amount']");
+        var ogPrice = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailOgPrice);
         if (ogPrice != null)
         {
             var priceText = ogPrice.GetAttributeValue("content", string.Empty);
@@ -271,8 +170,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
             }
         }
 
-        var priceNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//span[contains(@class,'product-price__price')]");
+        var priceNode = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailPrice);
         if (priceNode != null)
         {
             var priceText = HtmlEntity.DeEntitize(priceNode.InnerText?.Trim() ?? string.Empty)
@@ -287,7 +185,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
 
     private string ParsePhotoUrl(HtmlDocument htmlDocument)
     {
-        var ogImage = htmlDocument.DocumentNode.SelectSingleNode("//meta[@property='og:image:secure_url']");
+        var ogImage = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailOgImageSecure);
         if (ogImage != null)
         {
             var content = ogImage.GetAttributeValue("content", string.Empty);
@@ -297,7 +195,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
             }
         }
 
-        ogImage = htmlDocument.DocumentNode.SelectSingleNode("//meta[@property='og:image']");
+        ogImage = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailOgImage);
         if (ogImage != null)
         {
             var content = ogImage.GetAttributeValue("content", string.Empty);
@@ -312,8 +210,7 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
 
     private string ParseGenre(HtmlDocument htmlDocument)
     {
-        var descNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'product-single__description')]");
+        var descNode = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailDescription);
 
         if (descNode != null)
         {
@@ -329,9 +226,8 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
 
     private AlbumStatus? ParseStatus(HtmlDocument htmlDocument)
     {
-        var buttonSpan = htmlDocument.DocumentNode.SelectSingleNode(
-            "//span[@id='AddToCartText-product-template']")
-            ?? htmlDocument.DocumentNode.SelectSingleNode("//button[contains(@class,'product-form__cart-submit')]");
+        var buttonSpan = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailCartButton)
+            ?? htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailCartButtonFallback);
 
         if (buttonSpan != null)
         {
@@ -344,29 +240,6 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
         }
 
         return null;
-    }
-
-    private async Task<HtmlDocument> LoadHtmlDocument(string url, CancellationToken cancellationToken)
-    {
-        var htmlDocument = await _htmlDocumentLoader.LoadHtmlDocumentAsync(url, cancellationToken);
-
-        if (htmlDocument?.DocumentNode == null)
-        {
-            var error = $"Failed to load or parse the HTML document {url}.";
-            _logger.LogError(error);
-            throw new ParagonRecordsParserException(error);
-        }
-
-        return htmlDocument;
-    }
-
-    private async Task DelayBetweenRequests(CancellationToken cancellationToken)
-    {
-        var delaySeconds = _random.Next(
-            _generalParserSettings.MinDelayBetweenRequestsSeconds,
-            _generalParserSettings.MaxDelayBetweenRequestsSeconds);
-
-        await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
     }
 
     private static string ToAbsoluteUrl(string href)
@@ -423,44 +296,5 @@ public class ParagonRecordsParser : IListingParser, IAlbumDetailParser
             @"""product"":\{[^}]*""vendor"":""([^""]+)""");
 
         return match.Success ? match.Groups[1].Value : string.Empty;
-    }
-
-    private static AlbumMediaType? InferMediaType(string detailUrl, string title)
-    {
-        var slug = detailUrl.ToUpperInvariant();
-
-        if (slug.Contains("-LP") || slug.Contains("-VINYL") || slug.Contains("-DLP"))
-        {
-            return AlbumMediaType.LP;
-        }
-
-        if (slug.Contains("-CASSETTE") || slug.Contains("-TAPE"))
-        {
-            return AlbumMediaType.Tape;
-        }
-
-        if (slug.Contains("-CD") || slug.Contains("-DCD"))
-        {
-            return AlbumMediaType.CD;
-        }
-
-        var upper = title.ToUpperInvariant();
-
-        if (upper.EndsWith(" LP") || upper.Contains(" LP ") || upper.Contains(" VINYL") || upper.Contains(" DLP"))
-        {
-            return AlbumMediaType.LP;
-        }
-
-        if (upper.EndsWith(" CASSETTE") || upper.Contains(" CASSETTE ") || upper.Contains(" TAPE"))
-        {
-            return AlbumMediaType.Tape;
-        }
-
-        if (upper.EndsWith(" CD") || upper.Contains(" CD ") || upper.Contains(" DCD"))
-        {
-            return AlbumMediaType.CD;
-        }
-
-        return null;
     }
 }

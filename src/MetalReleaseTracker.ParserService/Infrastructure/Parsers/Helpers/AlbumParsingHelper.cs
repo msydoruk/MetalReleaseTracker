@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
@@ -50,6 +52,12 @@ public static class AlbumParsingHelper
         }
 
         return DateTime.MinValue;
+    }
+
+    public static string GenerateSkuFromUrl(string url)
+    {
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(url));
+        return Convert.ToHexStringLower(hashBytes)[..12];
     }
 
     public static float ParsePrice(string priceText)

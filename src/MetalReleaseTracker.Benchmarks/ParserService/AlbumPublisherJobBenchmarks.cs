@@ -57,7 +57,7 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         public void IterationSetup()
         {
             ClearDatabase().GetAwaiter().GetResult();
-            var session = _parsingSessionRepo.AddAsync(DistributorCode.OsmoseProductions, "https://test.com", CancellationToken.None)
+            var session = _parsingSessionRepo.AddAsync(DistributorCode.OsmoseProductions, CancellationToken.None)
                 .GetAwaiter().GetResult();
             for (int i = 0; i < DataSize; i++)
             {

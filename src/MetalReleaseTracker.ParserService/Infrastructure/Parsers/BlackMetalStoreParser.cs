@@ -1,165 +1,46 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
-using MetalReleaseTracker.ParserService.Domain.Models.Results;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Exceptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
+using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Selectors;
 using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
-public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
+public class BlackMetalStoreParser : BaseDistributorParser
 {
-    private static readonly string[] CategoryUrls =
-    [
-        "https://blackmetalstore.com/categoria-produto/cds/",
-        "https://blackmetalstore.com/categoria-produto/cassettes/",
-        "https://blackmetalstore.com/categoria-produto/vinyl/"
-    ];
-
     private static readonly char[] TitleSeparators = ['\u2013', '\u2014', '-'];
-
-    private readonly IHtmlDocumentLoader _htmlDocumentLoader;
-    private readonly GeneralParserSettings _generalParserSettings;
-    private readonly ILogger<BlackMetalStoreParser> _logger;
-    private readonly Random _random = new();
-    private Queue<string> _pendingCategoryUrls = new();
-    private bool _categoryQueueInitialized;
 
     public BlackMetalStoreParser(
         IHtmlDocumentLoader htmlDocumentLoader,
         IOptions<GeneralParserSettings> generalParserSettings,
         ILogger<BlackMetalStoreParser> logger)
+        : base(htmlDocumentLoader, generalParserSettings, logger)
     {
-        _htmlDocumentLoader = htmlDocumentLoader;
-        _generalParserSettings = generalParserSettings.Value;
-        _logger = logger;
     }
 
-    public DistributorCode DistributorCode => DistributorCode.BlackMetalStore;
+    public override DistributorCode DistributorCode => DistributorCode.BlackMetalStore;
 
-    public async Task<ListingPageResult> ParseListingsAsync(string url, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var pageUrl = url;
+    protected override string[] CatalogueUrls =>
+    [
+        "https://blackmetalstore.com/categoria-produto/cds/",
+        "https://blackmetalstore.com/categoria-produto/vinyl/",
+        "https://blackmetalstore.com/categoria-produto/cassettes/"
+    ];
 
-            if (!_categoryQueueInitialized)
-            {
-                pageUrl = InitializeCategoryQueue(url);
-                _categoryQueueInitialized = true;
-            }
+    protected override string ParserName => "BlackMetalStore";
 
-            _logger.LogInformation("Crawling BlackMetalStore page: {Url}.", pageUrl);
-
-            var htmlDocument = await LoadHtmlDocument(pageUrl, cancellationToken);
-            var listings = ParseListingsFromPage(htmlDocument);
-
-            _logger.LogInformation("Parsed {Count} products from page.", listings.Count);
-
-            var nextPageUrl = ResolveNextPageUrl(htmlDocument);
-
-            return new ListingPageResult
-            {
-                Listings = listings,
-                NextPageUrl = nextPageUrl
-            };
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (BlackMetalStoreParserException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Error during BlackMetalStore catalogue crawl for URL: {Url}.", url);
-            throw new BlackMetalStoreParserException($"Failed to crawl BlackMetalStore catalogue: {url}", exception);
-        }
-    }
-
-    public async Task<AlbumParsedEvent> ParseAlbumDetailAsync(string detailUrl, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await DelayBetweenRequests(cancellationToken);
-            return await ParseAlbumDetails(detailUrl, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (BlackMetalStoreParserException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Error during BlackMetalStore detail parse for URL: {Url}.", detailUrl);
-            throw new BlackMetalStoreParserException($"Failed to parse BlackMetalStore detail page: {detailUrl}", exception);
-        }
-    }
-
-    private string InitializeCategoryQueue(string initialUrl)
-    {
-        var urls = new List<string>();
-
-        foreach (var categoryUrl in CategoryUrls)
-        {
-            if (!string.Equals(categoryUrl, initialUrl, StringComparison.OrdinalIgnoreCase))
-            {
-                urls.Add(categoryUrl);
-            }
-        }
-
-        _pendingCategoryUrls = new Queue<string>(urls);
-
-        _logger.LogInformation(
-            "Initialized BlackMetalStore category queue. Starting with {Url}, {Remaining} categories remaining.",
-            initialUrl,
-            _pendingCategoryUrls.Count);
-
-        return initialUrl;
-    }
-
-    private string? ResolveNextPageUrl(HtmlDocument htmlDocument)
-    {
-        var nextPageLink = htmlDocument.DocumentNode.SelectSingleNode(
-            "//a[contains(@class,'next') and contains(@class,'page-numbers')]");
-
-        if (nextPageLink != null)
-        {
-            var nextUrl = HtmlEntity.DeEntitize(nextPageLink.GetAttributeValue("href", string.Empty).Trim());
-            if (!string.IsNullOrEmpty(nextUrl))
-            {
-                return nextUrl;
-            }
-        }
-
-        if (_pendingCategoryUrls.Count > 0)
-        {
-            var nextCategory = _pendingCategoryUrls.Dequeue();
-            _logger.LogInformation("Moving to next category: {Url}.", nextCategory);
-            return nextCategory;
-        }
-
-        _logger.LogInformation("All BlackMetalStore categories crawled.");
-        return null;
-    }
-
-    private List<ListingItem> ParseListingsFromPage(HtmlDocument htmlDocument)
+    protected override List<ListingItem> ParseListingsFromPage(HtmlDocument htmlDocument)
     {
         var results = new List<ListingItem>();
         var processedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        var productLinks = htmlDocument.DocumentNode.SelectNodes("//a[contains(@href,'/produto/')]");
+        var productLinks = htmlDocument.DocumentNode.SelectNodes(BlackMetalStoreSelectors.ProductLinks);
         if (productLinks == null)
         {
             return results;
@@ -184,27 +65,26 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             }
 
             var (bandName, albumTitle, _) = SplitTitle(titleText);
-            results.Add(new ListingItem(bandName, albumTitle, href, titleText));
+            results.Add(new ListingItem(bandName, albumTitle, href, titleText, CurrentCategoryMediaType));
         }
 
         return results;
     }
 
-    private async Task<AlbumParsedEvent> ParseAlbumDetails(string detailUrl, CancellationToken cancellationToken)
+    protected override async Task<AlbumParsedEvent> ParseAlbumDetails(string detailUrl, CancellationToken cancellationToken)
     {
         var htmlDocument = await LoadHtmlDocument(detailUrl, cancellationToken);
-        var jsonLd = ExtractJsonLd(htmlDocument);
+        var jsonLd = ParserHelper.ExtractProductJsonLd(htmlDocument);
 
-        var titleNode = htmlDocument.DocumentNode.SelectSingleNode("//h1");
+        var titleNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailTitle);
         var titleText = titleNode != null
             ? HtmlEntity.DeEntitize(titleNode.InnerText?.Trim() ?? string.Empty)
             : string.Empty;
 
-        var (bandName, albumName, mediaTypeRaw) = SplitTitle(titleText);
+        var (bandName, albumName, _) = SplitTitle(titleText);
         var sku = ParseSku(jsonLd, htmlDocument, detailUrl);
         var price = ParsePrice(jsonLd, htmlDocument);
         var photoUrl = ParsePhotoUrl(jsonLd, htmlDocument);
-        var media = ParseMediaType(mediaTypeRaw);
         var label = ParseLabel(htmlDocument);
         var genre = ParseGenre(jsonLd, htmlDocument);
         var description = ParseDescription(jsonLd, htmlDocument);
@@ -220,7 +100,6 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             Price = price,
             PurchaseUrl = detailUrl,
             PhotoUrl = photoUrl,
-            Media = media,
             Label = label,
             Press = sku,
             Description = description,
@@ -228,52 +107,21 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
         };
     }
 
-    private JsonElement? ExtractJsonLd(HtmlDocument htmlDocument)
+    protected override HtmlNode? FindNextPageLink(HtmlDocument htmlDocument)
     {
-        var scriptNodes = htmlDocument.DocumentNode.SelectNodes("//script[@type='application/ld+json']");
-        if (scriptNodes == null)
-        {
-            return null;
-        }
+        return htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.NextPageLink);
+    }
 
-        foreach (var scriptNode in scriptNodes)
-        {
-            var json = scriptNode.InnerText?.Trim();
-            if (string.IsNullOrEmpty(json))
-            {
-                continue;
-            }
+    protected override Exception CreateParserException(string message, Exception? innerException = null)
+    {
+        return innerException != null
+            ? new BlackMetalStoreParserException(message, innerException)
+            : new BlackMetalStoreParserException(message);
+    }
 
-            try
-            {
-                var document = JsonDocument.Parse(json);
-                var root = document.RootElement;
-
-                if (root.TryGetProperty("@type", out var typeElement) &&
-                    typeElement.GetString() == "Product")
-                {
-                    return root;
-                }
-
-                if (root.TryGetProperty("@graph", out var graph) &&
-                    graph.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var item in graph.EnumerateArray())
-                    {
-                        if (item.TryGetProperty("@type", out var itemType) &&
-                            itemType.GetString() == "Product")
-                        {
-                            return item;
-                        }
-                    }
-                }
-            }
-            catch (JsonException)
-            {
-            }
-        }
-
-        return null;
+    protected override bool IsOwnException(Exception exception)
+    {
+        return exception is BlackMetalStoreParserException;
     }
 
     private string ParseSku(JsonElement? jsonLd, HtmlDocument htmlDocument, string detailUrl)
@@ -290,7 +138,7 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             }
         }
 
-        var skuNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@class='sku']");
+        var skuNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailSku);
         var sku = skuNode?.InnerText?.Trim();
 
         if (!string.IsNullOrEmpty(sku))
@@ -317,8 +165,8 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             }
         }
 
-        var priceNode = htmlDocument.DocumentNode.SelectSingleNode("//p[contains(@class,'price')]//bdi")
-            ?? htmlDocument.DocumentNode.SelectSingleNode("//span[contains(@class,'woocommerce-Price-amount')]//bdi");
+        var priceNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailPrice)
+            ?? htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailPriceFallback);
 
         var priceText = priceNode?.InnerText?.Trim();
         if (string.IsNullOrEmpty(priceText))
@@ -346,7 +194,7 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             }
         }
 
-        var imgNode = htmlDocument.DocumentNode.SelectSingleNode("//img[contains(@class,'wp-post-image')]");
+        var imgNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailPhoto);
         if (imgNode != null)
         {
             var src = imgNode.GetAttributeValue("data-src", null)
@@ -363,7 +211,7 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
 
     private string ParseLabel(HtmlDocument htmlDocument)
     {
-        var categoryLinks = htmlDocument.DocumentNode.SelectNodes("//span[@class='posted_in']//a");
+        var categoryLinks = htmlDocument.DocumentNode.SelectNodes(BlackMetalStoreSelectors.DetailLabel);
         if (categoryLinks == null || categoryLinks.Count < 2)
         {
             return string.Empty;
@@ -397,7 +245,7 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             }
         }
 
-        var brandNode = htmlDocument.DocumentNode.SelectSingleNode("//div[contains(@class,'product-brand')]//a");
+        var brandNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailBrand);
         if (brandNode != null)
         {
             var text = HtmlEntity.DeEntitize(brandNode.InnerText?.Trim() ?? string.Empty);
@@ -417,12 +265,11 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
             var description = descElement.GetString();
             if (!string.IsNullOrEmpty(description))
             {
-                return StripHtml(description);
+                return ParserHelper.StripHtml(description);
             }
         }
 
-        var descNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'woocommerce-product-details__short-description')]");
+        var descNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailDescription);
 
         if (descNode != null)
         {
@@ -436,29 +283,6 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
         return string.Empty;
     }
 
-    private async Task<HtmlDocument> LoadHtmlDocument(string url, CancellationToken cancellationToken)
-    {
-        var htmlDocument = await _htmlDocumentLoader.LoadHtmlDocumentAsync(url, cancellationToken);
-
-        if (htmlDocument?.DocumentNode == null)
-        {
-            var error = $"Failed to load or parse the HTML document {url}.";
-            _logger.LogError(error);
-            throw new BlackMetalStoreParserException(error);
-        }
-
-        return htmlDocument;
-    }
-
-    private async Task DelayBetweenRequests(CancellationToken cancellationToken)
-    {
-        var delaySeconds = _random.Next(
-            _generalParserSettings.MinDelayBetweenRequestsSeconds,
-            _generalParserSettings.MaxDelayBetweenRequestsSeconds);
-
-        await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
-    }
-
     private static HtmlNode? FindTitleForProduct(HtmlNode linkNode)
     {
         var parent = linkNode.ParentNode;
@@ -466,9 +290,9 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
         {
             if (parent.HasClass("product"))
             {
-                return parent.SelectSingleNode(".//h2[contains(@class,'product-title')]")
-                    ?? parent.SelectSingleNode(".//h2")
-                    ?? parent.SelectSingleNode(".//h3");
+                return parent.SelectSingleNode(BlackMetalStoreSelectors.ProductTitle)
+                    ?? parent.SelectSingleNode(BlackMetalStoreSelectors.ProductTitleFallback)
+                    ?? parent.SelectSingleNode(BlackMetalStoreSelectors.ProductTitleFallback2);
             }
 
             parent = parent.ParentNode;
@@ -503,33 +327,6 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
         }
 
         return (title, title, mediaTypeRaw);
-    }
-
-    private static AlbumMediaType? ParseMediaType(string mediaTypeRaw)
-    {
-        if (string.IsNullOrWhiteSpace(mediaTypeRaw))
-        {
-            return null;
-        }
-
-        var upper = mediaTypeRaw.ToUpper();
-
-        if (upper.Contains("LP") || upper.Contains("VINYL"))
-        {
-            return AlbumMediaType.LP;
-        }
-
-        if (upper.Contains("CD") || upper.Contains("MCD"))
-        {
-            return AlbumMediaType.CD;
-        }
-
-        if (upper.Contains("TAPE") || upper.Contains("MC") || upper.Contains("CASSETT") || upper.Contains("CASSETE"))
-        {
-            return AlbumMediaType.Tape;
-        }
-
-        return null;
     }
 
     private static string? ExtractPriceFromOffer(JsonElement offer)
@@ -575,21 +372,5 @@ public class BlackMetalStoreParser : IListingParser, IAlbumDetailParser
         }
 
         return null;
-    }
-
-    private static string StripHtml(string html)
-    {
-        if (string.IsNullOrEmpty(html))
-        {
-            return html;
-        }
-
-        var document = new HtmlDocument();
-        document.LoadHtml(html);
-        var text = document.DocumentNode.InnerText ?? string.Empty;
-        text = HtmlEntity.DeEntitize(text);
-        text = Regex.Replace(text, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", string.Empty);
-
-        return text.Trim();
     }
 }

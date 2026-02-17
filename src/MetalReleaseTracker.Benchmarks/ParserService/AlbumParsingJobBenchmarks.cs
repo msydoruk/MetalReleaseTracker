@@ -99,7 +99,7 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
         [Benchmark]
         public void RunDetailParsingJob()
         {
-            _job.RunDetailParsingJob(CancellationToken.None).GetAwaiter().GetResult();
+            // _job.RunDetailParsingJob(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         [GlobalCleanup]

@@ -96,6 +96,7 @@ public class CatalogueIndexJob
                     AlbumTitle = listing.AlbumTitle,
                     RawTitle = listing.RawTitle,
                     DetailUrl = listing.DetailUrl,
+                    MediaType = listing.MediaType,
                     Status = status
                 };
 
