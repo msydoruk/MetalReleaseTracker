@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
@@ -14,6 +15,7 @@ public class BandReferenceService : IBandReferenceService
     private const int PageSize = 200;
 
     private readonly IBandReferenceRepository _bandReferenceRepository;
+    private readonly IBandDiscographyRepository _bandDiscographyRepository;
     private readonly ISeleniumWebDriverFactory _webDriverFactory;
     private readonly BandReferenceSettings _settings;
     private readonly ILogger<BandReferenceService> _logger;
@@ -21,11 +23,13 @@ public class BandReferenceService : IBandReferenceService
 
     public BandReferenceService(
         IBandReferenceRepository bandReferenceRepository,
+        IBandDiscographyRepository bandDiscographyRepository,
         ISeleniumWebDriverFactory webDriverFactory,
         IOptions<BandReferenceSettings> settings,
         ILogger<BandReferenceService> logger)
     {
         _bandReferenceRepository = bandReferenceRepository;
+        _bandDiscographyRepository = bandDiscographyRepository;
         _webDriverFactory = webDriverFactory;
         _settings = settings.Value;
         _logger = logger;
@@ -80,6 +84,8 @@ public class BandReferenceService : IBandReferenceService
             while (offset < totalRecords);
 
             _logger.LogInformation("Ukrainian bands sync completed. Total bands processed: {Total}.", totalProcessed);
+
+            await SyncDiscographiesAsync(driver, cancellationToken);
         }
         finally
         {
@@ -97,6 +103,57 @@ public class BandReferenceService : IBandReferenceService
                 }
             }
         }
+    }
+
+    private async Task SyncDiscographiesAsync(IWebDriver driver, CancellationToken cancellationToken)
+    {
+        var bands = await _bandReferenceRepository.GetAllAsync(cancellationToken);
+        _logger.LogInformation("Starting discography sync for {Count} bands.", bands.Count);
+
+        var syncedCount = 0;
+
+        foreach (var band in bands)
+        {
+            try
+            {
+                var entries = await FetchDiscographyAsync(driver, band, cancellationToken);
+                await _bandDiscographyRepository.ReplaceForBandAsync(band.Id, entries, cancellationToken);
+                syncedCount++;
+
+                _logger.LogInformation(
+                    "Synced discography for band '{BandName}' (MA ID: {MaId}): {AlbumCount} albums.",
+                    band.BandName,
+                    band.MetalArchivesId,
+                    entries.Count);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Failed to sync discography for band '{BandName}' (MA ID: {MaId}). Skipping.",
+                    band.BandName,
+                    band.MetalArchivesId);
+            }
+
+            await DelayBetweenRequests(cancellationToken);
+        }
+
+        _logger.LogInformation("Discography sync completed. Synced {Count}/{Total} bands.", syncedCount, bands.Count);
+    }
+
+    private async Task<List<BandDiscographyEntity>> FetchDiscographyAsync(
+        IWebDriver driver,
+        BandReferenceEntity band,
+        CancellationToken cancellationToken)
+    {
+        var url = $"{_settings.MetalArchivesBaseUrl}/band/discography/id/{band.MetalArchivesId}/tab/all";
+        var html = await FetchHtmlViaSelenium(driver, url, cancellationToken);
+
+        return ParseDiscographyHtml(html, band.Id);
     }
 
     private string BuildSearchUrl(int offset)
@@ -188,5 +245,90 @@ public class BandReferenceService : IBandReferenceService
         }
 
         return json;
+    }
+
+    private static async Task<string> FetchHtmlViaSelenium(IWebDriver driver, string url, CancellationToken cancellationToken)
+    {
+        var jsExecutor = (IJavaScriptExecutor)driver;
+
+        var script = @"
+            var callback = arguments[arguments.length - 1];
+            fetch(arguments[0], {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) { return response.text(); })
+            .then(function(text) { callback(text); })
+            .catch(function(error) { callback('ERROR: ' + error.message); });
+        ";
+
+        var result = await Task.Run(() => jsExecutor.ExecuteAsyncScript(script, url), cancellationToken);
+
+        var html = result?.ToString() ?? string.Empty;
+
+        if (html.StartsWith("ERROR:", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Selenium fetch failed: {html}");
+        }
+
+        return html;
+    }
+
+    private static List<BandDiscographyEntity> ParseDiscographyHtml(string html, Guid bandReferenceId)
+    {
+        var entries = new List<BandDiscographyEntity>();
+        var seenNormalizedTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var doc = new HtmlDocument();
+        doc.LoadHtml(html);
+
+        var rows = doc.DocumentNode.SelectNodes("//table[contains(@class,'discog')]//tr");
+        if (rows == null)
+        {
+            return entries;
+        }
+
+        foreach (var row in rows)
+        {
+            var cells = row.SelectNodes("td");
+            if (cells == null || cells.Count < 3)
+            {
+                continue;
+            }
+
+            var titleNode = cells[0].SelectSingleNode(".//a");
+            var albumTitle = titleNode != null
+                ? System.Net.WebUtility.HtmlDecode(titleNode.InnerText.Trim())
+                : System.Net.WebUtility.HtmlDecode(cells[0].InnerText.Trim());
+
+            var albumType = System.Net.WebUtility.HtmlDecode(cells[1].InnerText.Trim());
+            var yearText = cells[2].InnerText.Trim();
+
+            if (string.IsNullOrWhiteSpace(albumTitle))
+            {
+                continue;
+            }
+
+            var normalizedTitle = AlbumTitleNormalizer.Normalize(albumTitle);
+            if (!seenNormalizedTitles.Add(normalizedTitle))
+            {
+                continue;
+            }
+
+            int? year = int.TryParse(yearText, out var parsedYear) ? parsedYear : null;
+
+            entries.Add(new BandDiscographyEntity
+            {
+                Id = Guid.NewGuid(),
+                BandReferenceId = bandReferenceId,
+                AlbumTitle = albumTitle,
+                NormalizedAlbumTitle = normalizedTitle,
+                AlbumType = albumType,
+                Year = year
+            });
+        }
+
+        return entries;
     }
 }

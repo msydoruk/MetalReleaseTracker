@@ -17,4 +17,6 @@ public class BandReferenceEntity
 
     [Required]
     public DateTime LastSyncedAt { get; set; }
+
+    public List<BandDiscographyEntity> Discography { get; set; } = new();
 }

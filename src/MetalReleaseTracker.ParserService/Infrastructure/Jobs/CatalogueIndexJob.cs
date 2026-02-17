@@ -2,6 +2,7 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
+using MetalReleaseTracker.ParserService.Infrastructure.Services;
 using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
@@ -10,7 +11,7 @@ public class CatalogueIndexJob
 {
     private readonly Func<DistributorCode, IListingParser> _listingParserResolver;
     private readonly ICatalogueIndexRepository _catalogueIndexRepository;
-    private readonly IBandReferenceRepository _bandReferenceRepository;
+    private readonly IBandDiscographyRepository _bandDiscographyRepository;
     private readonly GeneralParserSettings _generalParserSettings;
     private readonly ILogger<CatalogueIndexJob> _logger;
     private readonly Random _random = new();
@@ -18,13 +19,13 @@ public class CatalogueIndexJob
     public CatalogueIndexJob(
         Func<DistributorCode, IListingParser> listingParserResolver,
         ICatalogueIndexRepository catalogueIndexRepository,
-        IBandReferenceRepository bandReferenceRepository,
+        IBandDiscographyRepository bandDiscographyRepository,
         IOptions<GeneralParserSettings> generalParserSettings,
         ILogger<CatalogueIndexJob> logger)
     {
         _listingParserResolver = listingParserResolver;
         _catalogueIndexRepository = catalogueIndexRepository;
-        _bandReferenceRepository = bandReferenceRepository;
+        _bandDiscographyRepository = bandDiscographyRepository;
         _generalParserSettings = generalParserSettings.Value;
         _logger = logger;
     }
@@ -64,15 +65,12 @@ public class CatalogueIndexJob
         var currentUrl = parserDataSource.ParsingUrl;
         var totalIndexed = 0;
 
-        var bandReferences = await _bandReferenceRepository.GetAllAsync(cancellationToken);
-        var ukrainianBandNames = new HashSet<string>(
-            bandReferences.Select(b => b.BandName),
-            StringComparer.OrdinalIgnoreCase);
+        var bandAlbumMap = await _bandDiscographyRepository.GetAllGroupedByBandNameAsync(cancellationToken);
 
         _logger.LogInformation(
-            "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian band names for matching.",
+            "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian bands with discography data for matching.",
             parserDataSource.DistributorCode,
-            ukrainianBandNames.Count);
+            bandAlbumMap.Count);
 
         do
         {
@@ -85,9 +83,7 @@ public class CatalogueIndexJob
 
             foreach (var listing in result.Listings)
             {
-                var status = ukrainianBandNames.Contains(listing.BandName)
-                    ? CatalogueIndexStatus.Relevant
-                    : CatalogueIndexStatus.NotRelevant;
+                var status = DetermineStatus(bandAlbumMap, listing.BandName, listing.AlbumTitle);
 
                 var entity = new CatalogueIndexEntity
                 {
@@ -134,5 +130,27 @@ public class CatalogueIndexJob
             _generalParserSettings.MaxDelayBetweenRequestsSeconds);
 
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+    }
+
+    internal static CatalogueIndexStatus DetermineStatus(
+        Dictionary<string, HashSet<string>> bandAlbumMap,
+        string bandName,
+        string albumTitle)
+    {
+        if (!bandAlbumMap.TryGetValue(bandName, out var albumTitles))
+        {
+            return CatalogueIndexStatus.NotRelevant;
+        }
+
+        if (albumTitles.Count == 0)
+        {
+            return CatalogueIndexStatus.PendingReview;
+        }
+
+        var normalizedAlbumTitle = AlbumTitleNormalizer.Normalize(albumTitle);
+
+        return albumTitles.Contains(normalizedAlbumTitle)
+            ? CatalogueIndexStatus.Relevant
+            : CatalogueIndexStatus.PendingReview;
     }
 }

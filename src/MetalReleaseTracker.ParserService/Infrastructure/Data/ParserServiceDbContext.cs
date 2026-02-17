@@ -15,6 +15,8 @@ public class ParserServiceDbContext : DbContext
 
     public DbSet<CatalogueIndexEntity> CatalogueIndex { get; set; }
 
+    public DbSet<BandDiscographyEntity> BandDiscography { get; set; }
+
     public ParserServiceDbContext(DbContextOptions<ParserServiceDbContext> options) : base(options)
     {
     }
@@ -27,6 +29,7 @@ public class ParserServiceDbContext : DbContext
         modelBuilder.Entity<ParsingSessionEntity>();
 
         modelBuilder.ApplyConfiguration(new BandReferenceEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BandDiscographyEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CatalogueIndexEntityConfiguration());
     }
 }

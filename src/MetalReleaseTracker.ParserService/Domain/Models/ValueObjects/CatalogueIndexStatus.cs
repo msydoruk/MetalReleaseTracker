@@ -5,5 +5,6 @@ public enum CatalogueIndexStatus
     New,
     Relevant,
     NotRelevant,
-    Processed
+    Processed,
+    PendingReview
 }
