@@ -24,9 +24,30 @@ env:
   SSH_OPTS: -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=20
 
 jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: inputs.service == 'parser-service' || inputs.service == 'all'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build ParserService
+        run: dotnet build src/MetalReleaseTracker.ParserService --configuration Release
+
+      - name: Run smoke tests
+        run: dotnet test src/MetalReleaseTracker.ParserService --configuration Release --filter "Category=Smoke" --logger "console;verbosity=detailed"
+
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: [smoke-tests]
+    if: always() && (needs.smoke-tests.result == 'success' || needs.smoke-tests.result == 'skipped')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
