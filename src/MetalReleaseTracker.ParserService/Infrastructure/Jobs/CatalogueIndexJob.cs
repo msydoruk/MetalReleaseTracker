@@ -137,7 +137,8 @@ public class CatalogueIndexJob
         string bandName,
         string albumTitle)
     {
-        if (!bandAlbumMap.TryGetValue(bandName, out var albumTitles))
+        var albumTitles = FindAlbumTitles(bandAlbumMap, bandName);
+        if (albumTitles == null)
         {
             return CatalogueIndexStatus.NotRelevant;
         }
@@ -152,5 +153,26 @@ public class CatalogueIndexJob
         return albumTitles.Contains(normalizedAlbumTitle)
             ? CatalogueIndexStatus.Relevant
             : CatalogueIndexStatus.PendingReview;
+    }
+
+    private static HashSet<string>? FindAlbumTitles(
+        Dictionary<string, HashSet<string>> bandAlbumMap,
+        string bandName)
+    {
+        if (bandAlbumMap.TryGetValue(bandName, out var exactMatch))
+        {
+            return exactMatch;
+        }
+
+        foreach (var kvp in bandAlbumMap)
+        {
+            if (kvp.Key.Contains(bandName, StringComparison.OrdinalIgnoreCase)
+                || bandName.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                return kvp.Value;
+            }
+        }
+
+        return null;
     }
 }

@@ -93,4 +93,43 @@ public class CatalogueIndexJobDetermineStatusTests
 
         Assert.Equal(CatalogueIndexStatus.NotRelevant, result);
     }
+
+    [Fact]
+    public void DetermineStatus_MaBandNameContainsDistributorName_ReturnsRelevant()
+    {
+        var bandAlbumMap = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Мисливці (The Hunters)"] = new(StringComparer.OrdinalIgnoreCase) { "the hunt begins" }
+        };
+
+        var result = CatalogueIndexJob.DetermineStatus(bandAlbumMap, "The Hunters", "The Hunt Begins");
+
+        Assert.Equal(CatalogueIndexStatus.Relevant, result);
+    }
+
+    [Fact]
+    public void DetermineStatus_DistributorNameContainsMaBandName_ReturnsRelevant()
+    {
+        var bandAlbumMap = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Khors"] = new(StringComparer.OrdinalIgnoreCase) { "night falls onto the fronts of ours" }
+        };
+
+        var result = CatalogueIndexJob.DetermineStatus(bandAlbumMap, "Khors (UA)", "Night Falls onto the Fronts of Ours");
+
+        Assert.Equal(CatalogueIndexStatus.Relevant, result);
+    }
+
+    [Fact]
+    public void DetermineStatus_ContainsMatchAlbumNotFound_ReturnsPendingReview()
+    {
+        var bandAlbumMap = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Мисливці (The Hunters)"] = new(StringComparer.OrdinalIgnoreCase) { "the hunt begins" }
+        };
+
+        var result = CatalogueIndexJob.DetermineStatus(bandAlbumMap, "The Hunters", "Unknown Album");
+
+        Assert.Equal(CatalogueIndexStatus.PendingReview, result);
+    }
 }
