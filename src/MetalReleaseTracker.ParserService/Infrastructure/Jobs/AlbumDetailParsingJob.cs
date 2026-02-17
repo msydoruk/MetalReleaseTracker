@@ -105,6 +105,11 @@ public class AlbumDetailParsingJob
 
                 var albumParsedEvent = await parser.ParseAlbumDetailAsync(entry.DetailUrl, cancellationToken);
 
+                if (!string.IsNullOrEmpty(albumParsedEvent.SKU))
+                {
+                    albumParsedEvent.SKU = $"{distributorCode}-{albumParsedEvent.SKU}";
+                }
+
                 if (entry.MediaType.HasValue)
                 {
                     albumParsedEvent.Media = entry.MediaType;
