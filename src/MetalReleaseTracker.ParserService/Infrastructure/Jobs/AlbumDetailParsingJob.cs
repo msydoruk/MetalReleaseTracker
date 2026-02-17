@@ -104,6 +104,12 @@ public class AlbumDetailParsingJob
                     distributorCode);
 
                 var albumParsedEvent = await parser.ParseAlbumDetailAsync(entry.DetailUrl, cancellationToken);
+
+                if (entry.MediaType.HasValue)
+                {
+                    albumParsedEvent.Media = entry.MediaType;
+                }
+
                 await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
 
                 await _albumParsedEventRepository.AddAsync(

@@ -24,6 +24,8 @@ public class CatalogueIndexEntity
     [Required]
     public CatalogueIndexStatus Status { get; set; }
 
+    public AlbumMediaType? MediaType { get; set; }
+
     [Required]
     public DateTime CreatedAt { get; set; }
 
