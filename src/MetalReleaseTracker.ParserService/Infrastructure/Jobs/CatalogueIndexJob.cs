@@ -132,7 +132,7 @@ public class CatalogueIndexJob
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
     }
 
-    internal static CatalogueIndexStatus DetermineStatus(
+    public static CatalogueIndexStatus DetermineStatus(
         Dictionary<string, HashSet<string>> bandAlbumMap,
         string bandName,
         string albumTitle)
