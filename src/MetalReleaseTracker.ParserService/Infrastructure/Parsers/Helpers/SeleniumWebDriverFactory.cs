@@ -48,7 +48,12 @@ public class SeleniumWebDriverFactory : ISeleniumWebDriverFactory
             _logger.LogInformation("Using Chrome binary: {ChromeBin}", chromeBin);
         }
 
-        options.AddArgument("--headless=new");
+        var hasDisplay = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY"));
+        if (!hasDisplay)
+        {
+            options.AddArgument("--headless=new");
+        }
+
         options.AddArgument("--no-sandbox");
         options.AddArgument("--disable-dev-shm-usage");
         options.AddArgument("--disable-blink-features=AutomationControlled");
