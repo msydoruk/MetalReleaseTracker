@@ -8,7 +8,7 @@ namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 [Trait("Category", "Smoke")]
 public class OsmoseProductionsParserSmokeTests : ParserSmokeTestBase
 {
-    private const string StartUrl = "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=11";
+    private const string StartUrl = "https://www.osmoseproductions.com/liste/?lng=2&fmt=11";
 
     private OsmoseProductionsParser CreateParser()
     {
