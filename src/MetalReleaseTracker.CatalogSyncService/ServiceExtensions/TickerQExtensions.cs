@@ -25,8 +25,8 @@ public static class TickerQExtensions
         {
             tickerOptions.ConfigureScheduler(schedulerOptions =>
             {
-                schedulerOptions.MaxConcurrency = 10;
-                schedulerOptions.NodeIdentifier = "catalogsync-server-01";
+                schedulerOptions.MaxConcurrency = Environment.ProcessorCount * 2;
+                schedulerOptions.NodeIdentifier = Environment.MachineName;
                 schedulerOptions.IdleWorkerTimeOut = TimeSpan.FromMinutes(2);
                 schedulerOptions.FallbackIntervalChecker = TimeSpan.FromSeconds(30);
                 schedulerOptions.SchedulerTimeZone = TimeZoneInfo.Utc;

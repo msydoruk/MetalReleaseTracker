@@ -50,9 +50,7 @@ namespace MetalReleaseTracker.CatalogSyncService.Services
                     {
                         Function = functionName,
                         Expression = "0 0 */1 * * *",
-                        Description = "Album processing job - runs every 4 hours",
-                        Retries = 3,
-                        RetryIntervals = [300, 900, 1800]
+                        Description = "Album processing job - runs every 4 hours"
                     },
                     cancellationToken);
 
@@ -87,9 +85,7 @@ namespace MetalReleaseTracker.CatalogSyncService.Services
                     {
                         Function = functionName,
                         Expression = "0 0 */1 * * *",
-                        Description = "Album processed publisher job - runs every hour",
-                        Retries = 3,
-                        RetryIntervals = [300, 900, 1800]
+                        Description = "Album processed publisher job - runs every hour"
                     },
                     cancellationToken);
 

@@ -16,6 +16,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using TickerQ.DependencyInjection;
+using TickerQ.Utilities.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,5 +70,5 @@ using (var scope = app.Services.CreateScope())
     tickerQDbContext.Database.Migrate();
 }
 
-app.UseTickerQ();
+app.UseTickerQ(TickerQStartMode.Manual);
 app.Run();

@@ -54,9 +54,7 @@ public class TickerQSchedulerService : BackgroundService
                 {
                     Function = functionName,
                     Expression = "0 0 0 * * 0",
-                    Description = "Weekly Ukrainian bands sync from Metal Archives",
-                    Retries = 3,
-                    RetryIntervals = [300, 900, 1800]
+                    Description = "Weekly Ukrainian bands sync from Metal Archives"
                 },
                 cancellationToken);
 
@@ -91,9 +89,7 @@ public class TickerQSchedulerService : BackgroundService
                         Function = functionName,
                         Request = request,
                         Expression = "0 0 2 */3 * *",
-                        Description = $"Catalogue index every 3 days for {parserDataSource.Name}",
-                        Retries = 3,
-                        RetryIntervals = [300, 900, 1800]
+                        Description = $"Catalogue index every 3 days for {parserDataSource.Name}"
                     },
                     cancellationToken);
 
@@ -133,9 +129,7 @@ public class TickerQSchedulerService : BackgroundService
                         Function = functionName,
                         Request = request,
                         Expression = "0 0 8 */3 * *",
-                        Description = $"Album detail parsing every 3 days for {parserDataSource.Name}",
-                        Retries = 3,
-                        RetryIntervals = [300, 900, 1800]
+                        Description = $"Album detail parsing every 3 days for {parserDataSource.Name}"
                     },
                     cancellationToken);
 
@@ -172,9 +166,7 @@ public class TickerQSchedulerService : BackgroundService
                 {
                     Function = functionName,
                     Expression = "0 0 */6 * * *",
-                    Description = "Album publishing job every 6 hours",
-                    Retries = 3,
-                    RetryIntervals = [300, 900, 1800]
+                    Description = "Album publishing job every 6 hours"
                 },
                 cancellationToken);
 
