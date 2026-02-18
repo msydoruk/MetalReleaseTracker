@@ -24,9 +24,9 @@ public class OsmoseProductionsParser : BaseDistributorParser
 
     protected override string[] CatalogueUrls =>
     [
-        "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=11",
-        "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=990001",
-        "https://www.osmoseproductions.com/liste/?what=label&tete=osmose&srt=2&fmt=16"
+        "https://www.osmoseproductions.com/liste/?lng=2&fmt=11",
+        "https://www.osmoseproductions.com/liste/?lng=2&fmt=990001",
+        "https://www.osmoseproductions.com/liste/?lng=2&fmt=16"
     ];
 
     protected override string ParserName => "OsmoseProductions";
