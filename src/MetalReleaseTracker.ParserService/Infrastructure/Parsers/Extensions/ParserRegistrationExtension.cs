@@ -12,9 +12,8 @@ public static class ParserRegistrationExtension
 {
     public static void AddParsers(this ContainerBuilder builder)
     {
-        builder.RegisterType<FlareSolverrHtmlDocumentLoader>()
+        builder.RegisterType<HtmlDocumentLoader>()
             .As<IHtmlDocumentLoader>()
-            .As<IAsyncDisposable>()
             .SingleInstance();
 
         builder.RegisterType<SeleniumWebDriverFactory>()
