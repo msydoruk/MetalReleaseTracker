@@ -11,7 +11,12 @@ import {
   IconButton,
   Button,
   Divider,
-  Chip
+  Chip,
+  FormControl,
+  Select,
+  MenuItem,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { useLocation, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -26,6 +31,8 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 const AlbumsPage = ({ isHome = false }) => {
   const { t } = useLanguage();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   usePageMeta(
     isHome
@@ -173,38 +180,86 @@ const AlbumsPage = ({ isHome = false }) => {
       </Box>
 
       {distributors.length > 0 && (
-        <Box sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1,
-          mb: 3
-        }}>
-          <Chip
-            label={t('albums.allDistributors')}
-            variant={!filters.distributorId ? 'filled' : 'outlined'}
-            color={!filters.distributorId ? 'primary' : 'default'}
-            onClick={() => handleDistributorSelect('')}
-            sx={{
-              fontWeight: !filters.distributorId ? 'bold' : 'normal',
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              '&:hover': { borderColor: 'rgba(255, 255, 255, 0.6)' }
-            }}
-          />
-          {distributors.map((distributor) => (
-            <Chip
-              key={distributor.id}
-              label={distributor.name}
-              variant={filters.distributorId === distributor.id ? 'filled' : 'outlined'}
-              color={filters.distributorId === distributor.id ? 'primary' : 'default'}
-              onClick={() => handleDistributorSelect(distributor.id)}
+        isMobile ? (
+          <FormControl
+            fullWidth
+            size="small"
+            sx={{ mb: 3 }}
+          >
+            <Select
+              value={filters.distributorId || ''}
+              onChange={(event) => handleDistributorSelect(event.target.value)}
+              displayEmpty
+              renderValue={(selected) => {
+                if (!selected) {
+                  return t('albums.allDistributors');
+                }
+                const dist = distributors.find(d => d.id === selected);
+                return dist ? dist.name : '';
+              }}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    backgroundColor: '#222',
+                    color: '#fff'
+                  }
+                }
+              }}
               sx={{
-                fontWeight: filters.distributorId === distributor.id ? 'bold' : 'normal',
+                '& .MuiSelect-select': {
+                  color: 'white',
+                  fontWeight: 'medium'
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.3)'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)'
+                }
+              }}
+            >
+              <MenuItem value="">{t('albums.allDistributors')}</MenuItem>
+              {distributors.map((distributor) => (
+                <MenuItem key={distributor.id} value={distributor.id}>
+                  {distributor.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <Box sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            mb: 3
+          }}>
+            <Chip
+              label={t('albums.allDistributors')}
+              variant={!filters.distributorId ? 'filled' : 'outlined'}
+              color={!filters.distributorId ? 'primary' : 'default'}
+              onClick={() => handleDistributorSelect('')}
+              sx={{
+                fontWeight: !filters.distributorId ? 'bold' : 'normal',
                 borderColor: 'rgba(255, 255, 255, 0.3)',
                 '&:hover': { borderColor: 'rgba(255, 255, 255, 0.6)' }
               }}
             />
-          ))}
-        </Box>
+            {distributors.map((distributor) => (
+              <Chip
+                key={distributor.id}
+                label={distributor.name}
+                variant={filters.distributorId === distributor.id ? 'filled' : 'outlined'}
+                color={filters.distributorId === distributor.id ? 'primary' : 'default'}
+                onClick={() => handleDistributorSelect(distributor.id)}
+                sx={{
+                  fontWeight: filters.distributorId === distributor.id ? 'bold' : 'normal',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&:hover': { borderColor: 'rgba(255, 255, 255, 0.6)' }
+                }}
+              />
+            ))}
+          </Box>
+        )
       )}
 
       {error && (

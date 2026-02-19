@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pagination as MuiPagination, Box, Typography, FormControl, Select, MenuItem } from '@mui/material';
+import { Pagination as MuiPagination, Box, Typography, FormControl, Select, MenuItem, useMediaQuery, useTheme } from '@mui/material';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const Pagination = ({
@@ -11,6 +11,8 @@ const Pagination = ({
   onPageSizeChange
 }) => {
   const { t } = useLanguage();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handlePageChange = (event, page) => {
     if (onPageChange) {
@@ -35,44 +37,42 @@ const Pagination = ({
   return (
     <Box sx={{
       display: 'flex',
-      flexDirection: { xs: 'column', sm: 'row' },
-      justifyContent: 'space-between',
-      alignItems: { xs: 'center', sm: 'flex-end' },
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 1.5,
       mb: 2
     }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 2, sm: 0 } }}>
+      <Typography variant="body2" color="text.secondary">
         {showingText}
       </Typography>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body2" color="text.secondary" mr={1}>
-            {t('pagination.itemsPerPage')}
-          </Typography>
-          <FormControl size="small" sx={{ minWidth: 70 }}>
-            <Select
-              value={pageSize}
-              onChange={handlePageSizeChange}
-              variant="outlined"
-              sx={{ height: 32 }}
-            >
-              <MenuItem value={5}>5</MenuItem>
-              <MenuItem value={10}>10</MenuItem>
-              <MenuItem value={20}>20</MenuItem>
-              <MenuItem value={50}>50</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+      <MuiPagination
+        count={totalPages}
+        page={currentPage}
+        onChange={handlePageChange}
+        color="primary"
+        size={isMobile ? 'small' : 'medium'}
+        showFirstButton
+        showLastButton
+      />
 
-        <MuiPagination
-          count={totalPages}
-          page={currentPage}
-          onChange={handlePageChange}
-          color="primary"
-          size="medium"
-          showFirstButton
-          showLastButton
-        />
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary" mr={1}>
+          {t('pagination.itemsPerPage')}
+        </Typography>
+        <FormControl size="small" sx={{ minWidth: 70 }}>
+          <Select
+            value={pageSize}
+            onChange={handlePageSizeChange}
+            variant="outlined"
+            sx={{ height: 32 }}
+          >
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={20}>20</MenuItem>
+            <MenuItem value={50}>50</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
     </Box>
   );
