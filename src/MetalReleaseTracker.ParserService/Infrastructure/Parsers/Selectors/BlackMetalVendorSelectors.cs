@@ -2,7 +2,7 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers.Selectors;
 
 public static class BlackMetalVendorSelectors
 {
-    public const string NextPageLink = "//a[@class='pageResults' and contains(@title, 'chste Seite')]";
+    public const string NextPageLink = "//a[@class='pageResults' and contains(@title, 'next page')]";
     public const string ListingBoxes = "//div[@class='listingbox']";
     public const string ListingTitleLink = ".//div[@class='lb_title']//h2//a";
 
