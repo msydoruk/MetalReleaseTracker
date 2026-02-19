@@ -310,7 +310,7 @@ const Header = () => {
             </IconButton>
             
             {/* Logo and title */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, flexGrow: { xs: 1, md: 0 } }}>
               <Typography
                 variant="h6"
                 noWrap

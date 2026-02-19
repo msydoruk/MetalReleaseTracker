@@ -192,7 +192,7 @@ const AlbumsPage = ({ isHome = false }) => {
               displayEmpty
               renderValue={(selected) => {
                 if (!selected) {
-                  return t('albums.allDistributors');
+                  return t('albums.allDistributorsDropdown');
                 }
                 const dist = distributors.find(d => d.id === selected);
                 return dist ? dist.name : '';
@@ -218,7 +218,7 @@ const AlbumsPage = ({ isHome = false }) => {
                 }
               }}
             >
-              <MenuItem value="">{t('albums.allDistributors')}</MenuItem>
+              <MenuItem value="">{t('albums.allDistributorsDropdown')}</MenuItem>
               {distributors.map((distributor) => (
                 <MenuItem key={distributor.id} value={distributor.id}>
                   {distributor.name}
@@ -274,17 +274,6 @@ const AlbumsPage = ({ isHome = false }) => {
         </Box>
       ) : albums.length > 0 ? (
         <>
-          <Box sx={{ mb: 3 }}>
-            <Pagination
-              currentPage={filters.page}
-              totalPages={pageCount}
-              totalItems={totalCount}
-              pageSize={filters.pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </Box>
-
           <Box sx={{ width: '100%', mb: 4 }}>
             <Grid
               container
