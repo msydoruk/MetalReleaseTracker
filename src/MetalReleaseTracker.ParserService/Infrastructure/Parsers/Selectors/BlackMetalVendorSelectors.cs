@@ -6,10 +6,12 @@ public static class BlackMetalVendorSelectors
     public const string ListingBoxes = "//div[@class='listingbox']";
     public const string ListingTitleLink = ".//div[@class='lb_title']//h2//a";
 
-    public const string DetailTitle = "//div[@class='lb_title']//h2//a";
-    public const string DetailTitleFallback = "//h1";
-    public const string DetailPrice = ".//span[@class='value_price']";
-    public const string DetailPriceFallback = "//span[contains(@class,'price')]";
-    public const string DetailPhoto = ".//div[contains(@class,'prod_image')]//img";
-    public const string DetailPhotoFallback = "//img[contains(@class,'product')]";
+    public const string DetailTitle = "//div[@class='pd_title']//h1";
+    public const string DetailTitleFallback = "//h1[@itemprop='name']";
+    public const string DetailPriceMeta = "//meta[@itemprop='price']";
+    public const string DetailPriceFallback = "//div[@class='pd_price']//span[@class='new_price']";
+    public const string DetailPhoto = "//img[@itemprop='image']";
+    public const string DetailPhotoFallback = "//div[contains(@class,'pd_image_big')]//img";
+    public const string DetailLabel = "//div[@itemprop='brand']//span[@itemprop='name']";
+    public const string DetailDescription = "//div[@itemprop='description']";
 }

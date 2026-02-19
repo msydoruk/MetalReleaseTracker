@@ -238,6 +238,8 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
         var sku = ParseSku(detailUrl);
         var price = ParsePriceFromPage(htmlDocument);
         var photoUrl = ParsePhotoUrlFromPage(htmlDocument);
+        var label = ParseLabelFromPage(htmlDocument);
+        var description = ParseDescriptionFromPage(htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -250,9 +252,9 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
             Price = price,
             PurchaseUrl = detailUrl,
             PhotoUrl = photoUrl,
-            Label = string.Empty,
+            Label = label,
             Press = sku,
-            Description = string.Empty,
+            Description = description,
             Status = null
         };
     }
@@ -351,12 +353,20 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
 
     private static float ParsePriceFromPage(HtmlDocument htmlDocument)
     {
-        var priceNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalVendorSelectors.DetailPrice)
-            ?? htmlDocument.DocumentNode.SelectSingleNode(BlackMetalVendorSelectors.DetailPriceFallback);
-
-        if (priceNode != null)
+        var metaNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalVendorSelectors.DetailPriceMeta);
+        if (metaNode != null)
         {
-            var priceText = HtmlEntity.DeEntitize(priceNode.InnerText?.Trim() ?? string.Empty);
+            var contentValue = metaNode.GetAttributeValue("content", string.Empty);
+            if (!string.IsNullOrEmpty(contentValue))
+            {
+                return AlbumParsingHelper.ParsePrice(contentValue);
+            }
+        }
+
+        var fallbackNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalVendorSelectors.DetailPriceFallback);
+        if (fallbackNode != null)
+        {
+            var priceText = HtmlEntity.DeEntitize(fallbackNode.InnerText?.Trim() ?? string.Empty);
             var match = Regex.Match(priceText, @"[\d]+[.,][\d]+");
             if (match.Success)
             {
@@ -374,14 +384,46 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
 
         if (imgNode != null)
         {
-            var src = imgNode.GetAttributeValue("src", null)
+            var src = imgNode.GetAttributeValue("data-original", null)
+                ?? imgNode.GetAttributeValue("src", null)
                 ?? imgNode.GetAttributeValue("data-src", null);
             if (!string.IsNullOrEmpty(src))
             {
                 src = src.Replace("thumbnail_images", "popup_images")
                          .Replace("midi_images", "popup_images")
+                         .Replace("info_images", "popup_images")
                          .Replace("mini_images", "popup_images");
                 return src;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ParseLabelFromPage(HtmlDocument htmlDocument)
+    {
+        var labelNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalVendorSelectors.DetailLabel);
+        if (labelNode != null)
+        {
+            var label = HtmlEntity.DeEntitize(labelNode.InnerText?.Trim() ?? string.Empty);
+            if (!string.IsNullOrEmpty(label))
+            {
+                return label;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ParseDescriptionFromPage(HtmlDocument htmlDocument)
+    {
+        var descriptionNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalVendorSelectors.DetailDescription);
+        if (descriptionNode != null)
+        {
+            var description = HtmlEntity.DeEntitize(descriptionNode.InnerText?.Trim() ?? string.Empty);
+            if (!string.IsNullOrEmpty(description))
+            {
+                return description;
             }
         }
 
