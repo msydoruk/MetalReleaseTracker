@@ -13,6 +13,15 @@ public class BandDiscographyRepository : IBandDiscographyRepository
         _context = context;
     }
 
+    public async Task<HashSet<string>> GetAllBandNamesAsync(CancellationToken cancellationToken)
+    {
+        var bandNames = await _context.BandReferences
+            .Select(b => b.BandName)
+            .ToListAsync(cancellationToken);
+
+        return new HashSet<string>(bandNames, StringComparer.OrdinalIgnoreCase);
+    }
+
     public async Task<Dictionary<string, HashSet<string>>> GetAllGroupedByBandNameAsync(CancellationToken cancellationToken)
     {
         var bandNames = await _context.BandReferences

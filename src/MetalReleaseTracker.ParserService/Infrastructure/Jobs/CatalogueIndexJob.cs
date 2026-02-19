@@ -2,7 +2,6 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
-using MetalReleaseTracker.ParserService.Infrastructure.Services;
 using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
@@ -65,12 +64,12 @@ public class CatalogueIndexJob
         var currentUrl = parserDataSource.ParsingUrl;
         var totalIndexed = 0;
 
-        var bandAlbumMap = await _bandDiscographyRepository.GetAllGroupedByBandNameAsync(cancellationToken);
+        var bandNames = await _bandDiscographyRepository.GetAllBandNamesAsync(cancellationToken);
 
         _logger.LogInformation(
-            "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian bands with discography data for matching.",
+            "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian band names for matching.",
             parserDataSource.DistributorCode,
-            bandAlbumMap.Count);
+            bandNames.Count);
 
         do
         {
@@ -83,7 +82,7 @@ public class CatalogueIndexJob
 
             foreach (var listing in result.Listings)
             {
-                var status = DetermineStatus(bandAlbumMap, listing.BandName, listing.AlbumTitle);
+                var status = DetermineStatus(bandNames, listing.BandName);
 
                 var entity = new CatalogueIndexEntity
                 {
@@ -133,46 +132,21 @@ public class CatalogueIndexJob
     }
 
     public static CatalogueIndexStatus DetermineStatus(
-        Dictionary<string, HashSet<string>> bandAlbumMap,
-        string bandName,
-        string albumTitle)
-    {
-        var albumTitles = FindAlbumTitles(bandAlbumMap, bandName);
-        if (albumTitles == null)
-        {
-            return CatalogueIndexStatus.NotRelevant;
-        }
-
-        if (albumTitles.Count == 0)
-        {
-            return CatalogueIndexStatus.PendingReview;
-        }
-
-        var normalizedAlbumTitle = AlbumTitleNormalizer.Normalize(albumTitle);
-
-        return albumTitles.Contains(normalizedAlbumTitle)
-            ? CatalogueIndexStatus.Relevant
-            : CatalogueIndexStatus.PendingReview;
-    }
-
-    private static HashSet<string>? FindAlbumTitles(
-        Dictionary<string, HashSet<string>> bandAlbumMap,
+        HashSet<string> bandNames,
         string bandName)
     {
-        if (bandAlbumMap.TryGetValue(bandName, out var exactMatch))
+        return IsBandInCanonicalList(bandNames, bandName)
+            ? CatalogueIndexStatus.Relevant
+            : CatalogueIndexStatus.NotRelevant;
+    }
+
+    private static bool IsBandInCanonicalList(HashSet<string> bandNames, string bandName)
+    {
+        if (bandNames.Contains(bandName))
         {
-            return exactMatch;
+            return true;
         }
 
-        foreach (var kvp in bandAlbumMap)
-        {
-            if (kvp.Key.Contains(bandName, StringComparison.OrdinalIgnoreCase)
-                || bandName.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
-            {
-                return kvp.Value;
-            }
-        }
-
-        return null;
+        return false;
     }
 }
