@@ -29,15 +29,16 @@ public class ParagonRecordsParserSmokeTests : ParserSmokeTestBase
     }
 
     [Fact]
-    public async Task ParseListings_Pagination_ReturnsNextPageUrl()
+    public async Task ParseListings_Pagination_ReturnsNextPageWithinSameCategory()
     {
         var parser = CreateParser();
 
         var firstPage = await parser.ParseListingsAsync(StartUrl, CancellationToken.None);
-        Assert.NotNull(firstPage.NextPageUrl);
+        AssertNextPageIsWithinSameCategory(StartUrl, firstPage.NextPageUrl);
 
-        var secondPage = await parser.ParseListingsAsync(firstPage.NextPageUrl, CancellationToken.None);
-        Assert.True(secondPage.Listings.Count > 0, "Second page should have listings.");
+        var secondPage = await parser.ParseListingsAsync(firstPage.NextPageUrl!, CancellationToken.None);
+        AssertListingPageValid(secondPage);
+        AssertPagesHaveDistinctListings(firstPage, secondPage);
     }
 
     [Fact]

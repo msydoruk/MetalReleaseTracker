@@ -56,4 +56,44 @@ public abstract class ParserSmokeTestBase
         Assert.False(string.IsNullOrWhiteSpace(album.PhotoUrl), "PhotoUrl should not be empty.");
         Assert.True(album.Price > 0, "Price should be greater than zero.");
     }
+
+    protected static void AssertNextPageIsWithinSameCategory(string startUrl, string? nextPageUrl)
+    {
+        Assert.NotNull(nextPageUrl);
+
+        var startUri = new Uri(startUrl);
+        var nextUri = new Uri(nextPageUrl);
+
+        Assert.Equal(startUri.Host, nextUri.Host);
+
+        var startPath = NormalizePathForComparison(startUri.AbsolutePath);
+        var nextPath = NormalizePathForComparison(nextUri.AbsolutePath);
+
+        Assert.True(
+            nextPath.StartsWith(startPath, StringComparison.OrdinalIgnoreCase),
+            $"Next page URL should be within the same category as start URL.\n" +
+            $"Start URL: {startUrl}\nNext page URL: {nextPageUrl}");
+    }
+
+    protected static void AssertPagesHaveDistinctListings(ListingPageResult firstPage, ListingPageResult secondPage)
+    {
+        var firstPageUrls = new HashSet<string>(
+            firstPage.Listings.Select(listing => listing.DetailUrl),
+            StringComparer.OrdinalIgnoreCase);
+
+        var secondPageUrls = new HashSet<string>(
+            secondPage.Listings.Select(listing => listing.DetailUrl),
+            StringComparer.OrdinalIgnoreCase);
+
+        var overlap = firstPageUrls.Intersect(secondPageUrls, StringComparer.OrdinalIgnoreCase).ToList();
+
+        Assert.True(
+            overlap.Count == 0,
+            $"Pages should not have overlapping listings. Found {overlap.Count} duplicates: {string.Join(", ", overlap.Take(3))}");
+    }
+
+    private static string NormalizePathForComparison(string path)
+    {
+        return path.TrimEnd('/').Replace(".html", string.Empty);
+    }
 }
