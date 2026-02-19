@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid,
   TextField,
   MenuItem,
   FormControl,
-  InputLabel,
   Select,
   Button,
   Paper,
@@ -12,7 +10,6 @@ import {
   Typography,
   Slider,
   Divider,
-  Chip,
   ToggleButton,
   ToggleButtonGroup,
   Radio,
@@ -21,7 +18,7 @@ import {
   FormLabel
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { fetchBands, fetchDistributors } from '../services/api';
+import { fetchBands } from '../services/api';
 import { ALBUM_SORT_FIELDS, SORT_FIELD_NAMES } from '../constants/albumSortFields';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -31,9 +28,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
   const [filters, setFilters] = useState({
     name: initialFilters.name || '',
     bandId: initialFilters.bandId || '',
-    distributorId: initialFilters.distributorId || '',
     mediaType: initialFilters.mediaType || '',
-    status: initialFilters.status || '',
     minPrice: initialFilters.minPrice || 0,
     maxPrice: initialFilters.maxPrice || 200,
     sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.RELEASE_DATE,
@@ -45,7 +40,6 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
   });
 
   const [bands, setBands] = useState([]);
-  const [distributors, setDistributors] = useState([]);
   const [priceRange, setPriceRange] = useState([
     filters.minPrice || 0,
     filters.maxPrice || 200
@@ -55,13 +49,8 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
-        const [bandsResponse, distributorsResponse] = await Promise.all([
-          fetchBands(),
-          fetchDistributors()
-        ]);
-
+        const bandsResponse = await fetchBands();
         setBands(bandsResponse.data || []);
-        setDistributors(distributorsResponse.data || []);
       } catch (error) {
         console.error('Error fetching filter data:', error);
       }
@@ -74,9 +63,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
     setFilters({
       name: initialFilters.name || '',
       bandId: initialFilters.bandId || '',
-      distributorId: initialFilters.distributorId || '',
       mediaType: initialFilters.mediaType || '',
-      status: initialFilters.status || '',
       minPrice: initialFilters.minPrice || 0,
       maxPrice: initialFilters.maxPrice || 200,
       sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.RELEASE_DATE,
@@ -135,9 +122,7 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
     const resetFilters = {
       name: '',
       bandId: '',
-      distributorId: '',
       mediaType: '',
-      status: '',
       minPrice: 0,
       maxPrice: 200,
       sortBy: ALBUM_SORT_FIELDS.RELEASE_DATE,
@@ -378,61 +363,6 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
             </ToggleButtonGroup>
           </Box>
 
-          {/* Status filter - using ToggleButtonGroup */}
-          <Box>
-            <FormLabel
-              component="legend"
-              sx={{
-                color: 'white',
-                mb: 1,
-                fontWeight: 'medium'
-              }}
-            >
-              {t('albumFilter.status')}
-            </FormLabel>
-            <ToggleButtonGroup
-              value={filters.status}
-              exclusive
-              onChange={(e, newValue) => {
-                if (newValue !== null) {
-                  handleInputChange({
-                    target: { name: 'status', value: newValue }
-                  });
-                }
-              }}
-              aria-label="status"
-              fullWidth
-              sx={{
-                display: 'flex',
-                '& .MuiToggleButton-root': {
-                  color: 'white',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  '&.Mui-selected': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.5)',
-                    color: 'white',
-                    fontWeight: 'bold'
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="" aria-label="all statuses">
-                {t('albumFilter.all')}
-              </ToggleButton>
-              <ToggleButton value="New" aria-label="new">
-                {t('albumFilter.statusNew')}
-              </ToggleButton>
-              <ToggleButton value="Restock" aria-label="restock">
-                {t('albumFilter.statusRestock')}
-              </ToggleButton>
-              <ToggleButton value="Preorder" aria-label="preorder">
-                {t('albumFilter.statusPreorder')}
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-
           {/* Band filter - Simplified with autocomplete look */}
           <Box>
             <FormLabel
@@ -497,76 +427,6 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                 {bands.map((band) => (
                   <MenuItem key={band.id} value={band.id}>
                     {band.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          {/* Distributor filter - Simplified with autocomplete look */}
-          <Box>
-            <FormLabel
-              component="legend"
-              sx={{
-                color: 'white',
-                mb: 1,
-                fontWeight: 'medium'
-              }}
-            >
-              {t('albumFilter.distributor')}
-            </FormLabel>
-            <FormControl
-              fullWidth
-              size="small"
-              variant="outlined"
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                width: '100%'
-              }}
-            >
-              <Select
-                name="distributorId"
-                value={filters.distributorId}
-                onChange={handleInputChange}
-                displayEmpty
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allDistributors')}</em>;
-                  }
-                  const selectedDist = distributors.find(d => d.id === selected);
-                  return selectedDist ? selectedDist.name : '';
-                }}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 300,
-                      backgroundColor: '#222',
-                      color: '#fff'
-                    }
-                  }
-                }}
-                sx={{
-                  '& .MuiSelect-select': {
-                    py: 1,
-                    color: 'white',
-                    fontWeight: 'medium',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)'
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)'
-                  },
-                  height: '40px'
-                }}
-              >
-                <MenuItem value="">{t('albumFilter.allDistributors')}</MenuItem>
-                {distributors.map((distributor) => (
-                  <MenuItem key={distributor.id} value={distributor.id}>
-                    {distributor.name}
                   </MenuItem>
                 ))}
               </Select>

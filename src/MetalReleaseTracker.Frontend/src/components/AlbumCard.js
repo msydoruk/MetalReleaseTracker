@@ -12,23 +12,8 @@ import {
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 
-// Mapping for status colors
-const statusColors = {
-  0: 'success', // New
-  1: 'info',    // Restock
-  2: 'warning', // PreOrder
-  Unavailable: 'error'
-};
-
 const AlbumCard = ({ album }) => {
   const { t } = useLanguage();
-
-  // Mapping for status labels
-  const statusLabels = {
-    0: t('albumCard.statusNew'),
-    1: t('albumCard.statusRestock'),
-    2: t('albumCard.statusPreOrder')
-  };
 
   // Mapping for media type labels
   const mediaTypeLabels = {
@@ -36,9 +21,6 @@ const AlbumCard = ({ album }) => {
     1: t('albumCard.mediaVinyl'),
     2: t('albumCard.mediaCassette')
   };
-
-  // Get status label (skip rendering if not in known statuses)
-  const statusLabel = statusLabels[album.status];
 
   // Get media type label
   const mediaTypeLabel = mediaTypeLabels[album.media] || t('albumCard.mediaUnknown');
@@ -60,35 +42,19 @@ const AlbumCard = ({ album }) => {
         boxShadow: '0 12px 20px rgba(0, 0, 0, 0.15)',
       }
     }}>
-      <Box sx={{ position: 'relative' }}>
-        <CardMedia
-          component="img"
-          height="220"
-          image={album.photoUrl || 'https://via.placeholder.com/300x300?text=No+Image'}
-          alt={album.name}
-          sx={{
-            objectFit: 'cover',
-            transition: 'transform 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.05)'
-            }
-          }}
-        />
-        {statusLabel && (
-          <Chip
-            label={statusLabel}
-            size="small"
-            color={statusColors[album.status] || 'default'}
-            sx={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              fontWeight: 'bold',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}
-          />
-        )}
-      </Box>
+      <CardMedia
+        component="img"
+        height="220"
+        image={album.photoUrl || 'https://via.placeholder.com/300x300?text=No+Image'}
+        alt={album.name}
+        sx={{
+          objectFit: 'cover',
+          transition: 'transform 0.3s ease',
+          '&:hover': {
+            transform: 'scale(1.05)'
+          }
+        }}
+      />
       <CardContent sx={{
         flex: '1 0 auto',
         display: 'flex',
@@ -130,6 +96,18 @@ const AlbumCard = ({ album }) => {
           }}>
             {album.bandName}
           </Typography>
+          {album.distributorName && (
+            <Typography variant="caption" color="text.secondary" sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              display: 'block',
+              opacity: 0.7,
+              fontSize: '0.7rem'
+            }}>
+              {album.distributorName}
+            </Typography>
+          )}
         </Box>
         <Box sx={{
           display: 'flex',

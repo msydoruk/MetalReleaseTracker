@@ -10,7 +10,8 @@ import {
   Drawer,
   IconButton,
   Button,
-  Divider
+  Divider,
+  Chip
 } from '@mui/material';
 import { useLocation, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -18,7 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AlbumCard from '../components/AlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
-import { fetchAlbums } from '../services/api';
+import { fetchAlbums, fetchDistributors } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -39,6 +40,20 @@ const AlbumsPage = ({ isHome = false }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [pageCount, setPageCount] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [distributors, setDistributors] = useState([]);
+
+  useEffect(() => {
+    const loadDistributors = async () => {
+      try {
+        const response = await fetchDistributors();
+        setDistributors(response.data || []);
+      } catch (error) {
+        console.error('Error fetching distributors:', error);
+      }
+    };
+
+    loadDistributors();
+  }, []);
 
   const getInitialFilters = () => {
     const searchParams = new URLSearchParams(location.search);
@@ -112,6 +127,14 @@ const AlbumsPage = ({ isHome = false }) => {
     setIsFilterOpen(!isFilterOpen);
   };
 
+  const handleDistributorSelect = (distributorId) => {
+    setFilters({
+      ...filters,
+      distributorId: distributorId || '',
+      page: 1
+    });
+  };
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {isHome && (
@@ -148,6 +171,41 @@ const AlbumsPage = ({ isHome = false }) => {
           {t('albums.filters')}
         </Button>
       </Box>
+
+      {distributors.length > 0 && (
+        <Box sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1,
+          mb: 3
+        }}>
+          <Chip
+            label={t('albums.allDistributors')}
+            variant={!filters.distributorId ? 'filled' : 'outlined'}
+            color={!filters.distributorId ? 'primary' : 'default'}
+            onClick={() => handleDistributorSelect('')}
+            sx={{
+              fontWeight: !filters.distributorId ? 'bold' : 'normal',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              '&:hover': { borderColor: 'rgba(255, 255, 255, 0.6)' }
+            }}
+          />
+          {distributors.map((distributor) => (
+            <Chip
+              key={distributor.id}
+              label={distributor.name}
+              variant={filters.distributorId === distributor.id ? 'filled' : 'outlined'}
+              color={filters.distributorId === distributor.id ? 'primary' : 'default'}
+              onClick={() => handleDistributorSelect(distributor.id)}
+              sx={{
+                fontWeight: filters.distributorId === distributor.id ? 'bold' : 'normal',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': { borderColor: 'rgba(255, 255, 255, 0.6)' }
+              }}
+            />
+          ))}
+        </Box>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ my: 2 }}>
