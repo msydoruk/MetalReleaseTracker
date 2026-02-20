@@ -12,8 +12,10 @@
     <meta name="keywords" content="Ukrainian metal, metal releases, vinyl, CD, cassette, black metal, death metal, Ukrainian bands, metal distributors, metal labels, buy metal records, Osmose Productions, Drakkar, physical releases, metal tracker" />
     <meta name="author" content="Metal Release Tracker" />
     <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://metal-release.com/" />
 
     <!-- SEO: Open Graph / Facebook -->
+    <meta property="og:url" content="https://metal-release.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Metal Release Tracker - Ukrainian Metal Releases from Foreign Distributors" />
     <meta property="og:description" content="Find where Ukrainian metal releases are sold abroad. Aggregated catalogs from foreign distributors and labels. Vinyl, CD, tape - order directly." />
@@ -29,6 +31,32 @@
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- SEO: JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Metal Release Tracker",
+      "url": "https://metal-release.com/",
+      "description": "Track and buy physical releases (vinyl, CD, tape) of Ukrainian metal bands from foreign distributors and labels.",
+      "inLanguage": ["en", "uk"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://metal-release.com/albums?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Metal Release Tracker",
+      "url": "https://metal-release.com/",
+      "logo": "https://metal-release.com/logo512.png"
+    }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
