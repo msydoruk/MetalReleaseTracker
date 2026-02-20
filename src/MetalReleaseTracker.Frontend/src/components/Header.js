@@ -36,7 +36,7 @@ import {
   Language as LanguageIcon,
   ContactMail as ContactMailIcon
 } from '@mui/icons-material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -47,6 +47,7 @@ const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { language, toggleLanguage, t } = useLanguage();
   
   const checkUserStatus = async () => {
@@ -189,16 +190,40 @@ const Header = () => {
       )}
       
       <List>
-        {navItems.map((item) => (
-          <ListItemButton
-            key={item.title}
-            component={Link}
-            to={item.path}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.title} />
-          </ListItemButton>
-        ))}
+        {navItems.map((item) => {
+          const isActive = item.path === '/'
+            ? location.pathname === '/'
+            : location.pathname.startsWith(item.path);
+          return (
+            <ListItemButton
+              key={item.title}
+              component={Link}
+              to={item.path}
+              selected={isActive}
+              sx={{
+                borderLeft: isActive ? '3px solid' : '3px solid transparent',
+                borderColor: isActive ? 'primary.main' : 'transparent',
+                '&.Mui-selected': {
+                  bgcolor: 'rgba(144, 202, 249, 0.08)'
+                },
+                '&.Mui-selected:hover': {
+                  bgcolor: 'rgba(144, 202, 249, 0.12)'
+                }
+              }}
+            >
+              <ListItemIcon sx={{ color: isActive ? 'primary.main' : 'inherit' }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.title}
+                primaryTypographyProps={{
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? 'primary.main' : 'inherit'
+                }}
+              />
+            </ListItemButton>
+          );
+        })}
       </List>
       
       <Divider />
