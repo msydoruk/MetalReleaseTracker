@@ -10,12 +10,22 @@ import {
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import BuildIcon from '@mui/icons-material/Build';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useLanguage } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
 
 const getNewsItems = (language) => {
   if (language === 'ua') {
     return [
+      {
+        date: '2026-02-20',
+        icon: <FavoriteIcon sx={{ fontSize: 28 }} />,
+        chipLabel: 'Нове',
+        chipColor: 'success',
+        title: 'Додано функціонал "Вибране"',
+        content:
+          'Тепер ви можете зберігати улюблені альбоми! Увійдіть через Google, натисніть на серце на картці альбому — і він з\'явиться у вашому кабінеті на вкладці "Вибране". Також додано перегляд обкладинок у повному розмірі та сторінку зворотного зв\'язку.',
+      },
       {
         date: '2026-02-17',
         icon: <RocketLaunchIcon sx={{ fontSize: 28 }} />,
@@ -47,6 +57,15 @@ const getNewsItems = (language) => {
   }
 
   return [
+    {
+      date: '2026-02-20',
+      icon: <FavoriteIcon sx={{ fontSize: 28 }} />,
+      chipLabel: 'New',
+      chipColor: 'success',
+      title: 'Favorites feature added',
+      content:
+        'You can now save your favorite albums! Sign in with Google, click the heart icon on any album card — and it will appear in your profile under the "Favorites" tab. We also added full-size cover image viewing and a feedback page.',
+    },
     {
       date: '2026-02-17',
       icon: <RocketLaunchIcon sx={{ fontSize: 28 }} />,
