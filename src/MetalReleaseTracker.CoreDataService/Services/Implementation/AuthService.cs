@@ -184,7 +184,7 @@ public class AuthService : IAuthService
 
         var user = new IdentityUser
         {
-            UserName = userName,
+            UserName = email,
             Email = email,
             EmailConfirmed = true
         };
