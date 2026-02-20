@@ -53,7 +53,7 @@ const AlbumsPage = ({ isHome = false }) => {
   const [distributors, setDistributors] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') === 'true');
+  const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
 
   useEffect(() => {
