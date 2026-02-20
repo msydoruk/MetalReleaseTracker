@@ -7,5 +7,7 @@ public interface IAlbumService
 {
     Task<PagedResultDto<AlbumDto>> GetFilteredAlbums(AlbumFilterDto filter, CancellationToken cancellationToken = default);
 
+    Task<PagedResultDto<GroupedAlbumDto>> GetGroupedAlbums(AlbumFilterDto filter, CancellationToken cancellationToken = default);
+
     Task<AlbumDto?> GetAlbumById(Guid id, CancellationToken cancellationToken = default);
 }

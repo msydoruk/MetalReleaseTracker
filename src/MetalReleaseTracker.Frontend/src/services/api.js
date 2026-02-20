@@ -80,6 +80,24 @@ export const fetchAlbums = (filters) => {
   return api.get(`/albums/filtered?${queryParams.toString()}`);
 };
 export const fetchAlbumById = (id) => api.get(`/albums/${id}`);
+export const fetchGroupedAlbums = (filters) => {
+  const queryParams = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (key === 'releaseDateFrom' || key === 'releaseDateTo') {
+          const formattedDate = formatDateParam(value);
+          if (formattedDate) {
+            queryParams.append(key, formattedDate);
+          }
+        } else {
+          queryParams.append(key, value);
+        }
+      }
+    });
+  }
+  return api.get(`/albums/grouped?${queryParams.toString()}`);
+};
 
 export const fetchBands = () => api.get('/bands/all');
 export const fetchBandById = (id) => api.get(`/bands/${id}`);

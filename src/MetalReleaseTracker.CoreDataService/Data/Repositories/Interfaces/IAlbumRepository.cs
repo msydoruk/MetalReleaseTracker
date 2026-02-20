@@ -10,6 +10,9 @@ public interface IAlbumRepository
     Task<PagedResultDto<AlbumEntity>> GetFilteredAlbumsAsync(AlbumFilterDto filter,
         CancellationToken cancellationToken = default);
 
+    Task<List<AlbumEntity>> GetAllFilteredAlbumsAsync(AlbumFilterDto filter,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(AlbumEntity entity, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(AlbumEntity entity, CancellationToken cancellationToken = default);

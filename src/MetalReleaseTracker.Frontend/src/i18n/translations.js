@@ -36,6 +36,10 @@ const translations = {
       error: 'Failed to load albums. Please try again later.',
       noAlbums: 'No albums found matching your criteria.',
       tryAdjusting: 'Try adjusting your filters to see more results.',
+      groupDuplicates: 'Group duplicates',
+    },
+    grouped: {
+      stores: 'stores',
     },
     albumCard: {
       statusNew: 'New',
@@ -225,6 +229,10 @@ const translations = {
       error: 'Не вдалося завантажити альбоми. Спробуйте пізніше.',
       noAlbums: 'Альбомів за вашими критеріями не знайдено.',
       tryAdjusting: 'Спробуйте змінити фільтри, щоб побачити більше результатів.',
+      groupDuplicates: 'Групувати дублікати',
+    },
+    grouped: {
+      stores: 'магазинів',
     },
     albumCard: {
       statusNew: 'Новий',

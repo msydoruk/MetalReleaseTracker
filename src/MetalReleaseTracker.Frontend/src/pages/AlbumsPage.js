@@ -13,6 +13,8 @@ import {
   Divider,
   Chip,
   FormControl,
+  FormControlLabel,
+  Checkbox,
   Select,
   MenuItem,
   useMediaQuery,
@@ -22,9 +24,10 @@ import { useLocation, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import AlbumCard from '../components/AlbumCard';
+import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
-import { fetchAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
+import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
 import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
@@ -51,6 +54,8 @@ const AlbumsPage = ({ isHome = false }) => {
   const [distributors, setDistributors] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isGrouped, setIsGrouped] = useState(false);
+  const [groupedAlbums, setGroupedAlbums] = useState([]);
 
   useEffect(() => {
     const checkAuthAndLoadFavorites = async () => {
@@ -107,12 +112,22 @@ const AlbumsPage = ({ isHome = false }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetchAlbums(filters);
-
-        if (response.data) {
-          setAlbums(response.data.items || []);
-          setTotalCount(response.data.totalCount || 0);
-          setPageCount(response.data.pageCount || 0);
+        if (isGrouped) {
+          const response = await fetchGroupedAlbums(filters);
+          if (response.data) {
+            setGroupedAlbums(response.data.items || []);
+            setAlbums([]);
+            setTotalCount(response.data.totalCount || 0);
+            setPageCount(response.data.pageCount || 0);
+          }
+        } else {
+          const response = await fetchAlbums(filters);
+          if (response.data) {
+            setAlbums(response.data.items || []);
+            setGroupedAlbums([]);
+            setTotalCount(response.data.totalCount || 0);
+            setPageCount(response.data.pageCount || 0);
+          }
         }
       } catch (err) {
         console.error('Error fetching albums:', err);
@@ -123,7 +138,7 @@ const AlbumsPage = ({ isHome = false }) => {
     };
 
     fetchData();
-  }, [filters]);
+  }, [filters, isGrouped]);
 
   const handleFilterChange = (newFilters) => {
     // Reset to page 1 when filters change
@@ -206,15 +221,31 @@ const AlbumsPage = ({ isHome = false }) => {
         <Typography variant="h4" component={isHome ? 'h2' : 'h1'}>
           {t('albums.metalReleases')}
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<FilterListIcon />}
-          onClick={toggleFilterDrawer}
-          sx={{ fontWeight: 'bold' }}
-        >
-          {t('albums.filters')}
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isGrouped}
+                onChange={(event) => {
+                  setIsGrouped(event.target.checked);
+                  setFilters({ ...filters, page: 1 });
+                }}
+                size="small"
+              />
+            }
+            label={t('albums.groupDuplicates')}
+            sx={{ mr: 0, '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<FilterListIcon />}
+            onClick={toggleFilterDrawer}
+            sx={{ fontWeight: 'bold' }}
+          >
+            {t('albums.filters')}
+          </Button>
+        </Box>
       </Box>
 
       {distributors.length > 0 && (
@@ -310,7 +341,7 @@ const AlbumsPage = ({ isHome = false }) => {
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
-      ) : albums.length > 0 ? (
+      ) : (isGrouped ? groupedAlbums.length > 0 : albums.length > 0) ? (
         <>
           <Box sx={{ width: '100%', mb: 4 }}>
             <Grid
@@ -329,22 +360,33 @@ const AlbumsPage = ({ isHome = false }) => {
                 alignItems: 'stretch'
               }}
             >
-              {albums.map((album) => (
-                <Box
-                  key={album.id}
-                  sx={{
-                    display: 'flex',
-                    height: '100%'
-                  }}
-                >
-                  <AlbumCard
-                    album={album}
-                    isFavorited={favoriteIds.has(album.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    isLoggedIn={isLoggedIn}
-                  />
-                </Box>
-              ))}
+              {isGrouped ? (
+                groupedAlbums.map((group, index) => (
+                  <Box
+                    key={`${group.bandName}-${group.albumName}-${index}`}
+                    sx={{ display: 'flex', height: '100%' }}
+                  >
+                    <GroupedAlbumCard group={group} />
+                  </Box>
+                ))
+              ) : (
+                albums.map((album) => (
+                  <Box
+                    key={album.id}
+                    sx={{
+                      display: 'flex',
+                      height: '100%'
+                    }}
+                  >
+                    <AlbumCard
+                      album={album}
+                      isFavorited={favoriteIds.has(album.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      isLoggedIn={isLoggedIn}
+                    />
+                  </Box>
+                ))
+              )}
             </Grid>
           </Box>
 

@@ -43,9 +43,118 @@ public class AlbumService : IAlbumService
         return pagedDtos;
     }
 
+    public async Task<PagedResultDto<GroupedAlbumDto>> GetGroupedAlbums(AlbumFilterDto filter, CancellationToken cancellationToken = default)
+    {
+        var allAlbums = await _albumRepository.GetAllFilteredAlbumsAsync(filter, cancellationToken);
+
+        var groups = new List<List<Data.Entities.AlbumEntity>>();
+        var assigned = new HashSet<int>();
+
+        for (var i = 0; i < allAlbums.Count; i++)
+        {
+            if (assigned.Contains(i))
+            {
+                continue;
+            }
+
+            var group = new List<Data.Entities.AlbumEntity> { allAlbums[i] };
+            assigned.Add(i);
+
+            for (var j = i + 1; j < allAlbums.Count; j++)
+            {
+                if (assigned.Contains(j))
+                {
+                    continue;
+                }
+
+                if (AreAlbumsMatching(allAlbums[i], allAlbums[j]))
+                {
+                    group.Add(allAlbums[j]);
+                    assigned.Add(j);
+                }
+            }
+
+            groups.Add(group);
+        }
+
+        var totalCount = groups.Count;
+        var pageSize = filter.PageSize;
+        var page = filter.Page;
+        var pageCount = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        var pagedGroups = groups
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var groupedDtos = new List<GroupedAlbumDto>();
+        foreach (var group in pagedGroups)
+        {
+            var primary = group[0];
+            var photoUrl = await _fileStorageService.GetFileUrlAsync(primary.PhotoUrl, cancellationToken);
+
+            var variants = group.Select(album => new AlbumVariantDto
+            {
+                AlbumId = album.Id,
+                DistributorId = album.DistributorId,
+                DistributorName = album.Distributor?.Name ?? string.Empty,
+                Price = album.Price,
+                PurchaseUrl = album.PurchaseUrl
+            }).ToList();
+
+            groupedDtos.Add(new GroupedAlbumDto
+            {
+                BandName = primary.Band?.Name ?? string.Empty,
+                AlbumName = primary.Name,
+                PhotoUrl = photoUrl,
+                ReleaseDate = primary.ReleaseDate,
+                Genre = primary.Genre,
+                Media = primary.Media,
+                Status = primary.Status,
+                Variants = variants
+            });
+        }
+
+        return new PagedResultDto<GroupedAlbumDto>
+        {
+            Items = groupedDtos,
+            TotalCount = totalCount,
+            PageCount = pageCount,
+            PageSize = pageSize,
+            CurrentPage = page
+        };
+    }
+
     public async Task<AlbumDto?> GetAlbumById(Guid id, CancellationToken cancellationToken = default)
     {
         var album = await _albumRepository.GetAsync(id, cancellationToken);
         return album == null ? null : _mapper.Map<AlbumDto>(album);
+    }
+
+    private static bool AreAlbumsMatching(Data.Entities.AlbumEntity albumA, Data.Entities.AlbumEntity albumB)
+    {
+        if (albumA.Media != albumB.Media)
+        {
+            return false;
+        }
+
+        var bandA = albumA.Band?.Name?.Trim() ?? string.Empty;
+        var bandB = albumB.Band?.Name?.Trim() ?? string.Empty;
+
+        if (!bandA.Equals(bandB, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var nameA = albumA.Name.Trim();
+        var nameB = albumB.Name.Trim();
+
+        if (nameA.Equals(nameB, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return nameA.Contains(nameB, StringComparison.OrdinalIgnoreCase)
+            || nameB.Contains(nameA, StringComparison.OrdinalIgnoreCase);
     }
 }

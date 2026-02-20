@@ -22,6 +22,7 @@ public static class RouteConstants
         {
             private const string Base = $"{ApiBase}/albums";
             public const string GetFiltered = $"{Base}/filtered";
+            public const string GetGrouped = $"{Base}/grouped";
             public const string GetById = $"{Base}/{{id:guid}}";
         }
 

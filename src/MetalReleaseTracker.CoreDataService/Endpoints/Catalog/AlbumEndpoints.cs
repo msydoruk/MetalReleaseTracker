@@ -22,6 +22,18 @@ public static class AlbumEndpoints
             .WithTags("Albums")
             .Produces<PagedResultDto<AlbumDto>>();
 
+        endpoints.MapGet(RouteConstants.Api.Albums.GetGrouped, async (
+                [AsParameters] AlbumFilterDto filter,
+                IAlbumService albumService,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await albumService.GetGroupedAlbums(filter, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetGroupedAlbums")
+            .WithTags("Albums")
+            .Produces<PagedResultDto<GroupedAlbumDto>>();
+
         endpoints.MapGet(RouteConstants.Api.Albums.GetById, async (
                 Guid id,
                 IAlbumService albumService,

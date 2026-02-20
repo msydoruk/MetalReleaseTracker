@@ -36,6 +36,17 @@ public class AlbumRepository : IAlbumRepository
         return await query.ToPagedResultAsync(filterCriteria.Page, filterCriteria.PageSize, cancellationToken);
     }
 
+    public async Task<List<AlbumEntity>> GetAllFilteredAlbumsAsync(AlbumFilterDto filterCriteria, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .AsNoTracking()
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .ApplyAlbumFilters(filterCriteria)
+            .ApplyAlbumSorting(filterCriteria.SortBy, filterCriteria.SortAscending)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(AlbumEntity entity, CancellationToken cancellationToken = default)
     {
         await _dbContext.Albums.AddAsync(entity, cancellationToken);
