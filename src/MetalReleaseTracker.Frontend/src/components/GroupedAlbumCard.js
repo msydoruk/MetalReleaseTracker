@@ -54,12 +54,13 @@ const GroupedAlbumCard = ({ group }) => {
         <Box sx={{ position: 'relative', overflow: 'hidden' }}>
           <CardMedia
             component="img"
-            height="220"
             image={group.photoUrl || '/placeholder-album.png'}
             alt={`${group.bandName} - ${group.albumName}`}
             onClick={() => setLightboxOpen(true)}
             sx={{
-              objectFit: 'cover',
+              aspectRatio: '1 / 1',
+              objectFit: 'contain',
+              backgroundColor: '#111',
               cursor: 'pointer',
               transition: 'transform 0.3s ease',
               '&:hover': {
@@ -141,7 +142,7 @@ const GroupedAlbumCard = ({ group }) => {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {sortedVariants.map((variant) => (
                 <Button
                   key={variant.albumId}
@@ -157,7 +158,7 @@ const GroupedAlbumCard = ({ group }) => {
                     textTransform: 'none',
                     borderRadius: 5,
                     px: 1.5,
-                    py: 0.3,
+                    py: 1,
                     fontSize: '0.8rem',
                     fontWeight: 500,
                     borderColor: 'rgba(255,255,255,0.12)',
