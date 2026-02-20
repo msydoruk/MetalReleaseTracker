@@ -51,11 +51,15 @@ public class UserFavoriteRepository : IUserFavoriteRepository
 
     public async Task<PagedResultDto<AlbumEntity>> GetFavoriteAlbumsAsync(string userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.UserFavorites
+        var albumIds = _dbContext.UserFavorites
             .AsNoTracking()
             .Where(favorite => favorite.UserId == userId)
             .OrderByDescending(favorite => favorite.CreatedDate)
-            .Select(favorite => favorite.Album)
+            .Select(favorite => favorite.AlbumId);
+
+        var query = _dbContext.Albums
+            .AsNoTracking()
+            .Where(album => albumIds.Contains(album.Id))
             .Include(album => album.Band)
             .Include(album => album.Distributor);
 

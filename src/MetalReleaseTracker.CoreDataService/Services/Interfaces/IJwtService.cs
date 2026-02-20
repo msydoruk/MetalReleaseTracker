@@ -5,7 +5,7 @@ namespace MetalReleaseTracker.CoreDataService.Services.Interfaces;
 
 public interface IJwtService
 {
-    JwtTokenDto GenerateJwtToken(IdentityUser user, IList<string> userRoles);
+    JwtTokenDto GenerateJwtToken(IdentityUser user, IList<string> userRoles, string displayName = null);
 
     string GenerateRefreshToken();
 

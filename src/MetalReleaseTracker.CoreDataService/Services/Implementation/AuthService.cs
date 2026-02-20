@@ -144,8 +144,6 @@ public class AuthService : IAuthService
 
     public async Task<AuthResultDto> LoginWithGoogleAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
-        _logger.LogWarning("Login with Google is not implemented yet");
-
         var authResult = await httpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
         if (!authResult.Succeeded)
@@ -179,7 +177,7 @@ public class AuthService : IAuthService
         if (existingUser != null)
         {
             _logger.LogInformation("User with email {Email} already exists, logging in", email);
-            return await CreateSuccessResult(existingUser, "Login successful", cancellationToken);
+            return await CreateSuccessResult(existingUser, "Login successful", cancellationToken, userName);
         }
 
         var user = new IdentityUser
@@ -203,13 +201,13 @@ public class AuthService : IAuthService
 
         _logger.LogInformation("User {Email} created from Google authentication", email);
 
-        return await CreateSuccessResult(user, "Google login successful", cancellationToken);
+        return await CreateSuccessResult(user, "Google login successful", cancellationToken, userName);
     }
 
-    private async Task<AuthResultDto> CreateSuccessResult(IdentityUser user, string message, CancellationToken cancellationToken = default)
+    private async Task<AuthResultDto> CreateSuccessResult(IdentityUser user, string message, CancellationToken cancellationToken = default, string displayName = null)
     {
         var roles = await _userManager.GetRolesAsync(user);
-        var jwtToken = _jwtService.GenerateJwtToken(user, roles);
+        var jwtToken = _jwtService.GenerateJwtToken(user, roles, displayName);
         var refreshToken = _jwtService.GenerateRefreshToken();
         await _jwtService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
 
