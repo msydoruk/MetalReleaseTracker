@@ -32,7 +32,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
     mediaType: initialFilters.mediaType || '',
     minPrice: initialFilters.minPrice || 0,
     maxPrice: initialFilters.maxPrice || 200,
-    sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.BAND,
+    sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.NAME,
     sortAscending: initialFilters.sortAscending ?? true,
     pageSize: initialFilters.pageSize || 20,
     ...initialFilters
@@ -65,7 +65,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
       mediaType: initialFilters.mediaType || '',
       minPrice: initialFilters.minPrice || 0,
       maxPrice: initialFilters.maxPrice || 200,
-      sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.BAND,
+      sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.NAME,
       sortAscending: initialFilters.sortAscending ?? true,
       pageSize: initialFilters.pageSize || 20,
       ...initialFilters
@@ -115,7 +115,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
       mediaType: '',
       minPrice: 0,
       maxPrice: 200,
-      sortBy: ALBUM_SORT_FIELDS.BAND,
+      sortBy: ALBUM_SORT_FIELDS.NAME,
       sortAscending: true,
       pageSize: 20
     };

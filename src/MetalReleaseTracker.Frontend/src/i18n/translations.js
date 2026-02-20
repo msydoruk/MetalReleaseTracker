@@ -40,6 +40,8 @@ const translations = {
     },
     grouped: {
       stores: 'stores',
+      moreStores: 'more',
+      showLess: 'Show less',
     },
     albumCard: {
       statusNew: 'New',
@@ -240,6 +242,8 @@ const translations = {
     },
     grouped: {
       stores: 'магазинів',
+      moreStores: 'ще',
+      showLess: 'Згорнути',
     },
     albumCard: {
       statusNew: 'Новий',

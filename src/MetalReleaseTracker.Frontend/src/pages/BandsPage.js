@@ -22,7 +22,6 @@ import { fetchBandsWithAlbumCount } from '../services/api';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumIcon from '@mui/icons-material/Album';
 import SearchIcon from '@mui/icons-material/Search';
-import DefaultBandImage from '../components/DefaultBandImage';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -156,30 +155,15 @@ const BandsPage = () => {
               onClick={() => handleBandClick(band.id)}
             >
               <CardMedia
-                component="div"
+                component="img"
+                image={band.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E"}
+                alt={band.name}
                 sx={{
                   aspectRatio: '1 / 1',
-                  position: 'relative',
+                  objectFit: 'contain',
                   backgroundColor: '#111',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
                 }}
-              >
-                {band.photoUrl ? (
-                  <img
-                    src={band.photoUrl}
-                    alt={band.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
-                ) : (
-                  <DefaultBandImage />
-                )}
-              </CardMedia>
+              />
               <CardContent sx={{ flexGrow: 1, p: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <MusicNoteIcon sx={{ mr: 1, color: 'primary.main' }} />
