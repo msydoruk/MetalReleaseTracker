@@ -88,3 +88,9 @@ export const fetchBandsWithAlbumCount = () => api.get('/bands/with-album-count')
 export const fetchDistributors = () => api.get('/distributors/all');
 export const fetchDistributorById = (id) => api.get(`/distributors/${id}`);
 export const fetchDistributorsWithAlbumCount = () => api.get('/distributors/with-album-count');
+
+export const addFavorite = (albumId) => api.post(`/favorites/${albumId}`);
+export const removeFavorite = (albumId) => api.delete(`/favorites/${albumId}`);
+export const fetchFavorites = (page, pageSize) => api.get(`/favorites?page=${page}&pageSize=${pageSize}`);
+export const fetchFavoriteIds = () => api.get('/favorites/ids');
+export const checkFavorite = (albumId) => api.get(`/favorites/${albumId}/check`);

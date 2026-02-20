@@ -15,6 +15,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<DistributorEntity> Distributors { get; set; }
 
+    public DbSet<UserFavoriteEntity> UserFavorites { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -32,6 +34,10 @@ public class CoreDataServiceDbContext : DbContext
 
         modelBuilder.Entity<AlbumEntity>()
             .HasIndex(album => album.SKU)
+            .IsUnique();
+
+        modelBuilder.Entity<UserFavoriteEntity>()
+            .HasIndex(favorite => new { favorite.UserId, favorite.AlbumId })
             .IsUnique();
     }
 }

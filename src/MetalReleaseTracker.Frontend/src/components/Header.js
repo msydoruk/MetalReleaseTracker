@@ -33,7 +33,8 @@ import {
   AppRegistration as RegisterIcon,
   Info as InfoIcon,
   Newspaper as NewspaperIcon,
-  Language as LanguageIcon
+  Language as LanguageIcon,
+  ContactMail as ContactMailIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
@@ -139,7 +140,8 @@ const Header = () => {
     { title: t('nav.bands'), path: '/bands', icon: <MusicNoteIcon /> },
     { title: t('nav.distributors'), path: '/distributors', icon: <StoreIcon /> },
     { title: t('nav.news'), path: '/news', icon: <NewspaperIcon /> },
-    { title: t('nav.about'), path: '/about', icon: <InfoIcon /> }
+    { title: t('nav.about'), path: '/about', icon: <InfoIcon /> },
+    { title: t('nav.feedback'), path: '/feedback', icon: <ContactMailIcon /> }
   ];
   
   const getInitials = (name) => {
@@ -200,14 +202,36 @@ const Header = () => {
         ))}
       </List>
       
-      {/* Auth UI hidden for now — will be enabled later */}
+      <Divider />
+      <List>
+        {user ? (
+          <>
+            <ListItemButton component={Link} to="/profile">
+              <ListItemIcon><AccountCircleIcon /></ListItemIcon>
+              <ListItemText primary={t('nav.profile')} />
+            </ListItemButton>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon><LogoutIcon color="error" /></ListItemIcon>
+              <ListItemText primary={t('nav.signOut')} primaryTypographyProps={{ color: 'error' }} />
+            </ListItemButton>
+          </>
+        ) : (
+          <>
+            <ListItemButton component={Link} to="/login">
+              <ListItemIcon><LoginIcon /></ListItemIcon>
+              <ListItemText primary={t('nav.login')} />
+            </ListItemButton>
+            <ListItemButton component={Link} to="/register">
+              <ListItemIcon><RegisterIcon /></ListItemIcon>
+              <ListItemText primary={t('nav.signUp')} />
+            </ListItemButton>
+          </>
+        )}
+      </List>
     </Box>
   );
   
   const renderAuthButtons = () => {
-    // Auth UI hidden for now — will be enabled later
-    return null;
-
     if (user) {
       return (
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
@@ -223,7 +247,7 @@ const Header = () => {
               display: { xs: 'none', sm: 'flex' } 
             }}
           />
-          <Tooltip title="User Profile">
+          <Tooltip title={t('nav.profile')}>
             <Button
               onClick={handleProfileMenuOpen}
               color="inherit"
@@ -254,7 +278,7 @@ const Header = () => {
               <ListItemIcon>
                 <AccountCircleIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Profile</ListItemText>
+              <ListItemText>{t('nav.profile')}</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>
@@ -262,7 +286,7 @@ const Header = () => {
                 <LogoutIcon fontSize="small" color="error" />
               </ListItemIcon>
               <ListItemText primaryTypographyProps={{ color: 'error' }}>
-                Sign Out
+                {t('nav.signOut')}
               </ListItemText>
             </MenuItem>
           </Menu>
@@ -278,15 +302,15 @@ const Header = () => {
           onClick={handleLogin}
           sx={{ mr: 1 }}
         >
-          Login
+          {t('nav.login')}
         </Button>
-        <Button 
-          color="secondary" 
+        <Button
+          color="secondary"
           variant="outlined"
           startIcon={<RegisterIcon />}
           onClick={handleRegister}
         >
-          Sign Up
+          {t('nav.signUp')}
         </Button>
       </Box>
     );
@@ -365,7 +389,7 @@ const Header = () => {
                   <Button
                     color="inherit"
                     onClick={toggleLanguage}
-                    sx={{ minWidth: 'auto', px: 1, mr: 1 }}
+                    sx={{ minWidth: 'auto', px: 1, mr: { xs: -0.5, md: 1 } }}
                     startIcon={<LanguageIcon />}
                   >
                     {language === 'en' ? 'UA' : 'EN'}
