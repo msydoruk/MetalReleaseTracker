@@ -23,10 +23,13 @@ public static class ApplicationBuilderExtensions
             });
         }
 
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        var forwardedHeadersOptions = new ForwardedHeadersOptions
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
+        };
+        forwardedHeadersOptions.KnownProxies.Clear();
+        forwardedHeadersOptions.KnownNetworks.Clear();
+        app.UseForwardedHeaders(forwardedHeadersOptions);
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
