@@ -153,7 +153,6 @@ const GroupedAlbumCard = ({ group }) => {
                   size="small"
                   variant="outlined"
                   startIcon={<ShoppingCartOutlinedIcon sx={{ fontSize: 13, color: '#f44336' }} />}
-                  endIcon={<OpenInNewIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }} />}
                   sx={{
                     justifyContent: 'space-between',
                     textTransform: 'none',
