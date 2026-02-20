@@ -32,7 +32,7 @@ const AboutPage = () => {
   usePageMeta('About - Ukrainian Metal Release Tracker', 'Metal Release Tracker aggregates Ukrainian metal releases from foreign distributors and labels into one searchable catalog.');
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
+    <Container maxWidth="md" sx={{ py: 6 }}>
       {/* Hero */}
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mb: 2 }}>
