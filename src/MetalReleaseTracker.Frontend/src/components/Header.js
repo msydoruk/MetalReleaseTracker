@@ -28,7 +28,6 @@ import {
   Store as StoreIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
-  Email as EmailIcon,
   Login as LoginIcon,
   AppRegistration as RegisterIcon,
   Info as InfoIcon,
@@ -150,11 +149,6 @@ const Header = () => {
     return name.split(' ').map(part => part[0]).join('').toUpperCase();
   };
   
-  const getUserEmail = () => {
-    if (!user) return '';
-    return user.claims?.email || '';
-  };
-
   const getUserName = () => {
     if (!user) return 'User';
     return user.claims?.username ||
@@ -180,9 +174,6 @@ const Header = () => {
             </Avatar>
             <Typography variant="subtitle1" component="div" noWrap>
               {getUserName()}
-            </Typography>
-            <Typography variant="body2" component="div" sx={{ mt: 0.5 }} noWrap>
-              {getUserEmail()}
             </Typography>
           </Box>
           <Divider />
@@ -259,18 +250,6 @@ const Header = () => {
     if (user) {
       return (
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-          <Chip 
-            icon={<EmailIcon fontSize="small" />}
-            label={getUserEmail()}
-            variant="outlined"
-            size="small"
-            sx={{ 
-              mr: 2, 
-              color: 'white', 
-              borderColor: 'rgba(255,255,255,0.5)',
-              display: { xs: 'none', sm: 'flex' } 
-            }}
-          />
           <Tooltip title={t('nav.profile')}>
             <Button
               onClick={handleProfileMenuOpen}
