@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -13,12 +13,15 @@ import {
   Chip,
   Avatar,
   Divider,
-  Paper
+  Paper,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { fetchBandsWithAlbumCount } from '../services/api';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumIcon from '@mui/icons-material/Album';
+import SearchIcon from '@mui/icons-material/Search';
 import DefaultBandImage from '../components/DefaultBandImage';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -30,7 +33,13 @@ const BandsPage = () => {
   const [bands, setBands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
+  const filteredBands = useMemo(() => {
+    if (!searchQuery.trim()) return bands;
+    return bands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [bands, searchQuery]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,6 +74,43 @@ const BandsPage = () => {
         </Typography>
       </Box>
 
+      {!loading && bands.length > 0 && (
+        <TextField
+          fullWidth
+          size="small"
+          placeholder={t('bands.searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            mb: 3,
+            maxWidth: 400,
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: 1,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'primary.main',
+              },
+            },
+            '& .MuiInputBase-input': {
+              color: 'white',
+            },
+          }}
+        />
+      )}
+
       {error && (
         <Alert severity="error" sx={{ my: 2 }}>
           {error}
@@ -75,7 +121,7 @@ const BandsPage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
-      ) : bands.length > 0 ? (
+      ) : filteredBands.length > 0 ? (
         <Grid
           container
           spacing={3}
@@ -91,7 +137,7 @@ const BandsPage = () => {
             gap: 3
           }}
         >
-          {bands.map((band) => (
+          {filteredBands.map((band) => (
             <Card
               key={band.id}
               sx={{
@@ -204,6 +250,12 @@ const BandsPage = () => {
             </Card>
           ))}
         </Grid>
+      ) : bands.length > 0 && searchQuery.trim() ? (
+        <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">
+            {t('bands.noResults')}
+          </Typography>
+        </Paper>
       ) : (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">

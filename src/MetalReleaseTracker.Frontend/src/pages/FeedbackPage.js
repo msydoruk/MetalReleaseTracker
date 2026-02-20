@@ -6,7 +6,8 @@ import {
   TextField,
   Button,
   Box,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import BugReportIcon from '@mui/icons-material/BugReport';
@@ -14,15 +15,32 @@ import LinkOffIcon from '@mui/icons-material/LinkOff';
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useLanguage } from '../i18n/LanguageContext';
+import { submitFeedback } from '../services/api';
 
 const FeedbackPage = () => {
   const { t } = useLanguage();
   const [message, setMessage] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const mailto = `mailto:sydoruk.m@gmail.com?subject=${encodeURIComponent(t('feedback.emailSubject'))}&body=${encodeURIComponent(message)}`;
-    window.location.href = mailto;
+    setLoading(true);
+    setSuccess(false);
+    setError(null);
+
+    try {
+      await submitFeedback({ message, email: email || undefined });
+      setSuccess(true);
+      setMessage('');
+      setEmail('');
+    } catch (err) {
+      setError(t('feedback.error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const issues = [
@@ -60,6 +78,18 @@ const FeedbackPage = () => {
         ))}
       </Box>
 
+      {success && (
+        <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+          {t('feedback.success')}
+        </Alert>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           <TextField
@@ -71,16 +101,27 @@ const FeedbackPage = () => {
             rows={5}
             fullWidth
             placeholder={t('feedback.messagePlaceholder')}
+            disabled={loading}
+          />
+          <TextField
+            label={t('feedback.emailLabel')}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            type="email"
+            fullWidth
+            placeholder={t('feedback.emailPlaceholder')}
+            disabled={loading}
           />
           <Button
             type="submit"
             variant="contained"
             color="primary"
             size="large"
-            endIcon={<SendIcon />}
+            disabled={loading}
+            endIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
             sx={{ fontWeight: 600 }}
           >
-            {t('feedback.submit')}
+            {loading ? t('feedback.sending') : t('feedback.submit')}
           </Button>
         </Box>
       </Paper>

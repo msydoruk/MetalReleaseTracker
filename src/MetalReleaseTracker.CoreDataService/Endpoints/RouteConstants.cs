@@ -42,6 +42,12 @@ public static class RouteConstants
             public const string GetWithAlbumCount = $"{Base}/with-album-count";
         }
 
+        public static class Feedback
+        {
+            private const string Base = $"{ApiBase}/feedback";
+            public const string Submit = Base;
+        }
+
         public static class Favorites
         {
             private const string Base = $"{ApiBase}/favorites";

@@ -55,3 +55,10 @@ appsettings.Development.json
 .env.prod
 
 settings.local.json
+
+# Playwright MCP
+.playwright-mcp/
+
+# Screenshots (debug/testing artifacts)
+desktop-*.png
+mobile-*.png
