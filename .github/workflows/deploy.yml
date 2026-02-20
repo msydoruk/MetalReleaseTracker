@@ -88,7 +88,8 @@ jobs:
           ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           docker image prune -f
-          echo "Cleaned dangling images"
+          docker builder prune -f
+          echo "Cleaned dangling images and build cache"
           df -h / | tail -1
           SCRIPT
 
@@ -176,6 +177,7 @@ jobs:
           ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           docker image prune -f
+          docker builder prune -f
           echo ""
           echo "=== All containers ==="
           docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

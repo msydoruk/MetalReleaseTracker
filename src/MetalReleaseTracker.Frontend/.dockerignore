@@ -1,3 +1,9 @@
 node_modules
 build
 .env
+.git
+.playwright-mcp
+*.png
+*.jpg
+*.jpeg
+README.md

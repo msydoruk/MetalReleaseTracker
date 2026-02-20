@@ -7,13 +7,9 @@ COPY ["MetalReleaseTracker.ParserService/MetalReleaseTracker.ParserService.cspro
 COPY ["MetalReleaseTracker.SharedLibraries/MetalReleaseTracker.SharedLibraries.csproj", "MetalReleaseTracker.SharedLibraries/"]
 RUN dotnet restore "MetalReleaseTracker.ParserService/MetalReleaseTracker.ParserService.csproj"
 
-# Copy everything else and build
+# Copy everything else and publish
 COPY . .
 WORKDIR "/src/MetalReleaseTracker.ParserService"
-RUN dotnet build "MetalReleaseTracker.ParserService.csproj" -c Release -o /app/build
-
-# Publish stage
-FROM build AS publish
 RUN dotnet publish "MetalReleaseTracker.ParserService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
@@ -38,5 +34,5 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.ParserService.dll"]

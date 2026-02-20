@@ -7,13 +7,9 @@ COPY ["MetalReleaseTracker.CatalogSyncService/MetalReleaseTracker.CatalogSyncSer
 COPY ["MetalReleaseTracker.SharedLibraries/MetalReleaseTracker.SharedLibraries.csproj", "MetalReleaseTracker.SharedLibraries/"]
 RUN dotnet restore "MetalReleaseTracker.CatalogSyncService/MetalReleaseTracker.CatalogSyncService.csproj"
 
-# Copy everything else and build
+# Copy everything else and publish
 COPY . .
 WORKDIR "/src/MetalReleaseTracker.CatalogSyncService"
-RUN dotnet build "MetalReleaseTracker.CatalogSyncService.csproj" -c Release -o /app/build
-
-# Publish stage
-FROM build AS publish
 RUN dotnet publish "MetalReleaseTracker.CatalogSyncService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
@@ -22,5 +18,5 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.CatalogSyncService.dll"]
