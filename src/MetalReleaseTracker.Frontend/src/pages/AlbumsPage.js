@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -18,7 +18,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { useLocation, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import AlbumCard from '../components/AlbumCard';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
@@ -29,6 +29,48 @@ import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
+
+const DEFAULTS = {
+  page: 1,
+  pageSize: 20,
+  sortBy: ALBUM_SORT_FIELDS.NAME,
+  sortAscending: true,
+  minPrice: 0,
+  maxPrice: 200,
+};
+
+const parseIntParam = (value, defaultValue) => {
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? defaultValue : parsed;
+};
+
+const parseFiltersFromUrl = (searchParams) => ({
+  page: parseIntParam(searchParams.get('page'), DEFAULTS.page),
+  pageSize: parseIntParam(searchParams.get('pageSize'), DEFAULTS.pageSize),
+  sortBy: parseIntParam(searchParams.get('sortBy'), DEFAULTS.sortBy),
+  sortAscending: searchParams.get('sortAscending') !== 'false',
+  bandId: searchParams.get('bandId') || '',
+  distributorId: searchParams.get('distributorId') || '',
+  name: searchParams.get('name') || '',
+  mediaType: searchParams.get('mediaType') || '',
+  minPrice: parseIntParam(searchParams.get('minPrice'), DEFAULTS.minPrice),
+  maxPrice: parseIntParam(searchParams.get('maxPrice'), DEFAULTS.maxPrice),
+});
+
+const filtersToSearchParams = (filters) => {
+  const params = new URLSearchParams();
+  if (filters.page > DEFAULTS.page) params.set('page', filters.page);
+  if (filters.pageSize !== DEFAULTS.pageSize) params.set('pageSize', filters.pageSize);
+  if (filters.sortBy !== DEFAULTS.sortBy) params.set('sortBy', filters.sortBy);
+  if (filters.sortAscending === false) params.set('sortAscending', 'false');
+  if (filters.bandId) params.set('bandId', filters.bandId);
+  if (filters.distributorId) params.set('distributorId', filters.distributorId);
+  if (filters.name) params.set('name', filters.name);
+  if (filters.mediaType) params.set('mediaType', filters.mediaType);
+  if (filters.minPrice > DEFAULTS.minPrice) params.set('minPrice', filters.minPrice);
+  if (filters.maxPrice < DEFAULTS.maxPrice) params.set('maxPrice', filters.maxPrice);
+  return params;
+};
 
 const AlbumsPage = ({ isHome = false }) => {
   const { t } = useLanguage();
@@ -41,7 +83,7 @@ const AlbumsPage = ({ isHome = false }) => {
       : 'Albums - Ukrainian Metal Releases',
     'Browse Ukrainian metal releases available from foreign distributors. Filter by band, format, price. Vinyl, CD, cassette - order directly from the source.'
   );
-  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [albums, setAlbums] = useState([]);
@@ -53,6 +95,12 @@ const AlbumsPage = ({ isHome = false }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
+
+  const filters = useMemo(() => parseFiltersFromUrl(searchParams), [searchParams]);
+
+  const updateFilters = (newFilters) => {
+    setSearchParams(filtersToSearchParams(newFilters), { replace: true });
+  };
 
   useEffect(() => {
     const checkAuthAndLoadFavorites = async () => {
@@ -83,27 +131,6 @@ const AlbumsPage = ({ isHome = false }) => {
 
     loadDistributors();
   }, []);
-
-  const getInitialFilters = () => {
-    const searchParams = new URLSearchParams(location.search);
-    const bandId = searchParams.get('bandId');
-    const distributorId = searchParams.get('distributorId');
-
-    return {
-      page: 1,
-      pageSize: 20,
-      sortBy: ALBUM_SORT_FIELDS.BAND,
-      sortAscending: true,
-      ...(bandId && { bandId }),
-      ...(distributorId && { distributorId })
-    };
-  };
-
-  const [filters, setFilters] = useState(getInitialFilters);
-
-  useEffect(() => {
-    setFilters(getInitialFilters());
-  }, [location.search]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,28 +165,16 @@ const AlbumsPage = ({ isHome = false }) => {
   }, [filters, isGrouped]);
 
   const handleFilterChange = (newFilters) => {
-    // Reset to page 1 when filters change
-    setFilters({
-      ...newFilters,
-      page: 1
-    });
-    // Close filter drawer after applying
+    updateFilters({ ...newFilters, page: 1 });
     setIsFilterOpen(false);
   };
 
   const handlePageChange = (newPage) => {
-    setFilters({
-      ...filters,
-      page: newPage
-    });
+    updateFilters({ ...filters, page: newPage });
   };
 
   const handlePageSizeChange = (newPageSize) => {
-    setFilters({
-      ...filters,
-      pageSize: newPageSize,
-      page: 1 // Reset to first page when changing page size
-    });
+    updateFilters({ ...filters, pageSize: newPageSize, page: 1 });
   };
 
   const toggleFilterDrawer = () => {
@@ -185,11 +200,7 @@ const AlbumsPage = ({ isHome = false }) => {
   };
 
   const handleDistributorSelect = (distributorId) => {
-    setFilters({
-      ...filters,
-      distributorId: distributorId || '',
-      page: 1
-    });
+    updateFilters({ ...filters, distributorId: distributorId || '', page: 1 });
   };
 
   return (
@@ -240,7 +251,7 @@ const AlbumsPage = ({ isHome = false }) => {
                   const checked = event.target.checked;
                   setIsGrouped(checked);
                   localStorage.setItem('albumsGrouped', String(checked));
-                  setFilters({ ...filters, distributorId: checked ? '' : filters.distributorId, page: 1 });
+                  updateFilters({ ...filters, distributorId: checked ? '' : filters.distributorId, page: 1 });
                 }}
                 size="small"
               />

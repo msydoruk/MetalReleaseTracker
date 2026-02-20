@@ -12,11 +12,16 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const GroupedAlbumCard = ({ group }) => {
   const { t } = useLanguage();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const MAX_VISIBLE_VARIANTS = 3;
 
   const mediaTypeLabels = {
     0: t('albumCard.mediaCD'),
@@ -42,7 +47,8 @@ const GroupedAlbumCard = ({ group }) => {
         flexDirection: 'column',
         boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
         borderRadius: 2,
-        overflow: 'hidden',
+        overflow: expanded ? 'visible' : 'hidden',
+        zIndex: expanded ? 10 : 'auto',
         transition: 'all 0.25s ease-in-out',
         bgcolor: 'background.paper',
         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -142,43 +148,122 @@ const GroupedAlbumCard = ({ group }) => {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {sortedVariants.map((variant) => (
+            <Box sx={{ position: 'relative' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {sortedVariants.slice(0, MAX_VISIBLE_VARIANTS).map((variant) => (
+                  <Button
+                    key={variant.albumId}
+                    component="a"
+                    href={variant.purchaseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    variant="outlined"
+                    endIcon={<OpenInNewIcon sx={{ fontSize: 14, color: '#f44336' }} />}
+                    sx={{
+                      justifyContent: 'space-between',
+                      textTransform: 'none',
+                      borderRadius: 5,
+                      px: 1.5,
+                      py: 0.4,
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      borderColor: 'rgba(255,255,255,0.12)',
+                      bgcolor: 'rgba(255,255,255,0.03)',
+                      '&:hover': {
+                        borderColor: 'rgba(255,255,255,0.3)',
+                        bgcolor: 'rgba(255,255,255,0.07)'
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'white' }}>
+                        {'\u20AC'}{variant.price.toFixed(2)}
+                      </Typography>
+                      <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
+                        {variant.distributorName}
+                      </Typography>
+                    </Box>
+                  </Button>
+                ))}
+              </Box>
+              {sortedVariants.length > MAX_VISIBLE_VARIANTS && (
                 <Button
-                  key={variant.albumId}
-                  component="a"
-                  href={variant.purchaseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   size="small"
-                  variant="outlined"
-                  endIcon={<OpenInNewIcon sx={{ fontSize: 14, color: '#f44336' }} />}
+                  onClick={() => setExpanded(!expanded)}
+                  endIcon={expanded ? <KeyboardArrowUpIcon sx={{ fontSize: 16 }} /> : <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />}
                   sx={{
-                    justifyContent: 'space-between',
+                    width: '100%',
+                    mt: 0.5,
                     textTransform: 'none',
+                    fontSize: '0.75rem',
+                    color: 'text.secondary',
+                    py: 0.25,
+                    minHeight: 'unset',
                     borderRadius: 5,
-                    px: 1.5,
-                    py: 0.4,
-                    fontSize: '0.8rem',
-                    fontWeight: 500,
-                    borderColor: 'rgba(255,255,255,0.12)',
-                    bgcolor: 'rgba(255,255,255,0.03)',
                     '&:hover': {
-                      borderColor: 'rgba(255,255,255,0.3)',
-                      bgcolor: 'rgba(255,255,255,0.07)'
+                      bgcolor: 'rgba(255,255,255,0.05)'
                     }
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'white' }}>
-                      {'\u20AC'}{variant.price.toFixed(2)}
-                    </Typography>
-                    <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
-                      {variant.distributorName}
-                    </Typography>
-                  </Box>
+                  {expanded ? t('grouped.showLess') : `+${sortedVariants.length - MAX_VISIBLE_VARIANTS} ${t('grouped.moreStores')}`}
                 </Button>
-              ))}
+              )}
+              {expanded && sortedVariants.length > MAX_VISIBLE_VARIANTS && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: -16,
+                  right: -16,
+                  zIndex: 10,
+                  bgcolor: 'background.paper',
+                  borderRadius: '0 0 8px 8px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                  px: 2,
+                  py: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5,
+                  borderTop: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  {sortedVariants.slice(MAX_VISIBLE_VARIANTS).map((variant) => (
+                    <Button
+                      key={variant.albumId}
+                      component="a"
+                      href={variant.purchaseUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      size="small"
+                      variant="outlined"
+                      endIcon={<OpenInNewIcon sx={{ fontSize: 14, color: '#f44336' }} />}
+                      sx={{
+                        justifyContent: 'space-between',
+                        textTransform: 'none',
+                        borderRadius: 5,
+                        px: 1.5,
+                        py: 0.4,
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        borderColor: 'rgba(255,255,255,0.12)',
+                        bgcolor: 'rgba(255,255,255,0.03)',
+                        '&:hover': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                          bgcolor: 'rgba(255,255,255,0.07)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'white' }}>
+                          {'\u20AC'}{variant.price.toFixed(2)}
+                        </Typography>
+                        <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
+                          {variant.distributorName}
+                        </Typography>
+                      </Box>
+                    </Button>
+                  ))}
+                </Box>
+              )}
             </Box>
           </Box>
         </CardContent>
