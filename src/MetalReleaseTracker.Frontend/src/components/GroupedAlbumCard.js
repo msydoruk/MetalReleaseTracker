@@ -169,11 +169,11 @@ const GroupedAlbumCard = ({ group }) => {
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
-                    <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
-                      {variant.distributorName}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', ml: 1, color: 'white' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'white' }}>
                       {'\u20AC'}{variant.price.toFixed(2)}
+                    </Typography>
+                    <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
+                      {variant.distributorName}
                     </Typography>
                   </Box>
                 </Button>
