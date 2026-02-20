@@ -158,9 +158,9 @@ const BandsPage = () => {
               <CardMedia
                 component="div"
                 sx={{
-                  height: 200,
+                  aspectRatio: '1 / 1',
                   position: 'relative',
-                  backgroundColor: '#333333',
+                  backgroundColor: '#111',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -173,7 +173,7 @@ const BandsPage = () => {
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover'
+                      objectFit: 'contain'
                     }}
                   />
                 ) : (

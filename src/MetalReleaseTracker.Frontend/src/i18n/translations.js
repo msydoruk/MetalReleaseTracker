@@ -36,7 +36,7 @@ const translations = {
       error: 'Failed to load albums. Please try again later.',
       noAlbums: 'No albums found matching your criteria.',
       tryAdjusting: 'Try adjusting your filters to see more results.',
-      comparePrices: 'Compare prices',
+      comparePrices: 'Group by album',
     },
     grouped: {
       stores: 'stores',
@@ -236,7 +236,7 @@ const translations = {
       error: 'Не вдалося завантажити альбоми. Спробуйте пізніше.',
       noAlbums: 'Альбомів за вашими критеріями не знайдено.',
       tryAdjusting: 'Спробуйте змінити фільтри, щоб побачити більше результатів.',
-      comparePrices: 'Порівняти ціни',
+      comparePrices: 'Групувати за альбомом',
     },
     grouped: {
       stores: 'магазинів',

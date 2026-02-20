@@ -7,7 +7,6 @@ import {
   Alert,
   Paper,
   Drawer,
-  IconButton,
   Button,
   Divider,
   Chip,
@@ -21,7 +20,6 @@ import {
 } from '@mui/material';
 import { useLocation, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CloseIcon from '@mui/icons-material/Close';
 import AlbumCard from '../components/AlbumCard';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
@@ -94,7 +92,7 @@ const AlbumsPage = ({ isHome = false }) => {
     return {
       page: 1,
       pageSize: 20,
-      sortBy: ALBUM_SORT_FIELDS.RELEASE_DATE,
+      sortBy: ALBUM_SORT_FIELDS.NAME,
       sortAscending: false,
       ...(bandId && { bandId }),
       ...(distributorId && { distributorId })
@@ -435,19 +433,15 @@ const AlbumsPage = ({ isHome = false }) => {
             backgroundColor: 'background.paper',
             borderTopLeftRadius: { xs: 0, sm: 8 },
             borderBottomLeftRadius: { xs: 0, sm: 8 },
-            boxShadow: '-4px 0 20px rgba(0,0,0,0.2)'
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.2)',
+            overflow: 'hidden'
           },
         }}
       >
-        <Box sx={{ position: 'relative', p: 1 }}>
-          <IconButton
-            onClick={toggleFilterDrawer}
-            sx={{ position: 'absolute', right: 8, top: 8, zIndex: 5 }}
-          >
-            <CloseIcon />
-          </IconButton>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 1 }}>
           <AlbumFilter
             onFilterChange={handleFilterChange}
+            onClose={toggleFilterDrawer}
             initialFilters={filters}
           />
         </Box>

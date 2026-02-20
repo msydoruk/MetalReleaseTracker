@@ -15,14 +15,15 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  FormLabel
+  FormLabel,
+  IconButton
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import CloseIcon from '@mui/icons-material/Close';
 import { fetchBands } from '../services/api';
-import { ALBUM_SORT_FIELDS, SORT_FIELD_NAMES } from '../constants/albumSortFields';
+import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
+const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   const { t } = useLanguage();
 
   const [filters, setFilters] = useState({
@@ -31,11 +32,9 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
     mediaType: initialFilters.mediaType || '',
     minPrice: initialFilters.minPrice || 0,
     maxPrice: initialFilters.maxPrice || 200,
-    sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.RELEASE_DATE,
+    sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.NAME,
     sortAscending: initialFilters.sortAscending || false,
     pageSize: initialFilters.pageSize || 20,
-    releaseDateFrom: initialFilters.releaseDateFrom || null,
-    releaseDateTo: initialFilters.releaseDateTo || null,
     ...initialFilters
   });
 
@@ -66,11 +65,9 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
       mediaType: initialFilters.mediaType || '',
       minPrice: initialFilters.minPrice || 0,
       maxPrice: initialFilters.maxPrice || 200,
-      sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.RELEASE_DATE,
+      sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.NAME,
       sortAscending: initialFilters.sortAscending || false,
       pageSize: initialFilters.pageSize || 20,
-      releaseDateFrom: initialFilters.releaseDateFrom || null,
-      releaseDateTo: initialFilters.releaseDateTo || null,
       ...initialFilters
     });
 
@@ -85,13 +82,6 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
     setFilters({
       ...filters,
       [name]: value
-    });
-  };
-
-  const handleDateChange = (name, date) => {
-    setFilters({
-      ...filters,
-      [name]: date
     });
   };
 
@@ -125,11 +115,9 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
       mediaType: '',
       minPrice: 0,
       maxPrice: 200,
-      sortBy: ALBUM_SORT_FIELDS.RELEASE_DATE,
+      sortBy: ALBUM_SORT_FIELDS.NAME,
       sortAscending: false,
-      pageSize: 20,
-      releaseDateFrom: null,
-      releaseDateTo: null
+      pageSize: 20
     };
 
     setFilters(resetFilters);
@@ -141,48 +129,57 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
   };
 
   const sortOptions = [
-    { value: ALBUM_SORT_FIELDS.RELEASE_DATE, label: t('albumFilter.sortDate') },
     { value: ALBUM_SORT_FIELDS.NAME, label: t('albumFilter.sortName') },
-    { value: ALBUM_SORT_FIELDS.PRICE, label: t('albumFilter.sortPrice') },
     { value: ALBUM_SORT_FIELDS.BAND, label: t('albumFilter.sortBand') },
-    { value: ALBUM_SORT_FIELDS.DISTRIBUTOR, label: t('albumFilter.sortDistributor') }
+    { value: ALBUM_SORT_FIELDS.PRICE, label: t('albumFilter.sortPrice') }
   ];
 
   return (
     <Paper sx={{
-      p: 3,
+      height: '100%',
       mb: 0,
       borderRadius: 2,
       bgcolor: 'background.paper',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-      border: '1px solid rgba(255, 255, 255, 0.1)'
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" component="h2" sx={{ color: 'white', fontWeight: 'bold' }}>
-          {t('albumFilter.filterAlbums')}
-        </Typography>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleReset}
-          color="secondary"
-          sx={{
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            color: '#fff',
-            '&:hover': {
-              borderColor: '#fff',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)'
-            }
-          }}
-        >
-          {t('albumFilter.resetFilters')}
-        </Button>
+      <Box sx={{ p: 3, pb: 0 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" component="h2" sx={{ color: 'white', fontWeight: 'bold' }}>
+            {t('albumFilter.filterAlbums')}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleReset}
+              color="secondary"
+              sx={{
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                color: '#fff',
+                '&:hover': {
+                  borderColor: '#fff',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                }
+              }}
+            >
+              {t('albumFilter.resetFilters')}
+            </Button>
+            {onClose && (
+              <IconButton onClick={onClose} sx={{ color: 'white' }}>
+                <CloseIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Box>
+        <Divider />
       </Box>
 
-      <Divider sx={{ mb: 3 }} />
-
-      <form onSubmit={handleSubmit}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <form onSubmit={handleSubmit} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Search by name */}
           <TextField
             fullWidth
@@ -220,94 +217,6 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
             }}
           />
 
-          {/* Release Date Range - updated component */}
-          <Box>
-            <FormLabel
-              component="legend"
-              sx={{
-                color: 'white',
-                mb: 1,
-                fontWeight: 'medium'
-              }}
-            >
-              {t('albumFilter.releaseDateRange')}
-            </FormLabel>
-            <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-              <DatePicker
-                label={t('albumFilter.from')}
-                value={filters.releaseDateFrom}
-                onChange={(date) => handleDateChange('releaseDateFrom', date)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    fullWidth
-                    sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      borderRadius: 1,
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                        height: '40px'
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'white',
-                        fontWeight: 'medium',
-                      },
-                      '& .MuiInputBase-input': {
-                        py: 1,
-                        color: 'white',
-                      }
-                    }}
-                  />
-                )}
-              />
-              <DatePicker
-                label={t('albumFilter.to')}
-                value={filters.releaseDateTo}
-                onChange={(date) => handleDateChange('releaseDateTo', date)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    fullWidth
-                    sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      borderRadius: 1,
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                        height: '40px'
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'white',
-                        fontWeight: 'medium',
-                      },
-                      '& .MuiInputBase-input': {
-                        py: 1,
-                        color: 'white',
-                      }
-                    }}
-                  />
-                )}
-              />
-            </Box>
-          </Box>
-
           {/* Media type filter - using ToggleButtonGroup */}
           <Box>
             <FormLabel
@@ -337,6 +246,8 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
                 '& .MuiToggleButton-root': {
                   color: 'white',
                   borderColor: 'rgba(255, 255, 255, 0.3)',
+                  height: '40px',
+                  fontSize: '0.85rem',
                   '&.Mui-selected': {
                     backgroundColor: 'rgba(25, 118, 210, 0.5)',
                     color: 'white',
@@ -447,90 +358,84 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
             </FormLabel>
             <Box sx={{
               display: 'flex',
-              gap: 2,
-              alignItems: { xs: 'stretch', sm: 'center' },
+              gap: 1,
+              alignItems: 'stretch',
               flexDirection: { xs: 'column', sm: 'row' }
             }}>
-              <Box sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                p: 1.5,
-                borderRadius: 1,
-                flexGrow: 1
-              }}>
-                <RadioGroup
-                  row
-                  name="sortBy"
-                  value={filters.sortBy}
-                  onChange={handleInputChange}
-                  sx={{
-                    justifyContent: { xs: 'flex-start', sm: 'space-between' },
-                    flexWrap: 'wrap',
-                    gap: { xs: 0.5, sm: 0 },
-                    '& .MuiFormControlLabel-root': {
-                      margin: 0,
-                    },
-                    '& .MuiRadio-root': {
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      padding: '4px',
-                      '&.Mui-checked': {
-                        color: 'white',
-                      }
-                    },
-                    '& .MuiTypography-root': {
-                      fontSize: '0.85rem',
+              <RadioGroup
+                row
+                name="sortBy"
+                value={filters.sortBy}
+                onChange={handleInputChange}
+                sx={{
+                  flexGrow: 1,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: 1,
+                  height: '40px',
+                  px: 1.5,
+                  flexWrap: 'nowrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-around',
+                  '& .MuiFormControlLabel-root': {
+                    margin: 0,
+                  },
+                  '& .MuiRadio-root': {
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    padding: '4px',
+                    '&.Mui-checked': {
                       color: 'white',
                     }
-                  }}
-                >
-                  {sortOptions.map(option => (
-                    <FormControlLabel
-                      key={option.value}
-                      value={option.value}
-                      control={<Radio size="small" />}
-                      label={option.label}
-                    />
-                  ))}
-                </RadioGroup>
-              </Box>
-              <Box sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                p: 1,
-                borderRadius: 1,
-                minWidth: '100px'
-              }}>
-                <ToggleButtonGroup
-                  exclusive
-                  size="small"
-                  value={filters.sortAscending.toString()}
-                  onChange={(e, newValue) => {
-                    if (newValue !== null) {
-                      handleInputChange({
-                        target: { name: 'sortAscending', value: newValue === 'true' }
-                      });
+                  },
+                  '& .MuiTypography-root': {
+                    fontSize: '0.85rem',
+                    color: 'white',
+                  }
+                }}
+              >
+                {sortOptions.map(option => (
+                  <FormControlLabel
+                    key={option.value}
+                    value={option.value}
+                    control={<Radio size="small" />}
+                    label={option.label}
+                  />
+                ))}
+              </RadioGroup>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={filters.sortAscending.toString()}
+                onChange={(e, newValue) => {
+                  if (newValue !== null) {
+                    handleInputChange({
+                      target: { name: 'sortAscending', value: newValue === 'true' }
+                    });
+                  }
+                }}
+                aria-label="sort order"
+                fullWidth
+                sx={{
+                  minWidth: '150px',
+                  '& .MuiToggleButton-root': {
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    height: '40px',
+                    fontSize: '0.85rem',
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.5)',
+                      color: 'white'
                     }
-                  }}
-                  aria-label="sort order"
-                  fullWidth
-                  sx={{
-                    '& .MuiToggleButton-root': {
-                      color: 'white',
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                      padding: '4px 8px',
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.5)',
-                        color: 'white'
-                      }
-                    }
-                  }}
-                >
-                  <ToggleButton value="false" aria-label="descending">
-                    {'\u2193'} {t('albumFilter.desc')}
-                  </ToggleButton>
-                  <ToggleButton value="true" aria-label="ascending">
-                    {'\u2191'} {t('albumFilter.asc')}
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
+                  }
+                }}
+              >
+                <ToggleButton value="false" aria-label="descending">
+                  {'\u2193'} {t('albumFilter.desc')}
+                </ToggleButton>
+                <ToggleButton value="true" aria-label="ascending">
+                  {'\u2191'} {t('albumFilter.asc')}
+                </ToggleButton>
+              </ToggleButtonGroup>
             </Box>
           </Box>
 
@@ -565,24 +470,24 @@ const AlbumFilter = ({ onFilterChange, initialFilters = {} }) => {
               }}
             />
           </Box>
+        </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              sx={{
-                minWidth: 120,
-                fontWeight: 'bold',
-                boxShadow: 2,
-                '&:hover': {
-                  boxShadow: 4
-                }
-              }}
-            >
-              {t('albumFilter.applyFilters')}
-            </Button>
-          </Box>
+        <Box sx={{ p: 3, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            fullWidth
+            sx={{
+              fontWeight: 'bold',
+              boxShadow: 2,
+              '&:hover': {
+                boxShadow: 4
+              }
+            }}
+          >
+            {t('albumFilter.applyFilters')}
+          </Button>
         </Box>
       </form>
     </Paper>

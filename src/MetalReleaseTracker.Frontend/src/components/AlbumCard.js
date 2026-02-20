@@ -66,12 +66,13 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
         <Box sx={{ position: 'relative', overflow: 'hidden' }}>
           <CardMedia
             component="img"
-            height="220"
             image={imageUrl}
             alt={album.name}
             onClick={() => setLightboxOpen(true)}
             sx={{
-              objectFit: 'cover',
+              aspectRatio: '1 / 1',
+              objectFit: 'contain',
+              backgroundColor: '#111',
               cursor: 'pointer',
               transition: 'transform 0.3s ease',
               '&:hover': {
