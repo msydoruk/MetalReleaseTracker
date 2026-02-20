@@ -24,7 +24,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import AlbumCard from '../components/AlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
-import { fetchAlbums, fetchDistributors } from '../services/api';
+import { fetchAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
+import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -48,6 +49,25 @@ const AlbumsPage = ({ isHome = false }) => {
   const [pageCount, setPageCount] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [distributors, setDistributors] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuthAndLoadFavorites = async () => {
+      try {
+        const loggedIn = await authService.isLoggedIn();
+        setIsLoggedIn(loggedIn);
+        if (loggedIn) {
+          const response = await fetchFavoriteIds();
+          setFavoriteIds(new Set(response.data));
+        }
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    };
+
+    checkAuthAndLoadFavorites();
+  }, []);
 
   useEffect(() => {
     const loadDistributors = async () => {
@@ -132,6 +152,24 @@ const AlbumsPage = ({ isHome = false }) => {
 
   const toggleFilterDrawer = () => {
     setIsFilterOpen(!isFilterOpen);
+  };
+
+  const handleToggleFavorite = async (albumId) => {
+    try {
+      if (favoriteIds.has(albumId)) {
+        await removeFavorite(albumId);
+        setFavoriteIds((previous) => {
+          const next = new Set(previous);
+          next.delete(albumId);
+          return next;
+        });
+      } else {
+        await addFavorite(albumId);
+        setFavoriteIds((previous) => new Set(previous).add(albumId));
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
   };
 
   const handleDistributorSelect = (distributorId) => {
@@ -299,7 +337,12 @@ const AlbumsPage = ({ isHome = false }) => {
                     height: '100%'
                   }}
                 >
-                  <AlbumCard album={album} />
+                  <AlbumCard
+                    album={album}
+                    isFavorited={favoriteIds.has(album.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    isLoggedIn={isLoggedIn}
+                  />
                 </Box>
               ))}
             </Grid>

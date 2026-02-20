@@ -26,5 +26,6 @@ public static class EndpointExtensions
         AlbumEndpoints.MapEndpoints(routeBuilder);
         BandEndpoints.MapEndpoints(routeBuilder);
         DistributorEndpoints.MapEndpoints(routeBuilder);
+        UserFavoriteEndpoints.MapEndpoints(routeBuilder);
     }
 }

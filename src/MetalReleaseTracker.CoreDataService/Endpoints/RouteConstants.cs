@@ -40,5 +40,15 @@ public static class RouteConstants
             public const string GetById = $"{Base}/{{id:guid}}";
             public const string GetWithAlbumCount = $"{Base}/with-album-count";
         }
+
+        public static class Favorites
+        {
+            private const string Base = $"{ApiBase}/favorites";
+            public const string Add = $"{Base}/{{albumId:guid}}";
+            public const string Remove = $"{Base}/{{albumId:guid}}";
+            public const string GetAll = Base;
+            public const string GetIds = $"{Base}/ids";
+            public const string Check = $"{Base}/{{albumId:guid}}/check";
+        }
     }
 }
