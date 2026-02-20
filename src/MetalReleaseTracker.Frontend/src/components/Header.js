@@ -357,13 +357,15 @@ const Header = () => {
                   component="span"
                   sx={{
                     ml: 1.5,
-                    fontSize: { xs: '1.2rem', sm: '1.5rem' },
                     lineHeight: 1,
                     display: 'flex',
                     alignItems: 'center',
                   }}
                 >
-                  {'\uD83C\uDDFA\uD83C\uDDE6'}
+                  <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: 2 }}>
+                    <rect width="24" height="8" fill="#005BBB" />
+                    <rect y="8" width="24" height="8" fill="#FFD500" />
+                  </svg>
                 </Box>
               </Tooltip>
             </Box>

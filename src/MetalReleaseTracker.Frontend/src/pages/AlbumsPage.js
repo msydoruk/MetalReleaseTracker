@@ -200,7 +200,13 @@ const AlbumsPage = ({ isHome = false }) => {
       {isHome && (
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mb: 1.5 }}>
-            {t('albums.heroTitle')} {'\uD83C\uDDFA\uD83C\uDDE6'}
+            {t('albums.heroTitle')}{' '}
+            <Box component="span" sx={{ display: 'inline-flex', verticalAlign: 'middle', ml: 1 }}>
+              <svg width="36" height="24" viewBox="0 0 36 24" style={{ borderRadius: 3 }}>
+                <rect width="36" height="12" fill="#005BBB" />
+                <rect y="12" width="36" height="12" fill="#FFD500" />
+              </svg>
+            </Box>
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto', mb: 2, lineHeight: 1.6 }}>
             {t('albums.heroSubtitle')}
