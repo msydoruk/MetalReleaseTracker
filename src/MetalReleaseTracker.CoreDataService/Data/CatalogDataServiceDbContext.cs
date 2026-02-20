@@ -17,6 +17,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<UserFavoriteEntity> UserFavorites { get; set; }
 
+    public DbSet<FeedbackEntity> Feedbacks { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

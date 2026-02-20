@@ -33,6 +33,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IDistributorsRepository, DistributorRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserFavoriteRepository, UserFavoriteRepository>();
+            services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 
             return services;
         }
@@ -43,6 +44,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IBandService, BandService>();
             services.AddScoped<IDistributorService, DistributorService>();
             services.AddScoped<IUserFavoriteService, UserFavoriteService>();
+            services.AddScoped<IFeedbackService, FeedbackService>();
 
             return services;
         }

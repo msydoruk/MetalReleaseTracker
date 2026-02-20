@@ -112,3 +112,5 @@ export const removeFavorite = (albumId) => api.delete(`/favorites/${albumId}`);
 export const fetchFavorites = (page, pageSize) => api.get(`/favorites?page=${page}&pageSize=${pageSize}`);
 export const fetchFavoriteIds = () => api.get('/favorites/ids');
 export const checkFavorite = (albumId) => api.get(`/favorites/${albumId}/check`);
+
+export const submitFeedback = (data) => api.post('/feedback', data);
