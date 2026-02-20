@@ -120,9 +120,9 @@ const BandsPage = () => {
                   justifyContent: 'center'
                 }}
               >
-                {band.imageUrl ? (
+                {band.photoUrl ? (
                   <img
-                    src={band.imageUrl}
+                    src={band.photoUrl}
                     alt={band.name}
                     style={{
                       width: '100%',

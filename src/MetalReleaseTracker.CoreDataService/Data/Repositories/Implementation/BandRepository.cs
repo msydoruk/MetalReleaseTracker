@@ -54,6 +54,9 @@ public class BandRepository : IBandRepository
             {
                 Id = band.Id,
                 Name = band.Name,
+                Description = band.Description,
+                PhotoUrl = band.PhotoUrl,
+                Genre = band.Genre,
                 AlbumCount = _dbContext.Albums.Count(album => album.BandId == band.Id)
             })
             .OrderBy(bandDto => bandDto.Name)

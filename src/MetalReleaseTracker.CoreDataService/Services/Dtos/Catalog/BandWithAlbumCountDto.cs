@@ -6,5 +6,11 @@ public class BandWithAlbumCountDto
 
     public string Name { get; set; } = string.Empty;
 
+    public string? Description { get; set; }
+
+    public string? PhotoUrl { get; set; }
+
+    public string? Genre { get; set; }
+
     public int AlbumCount { get; set; }
 }
