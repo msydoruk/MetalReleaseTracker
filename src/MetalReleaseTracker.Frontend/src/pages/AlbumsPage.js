@@ -92,8 +92,8 @@ const AlbumsPage = ({ isHome = false }) => {
     return {
       page: 1,
       pageSize: 20,
-      sortBy: ALBUM_SORT_FIELDS.NAME,
-      sortAscending: false,
+      sortBy: ALBUM_SORT_FIELDS.BAND,
+      sortAscending: true,
       ...(bandId && { bandId }),
       ...(distributorId && { distributorId })
     };
@@ -366,7 +366,8 @@ const AlbumsPage = ({ isHome = false }) => {
                   lg: 'repeat(4, 1fr)',
                   xl: 'repeat(5, 1fr)'
                 },
-                gap: 3
+                gap: 3,
+                alignItems: 'start'
               }}
             >
               {isGrouped ? (

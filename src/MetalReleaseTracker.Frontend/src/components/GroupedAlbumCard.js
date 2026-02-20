@@ -142,7 +142,7 @@ const GroupedAlbumCard = ({ group }) => {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               {sortedVariants.map((variant) => (
                 <Button
                   key={variant.albumId}
@@ -158,7 +158,7 @@ const GroupedAlbumCard = ({ group }) => {
                     textTransform: 'none',
                     borderRadius: 5,
                     px: 1.5,
-                    py: 1,
+                    py: 0.4,
                     fontSize: '0.8rem',
                     fontWeight: 500,
                     borderColor: 'rgba(255,255,255,0.12)',
