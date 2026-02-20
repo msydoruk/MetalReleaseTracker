@@ -222,11 +222,18 @@ const AlbumsPage = ({ isHome = false }) => {
           <Divider sx={{ mt: 3 }} />
         </Box>
       )}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: { xs: 1.5, sm: 0 },
+        mb: 3
+      }}>
         <Typography variant="h4" component={isHome ? 'h2' : 'h1'}>
           {t('albums.metalReleases')}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
           <FormControlLabel
             control={
               <Checkbox
@@ -235,7 +242,7 @@ const AlbumsPage = ({ isHome = false }) => {
                   const checked = event.target.checked;
                   setIsGrouped(checked);
                   localStorage.setItem('albumsGrouped', String(checked));
-                  setFilters({ ...filters, page: 1 });
+                  setFilters({ ...filters, distributorId: checked ? '' : filters.distributorId, page: 1 });
                 }}
                 size="small"
               />
@@ -255,7 +262,7 @@ const AlbumsPage = ({ isHome = false }) => {
         </Box>
       </Box>
 
-      {distributors.length > 0 && (
+      {distributors.length > 0 && !isGrouped && (
         isMobile ? (
           <FormControl
             fullWidth

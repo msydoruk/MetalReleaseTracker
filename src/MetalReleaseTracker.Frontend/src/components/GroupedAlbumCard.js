@@ -150,8 +150,7 @@ const GroupedAlbumCard = ({ group }) => {
                   rel="noopener noreferrer"
                   size="small"
                   variant="outlined"
-                  color="primary"
-                  endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                  endIcon={<OpenInNewIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }} />}
                   sx={{
                     justifyContent: 'space-between',
                     textTransform: 'none',
@@ -159,14 +158,20 @@ const GroupedAlbumCard = ({ group }) => {
                     px: 1.5,
                     py: 0.3,
                     fontSize: '0.8rem',
-                    fontWeight: 500
+                    fontWeight: 500,
+                    borderColor: 'rgba(255,255,255,0.12)',
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    '&:hover': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                      bgcolor: 'rgba(255,255,255,0.07)'
+                    }
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
-                    <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem' }}>
+                    <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
                       {variant.distributorName}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap', fontSize: '0.8rem', ml: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', ml: 1, color: 'white' }}>
                       {'\u20AC'}{variant.price.toFixed(2)}
                     </Typography>
                   </Box>
