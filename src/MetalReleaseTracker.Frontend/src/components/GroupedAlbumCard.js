@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const GroupedAlbumCard = ({ group }) => {
@@ -152,7 +151,7 @@ const GroupedAlbumCard = ({ group }) => {
                   rel="noopener noreferrer"
                   size="small"
                   variant="outlined"
-                  startIcon={<ShoppingCartOutlinedIcon sx={{ fontSize: 13, color: '#f44336' }} />}
+                  endIcon={<OpenInNewIcon sx={{ fontSize: 14, color: '#f44336' }} />}
                   sx={{
                     justifyContent: 'space-between',
                     textTransform: 'none',
