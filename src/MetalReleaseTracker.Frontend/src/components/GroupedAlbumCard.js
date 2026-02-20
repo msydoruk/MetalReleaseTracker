@@ -26,6 +26,7 @@ const GroupedAlbumCard = ({ group }) => {
 
   const mediaLabel = mediaTypeLabels[group.media] || t('albumCard.mediaUnknown');
 
+  const sortedVariants = [...group.variants].sort((a, b) => a.price - b.price);
   const minPrice = Math.min(...group.variants.map((v) => v.price));
   const maxPrice = Math.max(...group.variants.map((v) => v.price));
   const priceDisplay = minPrice === maxPrice
@@ -141,7 +142,7 @@ const GroupedAlbumCard = ({ group }) => {
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {group.variants.map((variant) => (
+              {sortedVariants.map((variant) => (
                 <Button
                   key={variant.albumId}
                   component="a"
