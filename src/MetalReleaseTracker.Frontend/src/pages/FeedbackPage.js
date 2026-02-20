@@ -5,66 +5,72 @@ import {
   Typography,
   TextField,
   Button,
-  Box
+  Box,
+  Alert
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import LinkOffIcon from '@mui/icons-material/LinkOff';
+import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const FeedbackPage = () => {
   const { t } = useLanguage();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const body = `${t('feedback.nameLabel')}: ${name}\n${t('feedback.emailLabel')}: ${email}\n\n${message}`;
-    const mailto = `mailto:sydoruk.m@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:sydoruk.m@gmail.com?subject=${encodeURIComponent(t('feedback.emailSubject'))}&body=${encodeURIComponent(message)}`;
     window.location.href = mailto;
   };
+
+  const issues = [
+    { icon: <LibraryMusicIcon sx={{ color: 'warning.main' }} />, text: t('feedback.issueMissing') },
+    { icon: <BugReportIcon sx={{ color: 'error.main' }} />, text: t('feedback.issueIncorrect') },
+    { icon: <LinkOffIcon sx={{ color: 'info.main' }} />, text: t('feedback.issueBrokenLinks') },
+  ];
 
   return (
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700, textAlign: 'center' }}>
         {t('feedback.title')}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mb: 4 }}>
-        {t('feedback.subtitle')}
+
+      <Alert icon={<InfoOutlinedIcon />} severity="info" sx={{ mb: 3, borderRadius: 2 }}>
+        {t('feedback.nonCommercial')}
+      </Alert>
+
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, lineHeight: 1.8 }}>
+        {t('feedback.description')}
       </Typography>
+
+      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+        {t('feedback.issuesTitle')}
+      </Typography>
+
+      <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {issues.map((issue, index) => (
+          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {issue.icon}
+            <Typography variant="body2" color="text.secondary">
+              {issue.text}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
 
       <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <TextField
-            label={t('feedback.nameLabel')}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            fullWidth
-          />
-          <TextField
-            label={t('feedback.emailLabel')}
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            fullWidth
-          />
-          <TextField
-            label={t('feedback.subjectLabel')}
-            value={subject}
-            onChange={(event) => setSubject(event.target.value)}
-            required
-            fullWidth
-          />
           <TextField
             label={t('feedback.messageLabel')}
             value={message}
             onChange={(event) => setMessage(event.target.value)}
             required
             multiline
-            rows={4}
+            rows={5}
             fullWidth
+            placeholder={t('feedback.messagePlaceholder')}
           />
           <Button
             type="submit"
@@ -72,7 +78,7 @@ const FeedbackPage = () => {
             color="primary"
             size="large"
             endIcon={<SendIcon />}
-            sx={{ mt: 1, fontWeight: 600 }}
+            sx={{ fontWeight: 600 }}
           >
             {t('feedback.submit')}
           </Button>
