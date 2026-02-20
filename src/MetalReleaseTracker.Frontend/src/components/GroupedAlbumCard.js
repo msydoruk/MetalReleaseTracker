@@ -8,7 +8,7 @@ import {
   Chip,
   Dialog,
   IconButton,
-  Divider
+  Button
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -24,126 +24,155 @@ const GroupedAlbumCard = ({ group }) => {
     2: t('albumCard.mediaCassette')
   };
 
-  const statusLabels = {
-    0: { label: t('albumCard.statusNew'), color: 'success' },
-    1: { label: t('albumCard.statusRestock'), color: 'info' },
-    2: { label: t('albumCard.statusPreOrder'), color: 'warning' }
-  };
-
-  const statusInfo = statusLabels[group.status];
   const mediaLabel = mediaTypeLabels[group.media] || t('albumCard.mediaUnknown');
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
 
   const minPrice = Math.min(...group.variants.map((v) => v.price));
   const maxPrice = Math.max(...group.variants.map((v) => v.price));
   const priceDisplay = minPrice === maxPrice
-    ? `€${minPrice.toFixed(2)}`
-    : `€${minPrice.toFixed(2)} – €${maxPrice.toFixed(2)}`;
+    ? `\u20AC${minPrice.toFixed(2)}`
+    : `\u20AC${minPrice.toFixed(2)} \u2013 \u20AC${maxPrice.toFixed(2)}`;
 
   return (
     <>
       <Card sx={{
-        display: 'flex',
-        flexDirection: 'column',
         width: '100%',
         height: '100%',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
+        borderRadius: 2,
+        overflow: 'hidden',
+        transition: 'all 0.25s ease-in-out',
+        bgcolor: 'background.paper',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.3)'
+          transform: 'translateY(-8px)',
+          boxShadow: '0 12px 20px rgba(0, 0, 0, 0.15)',
         }
       }}>
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={{ position: 'relative', overflow: 'hidden' }}>
           <CardMedia
             component="img"
             height="220"
             image={group.photoUrl || '/placeholder-album.png'}
             alt={`${group.bandName} - ${group.albumName}`}
+            onClick={() => setLightboxOpen(true)}
             sx={{
               objectFit: 'cover',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'transform 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.05)'
+              }
             }}
-            onClick={() => setLightboxOpen(true)}
           />
           {group.variants.length > 1 && (
             <Chip
               label={`${group.variants.length} ${t('grouped.stores')}`}
               size="small"
-              color="primary"
               sx={{
                 position: 'absolute',
                 top: 8,
                 right: 8,
                 fontWeight: 'bold',
-                fontSize: '0.7rem'
+                fontSize: '0.7rem',
+                bgcolor: 'rgba(0,0,0,0.5)',
+                color: 'white'
               }}
             />
           )}
         </Box>
 
-        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2, '&:last-child': { pb: 2 } }}>
-          <Typography variant="subtitle2" color="text.secondary" noWrap>
-            {group.bandName}
-          </Typography>
-          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }} noWrap>
-            {group.albumName}
-          </Typography>
-
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
-            {statusInfo && (
-              <Chip label={statusInfo.label} color={statusInfo.color} size="small" variant="outlined" />
-            )}
-            <Chip label={mediaLabel} size="small" variant="outlined" />
-            {group.releaseDate && (
-              <Chip label={formatDate(group.releaseDate)} size="small" variant="outlined" />
-            )}
+        <CardContent sx={{
+          flex: '1 0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          p: 2,
+          pt: 1.5,
+          pb: 1
+        }}>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Chip
+                label={mediaLabel}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            </Box>
+            <Typography gutterBottom variant="h6" component="div" sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              mb: 0.5,
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              lineHeight: 1.3,
+              height: '2.8rem'
+            }} title={group.albumName}>
+              {group.albumName}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              mb: 0.5,
+              fontWeight: 500
+            }}>
+              {group.bandName}
+            </Typography>
           </Box>
 
-          <Typography variant="h6" color="primary" sx={{ fontWeight: 700, mb: 1 }}>
-            {priceDisplay}
-          </Typography>
+          <Box sx={{ mt: 'auto' }}>
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              pt: 1,
+              mb: 1,
+              borderTop: '1px solid rgba(0,0,0,0.05)'
+            }}>
+              <Typography variant="body1" color="text.primary" sx={{ fontWeight: 'bold' }}>
+                {priceDisplay}
+              </Typography>
+            </Box>
 
-          <Divider sx={{ mb: 1 }} />
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 'auto' }}>
-            {group.variants.map((variant) => (
-              <Box
-                key={variant.albumId}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  py: 0.5,
-                  px: 1,
-                  borderRadius: 1,
-                  bgcolor: 'action.hover',
-                  '&:hover': { bgcolor: 'action.selected' }
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
-                  <Typography variant="body2" noWrap sx={{ flex: 1 }}>
-                    {variant.distributorName}
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    €{variant.price.toFixed(2)}
-                  </Typography>
-                </Box>
-                <IconButton
-                  size="small"
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {group.variants.map((variant) => (
+                <Button
+                  key={variant.albumId}
+                  component="a"
                   href={variant.purchaseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  sx={{ ml: 0.5 }}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    justifyContent: 'space-between',
+                    textTransform: 'none',
+                    borderRadius: 5,
+                    px: 1.5,
+                    py: 0.3,
+                    fontSize: '0.8rem',
+                    fontWeight: 500
+                  }}
                 >
-                  <OpenInNewIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            ))}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
+                    <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem' }}>
+                      {variant.distributorName}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap', fontSize: '0.8rem', ml: 1 }}>
+                      {'\u20AC'}{variant.price.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Button>
+              ))}
+            </Box>
           </Box>
         </CardContent>
       </Card>

@@ -36,7 +36,7 @@ const translations = {
       error: 'Failed to load albums. Please try again later.',
       noAlbums: 'No albums found matching your criteria.',
       tryAdjusting: 'Try adjusting your filters to see more results.',
-      groupDuplicates: 'Group duplicates',
+      comparePrices: 'Compare prices',
     },
     grouped: {
       stores: 'stores',
@@ -49,7 +49,7 @@ const translations = {
       mediaVinyl: 'Vinyl',
       mediaCassette: 'Cassette',
       mediaUnknown: 'Unknown',
-      viewInStore: 'View in Store',
+      viewInStore: 'Buy',
     },
     albumFilter: {
       filterAlbums: 'Filter Albums',
@@ -229,7 +229,7 @@ const translations = {
       error: 'Не вдалося завантажити альбоми. Спробуйте пізніше.',
       noAlbums: 'Альбомів за вашими критеріями не знайдено.',
       tryAdjusting: 'Спробуйте змінити фільтри, щоб побачити більше результатів.',
-      groupDuplicates: 'Групувати дублікати',
+      comparePrices: 'Порівняти ціни',
     },
     grouped: {
       stores: 'магазинів',
@@ -242,7 +242,7 @@ const translations = {
       mediaVinyl: 'Вініл',
       mediaCassette: 'Касета',
       mediaUnknown: 'Невідомо',
-      viewInStore: 'Переглянути в магазині',
+      viewInStore: 'Купити',
     },
     albumFilter: {
       filterAlbums: 'Фільтр альбомів',

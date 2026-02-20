@@ -37,12 +37,13 @@ const Pagination = ({
   return (
     <Box sx={{
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: { xs: 'column', sm: 'row' },
       alignItems: 'center',
-      gap: 1.5,
+      justifyContent: 'center',
+      gap: { xs: 1.5, sm: 2 },
       mb: 2
     }}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
         {showingText}
       </Typography>
 
@@ -57,7 +58,7 @@ const Pagination = ({
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary" mr={1}>
+        <Typography variant="body2" color="text.secondary" mr={1} sx={{ whiteSpace: 'nowrap' }}>
           {t('pagination.itemsPerPage')}
         </Typography>
         <FormControl size="small" sx={{ minWidth: 70 }}>

@@ -11,6 +11,7 @@ import {
   IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useNavigate } from 'react-router-dom';
@@ -171,11 +172,13 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
               rel="noopener noreferrer"
               variant="contained"
               color="primary"
+              endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
               sx={{
                 borderRadius: 5,
                 px: 2,
                 fontWeight: 'bold',
-                textTransform: 'none'
+                textTransform: 'none',
+                whiteSpace: 'nowrap'
               }}
             >
               {t('albumCard.viewInStore')}

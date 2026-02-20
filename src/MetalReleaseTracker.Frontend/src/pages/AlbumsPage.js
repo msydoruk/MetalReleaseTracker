@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container,
-  Grid,
   Typography,
   Box,
   CircularProgress,
@@ -54,7 +53,7 @@ const AlbumsPage = ({ isHome = false }) => {
   const [distributors, setDistributors] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isGrouped, setIsGrouped] = useState(false);
+  const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') === 'true');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
 
   useEffect(() => {
@@ -233,13 +232,15 @@ const AlbumsPage = ({ isHome = false }) => {
               <Checkbox
                 checked={isGrouped}
                 onChange={(event) => {
-                  setIsGrouped(event.target.checked);
+                  const checked = event.target.checked;
+                  setIsGrouped(checked);
+                  localStorage.setItem('albumsGrouped', String(checked));
                   setFilters({ ...filters, page: 1 });
                 }}
                 size="small"
               />
             }
-            label={t('albums.groupDuplicates')}
+            label={t('albums.comparePrices')}
             sx={{ mr: 0, '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
           />
           <Button
@@ -350,9 +351,7 @@ const AlbumsPage = ({ isHome = false }) => {
       ) : (isGrouped ? groupedAlbums.length > 0 : albums.length > 0) ? (
         <>
           <Box sx={{ width: '100%', mb: 4 }}>
-            <Grid
-              container
-              spacing={3}
+            <Box
               sx={{
                 display: 'grid',
                 gridTemplateColumns: {
@@ -362,8 +361,7 @@ const AlbumsPage = ({ isHome = false }) => {
                   lg: 'repeat(4, 1fr)',
                   xl: 'repeat(5, 1fr)'
                 },
-                gap: 3,
-                alignItems: 'stretch'
+                gap: 3
               }}
             >
               {isGrouped ? (
@@ -393,7 +391,7 @@ const AlbumsPage = ({ isHome = false }) => {
                   </Box>
                 ))
               )}
-            </Grid>
+            </Box>
           </Box>
 
           <Box sx={{ mt: 3, mb: 4 }}>

@@ -151,14 +151,13 @@ const Header = () => {
   
   const getUserEmail = () => {
     if (!user) return '';
-    return user.profile?.email || '';
+    return user.claims?.email || '';
   };
-  
+
   const getUserName = () => {
     if (!user) return 'User';
-    return user.profile?.name || 
-           user.profile?.given_name || 
-           user.profile?.email?.split('@')[0] || 
+    return user.claims?.username ||
+           user.claims?.email?.split('@')[0] ||
            'User';
   };
   
