@@ -14,6 +14,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const GroupedAlbumCard = ({ group }) => {
@@ -22,14 +23,6 @@ const GroupedAlbumCard = ({ group }) => {
   const [expanded, setExpanded] = useState(false);
 
   const MAX_VISIBLE_VARIANTS = 3;
-
-  const mediaTypeLabels = {
-    0: t('albumCard.mediaCD'),
-    1: t('albumCard.mediaVinyl'),
-    2: t('albumCard.mediaCassette')
-  };
-
-  const mediaLabel = mediaTypeLabels[group.media] || t('albumCard.mediaUnknown');
 
   const sortedVariants = [...group.variants].sort((a, b) => a.price - b.price);
   const minPrice = Math.min(...group.variants.map((v) => v.price));
@@ -102,12 +95,7 @@ const GroupedAlbumCard = ({ group }) => {
         }}>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Chip
-                label={mediaLabel}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
+              <MediaTypeIcon mediaType={group.media} />
             </Box>
             <Typography gutterBottom variant="h6" component="div" sx={{
               overflow: 'hidden',
