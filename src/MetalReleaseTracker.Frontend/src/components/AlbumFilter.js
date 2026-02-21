@@ -148,10 +148,10 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
     }}>
       <Box sx={{ p: 3, pb: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" component="h2" sx={{ color: 'white', fontWeight: 'bold' }}>
+          <Typography variant="h6" component="h2" sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', fontSize: '1.1rem' }}>
             {t('albumFilter.filterAlbums')}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Button
               variant="outlined"
               size="small"
@@ -160,6 +160,9 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               sx={{
                 borderColor: 'rgba(255, 255, 255, 0.3)',
                 color: '#fff',
+                whiteSpace: 'nowrap',
+                fontSize: '0.75rem',
+                px: 1.5,
                 '&:hover': {
                   borderColor: '#fff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)'
@@ -360,6 +363,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               display: 'flex',
               gap: 1,
               alignItems: 'stretch',
+              flexWrap: 'wrap',
               flexDirection: { xs: 'column', sm: 'row' }
             }}>
               <RadioGroup
@@ -369,6 +373,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 onChange={handleInputChange}
                 sx={{
                   flexGrow: 1,
+                  flexShrink: 1,
+                  minWidth: 0,
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.3)',
                   borderRadius: 1,
@@ -416,7 +422,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 aria-label="sort order"
                 fullWidth
                 sx={{
-                  minWidth: '150px',
+                  flexShrink: 0,
                   '& .MuiToggleButton-root': {
                     color: 'white',
                     borderColor: 'rgba(255, 255, 255, 0.3)',
