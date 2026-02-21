@@ -19,6 +19,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
 import { LanguageProvider } from './i18n/LanguageContext';
+import ScrollToTop from './components/ScrollToTop';
 
 // Create a dark theme for the metal music theme
 const theme = createTheme({
@@ -191,6 +192,7 @@ function App() {
                 </Routes>
               </Box>
               <Footer />
+              <ScrollToTop />
             </Box>
           </Router>
         </LanguageProvider>

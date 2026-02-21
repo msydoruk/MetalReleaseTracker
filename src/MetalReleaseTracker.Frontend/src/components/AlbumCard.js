@@ -6,7 +6,6 @@ import {
   Typography,
   Button,
   Box,
-  Chip,
   Dialog,
   IconButton
 } from '@mui/material';
@@ -15,22 +14,13 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useNavigate } from 'react-router-dom';
+import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = false }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
-
-  // Mapping for media type labels
-  const mediaTypeLabels = {
-    0: t('albumCard.mediaCD'),
-    1: t('albumCard.mediaVinyl'),
-    2: t('albumCard.mediaCassette')
-  };
-
-  // Get media type label
-  const mediaTypeLabel = mediaTypeLabels[album.media] || t('albumCard.mediaUnknown');
 
   const imageUrl = album.photoUrl || 'https://via.placeholder.com/300x300?text=No+Image';
 
@@ -111,12 +101,7 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
         }}>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Chip
-                label={mediaTypeLabel}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
+              <MediaTypeIcon mediaType={album.media} />
             </Box>
             <Typography gutterBottom variant="h6" component="div" sx={{
               overflow: 'hidden',
