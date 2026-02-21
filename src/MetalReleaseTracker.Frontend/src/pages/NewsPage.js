@@ -98,7 +98,7 @@ const getNewsItems = (language) => {
 
 const NewsPage = () => {
   const { language, t } = useLanguage();
-  usePageMeta('News - Metal Release Tracker', 'Latest news and updates from Metal Release Tracker.');
+  usePageMeta(t('pageMeta.newsTitle'), t('pageMeta.newsDescription'));
 
   const newsItems = getNewsItems(language);
 
