@@ -29,7 +29,7 @@ const featureKeys = ['discover', 'globalReach', 'orderDirect', 'stayUpdated', 'a
 
 const AboutPage = () => {
   const { t } = useLanguage();
-  usePageMeta('About - Ukrainian Metal Release Tracker', 'Metal Release Tracker aggregates Ukrainian metal releases from foreign distributors and labels into one searchable catalog.');
+  usePageMeta(t('pageMeta.aboutTitle'), t('pageMeta.aboutDescription'));
 
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>

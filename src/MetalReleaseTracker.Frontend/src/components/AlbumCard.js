@@ -16,6 +16,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useNavigate } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getDistributorCountry } from '../utils/distributorCountries';
 
 const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = false }) => {
   const { t } = useLanguage();
@@ -135,7 +136,7 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
                 opacity: 0.7,
                 fontSize: '0.7rem'
               }}>
-                {album.distributorName}
+                {getDistributorCountry(album.distributorName)} {album.distributorName}
               </Typography>
             )}
           </Box>

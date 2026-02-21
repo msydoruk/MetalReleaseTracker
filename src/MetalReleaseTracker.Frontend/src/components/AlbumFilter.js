@@ -442,7 +442,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
           {/* Price range filter */}
           <Box>
             <Typography sx={{ color: 'white', mb: 1, fontWeight: 'medium' }}>
-              {t('albumFilter.priceRange')}: ${priceRange[0]} - ${priceRange[1]}
+              {t('albumFilter.priceRange')}: {'\u20AC'}{priceRange[0]} - {'\u20AC'}{priceRange[1]}
             </Typography>
             <Slider
               value={priceRange}

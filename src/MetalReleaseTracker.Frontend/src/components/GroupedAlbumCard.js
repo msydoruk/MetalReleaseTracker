@@ -16,6 +16,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getDistributorCountry } from '../utils/distributorCountries';
 
 const GroupedAlbumCard = ({ group }) => {
   const { t } = useLanguage();
@@ -169,7 +170,7 @@ const GroupedAlbumCard = ({ group }) => {
                         {'\u20AC'}{variant.price.toFixed(2)}
                       </Typography>
                       <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
-                        {variant.distributorName}
+                        {getDistributorCountry(variant.distributorName)} {variant.distributorName}
                       </Typography>
                     </Box>
                   </Button>
@@ -245,7 +246,7 @@ const GroupedAlbumCard = ({ group }) => {
                           {'\u20AC'}{variant.price.toFixed(2)}
                         </Typography>
                         <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
-                          {variant.distributorName}
+                          {getDistributorCountry(variant.distributorName)} {variant.distributorName}
                         </Typography>
                       </Box>
                     </Button>

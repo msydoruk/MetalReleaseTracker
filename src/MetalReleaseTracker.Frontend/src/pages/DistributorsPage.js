@@ -25,6 +25,7 @@ import { fetchDistributorsWithAlbumCount } from '../services/api';
 import DefaultDistributorImage from '../components/DefaultDistributorImage';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getDistributorCountry } from '../utils/distributorCountries';
 
 const distributorLogos = {
   'osmose productions': '/logos/osmose.png',
@@ -122,7 +123,7 @@ const getDistributorLogo = (distributor) => {
 const DistributorsPage = () => {
   const { t, language } = useLanguage();
 
-  usePageMeta('Distributors - Foreign Metal Labels & Shops', 'Foreign distributors and labels selling Ukrainian metal releases. Osmose Productions, Drakkar, Black Metal Vendor and more.');
+  usePageMeta(t('pageMeta.distributorsTitle'), t('pageMeta.distributorsDescription'));
   const [distributors, setDistributors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -241,9 +242,9 @@ const DistributorsPage = () => {
                   }}>
                     {distributor.name}
                   </Typography>
-                  {getDistributorInfo(distributor.name, language)?.country && (
+                  {getDistributorCountry(distributor.name) && (
                     <Typography sx={{ ml: 1, fontSize: '1.2rem', lineHeight: 1 }}>
-                      {getDistributorInfo(distributor.name, language).country}
+                      {getDistributorCountry(distributor.name)}
                     </Typography>
                   )}
                 </Box>

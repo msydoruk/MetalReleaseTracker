@@ -61,6 +61,13 @@ const Pagination = ({
         boundaryCount={1}
         showFirstButton
         showLastButton
+        getItemAriaLabel={(type, page) => {
+          if (type === 'first') return t('pagination.goToFirstPage');
+          if (type === 'last') return t('pagination.goToLastPage');
+          if (type === 'next') return t('pagination.goToNextPage');
+          if (type === 'previous') return t('pagination.goToPreviousPage');
+          return `${t('pagination.goToPage')} ${page}`;
+        }}
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>

@@ -16,9 +16,11 @@ import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useLanguage } from '../i18n/LanguageContext';
 import { submitFeedback } from '../services/api';
+import usePageMeta from '../hooks/usePageMeta';
 
 const FeedbackPage = () => {
   const { t } = useLanguage();
+  usePageMeta(t('pageMeta.feedbackTitle'), t('pageMeta.feedbackDescription'));
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);

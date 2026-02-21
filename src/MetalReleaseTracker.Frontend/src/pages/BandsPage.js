@@ -28,7 +28,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 const BandsPage = () => {
   const { t } = useLanguage();
 
-  usePageMeta('Bands - Ukrainian Metal Bands', 'Explore Ukrainian metal bands whose physical releases are sold by foreign distributors and labels worldwide.');
+  usePageMeta(t('pageMeta.bandsTitle'), t('pageMeta.bandsDescription'));
   const [bands, setBands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -208,7 +208,7 @@ const BandsPage = () => {
                 }}>
                   <Chip
                     icon={<AlbumIcon />}
-                    label={`${band.albumCount || 0} ${t('bands.albums')}`}
+                    label={`${band.albumCount || 0} ${(band.albumCount || 0) === 1 ? t('bands.album') : t('bands.albums')}`}
                     variant="outlined"
                     size="small"
                   />
