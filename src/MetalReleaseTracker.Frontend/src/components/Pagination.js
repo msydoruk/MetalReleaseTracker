@@ -8,7 +8,8 @@ const Pagination = ({
   totalItems,
   pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
+  compact = false
 }) => {
   const { t } = useLanguage();
   const theme = useTheme();
@@ -37,15 +38,18 @@ const Pagination = ({
   return (
     <Box sx={{
       display: 'flex',
-      flexDirection: { xs: 'column', sm: 'row' },
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: { xs: 1.5, sm: 2 },
-      mb: 2
+      gap: { xs: 0.5, sm: 2 },
+      mb: compact ? 0 : 2
     }}>
-      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-        {showingText}
-      </Typography>
+      {!isMobile && (
+        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+          {showingText}
+        </Typography>
+      )}
 
       <MuiPagination
         count={totalPages}
@@ -53,20 +57,24 @@ const Pagination = ({
         onChange={handlePageChange}
         color="primary"
         size={isMobile ? 'small' : 'medium'}
+        siblingCount={isMobile ? 0 : 1}
+        boundaryCount={1}
         showFirstButton
         showLastButton
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary" mr={1} sx={{ whiteSpace: 'nowrap' }}>
-          {t('pagination.itemsPerPage')}
-        </Typography>
-        <FormControl size="small" sx={{ minWidth: 70 }}>
+        {!isMobile && (
+          <Typography variant="body2" color="text.secondary" mr={1} sx={{ whiteSpace: 'nowrap' }}>
+            {t('pagination.itemsPerPage')}
+          </Typography>
+        )}
+        <FormControl size="small" sx={{ minWidth: 60 }}>
           <Select
             value={pageSize}
             onChange={handlePageSizeChange}
             variant="outlined"
-            sx={{ height: 32 }}
+            sx={{ height: 30 }}
           >
             <MenuItem value={5}>5</MenuItem>
             <MenuItem value={10}>10</MenuItem>
