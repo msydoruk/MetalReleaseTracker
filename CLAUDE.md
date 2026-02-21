@@ -76,6 +76,10 @@ ParserService -> Kafka (albums-parsed-topic) -> CatalogSyncService -> Kafka (alb
 - **No short parameter names**: Use full descriptive names - `cancellationToken` (not `ct`), `exception` (not `ex`), etc.
 - **Class member ordering**: Fields, constructor, public methods, private instance methods, private static methods (static helpers go at the bottom)
 
+## Artifacts
+
+All temporary and generated files (screenshots, one-off scripts, drafts, test reports, etc.) MUST be saved to the `.artifacts/` folder in the repo root. Never create such files in the repo root or inside `src/`. The `.artifacts/` folder is git-ignored.
+
 ## Workflow Rules
 
 - **Confirm before implementing**: Before making ANY code changes, explain the approach and reasoning. Wait for explicit user approval before writing/editing files. If there are multiple ways to solve a problem, present the options and let the user choose.

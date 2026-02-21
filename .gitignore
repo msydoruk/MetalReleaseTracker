@@ -59,6 +59,8 @@ settings.local.json
 # Playwright MCP
 .playwright-mcp/
 
-# Screenshots (debug/testing artifacts)
-desktop-*.png
-mobile-*.png
+# Artifacts (screenshots, one-off scripts, drafts, etc.)
+.artifacts/
+*.png
+*.jpg
+*.jpeg
