@@ -6,5 +6,5 @@ public enum CatalogueIndexStatus
     Relevant,
     NotRelevant,
     Processed,
-    PendingReview
+    AiVerified
 }

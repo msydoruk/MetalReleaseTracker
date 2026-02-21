@@ -55,6 +55,7 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
             existing.AlbumTitle = entity.AlbumTitle;
             existing.RawTitle = entity.RawTitle;
             existing.MediaType = entity.MediaType;
+            existing.BandReferenceId = entity.BandReferenceId;
             existing.UpdatedAt = DateTime.UtcNow;
             _context.CatalogueIndex.Update(existing);
         }

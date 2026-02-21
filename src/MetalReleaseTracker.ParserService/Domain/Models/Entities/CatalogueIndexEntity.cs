@@ -26,6 +26,10 @@ public class CatalogueIndexEntity
 
     public AlbumMediaType? MediaType { get; set; }
 
+    public Guid? BandReferenceId { get; set; }
+
+    public BandReferenceEntity? BandReference { get; set; }
+
     [Required]
     public DateTime CreatedAt { get; set; }
 

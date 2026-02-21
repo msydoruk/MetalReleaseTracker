@@ -36,9 +36,16 @@ public class CatalogueIndexEntityConfiguration : IEntityTypeConfiguration<Catalo
         builder.Property(e => e.UpdatedAt)
             .IsRequired();
 
+        builder.HasOne(e => e.BandReference)
+            .WithMany()
+            .HasForeignKey(e => e.BandReferenceId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(e => new { e.DetailUrl, e.DistributorCode })
             .IsUnique();
 
         builder.HasIndex(e => new { e.DistributorCode, e.Status });
+
+        builder.HasIndex(e => e.BandReferenceId);
     }
 }

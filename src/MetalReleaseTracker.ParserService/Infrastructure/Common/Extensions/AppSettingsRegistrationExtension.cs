@@ -1,4 +1,5 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs.Configuration;
@@ -20,6 +21,7 @@ public static class AppSettingsRegistrationExtension
         services.Configure<MinioFileStorageConfig>(configuration.GetSection("Minio"));
         services.Configure<BandReferenceSettings>(configuration.GetSection("BandReference"));
         services.Configure<FlareSolverrSettings>(configuration.GetSection("FlareSolverr"));
+        services.Configure<ClaudeApiSettings>(configuration.GetSection("ClaudeApi"));
 
         return services;
     }

@@ -11,6 +11,7 @@ public class CatalogueIndexJob
     private readonly Func<DistributorCode, IListingParser> _listingParserResolver;
     private readonly ICatalogueIndexRepository _catalogueIndexRepository;
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
+    private readonly IBandReferenceRepository _bandReferenceRepository;
     private readonly GeneralParserSettings _generalParserSettings;
     private readonly ILogger<CatalogueIndexJob> _logger;
     private readonly Random _random = new();
@@ -19,12 +20,14 @@ public class CatalogueIndexJob
         Func<DistributorCode, IListingParser> listingParserResolver,
         ICatalogueIndexRepository catalogueIndexRepository,
         IBandDiscographyRepository bandDiscographyRepository,
+        IBandReferenceRepository bandReferenceRepository,
         IOptions<GeneralParserSettings> generalParserSettings,
         ILogger<CatalogueIndexJob> logger)
     {
         _listingParserResolver = listingParserResolver;
         _catalogueIndexRepository = catalogueIndexRepository;
         _bandDiscographyRepository = bandDiscographyRepository;
+        _bandReferenceRepository = bandReferenceRepository;
         _generalParserSettings = generalParserSettings.Value;
         _logger = logger;
     }
@@ -65,6 +68,7 @@ public class CatalogueIndexJob
         var totalIndexed = 0;
 
         var bandNames = await _bandDiscographyRepository.GetAllBandNamesAsync(cancellationToken);
+        var bandReferenceLookup = await BuildBandReferenceLookupAsync(cancellationToken);
 
         _logger.LogInformation(
             "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian band names for matching.",
@@ -83,6 +87,7 @@ public class CatalogueIndexJob
             foreach (var listing in result.Listings)
             {
                 var status = DetermineStatus(bandNames, listing.BandName);
+                bandReferenceLookup.TryGetValue(listing.BandName, out var bandReferenceId);
 
                 var entity = new CatalogueIndexEntity
                 {
@@ -92,7 +97,8 @@ public class CatalogueIndexJob
                     RawTitle = listing.RawTitle,
                     DetailUrl = listing.DetailUrl,
                     MediaType = listing.MediaType,
-                    Status = status
+                    Status = status,
+                    BandReferenceId = status == CatalogueIndexStatus.Relevant ? bandReferenceId : null,
                 };
 
                 await _catalogueIndexRepository.UpsertAsync(entity, cancellationToken);
@@ -120,6 +126,19 @@ public class CatalogueIndexJob
             "Catalogue indexing completed for {DistributorCode}. Total entries: {Total}.",
             parserDataSource.DistributorCode,
             totalIndexed);
+    }
+
+    private async Task<Dictionary<string, Guid>> BuildBandReferenceLookupAsync(CancellationToken cancellationToken)
+    {
+        var allBandReferences = await _bandReferenceRepository.GetAllAsync(cancellationToken);
+        var lookup = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var bandReference in allBandReferences)
+        {
+            lookup.TryAdd(bandReference.BandName, bandReference.Id);
+        }
+
+        return lookup;
     }
 
     private async Task DelayBetweenPages(CancellationToken cancellationToken)

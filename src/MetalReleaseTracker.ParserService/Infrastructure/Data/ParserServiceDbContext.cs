@@ -1,4 +1,6 @@
 ﻿using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Configurations;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Configurations;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,8 @@ public class ParserServiceDbContext : DbContext
 
     public DbSet<BandDiscographyEntity> BandDiscography { get; set; }
 
+    public DbSet<AiVerificationEntity> AiVerifications { get; set; }
+
     public ParserServiceDbContext(DbContextOptions<ParserServiceDbContext> options) : base(options)
     {
     }
@@ -31,5 +35,6 @@ public class ParserServiceDbContext : DbContext
         modelBuilder.ApplyConfiguration(new BandReferenceEntityConfiguration());
         modelBuilder.ApplyConfiguration(new BandDiscographyEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CatalogueIndexEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AiVerificationEntityConfiguration());
     }
 }
