@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -26,6 +26,7 @@ import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
 import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
 import authService from '../services/auth';
+import ScrollToTop from '../components/ScrollToTop';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -95,6 +96,7 @@ const AlbumsPage = ({ isHome = false }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
+  const albumListRef = useRef(null);
 
   const filters = useMemo(() => parseFiltersFromUrl(searchParams), [searchParams]);
 
@@ -171,6 +173,7 @@ const AlbumsPage = ({ isHome = false }) => {
 
   const handlePageChange = (newPage) => {
     updateFilters({ ...filters, page: newPage });
+    albumListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handlePageSizeChange = (newPageSize) => {
@@ -366,6 +369,18 @@ const AlbumsPage = ({ isHome = false }) => {
         </Box>
       ) : (isGrouped ? groupedAlbums.length > 0 : albums.length > 0) ? (
         <>
+          <Box ref={albumListRef} sx={{ mb: 1 }}>
+            <Pagination
+              currentPage={filters.page}
+              totalPages={pageCount}
+              totalItems={totalCount}
+              pageSize={filters.pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              compact
+            />
+          </Box>
+
           <Box sx={{ width: '100%', mb: 4 }}>
             <Box
               sx={{
@@ -458,6 +473,8 @@ const AlbumsPage = ({ isHome = false }) => {
           />
         </Box>
       </Drawer>
+
+      <ScrollToTop />
     </Container>
   );
 };
