@@ -39,5 +39,6 @@ public static class AdminRouteConstants
         public const string Run = $"{Prefix}/run";
         public const string SetDecision = $"{Prefix}/{{id:guid}}/decision";
         public const string BatchDecision = $"{Prefix}/batch-decision";
+        public const string BulkDecision = $"{Prefix}/bulk-decision";
     }
 }

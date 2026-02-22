@@ -16,6 +16,8 @@ public class CatalogueIndexEntity
 
     public string AlbumTitle { get; set; }
 
+    public string? CorrectedAlbumTitle { get; set; }
+
     public string RawTitle { get; set; }
 
     [Required]

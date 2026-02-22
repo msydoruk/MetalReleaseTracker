@@ -73,6 +73,7 @@ public class AiVerificationService : IAiVerificationService
                     AiAnalysis = verification != null ? verification.AiAnalysis : null,
                     AdminDecision = verification != null ? verification.AdminDecision : null,
                     AdminDecisionDate = verification != null ? verification.AdminDecisionDate : null,
+                    CorrectedAlbumTitle = verification != null ? verification.CorrectedAlbumTitle : null,
                     VerifiedAt = verification != null ? verification.CreatedAt : (DateTime?)null,
                 })
             .WhereIf(filter.DistributorCode.HasValue, dto => dto.DistributorCode == filter.DistributorCode!.Value)
@@ -99,14 +100,19 @@ public class AiVerificationService : IAiVerificationService
             ? await _catalogueIndexRepository.GetByStatusAsync(distributorCode.Value, CatalogueIndexStatus.Relevant, cancellationToken)
             : await _catalogueIndexRepository.GetByStatusAsync(CatalogueIndexStatus.Relevant, cancellationToken);
 
-        var existingCatalogueIds = await _context.AiVerifications
-            .Where(verification => verification.AdminDecision == null)
-            .Select(verification => verification.CatalogueIndexId)
-            .ToHashSetAsync(cancellationToken);
+        var toVerify = relevantEntries.ToList();
 
-        var toVerify = relevantEntries
-            .Where(entry => !existingCatalogueIds.Contains(entry.Id))
-            .ToList();
+        var existingPendingVerifications = await _context.AiVerifications
+            .Where(verification => verification.AdminDecision == null)
+            .Where(verification => toVerify.Select(entry => entry.Id).Contains(verification.CatalogueIndexId))
+            .ToListAsync(cancellationToken);
+
+        if (existingPendingVerifications.Count > 0)
+        {
+            _context.AiVerifications.RemoveRange(existingPendingVerifications);
+            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("AI Verification: Removed {Count} existing pending verifications for re-run.", existingPendingVerifications.Count);
+        }
 
         _logger.LogInformation("AI Verification: {Count} entries to verify out of {Total} relevant.", toVerify.Count, relevantEntries.Count);
 
@@ -130,6 +136,7 @@ public class AiVerificationService : IAiVerificationService
                         IsUkrainian = result.IsUkrainian,
                         ConfidenceScore = result.Confidence,
                         AiAnalysis = result.Analysis,
+                        CorrectedAlbumTitle = result.CorrectedAlbumTitle,
                         CreatedAt = DateTime.UtcNow,
                     };
 
@@ -179,6 +186,15 @@ public class AiVerificationService : IAiVerificationService
         else if (decision == AiVerificationDecision.Confirmed)
         {
             await _catalogueIndexRepository.UpdateStatusAsync(verification.CatalogueIndexId, CatalogueIndexStatus.AiVerified, cancellationToken);
+
+            if (!string.IsNullOrEmpty(verification.CorrectedAlbumTitle))
+            {
+                var catalogueEntry = await _context.CatalogueIndex.FindAsync([verification.CatalogueIndexId], cancellationToken);
+                if (catalogueEntry != null)
+                {
+                    catalogueEntry.CorrectedAlbumTitle = verification.CorrectedAlbumTitle;
+                }
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -219,9 +235,107 @@ public class AiVerificationService : IAiVerificationService
         if (confirmedCatalogueIds.Count > 0)
         {
             await _catalogueIndexRepository.UpdateStatusBatchAsync(confirmedCatalogueIds, CatalogueIndexStatus.AiVerified, cancellationToken);
+
+            var correctedTitles = verifications
+                .Where(verification => verification.AdminDecision == AiVerificationDecision.Confirmed && !string.IsNullOrEmpty(verification.CorrectedAlbumTitle))
+                .ToDictionary(verification => verification.CatalogueIndexId, verification => verification.CorrectedAlbumTitle!);
+
+            if (correctedTitles.Count > 0)
+            {
+                var catalogueEntries = await _context.CatalogueIndex
+                    .Where(entry => correctedTitles.Keys.Contains(entry.Id))
+                    .ToListAsync(cancellationToken);
+
+                foreach (var entry in catalogueEntries)
+                {
+                    entry.CorrectedAlbumTitle = correctedTitles[entry.Id];
+                }
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> SetBulkDecisionByFilterAsync(
+        DistributorCode? distributorCode,
+        bool? isUkrainian,
+        AiVerificationDecision decision,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.AiVerifications
+            .Where(verification => verification.AdminDecision == null);
+
+        if (distributorCode.HasValue)
+        {
+            var catalogueIds = await _context.CatalogueIndex
+                .Where(entry => entry.DistributorCode == distributorCode.Value)
+                .Select(entry => entry.Id)
+                .ToListAsync(cancellationToken);
+
+            query = query.Where(verification => catalogueIds.Contains(verification.CatalogueIndexId));
+        }
+
+        if (isUkrainian.HasValue)
+        {
+            query = query.Where(verification => verification.IsUkrainian == isUkrainian.Value);
+        }
+
+        var verifications = await query.ToListAsync(cancellationToken);
+        if (verifications.Count == 0)
+        {
+            return 0;
+        }
+
+        var rejectedCatalogueIds = new List<Guid>();
+        var confirmedCatalogueIds = new List<Guid>();
+        var correctedTitles = new Dictionary<Guid, string>();
+
+        foreach (var verification in verifications)
+        {
+            verification.AdminDecision = decision;
+            verification.AdminDecisionDate = DateTime.UtcNow;
+
+            if (decision == AiVerificationDecision.Rejected)
+            {
+                rejectedCatalogueIds.Add(verification.CatalogueIndexId);
+            }
+            else if (decision == AiVerificationDecision.Confirmed)
+            {
+                confirmedCatalogueIds.Add(verification.CatalogueIndexId);
+
+                if (!string.IsNullOrEmpty(verification.CorrectedAlbumTitle))
+                {
+                    correctedTitles[verification.CatalogueIndexId] = verification.CorrectedAlbumTitle;
+                }
+            }
+        }
+
+        if (rejectedCatalogueIds.Count > 0)
+        {
+            await _catalogueIndexRepository.UpdateStatusBatchAsync(rejectedCatalogueIds, CatalogueIndexStatus.NotRelevant, cancellationToken);
+        }
+
+        if (confirmedCatalogueIds.Count > 0)
+        {
+            await _catalogueIndexRepository.UpdateStatusBatchAsync(confirmedCatalogueIds, CatalogueIndexStatus.AiVerified, cancellationToken);
+
+            if (correctedTitles.Count > 0)
+            {
+                var catalogueEntries = await _context.CatalogueIndex
+                    .Where(entry => correctedTitles.Keys.Contains(entry.Id))
+                    .ToListAsync(cancellationToken);
+
+                foreach (var entry in catalogueEntries)
+                {
+                    entry.CorrectedAlbumTitle = correctedTitles[entry.Id];
+                }
+            }
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Bulk decision applied: {Decision} to {Count} verifications.", decision, verifications.Count);
+        return verifications.Count;
     }
 
     private async Task<ClaudeVerificationResult?> CallClaudeApiAsync(
@@ -231,6 +345,8 @@ public class AiVerificationService : IAiVerificationService
     {
         var prompt = $$"""
             You are a metal music expert. Determine if the following band originates from Ukraine.
+            Also, provide the correct canonical album title if the given title appears garbled,
+            truncated, has encoding issues, or contains formatting artifacts.
 
             Band: {{bandName}}
             Album: {{albumTitle}}
@@ -239,7 +355,7 @@ public class AiVerificationService : IAiVerificationService
             official sources like Metal Archives, Discogs, or band websites.
 
             Respond ONLY with JSON:
-            {"isUkrainian": true/false, "confidence": 0.0-1.0, "analysis": "brief reasoning"}
+            {"isUkrainian": true/false, "confidence": 0.0-1.0, "analysis": "brief reasoning", "correctedAlbumTitle": "correct title or null if original is fine"}
             """;
 
         var requestBody = new
@@ -294,5 +410,7 @@ public class AiVerificationService : IAiVerificationService
         public double Confidence { get; set; }
 
         public string Analysis { get; set; } = string.Empty;
+
+        public string? CorrectedAlbumTitle { get; set; }
     }
 }

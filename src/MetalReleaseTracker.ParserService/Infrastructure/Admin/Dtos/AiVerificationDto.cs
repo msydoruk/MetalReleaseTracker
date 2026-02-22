@@ -11,6 +11,8 @@ public class AiVerificationDto
 
     public string AlbumTitle { get; set; } = string.Empty;
 
+    public string? CorrectedAlbumTitle { get; set; }
+
     public DistributorCode? DistributorCode { get; set; }
 
     public Guid? VerificationId { get; set; }

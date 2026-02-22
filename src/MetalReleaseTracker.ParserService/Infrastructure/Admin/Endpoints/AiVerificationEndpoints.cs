@@ -58,5 +58,21 @@ public static class AiVerificationEndpoints
             .WithName("BatchSetAiVerificationDecision")
             .WithTags("Admin AI Verification")
             .Produces(204);
+
+        endpoints.MapPut(AdminRouteConstants.AiVerification.BulkDecision, async (
+                BulkSetDecisionDto request,
+                IAiVerificationService aiVerificationService,
+                CancellationToken cancellationToken) =>
+            {
+                var count = await aiVerificationService.SetBulkDecisionByFilterAsync(
+                    request.DistributorCode,
+                    request.IsUkrainian,
+                    request.Decision,
+                    cancellationToken);
+                return Results.Ok(new { count });
+            })
+            .WithName("BulkSetAiVerificationDecision")
+            .WithTags("Admin AI Verification")
+            .Produces<object>();
     }
 }

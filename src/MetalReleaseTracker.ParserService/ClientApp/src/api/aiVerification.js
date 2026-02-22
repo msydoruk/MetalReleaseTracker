@@ -11,3 +11,10 @@ export const setDecision = (id, decision) =>
 
 export const batchSetDecision = (ids, decision) =>
   client.put('/ai-verification/batch-decision', { ids, decision });
+
+export const bulkSetDecision = (distributorCode, isUkrainian, decision) =>
+  client.put('/ai-verification/bulk-decision', {
+    distributorCode: distributorCode || null,
+    isUkrainian: isUkrainian !== '' ? isUkrainian === 'true' : null,
+    decision,
+  });

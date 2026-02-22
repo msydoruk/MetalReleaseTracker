@@ -20,6 +20,9 @@ public class CatalogueIndexEntityConfiguration : IEntityTypeConfiguration<Catalo
         builder.Property(e => e.AlbumTitle)
             .HasMaxLength(500);
 
+        builder.Property(e => e.CorrectedAlbumTitle)
+            .HasMaxLength(500);
+
         builder.Property(e => e.RawTitle)
             .HasMaxLength(1000);
 

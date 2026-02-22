@@ -22,6 +22,9 @@ public class AiVerificationEntityConfiguration : IEntityTypeConfiguration<AiVeri
             .IsRequired()
             .HasMaxLength(4000);
 
+        builder.Property(e => e.CorrectedAlbumTitle)
+            .HasMaxLength(500);
+
         builder.Property(e => e.CreatedAt)
             .IsRequired();
 

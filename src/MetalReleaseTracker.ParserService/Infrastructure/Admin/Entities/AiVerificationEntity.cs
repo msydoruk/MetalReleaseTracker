@@ -26,6 +26,8 @@ public class AiVerificationEntity
     [Required]
     public string AiAnalysis { get; set; }
 
+    public string? CorrectedAlbumTitle { get; set; }
+
     public AiVerificationDecision? AdminDecision { get; set; }
 
     public DateTime? AdminDecisionDate { get; set; }

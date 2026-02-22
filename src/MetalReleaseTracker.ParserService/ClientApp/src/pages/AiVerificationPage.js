@@ -28,7 +28,10 @@ import DistributorChip from '../components/DistributorChip';
 import PageHeader from '../components/PageHeader';
 import FilterBar from '../components/FilterBar';
 import { DISTRIBUTOR_CODES } from '../constants';
-import { fetchAiVerifications, runVerification, setDecision, batchSetDecision } from '../api/aiVerification';
+import DialogContentText from '@mui/material/DialogContentText';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import RemoveDoneIcon from '@mui/icons-material/RemoveDone';
+import { fetchAiVerifications, runVerification, setDecision, batchSetDecision, bulkSetDecision } from '../api/aiVerification';
 
 export default function AiVerificationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,6 +43,8 @@ export default function AiVerificationPage() {
   const [runDistributor, setRunDistributor] = useState('');
   const [running, setRunning] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkDecision, setBulkDecision] = useState(null);
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = parseInt(searchParams.get('pageSize') || '25', 10);
@@ -112,7 +117,21 @@ export default function AiVerificationPage() {
     }
   };
 
+  const handleBulkDecision = async () => {
+    try {
+      const { data } = await bulkSetDecision(distributorCode, isUkrainian, bulkDecision);
+      setSnackbar({ open: true, message: `Updated ${data.count} entries`, severity: 'success' });
+      setBulkDialogOpen(false);
+      setBulkDecision(null);
+      setSelectedIds([]);
+      load();
+    } catch {
+      setSnackbar({ open: true, message: 'Bulk update failed', severity: 'error' });
+    }
+  };
+
   const selectedWithVerification = rows.filter((row) => selectedIds.includes(row.id) && row.verificationId).length;
+  const verifiedRowCount = rows.filter((row) => row.verificationId != null).length;
 
   const columns = [
     {
@@ -135,6 +154,31 @@ export default function AiVerificationPage() {
       headerName: 'Album',
       flex: 1,
       minWidth: 140,
+    },
+    {
+      field: 'correctedAlbumTitle',
+      headerName: 'Corrected Title',
+      flex: 1,
+      minWidth: 140,
+      renderCell: ({ row }) => {
+        if (!row.correctedAlbumTitle) {
+          return <Box sx={{ color: 'rgba(255, 255, 255, 0.2)' }}>-</Box>;
+        }
+        const isDifferent = row.correctedAlbumTitle !== row.albumTitle;
+        return (
+          <Tooltip title={isDifferent ? `Original: ${row.albumTitle}` : 'Same as original'} placement="bottom-start">
+            <Box sx={{
+              color: isDifferent ? '#66bb6a' : 'rgba(255, 255, 255, 0.4)',
+              fontWeight: isDifferent ? 500 : 400,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {row.correctedAlbumTitle}
+            </Box>
+          </Tooltip>
+        );
+      },
     },
     {
       field: 'isUkrainian',
@@ -346,6 +390,30 @@ export default function AiVerificationPage() {
             </Button>
           </>
         )}
+        {verifiedRowCount > 0 && (
+          <>
+            <Button
+              variant="outlined"
+              color="success"
+              size="small"
+              startIcon={<DoneAllIcon />}
+              onClick={() => { setBulkDecision(0); setBulkDialogOpen(true); }}
+              sx={{ borderWidth: 1.5, ml: 'auto' }}
+            >
+              Confirm All
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<RemoveDoneIcon />}
+              onClick={() => { setBulkDecision(1); setBulkDialogOpen(true); }}
+              sx={{ borderWidth: 1.5 }}
+            >
+              Reject All
+            </Button>
+          </>
+        )}
       </FilterBar>
       <DataGrid
         rows={rows}
@@ -375,8 +443,8 @@ export default function AiVerificationPage() {
           {!running ? (
             <>
               <Typography color="text.secondary" sx={{ mb: 2.5, fontSize: '0.875rem' }}>
-                Send all unverified "Relevant" catalogue entries to Claude API for Ukrainian band verification.
-                Entries that already have a pending verification will be skipped.
+                Send all "Relevant" catalogue entries to Claude API for Ukrainian band verification.
+                Existing pending verifications will be replaced with fresh results.
               </Typography>
               <FormControl fullWidth size="small">
                 <InputLabel>Distributor (optional)</InputLabel>
@@ -415,6 +483,44 @@ export default function AiVerificationPage() {
             </Button>
           </DialogActions>
         )}
+      </Dialog>
+
+      <Dialog open={bulkDialogOpen} onClose={() => setBulkDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {bulkDecision === 0 ? 'Confirm All Matching Entries' : 'Reject All Matching Entries'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Are you sure you want to {bulkDecision === 0 ? 'confirm' : 'reject'} all pending verifications matching the current filters?
+          </DialogContentText>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {distributorCode && (
+              <Typography variant="body2" color="text.secondary">
+                Distributor: <strong>{DISTRIBUTOR_CODES[distributorCode]?.label || distributorCode}</strong>
+              </Typography>
+            )}
+            {isUkrainian !== '' && (
+              <Typography variant="body2" color="text.secondary">
+                Ukrainian: <strong>{isUkrainian === 'true' ? 'Yes' : 'No'}</strong>
+              </Typography>
+            )}
+            {!distributorCode && isUkrainian === '' && (
+              <Typography variant="body2" color="text.secondary">
+                No filters applied — this will affect <strong>all</strong> pending verifications.
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color={bulkDecision === 0 ? 'success' : 'error'}
+            onClick={handleBulkDecision}
+          >
+            {bulkDecision === 0 ? 'Confirm All' : 'Reject All'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Snackbar

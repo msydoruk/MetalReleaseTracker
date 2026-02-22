@@ -23,4 +23,10 @@ public interface IAiVerificationService
         List<Guid> ids,
         AiVerificationDecision decision,
         CancellationToken cancellationToken);
+
+    Task<int> SetBulkDecisionByFilterAsync(
+        DistributorCode? distributorCode,
+        bool? isUkrainian,
+        AiVerificationDecision decision,
+        CancellationToken cancellationToken);
 }
