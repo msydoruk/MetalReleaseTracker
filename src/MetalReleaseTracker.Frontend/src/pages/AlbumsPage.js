@@ -15,11 +15,14 @@ import {
   Checkbox,
   Select,
   MenuItem,
+  TextField,
+  InputAdornment,
   useMediaQuery,
   useTheme
 } from '@mui/material';
 import { useSearchParams, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import SearchIcon from '@mui/icons-material/Search';
 import AlbumCard from '../components/AlbumCard';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
@@ -97,9 +100,21 @@ const AlbumsPage = ({ isHome = false }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const albumListRef = useRef(null);
+  const searchTimerRef = useRef(null);
 
   const filters = useMemo(() => parseFiltersFromUrl(searchParams), [searchParams]);
+
+  useEffect(() => {
+    setSearchQuery(filters.name || '');
+  }, [filters.name]);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
 
   const updateFilters = (newFilters) => {
     setSearchParams(filtersToSearchParams(newFilters), { replace: true });
@@ -207,6 +222,15 @@ const AlbumsPage = ({ isHome = false }) => {
     updateFilters({ ...filters, distributorId: distributorId || '', page: 1 });
   };
 
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      updateFilters({ ...filters, name: value, page: 1 });
+    }, 400);
+  };
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {isHome && (
@@ -274,6 +298,41 @@ const AlbumsPage = ({ isHome = false }) => {
           </Button>
         </Box>
       </Box>
+
+      <TextField
+        fullWidth
+        size="small"
+        placeholder={t('albums.searchPlaceholder')}
+        value={searchQuery}
+        onChange={handleSearchChange}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          mb: 3,
+          maxWidth: 400,
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: 1,
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+            },
+            '&:hover fieldset': {
+              borderColor: 'rgba(255, 255, 255, 0.5)',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'primary.main',
+            },
+          },
+          '& .MuiInputBase-input': {
+            color: 'white',
+          },
+        }}
+      />
 
       {distributors.length > 0 && !isGrouped && (
         isMobile ? (
