@@ -117,7 +117,7 @@ export default function BandReferencesPage() {
   ];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <PageHeader
         icon={<LibraryMusicIcon />}
         title="Band References"
@@ -151,7 +151,7 @@ export default function BandReferencesPage() {
         }}
         pageSizeOptions={[10, 25, 50, 100]}
         onRowClick={(params) => navigate(`/band-references/${params.id}`)}
-        sx={{ height: 'calc(100vh - 240px)', cursor: 'pointer' }}
+        sx={{ flexGrow: 1, minHeight: 0, cursor: 'pointer', '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' } }}
         disableRowSelectionOnClick
       />
     </Box>

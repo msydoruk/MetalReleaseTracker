@@ -62,7 +62,7 @@ export default function BandReferenceDetailPage() {
   ];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'auto' }}>
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate('/')}
@@ -125,7 +125,7 @@ export default function BandReferenceDetailPage() {
         columns={columns}
         pageSizeOptions={[10, 25, 50]}
         initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-        sx={{ height: 'calc(100vh - 460px)' }}
+        sx={{ flexGrow: 1, minHeight: 300 }}
         disableRowSelectionOnClick
       />
     </Box>

@@ -36,6 +36,29 @@ const theme = createTheme({
     borderRadius: 8,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '*': {
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(183, 28, 28, 0.4) rgba(255, 255, 255, 0.05)',
+        },
+        '*::-webkit-scrollbar': {
+          width: 8,
+          height: 8,
+        },
+        '*::-webkit-scrollbar-track': {
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: 4,
+        },
+        '*::-webkit-scrollbar-thumb': {
+          background: 'rgba(183, 28, 28, 0.4)',
+          borderRadius: 4,
+          '&:hover': {
+            background: 'rgba(183, 28, 28, 0.6)',
+          },
+        },
+      },
+    },
     MuiAppBar: {
       styleOverrides: {
         root: {

@@ -31,7 +31,7 @@ import { DISTRIBUTOR_CODES } from '../constants';
 import DialogContentText from '@mui/material/DialogContentText';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import RemoveDoneIcon from '@mui/icons-material/RemoveDone';
-import { fetchAiVerifications, runVerification, setDecision, batchSetDecision, bulkSetDecision } from '../api/aiVerification';
+import { fetchAiVerifications, runVerificationStream, setDecision, batchSetDecision, bulkSetDecision } from '../api/aiVerification';
 
 export default function AiVerificationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,6 +42,9 @@ export default function AiVerificationPage() {
   const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [runDistributor, setRunDistributor] = useState('');
   const [running, setRunning] = useState(false);
+  const [runProgress, setRunProgress] = useState({ processed: 0, total: 0, failed: 0, current: '' });
+  const [runFinished, setRunFinished] = useState(false);
+  const [runError, setRunError] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkDecision, setBulkDecision] = useState(null);
@@ -105,15 +108,41 @@ export default function AiVerificationPage() {
 
   const handleRunVerification = async () => {
     setRunning(true);
+    setRunFinished(false);
+    setRunError(null);
+    setRunProgress({ processed: 0, total: 0, failed: 0, current: '' });
     try {
-      const { data } = await runVerification(runDistributor || null);
-      setSnackbar({ open: true, message: `Created ${data.count} verifications`, severity: 'success' });
-      setRunDialogOpen(false);
-      load();
-    } catch {
-      setSnackbar({ open: true, message: 'Verification run failed', severity: 'error' });
+      await runVerificationStream(runDistributor || null, (event) => {
+        if (event.type === 'started') {
+          setRunProgress((prev) => ({ ...prev, total: event.total }));
+        } else if (event.type === 'progress') {
+          setRunProgress({ processed: event.processed, total: event.total, failed: event.failed, current: event.current || '' });
+        } else if (event.type === 'completed') {
+          setRunProgress((prev) => ({ ...prev, processed: event.processed, failed: event.failed }));
+          setRunFinished(true);
+        } else if (event.type === 'error') {
+          setRunError(event.message || 'Unknown error');
+          setRunFinished(true);
+        }
+      });
+      if (!runError) {
+        setRunFinished(true);
+      }
+    } catch (err) {
+      setRunError(err.message || 'Verification run failed');
+      setRunFinished(true);
     } finally {
       setRunning(false);
+    }
+  };
+
+  const handleCloseRunDialog = () => {
+    setRunDialogOpen(false);
+    setRunFinished(false);
+    setRunError(null);
+    setRunProgress({ processed: 0, total: 0, failed: 0, current: '' });
+    if (runFinished) {
+      load();
     }
   };
 
@@ -137,14 +166,14 @@ export default function AiVerificationPage() {
     {
       field: 'distributorCode',
       headerName: 'Distributor',
-      width: 170,
+      width: 130,
       renderCell: ({ value }) => value != null ? <DistributorChip code={value} /> : '-',
     },
     {
       field: 'bandName',
       headerName: 'Band',
       flex: 1,
-      minWidth: 140,
+      minWidth: 100,
       renderCell: ({ value }) => (
         <Box sx={{ fontWeight: 500, color: 'rgba(255, 255, 255, 0.95)' }}>{value}</Box>
       ),
@@ -153,28 +182,44 @@ export default function AiVerificationPage() {
       field: 'albumTitle',
       headerName: 'Album',
       flex: 1,
-      minWidth: 140,
+      minWidth: 100,
     },
     {
-      field: 'correctedAlbumTitle',
-      headerName: 'Corrected Title',
+      field: 'matchedAlbumTitle',
+      headerName: 'Matched Album',
       flex: 1,
-      minWidth: 140,
+      minWidth: 100,
       renderCell: ({ row }) => {
-        if (!row.correctedAlbumTitle) {
+        if (!row.matchedAlbumTitle) {
           return <Box sx={{ color: 'rgba(255, 255, 255, 0.2)' }}>-</Box>;
         }
-        const isDifferent = row.correctedAlbumTitle !== row.albumTitle;
+        const isDifferent = row.matchedAlbumTitle !== row.albumTitle;
         return (
-          <Tooltip title={isDifferent ? `Original: ${row.albumTitle}` : 'Same as original'} placement="bottom-start">
-            <Box sx={{
-              color: isDifferent ? '#66bb6a' : 'rgba(255, 255, 255, 0.4)',
-              fontWeight: isDifferent ? 500 : 400,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              {row.correctedAlbumTitle}
+          <Tooltip title={`${row.matchedAlbumTitle} / ${row.matchedAlbumType || '?'} / ${row.matchedAlbumYear || '?'}`} placement="bottom-start">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, overflow: 'hidden' }}>
+              <Box sx={{
+                color: isDifferent ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)',
+                fontWeight: isDifferent ? 500 : 400,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {row.matchedAlbumTitle}
+              </Box>
+              {row.matchedAlbumYear && (
+                <Chip
+                  label={row.matchedAlbumYear}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
             </Box>
           </Tooltip>
         );
@@ -182,8 +227,8 @@ export default function AiVerificationPage() {
     },
     {
       field: 'isUkrainian',
-      headerName: 'Ukrainian',
-      width: 110,
+      headerName: 'UA',
+      width: 70,
       renderCell: ({ row }) => {
         if (row.verificationId == null) {
           return (
@@ -212,7 +257,7 @@ export default function AiVerificationPage() {
     {
       field: 'confidenceScore',
       headerName: 'Confidence',
-      width: 140,
+      width: 100,
       renderCell: ({ row }) => {
         if (row.verificationId == null || row.confidenceScore == null) {
           return <Box sx={{ color: 'rgba(255, 255, 255, 0.2)' }}>-</Box>;
@@ -236,8 +281,8 @@ export default function AiVerificationPage() {
     },
     {
       field: 'actions',
-      headerName: 'Actions',
-      width: 110,
+      headerName: '',
+      width: 80,
       sortable: false,
       renderCell: ({ row }) => {
         if (row.verificationId == null) {
@@ -282,8 +327,8 @@ export default function AiVerificationPage() {
     {
       field: 'aiAnalysis',
       headerName: 'AI Analysis',
-      flex: 1.5,
-      minWidth: 200,
+      flex: 1,
+      minWidth: 80,
       renderCell: ({ row }) => {
         if (row.verificationId == null || !row.aiAnalysis) {
           return <Box sx={{ color: 'rgba(255, 255, 255, 0.2)' }}>-</Box>;
@@ -306,13 +351,13 @@ export default function AiVerificationPage() {
     {
       field: 'verifiedAt',
       headerName: 'Verified',
-      width: 160,
+      width: 120,
       valueFormatter: (value) => value ? new Date(value).toLocaleString() : '',
     },
   ];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <PageHeader
         icon={<SmartToyIcon />}
         title="AI Verification"
@@ -428,11 +473,11 @@ export default function AiVerificationPage() {
         isRowSelectable={(params) => params.row.verificationId != null}
         rowSelectionModel={selectedIds}
         onRowSelectionModelChange={(ids) => setSelectedIds(ids)}
-        sx={{ height: 'calc(100vh - 260px)' }}
+        sx={{ flexGrow: 1, minHeight: 0, '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' } }}
         disableRowSelectionOnClick
       />
 
-      <Dialog open={runDialogOpen} onClose={() => !running && setRunDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={runDialogOpen} onClose={() => !running && handleCloseRunDialog()} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <SmartToyIcon sx={{ color: '#e53935' }} />
@@ -440,7 +485,7 @@ export default function AiVerificationPage() {
           </Box>
         </DialogTitle>
         <DialogContent>
-          {!running ? (
+          {!running && !runFinished ? (
             <>
               <Typography color="text.secondary" sx={{ mb: 2.5, fontSize: '0.875rem' }}>
                 Send all "Relevant" catalogue entries to Claude API for Ukrainian band verification.
@@ -461,26 +506,74 @@ export default function AiVerificationPage() {
               </FormControl>
             </>
           ) : (
-            <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <CircularProgress size={48} sx={{ color: '#e53935' }} />
-              <Typography variant="h6">Analyzing bands...</Typography>
-              <Typography color="text.secondary" sx={{ fontSize: '0.875rem', textAlign: 'center' }}>
-                Each band is being verified against music databases via Claude AI.
-                This may take a few minutes depending on the number of entries.
-              </Typography>
+            <Box sx={{ py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {runError ? (
+                <Alert severity="error" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {runError}
+                </Alert>
+              ) : runFinished ? (
+                <Alert severity="success">
+                  Verification complete: {runProgress.processed - runProgress.failed} verified
+                  {runProgress.failed > 0 && `, ${runProgress.failed} failed`}
+                </Alert>
+              ) : null}
+
+              {!runFinished && (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <CircularProgress size={24} sx={{ color: '#e53935' }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      Verified {runProgress.processed} / {runProgress.total}
+                      {runProgress.failed > 0 && (
+                        <Typography component="span" sx={{ color: '#ef5350', ml: 1, fontSize: '0.875rem' }}>
+                          ({runProgress.failed} failed)
+                        </Typography>
+                      )}
+                    </Typography>
+                  </Box>
+                  {runProgress.current && (
+                    <Typography
+                      color="text.secondary"
+                      sx={{
+                        fontSize: '0.8rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Analyzing: {runProgress.current}
+                    </Typography>
+                  )}
+                </>
+              )}
+
               <LinearProgress
-                sx={{ width: '100%', mt: 1, height: 4, borderRadius: 2 }}
-                color="primary"
+                variant={runProgress.total > 0 ? 'determinate' : 'indeterminate'}
+                value={runProgress.total > 0 ? (runProgress.processed / runProgress.total) * 100 : 0}
+                sx={{ width: '100%', height: 6, borderRadius: 3 }}
+                color={runError ? 'error' : runFinished ? 'success' : 'primary'}
               />
+
+              {runFinished && runProgress.total > 0 && (
+                <Typography color="text.secondary" sx={{ fontSize: '0.8rem', textAlign: 'center' }}>
+                  {runProgress.processed} of {runProgress.total} entries processed
+                </Typography>
+              )}
             </Box>
           )}
         </DialogContent>
         {!running && (
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={() => setRunDialogOpen(false)}>Cancel</Button>
-            <Button variant="contained" onClick={handleRunVerification} startIcon={<PlayArrowIcon />}>
-              Start Verification
-            </Button>
+            {runFinished ? (
+              <Button variant="contained" onClick={handleCloseRunDialog}>Close</Button>
+            ) : (
+              <>
+                <Button onClick={handleCloseRunDialog}>Cancel</Button>
+                <Button variant="contained" onClick={handleRunVerification} startIcon={<PlayArrowIcon />}>
+                  Start Verification
+                </Button>
+              </>
+            )}
           </DialogActions>
         )}
       </Dialog>

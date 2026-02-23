@@ -168,7 +168,7 @@ export default function CatalogueIndexPage() {
   ];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <PageHeader
         icon={<ListAltIcon />}
         title="Catalogue Index"
@@ -245,7 +245,7 @@ export default function CatalogueIndexPage() {
         checkboxSelection
         rowSelectionModel={selectedIds}
         onRowSelectionModelChange={(ids) => setSelectedIds(ids)}
-        sx={{ height: 'calc(100vh - 260px)' }}
+        sx={{ flexGrow: 1, minHeight: 0, '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' } }}
         disableRowSelectionOnClick
       />
       <Snackbar

@@ -17,6 +17,7 @@ import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import SyncIcon from '@mui/icons-material/Sync';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../hooks/useAuth';
 
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { label: 'Catalogue Index', path: '/catalogue-index', icon: <ListAltIcon /> },
   { label: 'Parsing Sessions', path: '/parsing-sessions', icon: <SyncIcon /> },
   { label: 'AI Verification', path: '/ai-verification', icon: <SmartToyIcon /> },
+  { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
 ];
 
 export default function Layout() {
@@ -126,7 +128,15 @@ export default function Layout() {
         </Drawer>
       </Box>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, width: { md: `calc(100% - ${DRAWER_WIDTH}px)` } }}>
+      <Box component="main" sx={{
+        flexGrow: 1,
+        p: 3,
+        width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         <Toolbar />
         <Outlet />
       </Box>

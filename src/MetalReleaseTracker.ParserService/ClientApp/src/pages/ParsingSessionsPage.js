@@ -127,7 +127,7 @@ export default function ParsingSessionsPage() {
   ];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <PageHeader
         icon={<SyncIcon />}
         title="Parsing Sessions"
@@ -176,7 +176,7 @@ export default function ParsingSessionsPage() {
         }}
         pageSizeOptions={[10, 25, 50]}
         onRowClick={(params) => navigate(`/parsing-sessions/${params.id}`)}
-        sx={{ height: 'calc(100vh - 260px)', cursor: 'pointer' }}
+        sx={{ flexGrow: 1, minHeight: 0, cursor: 'pointer', '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' } }}
         disableRowSelectionOnClick
       />
       <Snackbar
