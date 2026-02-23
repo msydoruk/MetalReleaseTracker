@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  TextField,
   MenuItem,
   FormControl,
   Select,
@@ -183,43 +182,6 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
 
       <form onSubmit={handleSubmit} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Search by name */}
-          <TextField
-            fullWidth
-            label={t('albumFilter.albumName')}
-            name="name"
-            value={filters.name}
-            onChange={handleInputChange}
-            variant="outlined"
-            size="small"
-            placeholder={t('albumFilter.searchPlaceholder')}
-            sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 1,
-              width: '100%',
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'primary.main',
-                },
-                height: '40px'
-              },
-              '& .MuiInputLabel-root': {
-                color: 'white',
-                fontWeight: 'medium',
-              },
-              '& .MuiInputBase-input': {
-                py: 1,
-                color: 'white',
-              }
-            }}
-          />
-
           {/* Media type filter - using ToggleButtonGroup */}
           <Box>
             <FormLabel

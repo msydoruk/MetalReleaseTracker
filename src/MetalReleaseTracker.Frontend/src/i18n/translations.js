@@ -37,6 +37,7 @@ const translations = {
       noAlbums: 'No albums found matching your criteria.',
       tryAdjusting: 'Try adjusting your filters to see more results.',
       comparePrices: 'Group by album',
+      searchPlaceholder: 'Search by band or album name...',
     },
     grouped: {
       stores: 'stores',
@@ -263,6 +264,7 @@ const translations = {
       noAlbums: 'Альбомів за вашими критеріями не знайдено.',
       tryAdjusting: 'Спробуйте змінити фільтри, щоб побачити більше результатів.',
       comparePrices: 'Групувати за альбомом',
+      searchPlaceholder: 'Пошук за назвою гурту або альбому...',
     },
     grouped: {
       stores: 'магазинів',

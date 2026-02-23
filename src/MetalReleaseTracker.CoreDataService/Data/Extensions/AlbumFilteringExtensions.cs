@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
+using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.CoreDataService.Data.Extensions;
 
@@ -12,7 +13,8 @@ public static class AlbumFilteringExtensions
     {
         return query
             .WhereIf(!string.IsNullOrWhiteSpace(filter.Name),
-                album => album.Name.Contains(filter.Name))
+                album => EF.Functions.ILike(album.Name, $"%{filter.Name}%") ||
+                         EF.Functions.ILike(album.Band.Name, $"%{filter.Name}%"))
             .WhereIf(filter.MinPrice.HasValue,
                 album => album.Price >= (float)filter.MinPrice.Value)
             .WhereIf(filter.MaxPrice.HasValue,
