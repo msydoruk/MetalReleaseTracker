@@ -53,11 +53,9 @@ services:
       - TickerQ__Dashboard__BasePath=/tickerq/dashboard
       - TickerQ__Dashboard__Username=${TICKERQ_DASHBOARD_USERNAME}
       - TickerQ__Dashboard__Password=${TICKERQ_DASHBOARD_PASSWORD}
-      - FlareSolverr__BaseUrl=http://flaresolverr:8191
       - AdminAuth__Username=${ADMIN_USERNAME}
       - AdminAuth__Password=${ADMIN_PASSWORD}
       - AdminAuth__JwtKey=${ADMIN_JWT_KEY}
-      - ClaudeApi__ApiKey=${CLAUDE_API_KEY}
     ports:
       - '5000:8080'
     depends_on:

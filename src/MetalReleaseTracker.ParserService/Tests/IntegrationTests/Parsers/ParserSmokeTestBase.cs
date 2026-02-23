@@ -1,11 +1,15 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Http;
 using MetalReleaseTracker.ParserService.Infrastructure.Http.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
+using MetalReleaseTracker.ParserService.Infrastructure.Services.Configuration;
 using Microsoft.Extensions.Options;
 using Xunit;
 
@@ -21,13 +25,9 @@ public abstract class ParserSmokeTestBase
         return new HtmlDocumentLoader(httpRequestService);
     }
 
-    protected static IOptions<GeneralParserSettings> CreateParserSettings()
+    protected static ISettingsService CreateSettingsService()
     {
-        return Options.Create(new GeneralParserSettings
-        {
-            MinDelayBetweenRequestsSeconds = 0,
-            MaxDelayBetweenRequestsSeconds = 1
-        });
+        return new StubSettingsService();
     }
 
     protected static void AssertListingPageValid(ListingPageResult result)
@@ -95,5 +95,87 @@ public abstract class ParserSmokeTestBase
     private static string NormalizePathForComparison(string path)
     {
         return path.TrimEnd('/').Replace(".html", string.Empty);
+    }
+
+    private class StubSettingsService : ISettingsService
+    {
+        public Task<List<ParsingSourceEntity>> GetEnabledParsingSourcesAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new List<ParsingSourceEntity>());
+        }
+
+        public Task<ParsingSourceEntity?> GetParsingSourceByCodeAsync(DistributorCode distributorCode, CancellationToken cancellationToken)
+        {
+            return Task.FromResult<ParsingSourceEntity?>(null);
+        }
+
+        public Task<GeneralParserSettings> GetGeneralParserSettingsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new GeneralParserSettings
+            {
+                MinDelayBetweenRequestsSeconds = 0,
+                MaxDelayBetweenRequestsSeconds = 1,
+            });
+        }
+
+        public Task<BandReferenceSettings> GetBandReferenceSettingsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new BandReferenceSettings());
+        }
+
+        public Task<FlareSolverrSettings> GetFlareSolverrSettingsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new FlareSolverrSettings());
+        }
+
+        public Task<List<AiAgentDto>> GetAiAgentsAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new List<AiAgentDto>());
+        }
+
+        public Task<AiAgentDto?> GetAiAgentByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return Task.FromResult<AiAgentDto?>(null);
+        }
+
+        public Task<AiAgentEntity?> GetActiveAiAgentAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<AiAgentEntity?>(null);
+        }
+
+        public Task<AiAgentDto> CreateAiAgentAsync(CreateAiAgentDto dto, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AiAgentDto?> UpdateAiAgentAsync(Guid id, UpdateAiAgentDto dto, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> DeleteAiAgentAsync(Guid id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<ParsingSourceDto>> GetParsingSourcesAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new List<ParsingSourceDto>());
+        }
+
+        public Task<ParsingSourceDto?> UpdateParsingSourceAsync(Guid id, UpdateParsingSourceDto dto, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<CategorySettingsDto> GetSettingsByCategoryAsync(string category, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new CategorySettingsDto(new Dictionary<string, string>()));
+        }
+
+        public Task<CategorySettingsDto> UpdateSettingsByCategoryAsync(string category, CategorySettingsDto dto, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

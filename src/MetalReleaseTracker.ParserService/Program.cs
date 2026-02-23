@@ -80,6 +80,8 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
     containerBuilder.RegisterType<AdminQueryRepository>().As<IAdminQueryRepository>().InstancePerLifetimeScope();
     containerBuilder.RegisterType<AdminAuthService>().As<IAdminAuthService>().InstancePerLifetimeScope();
     containerBuilder.RegisterType<AiVerificationService>().As<IAiVerificationService>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<SettingsService>().As<ISettingsService>().InstancePerLifetimeScope();
+    containerBuilder.RegisterType<SettingsSeedService>().As<ISettingsSeedService>().InstancePerLifetimeScope();
     containerBuilder.AddParsers();
 });
 
@@ -103,6 +105,9 @@ using (var scope = app.Services.CreateScope())
 
     var parserServiceTickerQDbContext = scope.ServiceProvider.GetRequiredService<ParserServiceTickerQDbContext>();
     parserServiceTickerQDbContext.Database.Migrate();
+
+    var settingsSeedService = scope.ServiceProvider.GetRequiredService<ISettingsSeedService>();
+    await settingsSeedService.SeedAsync();
 }
 
 var adminFileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "wwwroot"));

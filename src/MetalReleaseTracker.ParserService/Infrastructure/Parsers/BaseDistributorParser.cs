@@ -3,29 +3,30 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
 public abstract class BaseDistributorParser : IListingParser, IAlbumDetailParser
 {
     private readonly IHtmlDocumentLoader _htmlDocumentLoader;
-    private readonly GeneralParserSettings _generalParserSettings;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger _logger;
     private readonly Random _random = new();
+    private GeneralParserSettings? _cachedSettings;
     private Queue<(string Url, AlbumMediaType MediaType)> _pendingCategoryUrls = new();
     private bool _categoryQueueInitialized;
 
     protected BaseDistributorParser(
         IHtmlDocumentLoader htmlDocumentLoader,
-        IOptions<GeneralParserSettings> generalParserSettings,
+        ISettingsService settingsService,
         ILogger logger)
     {
         _htmlDocumentLoader = htmlDocumentLoader;
-        _generalParserSettings = generalParserSettings.Value;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -82,7 +83,8 @@ public abstract class BaseDistributorParser : IListingParser, IAlbumDetailParser
     {
         try
         {
-            await ParserHelper.DelayBetweenRequestsAsync(_generalParserSettings, _random, cancellationToken);
+            _cachedSettings ??= await _settingsService.GetGeneralParserSettingsAsync(cancellationToken);
+            await ParserHelper.DelayBetweenRequestsAsync(_cachedSettings, _random, cancellationToken);
             return await ParseAlbumDetails(detailUrl, cancellationToken);
         }
         catch (OperationCanceledException)

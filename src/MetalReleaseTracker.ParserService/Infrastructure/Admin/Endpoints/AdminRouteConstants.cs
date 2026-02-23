@@ -41,4 +41,30 @@ public static class AdminRouteConstants
         public const string BatchDecision = $"{Prefix}/batch-decision";
         public const string BulkDecision = $"{Prefix}/bulk-decision";
     }
+
+    public static class Settings
+    {
+        private const string Prefix = $"{Base}/settings";
+
+        public static class AiAgents
+        {
+            private const string AgentPrefix = $"{Prefix}/ai-agents";
+            public const string GetAll = AgentPrefix;
+            public const string GetById = $"{AgentPrefix}/{{id:guid}}";
+            public const string Create = AgentPrefix;
+            public const string Update = $"{AgentPrefix}/{{id:guid}}";
+            public const string Delete = $"{AgentPrefix}/{{id:guid}}";
+        }
+
+        public static class ParsingSources
+        {
+            private const string SourcePrefix = $"{Prefix}/parsing-sources";
+            public const string GetAll = SourcePrefix;
+            public const string Update = $"{SourcePrefix}/{{id:guid}}";
+        }
+
+        public const string BandReference = $"{Prefix}/band-reference";
+        public const string FlareSolverr = $"{Prefix}/flaresolverr";
+        public const string GeneralParser = $"{Prefix}/general-parser";
+    }
 }

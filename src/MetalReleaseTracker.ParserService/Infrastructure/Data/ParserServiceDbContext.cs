@@ -21,6 +21,12 @@ public class ParserServiceDbContext : DbContext
 
     public DbSet<AiVerificationEntity> AiVerifications { get; set; }
 
+    public DbSet<AiAgentEntity> AiAgents { get; set; }
+
+    public DbSet<ParsingSourceEntity> ParsingSources { get; set; }
+
+    public DbSet<SettingEntity> Settings { get; set; }
+
     public ParserServiceDbContext(DbContextOptions<ParserServiceDbContext> options) : base(options)
     {
     }
@@ -36,5 +42,8 @@ public class ParserServiceDbContext : DbContext
         modelBuilder.ApplyConfiguration(new BandDiscographyEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CatalogueIndexEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AiVerificationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AiAgentEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ParsingSourceEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SettingEntityConfiguration());
     }
 }

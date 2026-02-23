@@ -14,7 +14,7 @@ public class DrakkarParserSmokeTests : ParserSmokeTestBase
     {
         return new DrakkarParser(
             CreateHtmlDocumentLoader(),
-            CreateParserSettings(),
+            CreateSettingsService(),
             NullLogger<DrakkarParser>.Instance);
     }
 

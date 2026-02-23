@@ -12,6 +12,7 @@ import CatalogueIndexPage from './pages/CatalogueIndexPage';
 import ParsingSessionsPage from './pages/ParsingSessionsPage';
 import ParsingSessionDetailPage from './pages/ParsingSessionDetailPage';
 import AiVerificationPage from './pages/AiVerificationPage';
+import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="parsing-sessions" element={<ParsingSessionsPage />} />
               <Route path="parsing-sessions/:id" element={<ParsingSessionDetailPage />} />
               <Route path="ai-verification" element={<AiVerificationPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

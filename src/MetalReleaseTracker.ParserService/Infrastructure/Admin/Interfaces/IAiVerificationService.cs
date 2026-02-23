@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities;
@@ -12,6 +13,11 @@ public interface IAiVerificationService
 
     Task<int> RunVerificationAsync(
         DistributorCode? distributorCode,
+        CancellationToken cancellationToken);
+
+    Task RunVerificationStreamAsync(
+        DistributorCode? distributorCode,
+        ChannelWriter<VerificationProgressEvent> writer,
         CancellationToken cancellationToken);
 
     Task SetDecisionAsync(

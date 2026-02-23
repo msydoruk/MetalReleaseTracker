@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Threading.Channels;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -25,14 +27,30 @@ public static class AiVerificationEndpoints
         endpoints.MapPost(AdminRouteConstants.AiVerification.Run, async (
                 RunVerificationDto request,
                 IAiVerificationService aiVerificationService,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
-                var count = await aiVerificationService.RunVerificationAsync(request.DistributorCode, cancellationToken);
-                return Results.Ok(new { count });
+                httpContext.Response.ContentType = "text/event-stream";
+                httpContext.Response.Headers.CacheControl = "no-cache";
+                httpContext.Response.Headers.Connection = "keep-alive";
+
+                var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+                var channel = Channel.CreateUnbounded<VerificationProgressEvent>();
+
+                var processingTask = aiVerificationService.RunVerificationStreamAsync(
+                    request.DistributorCode, channel.Writer, cancellationToken);
+
+                await foreach (var progressEvent in channel.Reader.ReadAllAsync(cancellationToken))
+                {
+                    var json = JsonSerializer.Serialize(progressEvent, jsonOptions);
+                    await httpContext.Response.WriteAsync($"event: {progressEvent.Type}\ndata: {json}\n\n", cancellationToken);
+                    await httpContext.Response.Body.FlushAsync(cancellationToken);
+                }
+
+                await processingTask;
             })
             .WithName("RunAiVerification")
-            .WithTags("Admin AI Verification")
-            .Produces<object>();
+            .WithTags("Admin AI Verification");
 
         endpoints.MapPut(AdminRouteConstants.AiVerification.SetDecision, async (
                 Guid id,

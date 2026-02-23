@@ -1,8 +1,8 @@
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
@@ -12,7 +12,7 @@ public class CatalogueIndexJob
     private readonly ICatalogueIndexRepository _catalogueIndexRepository;
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
     private readonly IBandReferenceRepository _bandReferenceRepository;
-    private readonly GeneralParserSettings _generalParserSettings;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<CatalogueIndexJob> _logger;
     private readonly Random _random = new();
 
@@ -21,14 +21,14 @@ public class CatalogueIndexJob
         ICatalogueIndexRepository catalogueIndexRepository,
         IBandDiscographyRepository bandDiscographyRepository,
         IBandReferenceRepository bandReferenceRepository,
-        IOptions<GeneralParserSettings> generalParserSettings,
+        ISettingsService settingsService,
         ILogger<CatalogueIndexJob> logger)
     {
         _listingParserResolver = listingParserResolver;
         _catalogueIndexRepository = catalogueIndexRepository;
         _bandDiscographyRepository = bandDiscographyRepository;
         _bandReferenceRepository = bandReferenceRepository;
-        _generalParserSettings = generalParserSettings.Value;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -36,6 +36,16 @@ public class CatalogueIndexJob
     {
         try
         {
+            var source = await _settingsService.GetParsingSourceByCodeAsync(parserDataSource.DistributorCode, cancellationToken);
+            if (source == null || !source.IsEnabled)
+            {
+                _logger.LogInformation(
+                    "Skipping catalogue indexing for disabled distributor: {DistributorCode}.",
+                    parserDataSource.DistributorCode);
+                return;
+            }
+
+            parserDataSource.ParsingUrl = source.ParsingUrl;
             await ExecuteIndexingAsync(parserDataSource, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -63,6 +73,7 @@ public class CatalogueIndexJob
 
     private async Task ExecuteIndexingAsync(ParserDataSource parserDataSource, CancellationToken cancellationToken)
     {
+        var generalParserSettings = await _settingsService.GetGeneralParserSettingsAsync(cancellationToken);
         var parser = _listingParserResolver(parserDataSource.DistributorCode);
         var currentUrl = parserDataSource.ParsingUrl;
         var totalIndexed = 0;
@@ -113,7 +124,7 @@ public class CatalogueIndexJob
             if (result.HasMorePages)
             {
                 currentUrl = result.NextPageUrl;
-                await DelayBetweenPages(cancellationToken);
+                await DelayBetweenPages(generalParserSettings, cancellationToken);
             }
             else
             {
@@ -141,11 +152,11 @@ public class CatalogueIndexJob
         return lookup;
     }
 
-    private async Task DelayBetweenPages(CancellationToken cancellationToken)
+    private async Task DelayBetweenPages(GeneralParserSettings generalParserSettings, CancellationToken cancellationToken)
     {
         var delaySeconds = _random.Next(
-            _generalParserSettings.MinDelayBetweenRequestsSeconds,
-            _generalParserSettings.MaxDelayBetweenRequestsSeconds);
+            generalParserSettings.MinDelayBetweenRequestsSeconds,
+            generalParserSettings.MaxDelayBetweenRequestsSeconds);
 
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
     }
