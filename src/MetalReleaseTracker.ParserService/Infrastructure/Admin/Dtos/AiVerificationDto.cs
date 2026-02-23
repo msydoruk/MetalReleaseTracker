@@ -11,7 +11,13 @@ public class AiVerificationDto
 
     public string AlbumTitle { get; set; } = string.Empty;
 
-    public string? CorrectedAlbumTitle { get; set; }
+    public Guid? MatchedBandDiscographyId { get; set; }
+
+    public string? MatchedAlbumTitle { get; set; }
+
+    public string? MatchedAlbumType { get; set; }
+
+    public int? MatchedAlbumYear { get; set; }
 
     public DistributorCode? DistributorCode { get; set; }
 

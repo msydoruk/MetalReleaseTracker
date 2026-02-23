@@ -16,7 +16,9 @@ public class CatalogueIndexEntity
 
     public string AlbumTitle { get; set; }
 
-    public string? CorrectedAlbumTitle { get; set; }
+    public Guid? BandDiscographyId { get; set; }
+
+    public BandDiscographyEntity? BandDiscography { get; set; }
 
     public string RawTitle { get; set; }
 

@@ -26,7 +26,9 @@ public class AiVerificationEntity
     [Required]
     public string AiAnalysis { get; set; }
 
-    public string? CorrectedAlbumTitle { get; set; }
+    public Guid? MatchedBandDiscographyId { get; set; }
+
+    public BandDiscographyEntity? MatchedBandDiscography { get; set; }
 
     public AiVerificationDecision? AdminDecision { get; set; }
 
