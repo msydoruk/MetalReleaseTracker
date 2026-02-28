@@ -44,9 +44,15 @@ docker exec -i <postgres-container> env PGPASSWORD='<from .env>' psql -U <user> 
 docker exec -i metalrelease_postgres_parser env PGPASSWORD='...' psql -U parser_admin -d ParserServiceDb -c 'SELECT COUNT(*) FROM "CatalogueIndex";'
 ```
 
-Service database ports: ParserService=5434, CatalogSyncService=5435, CoreDataService=5436. All use PostgreSQL. Column names are PascalCase and must be double-quoted in SQL.
+Service database ports: ParserService=5434, CatalogSyncService=5435, CoreDataService=5436. PostgreSQL column names are PascalCase and must be double-quoted in SQL.
 
-**ParserServiceDb tables**: BandReferences (Ukrainian bands from MA), BandDiscography (albums per band), CatalogueIndex (distributor catalogue, status tracking), AiVerifications (AI verification results), AiAgents (Claude API config), ParsingSessions, AlbumParsedEvents (outbox), ParsingSources (distributor URLs), Settings (runtime key-value config).
+**ParserServiceDb** (PostgreSQL, port 5434): BandReferences, BandDiscography, CatalogueIndex, AiVerifications, AiAgents, ParsingSessions, AlbumParsedEvents, ParsingSources, Settings.
+
+**CatalogSyncServiceDb** (MongoDB, port 27017): ParsingSessionWithRawAlbums (30-day TTL), ProcessedAlbums. PostgreSQL (port 5435) used only for TickerQ scheduling.
+
+**CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, Feedbacks, RefreshTokens, UserFavorites + ASP.NET Identity tables.
+
+Full schema with columns, types, and FK relationships: [`docs/database-schema.md`](docs/database-schema.md).
 
 ## Architecture
 
