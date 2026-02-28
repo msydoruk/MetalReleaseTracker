@@ -22,7 +22,12 @@ public class SettingsSeedService : ISettingsSeedService
            Multiple bands often share the same name.
            - If "{{albumTitle}}" matches or closely matches an entry in the discography → isUkrainian: true,
              and return the UUID of the matched entry as matchedAlbumId.
-           - If "{{albumTitle}}" does NOT appear in the discography → this is most likely a DIFFERENT band
+           - IMPORTANT: Metal Archives often lists album titles in the band's native language
+             (Russian, Ukrainian, or other Cyrillic scripts), while distributors may use the English
+             translation, transliteration, or international title. Consider cross-language equivalents
+             when matching. For example, a Cyrillic title and its English translation are the SAME album.
+           - If "{{albumTitle}}" does NOT appear in the discography even after considering translations
+             and cross-language equivalents → this is most likely a DIFFERENT band
              with the same name → isUkrainian: false, matchedAlbumId: null.
         2. If NO discography is provided, use your general knowledge of the metal scene to determine
            the band's country of origin. Consider: band name language, Metal Archives, Discogs,

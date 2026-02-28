@@ -437,66 +437,98 @@ export default function AiVerificationPage() {
             <MenuItem value="false">No</MenuItem>
           </Select>
         </FormControl>
-        {selectedIds.length > 0 && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<SmartToyIcon />}
-            onClick={() => { setRunMode('selected'); setRunDialogOpen(true); }}
-            sx={{ px: 2 }}
-          >
-            Verify {selectedIds.length} Selected
-          </Button>
-        )}
-        {selectedWithVerification > 0 && (
-          <>
-            <Button
-              variant="outlined"
-              color="success"
-              size="small"
-              startIcon={<CheckCircleIcon />}
-              onClick={() => handleBatchDecision(0)}
-              sx={{ borderWidth: 1.5 }}
-            >
-              Confirm {selectedWithVerification}
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<CancelIcon />}
-              onClick={() => handleBatchDecision(1)}
-              sx={{ borderWidth: 1.5 }}
-            >
-              Reject {selectedWithVerification}
-            </Button>
-          </>
-        )}
         {verifiedRowCount > 0 && (
           <>
             <Button
-              variant="outlined"
-              color="success"
+              variant="text"
               size="small"
               startIcon={<DoneAllIcon />}
               onClick={() => { setBulkDecision(0); setBulkDialogOpen(true); }}
-              sx={{ borderWidth: 1.5, ml: 'auto' }}
+              sx={{ ml: 'auto', color: 'rgba(255, 255, 255, 0.45)', '&:hover': { color: '#66bb6a' } }}
             >
               Confirm All
             </Button>
             <Button
-              variant="outlined"
-              color="error"
+              variant="text"
               size="small"
               startIcon={<RemoveDoneIcon />}
               onClick={() => { setBulkDecision(1); setBulkDialogOpen(true); }}
-              sx={{ borderWidth: 1.5 }}
+              sx={{ color: 'rgba(255, 255, 255, 0.45)', '&:hover': { color: '#ef5350' } }}
             >
               Reject All
             </Button>
           </>
         )}
       </FilterBar>
+      {selectedIds.length > 0 && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1,
+            mb: 1,
+            borderRadius: 2,
+            backgroundColor: 'rgba(227, 57, 53, 0.08)',
+            border: '1px solid rgba(227, 57, 53, 0.2)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.85)' }}>
+              {selectedIds.length} {selectedIds.length === 1 ? 'row' : 'rows'} selected
+            </Typography>
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => setSelectedIds([])}
+              sx={{ minWidth: 'auto', color: 'rgba(255, 255, 255, 0.5)', textTransform: 'none', '&:hover': { color: 'rgba(255, 255, 255, 0.8)' } }}
+            >
+              Clear
+            </Button>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<SmartToyIcon />}
+              onClick={() => { setRunMode('selected'); setRunDialogOpen(true); }}
+            >
+              Verify
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<CheckCircleIcon />}
+              disabled={selectedWithVerification === 0}
+              onClick={() => handleBatchDecision(0)}
+              sx={{
+                backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                color: '#66bb6a',
+                '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.25)' },
+                '&.Mui-disabled': { backgroundColor: 'rgba(76, 175, 80, 0.06)', color: 'rgba(102, 187, 106, 0.3)' },
+              }}
+            >
+              Confirm
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<CancelIcon />}
+              disabled={selectedWithVerification === 0}
+              onClick={() => handleBatchDecision(1)}
+              sx={{
+                backgroundColor: 'rgba(244, 67, 54, 0.15)',
+                color: '#ef5350',
+                '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.25)' },
+                '&.Mui-disabled': { backgroundColor: 'rgba(244, 67, 54, 0.06)', color: 'rgba(239, 83, 80, 0.3)' },
+              }}
+            >
+              Reject
+            </Button>
+          </Box>
+        </Box>
+      )}
       <DataGrid
         rows={rows}
         columns={columns}

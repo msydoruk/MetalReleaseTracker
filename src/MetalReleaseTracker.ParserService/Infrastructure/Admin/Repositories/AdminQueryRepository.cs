@@ -115,6 +115,7 @@ public class AdminQueryRepository : IAdminQueryRepository
                 BandReferenceId = catalogue.BandReferenceId,
                 BandReferenceName = catalogue.BandReference != null ? catalogue.BandReference.BandName : null,
                 MatchedAlbumTitle = catalogue.BandDiscography != null ? catalogue.BandDiscography.AlbumTitle : null,
+                MatchedAlbumYear = catalogue.BandDiscography != null ? catalogue.BandDiscography.Year : null,
                 CreatedAt = catalogue.CreatedAt,
                 UpdatedAt = catalogue.UpdatedAt,
             })

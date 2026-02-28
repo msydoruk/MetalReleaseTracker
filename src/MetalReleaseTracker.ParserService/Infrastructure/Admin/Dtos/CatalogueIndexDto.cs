@@ -26,6 +26,8 @@ public class CatalogueIndexDto
 
     public string? MatchedAlbumTitle { get; set; }
 
+    public int? MatchedAlbumYear { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
