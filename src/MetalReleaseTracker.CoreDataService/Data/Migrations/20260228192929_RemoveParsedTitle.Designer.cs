@@ -3,17 +3,20 @@ using System;
 using MetalReleaseTracker.CoreDataService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MetalReleaseTracker.CoreDataService.Migrations
+namespace MetalReleaseTracker.CoreDataService.Data.Migrations
 {
     [DbContext(typeof(CoreDataServiceDbContext))]
-    partial class CoreDataServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260228192929_RemoveParsedTitle")]
+    partial class RemoveParsedTitle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

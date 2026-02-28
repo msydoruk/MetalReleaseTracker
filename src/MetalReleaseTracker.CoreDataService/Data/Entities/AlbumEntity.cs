@@ -57,8 +57,6 @@ public class AlbumEntity
     [EnumDataType(typeof(AlbumStatus))]
     public AlbumStatus? Status { get; set; }
 
-    public string? ParsedTitle { get; set; }
-
     public string? CanonicalTitle { get; set; }
 
     public int? OriginalYear { get; set; }

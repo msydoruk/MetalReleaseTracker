@@ -84,8 +84,7 @@ public class AlbumDetailParsingJobTests
 
         var deserialized = JsonConvert.DeserializeObject<AlbumParsedEvent>(capturedPayload!);
         Assert.NotNull(deserialized);
-        Assert.Equal("Where Fear and Weapons Meet", deserialized!.ParsedTitle);
-        Assert.Equal("Where Fear and Weapons Meet", deserialized.CanonicalTitle);
+        Assert.Equal("Where Fear and Weapons Meet", deserialized!.CanonicalTitle);
         Assert.Equal(2021, deserialized.OriginalYear);
     }
 
@@ -138,8 +137,7 @@ public class AlbumDetailParsingJobTests
 
         var deserialized = JsonConvert.DeserializeObject<AlbumParsedEvent>(capturedPayload!);
         Assert.NotNull(deserialized);
-        Assert.Equal("Some Album (Digipak CD)", deserialized!.ParsedTitle);
-        Assert.Null(deserialized.CanonicalTitle);
+        Assert.Null(deserialized!.CanonicalTitle);
         Assert.Null(deserialized.OriginalYear);
     }
 
@@ -201,8 +199,7 @@ public class AlbumDetailParsingJobTests
 
         var deserialized = JsonConvert.DeserializeObject<AlbumParsedEvent>(capturedPayload!);
         Assert.NotNull(deserialized);
-        Assert.Equal("TestAlbum", deserialized!.ParsedTitle);
-        Assert.Equal("Canonical Album Title", deserialized.CanonicalTitle);
+        Assert.Equal("Canonical Album Title", deserialized!.CanonicalTitle);
         Assert.Null(deserialized.OriginalYear);
     }
 

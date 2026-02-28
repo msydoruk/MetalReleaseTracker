@@ -125,7 +125,6 @@ public class AlbumDetailParsingJob
                     albumParsedEvent.Media = entry.MediaType;
                 }
 
-                albumParsedEvent.ParsedTitle = entry.AlbumTitle;
                 if (entry.BandDiscography != null)
                 {
                     albumParsedEvent.CanonicalTitle = entry.BandDiscography.AlbumTitle;
