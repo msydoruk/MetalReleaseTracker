@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
+using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities;
@@ -175,22 +176,7 @@ public class AiVerificationService : IAiVerificationService
             return;
         }
 
-        var bandReferenceIds = toVerify
-            .Where(entry => entry.BandReferenceId.HasValue)
-            .Select(entry => entry.BandReferenceId!.Value)
-            .Distinct()
-            .ToList();
-
-        var discographyByBandReference = await _context.BandDiscography
-            .Where(discography => bandReferenceIds.Contains(discography.BandReferenceId))
-            .GroupBy(discography => discography.BandReferenceId)
-            .ToDictionaryAsync(
-                group => group.Key,
-                group => (
-                    FormattedText: string.Join("\n", group.Select(discography =>
-                        $"- [{discography.Id}] {discography.AlbumTitle} ({discography.AlbumType}, {discography.Year})")),
-                    ValidIds: new HashSet<Guid>(group.Select(discography => discography.Id))),
-                cancellationToken);
+        var discographyByBandName = await BuildDiscographyByBandNameAsync(toVerify, cancellationToken);
 
         var semaphore = new SemaphoreSlim(agent.MaxConcurrentRequests);
         var processed = 0;
@@ -211,7 +197,7 @@ public class AiVerificationService : IAiVerificationService
             {
                 var discography = string.Empty;
                 HashSet<Guid>? validIds = null;
-                if (entry.BandReferenceId.HasValue && discographyByBandReference.TryGetValue(entry.BandReferenceId.Value, out var disco))
+                if (discographyByBandName.TryGetValue(entry.BandName, out var disco))
                 {
                     discography = disco.FormattedText;
                     validIds = disco.ValidIds;
@@ -461,6 +447,41 @@ public class AiVerificationService : IAiVerificationService
         return verifications.Count;
     }
 
+    private async Task<Dictionary<string, (string FormattedText, HashSet<Guid> ValidIds)>> BuildDiscographyByBandNameAsync(
+        List<CatalogueIndexEntity> toVerify,
+        CancellationToken cancellationToken)
+    {
+        var bandNamesToVerify = toVerify
+            .Select(entry => entry.BandName.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+
+        var matchingBandRefs = await _context.BandReferences
+            .Where(bandReference => bandNamesToVerify.Contains(bandReference.BandName.ToLower()))
+            .Select(bandReference => new { bandReference.Id, bandReference.BandName })
+            .ToListAsync(cancellationToken);
+
+        var bandRefIds = matchingBandRefs.Select(bandReference => bandReference.Id).ToList();
+
+        var allDiscographies = await _context.BandDiscography
+            .Where(discography => bandRefIds.Contains(discography.BandReferenceId))
+            .ToListAsync(cancellationToken);
+
+        var bandRefIdToName = matchingBandRefs.ToDictionary(
+            bandReference => bandReference.Id,
+            bandReference => bandReference.BandName);
+
+        return allDiscographies
+            .GroupBy(discography => bandRefIdToName[discography.BandReferenceId], StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => (
+                    FormattedText: string.Join("\n", group.Select(discography =>
+                        $"- [{discography.Id}] {discography.AlbumTitle} ({discography.AlbumType}, {discography.Year})")),
+                    ValidIds: new HashSet<Guid>(group.Select(discography => discography.Id))),
+                StringComparer.OrdinalIgnoreCase);
+    }
+
     private async Task<(ClaudeVerificationResult? Result, ApiCallError? Error)> CallClaudeApiSafeAsync(
         AiAgentEntity agent,
         string bandName,
@@ -583,6 +604,7 @@ public class AiVerificationService : IAiVerificationService
             return null;
         }
 
-        return Guid.TryParse(value, out var guid) ? guid : null;
+        var trimmed = value.Trim('[', ']');
+        return Guid.TryParse(trimmed, out var guid) ? guid : null;
     }
 }

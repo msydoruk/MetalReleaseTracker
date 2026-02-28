@@ -160,6 +160,14 @@ export default function CatalogueIndexPage() {
       ) : <Box sx={{ color: 'rgba(255,255,255,0.25)' }}>-</Box>,
     },
     {
+      field: 'matchedAlbumTitle',
+      headerName: 'Matched Album',
+      width: 200,
+      renderCell: ({ value }) => value ? (
+        <Chip label={value} size="small" sx={{ backgroundColor: 'rgba(33, 150, 243, 0.12)', color: '#42a5f5', fontSize: '0.75rem' }} />
+      ) : <Box sx={{ color: 'rgba(255,255,255,0.25)' }}>-</Box>,
+    },
+    {
       field: 'updatedAt',
       headerName: 'Updated',
       width: 170,

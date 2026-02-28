@@ -142,9 +142,13 @@ public class CatalogueIndexJob
     private async Task<Dictionary<string, Guid>> BuildBandReferenceLookupAsync(CancellationToken cancellationToken)
     {
         var allBandReferences = await _bandReferenceRepository.GetAllAsync(cancellationToken);
+        var albumCounts = await _bandDiscographyRepository.GetAlbumCountsByBandReferenceAsync(cancellationToken);
         var lookup = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var bandReference in allBandReferences)
+        var orderedReferences = allBandReferences
+            .OrderByDescending(bandReference => albumCounts.GetValueOrDefault(bandReference.Id, 0));
+
+        foreach (var bandReference in orderedReferences)
         {
             lookup.TryAdd(bandReference.BandName, bandReference.Id);
         }

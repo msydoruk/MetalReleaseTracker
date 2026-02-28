@@ -101,6 +101,7 @@ public class AdminQueryRepository : IAdminQueryRepository
         var query = _context.CatalogueIndex
             .AsNoTracking()
             .Include(catalogue => catalogue.BandReference)
+            .Include(catalogue => catalogue.BandDiscography)
             .Select(catalogue => new CatalogueIndexDto
             {
                 Id = catalogue.Id,
@@ -113,6 +114,7 @@ public class AdminQueryRepository : IAdminQueryRepository
                 MediaType = catalogue.MediaType,
                 BandReferenceId = catalogue.BandReferenceId,
                 BandReferenceName = catalogue.BandReference != null ? catalogue.BandReference.BandName : null,
+                MatchedAlbumTitle = catalogue.BandDiscography != null ? catalogue.BandDiscography.AlbumTitle : null,
                 CreatedAt = catalogue.CreatedAt,
                 UpdatedAt = catalogue.UpdatedAt,
             })

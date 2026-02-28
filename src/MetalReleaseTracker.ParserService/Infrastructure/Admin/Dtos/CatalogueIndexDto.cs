@@ -24,6 +24,8 @@ public class CatalogueIndexDto
 
     public string? BandReferenceName { get; set; }
 
+    public string? MatchedAlbumTitle { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

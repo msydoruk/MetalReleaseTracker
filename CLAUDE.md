@@ -82,6 +82,7 @@ All temporary and generated files (screenshots, one-off scripts, drafts, test re
 
 ## Workflow Rules
 
+- **Plan before substantial changes**: All non-trivial changes (multi-file edits, new features, refactoring, bug investigations) MUST start with a plan. Use plan mode to explore the codebase, draft a step-by-step approach, and get explicit user approval before writing any code.
 - **Confirm before implementing**: Before making ANY code changes, explain the approach and reasoning. Wait for explicit user approval before writing/editing files. If there are multiple ways to solve a problem, present the options and let the user choose.
 - **No AI attribution in commits**: Never include `Co-Authored-By` or any other mention of AI/Claude/assistant in commit messages.
 - **Confirm before pushing**: Before `git push`, always show the user the full list of files being pushed and a summary of changes. Ask for explicit confirmation. Do not push one-time scripts, temporary files, screenshots, or other artifacts that don't belong in the repository.

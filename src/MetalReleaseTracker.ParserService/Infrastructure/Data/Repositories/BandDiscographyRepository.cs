@@ -58,6 +58,13 @@ public class BandDiscographyRepository : IBandDiscographyRepository
         return result;
     }
 
+    public async Task<Dictionary<Guid, int>> GetAlbumCountsByBandReferenceAsync(CancellationToken cancellationToken)
+    {
+        return await _context.BandDiscography
+            .GroupBy(d => d.BandReferenceId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken);
+    }
+
     public async Task ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken)
     {
         var existing = await _context.BandDiscography
