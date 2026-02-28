@@ -46,6 +46,8 @@ docker exec -i metalrelease_postgres_parser env PGPASSWORD='...' psql -U parser_
 
 Service database ports: ParserService=5434, CatalogSyncService=5435, CoreDataService=5436. All use PostgreSQL. Column names are PascalCase and must be double-quoted in SQL.
 
+**ParserServiceDb tables**: BandReferences (Ukrainian bands from MA), BandDiscography (albums per band), CatalogueIndex (distributor catalogue, status tracking), AiVerifications (AI verification results), AiAgents (Claude API config), ParsingSessions, AlbumParsedEvents (outbox), ParsingSources (distributor URLs), Settings (runtime key-value config).
+
 ## Architecture
 
 Event-driven pipeline for tracking Ukrainian metal band releases:
