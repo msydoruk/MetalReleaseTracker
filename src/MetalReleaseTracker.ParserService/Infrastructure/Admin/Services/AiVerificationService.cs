@@ -84,6 +84,7 @@ public class AiVerificationService : IAiVerificationService
                     VerifiedAt = verification != null ? verification.CreatedAt : (DateTime?)null,
                 })
             .WhereIf(filter.DistributorCode.HasValue, dto => dto.DistributorCode == filter.DistributorCode!.Value)
+            .WhereIf(!string.IsNullOrWhiteSpace(filter.Search), dto => dto.BandName.Contains(filter.Search!) || dto.AlbumTitle.Contains(filter.Search!))
             .WhereIf(filter.IsUkrainian.HasValue, dto => dto.IsUkrainian == filter.IsUkrainian!.Value)
             .WhereIf(filter.VerifiedOnly == true, dto => dto.VerificationId != null)
             .WhereIf(filter.VerifiedOnly == false, dto => dto.VerificationId == null);
@@ -100,13 +101,13 @@ public class AiVerificationService : IAiVerificationService
     }
 
     public async Task<int> RunVerificationAsync(
-        DistributorCode? distributorCode,
+        RunVerificationDto request,
         CancellationToken cancellationToken)
     {
         var channel = Channel.CreateUnbounded<VerificationProgressEvent>();
         var count = 0;
 
-        var writeTask = RunVerificationStreamAsync(distributorCode, channel.Writer, cancellationToken);
+        var writeTask = RunVerificationStreamAsync(request, channel.Writer, cancellationToken);
 
         await foreach (var progressEvent in channel.Reader.ReadAllAsync(cancellationToken))
         {
@@ -121,13 +122,13 @@ public class AiVerificationService : IAiVerificationService
     }
 
     public async Task RunVerificationStreamAsync(
-        DistributorCode? distributorCode,
+        RunVerificationDto request,
         ChannelWriter<VerificationProgressEvent> writer,
         CancellationToken cancellationToken)
     {
         try
         {
-            await RunVerificationCoreAsync(distributorCode, writer, cancellationToken);
+            await RunVerificationCoreAsync(request, writer, cancellationToken);
         }
         finally
         {
@@ -136,7 +137,7 @@ public class AiVerificationService : IAiVerificationService
     }
 
     private async Task RunVerificationCoreAsync(
-        DistributorCode? distributorCode,
+        RunVerificationDto request,
         ChannelWriter<VerificationProgressEvent> writer,
         CancellationToken cancellationToken)
     {
@@ -148,11 +149,7 @@ public class AiVerificationService : IAiVerificationService
             return;
         }
 
-        var relevantEntries = distributorCode.HasValue
-            ? await _catalogueIndexRepository.GetByStatusAsync(distributorCode.Value, CatalogueIndexStatus.Relevant, cancellationToken)
-            : await _catalogueIndexRepository.GetByStatusAsync(CatalogueIndexStatus.Relevant, cancellationToken);
-
-        var toVerify = relevantEntries.ToList();
+        var toVerify = await ResolveEntriesToVerifyAsync(request, cancellationToken);
 
         var existingPendingVerifications = await _context.AiVerifications
             .Where(verification => verification.AdminDecision == null)
@@ -166,7 +163,7 @@ public class AiVerificationService : IAiVerificationService
             _logger.LogInformation("AI Verification: Removed {Count} existing pending verifications for re-run.", existingPendingVerifications.Count);
         }
 
-        _logger.LogInformation("AI Verification: {Count} entries to verify out of {Total} relevant.", toVerify.Count, relevantEntries.Count);
+        _logger.LogInformation("AI Verification: {Count} entries to verify.", toVerify.Count);
 
         await writer.WriteAsync(new VerificationProgressEvent("started", 0, toVerify.Count, 0, null, null), cancellationToken);
 
@@ -445,6 +442,34 @@ public class AiVerificationService : IAiVerificationService
 
         _logger.LogInformation("Bulk decision applied: {Decision} to {Count} verifications.", decision, verifications.Count);
         return verifications.Count;
+    }
+
+    private async Task<List<CatalogueIndexEntity>> ResolveEntriesToVerifyAsync(
+        RunVerificationDto request,
+        CancellationToken cancellationToken)
+    {
+        if (request.CatalogueIndexIds is { Count: > 0 })
+        {
+            return await _context.CatalogueIndex
+                .Where(entry => request.CatalogueIndexIds.Contains(entry.Id))
+                .Where(entry => entry.Status == CatalogueIndexStatus.Relevant)
+                .ToListAsync(cancellationToken);
+        }
+
+        IQueryable<CatalogueIndexEntity> query = _context.CatalogueIndex
+            .Where(entry => entry.Status == CatalogueIndexStatus.Relevant);
+
+        if (request.DistributorCode.HasValue)
+        {
+            query = query.Where(entry => entry.DistributorCode == request.DistributorCode.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            query = query.Where(entry => entry.BandName.Contains(request.Search) || entry.AlbumTitle.Contains(request.Search));
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     private async Task<Dictionary<string, (string FormattedText, HashSet<Guid> ValidIds)>> BuildDiscographyByBandNameAsync(

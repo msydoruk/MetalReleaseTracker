@@ -12,11 +12,11 @@ public interface IAiVerificationService
         CancellationToken cancellationToken);
 
     Task<int> RunVerificationAsync(
-        DistributorCode? distributorCode,
+        RunVerificationDto request,
         CancellationToken cancellationToken);
 
     Task RunVerificationStreamAsync(
-        DistributorCode? distributorCode,
+        RunVerificationDto request,
         ChannelWriter<VerificationProgressEvent> writer,
         CancellationToken cancellationToken);
 

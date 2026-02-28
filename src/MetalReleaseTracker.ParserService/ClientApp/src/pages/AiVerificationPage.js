@@ -7,6 +7,8 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import Chip from '@mui/material/Chip';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -21,6 +23,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import SearchIcon from '@mui/icons-material/Search';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { DataGrid } from '@mui/x-data-grid';
@@ -39,8 +42,11 @@ export default function AiVerificationPage() {
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [search, setSearch] = useState(searchParams.get('search') || '');
   const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [runDistributor, setRunDistributor] = useState('');
+  const [runSearch, setRunSearch] = useState('');
+  const [runMode, setRunMode] = useState('filter');
   const [running, setRunning] = useState(false);
   const [runProgress, setRunProgress] = useState({ processed: 0, total: 0, failed: 0, current: '' });
   const [runFinished, setRunFinished] = useState(false);
@@ -52,6 +58,7 @@ export default function AiVerificationPage() {
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = parseInt(searchParams.get('pageSize') || '25', 10);
   const distributorCode = searchParams.get('distributorCode') || '';
+  const appliedSearch = searchParams.get('search') || '';
   const verifiedOnly = searchParams.get('verifiedOnly') || '';
   const isUkrainian = searchParams.get('isUkrainian') || '';
 
@@ -60,6 +67,7 @@ export default function AiVerificationPage() {
     try {
       const params = { page, pageSize, sortAscending: false };
       if (distributorCode) params.distributorCode = distributorCode;
+      if (appliedSearch) params.search = appliedSearch;
       if (verifiedOnly !== '') params.verifiedOnly = verifiedOnly === 'true';
       if (isUkrainian !== '') params.isUkrainian = isUkrainian === 'true';
       const { data } = await fetchAiVerifications(params);
@@ -70,7 +78,7 @@ export default function AiVerificationPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, distributorCode, verifiedOnly, isUkrainian]);
+  }, [page, pageSize, distributorCode, appliedSearch, verifiedOnly, isUkrainian]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -111,8 +119,13 @@ export default function AiVerificationPage() {
     setRunFinished(false);
     setRunError(null);
     setRunProgress({ processed: 0, total: 0, failed: 0, current: '' });
+
+    const requestPayload = runMode === 'selected'
+      ? { catalogueIndexIds: selectedIds }
+      : { distributorCode: runDistributor || null, search: runSearch || null };
+
     try {
-      await runVerificationStream(runDistributor || null, (event) => {
+      await runVerificationStream(requestPayload, (event) => {
         if (event.type === 'started') {
           setRunProgress((prev) => ({ ...prev, total: event.total }));
         } else if (event.type === 'progress') {
@@ -141,6 +154,8 @@ export default function AiVerificationPage() {
     setRunFinished(false);
     setRunError(null);
     setRunProgress({ processed: 0, total: 0, failed: 0, current: '' });
+    setRunMode('filter');
+    setRunSearch('');
     if (runFinished) {
       load();
     }
@@ -366,7 +381,7 @@ export default function AiVerificationPage() {
           <Button
             variant="contained"
             startIcon={<PlayArrowIcon />}
-            onClick={() => setRunDialogOpen(true)}
+            onClick={() => { setRunMode('filter'); setRunDialogOpen(true); }}
             sx={{ px: 3 }}
           >
             Run Verification
@@ -374,6 +389,17 @@ export default function AiVerificationPage() {
         }
       />
       <FilterBar>
+        <TextField
+          size="small"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') updateParams({ search, page: 1 }); }}
+          sx={{ width: 220 }}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 20, opacity: 0.5 }} /></InputAdornment>,
+          }}
+        />
         <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel>Distributor</InputLabel>
           <Select
@@ -411,6 +437,17 @@ export default function AiVerificationPage() {
             <MenuItem value="false">No</MenuItem>
           </Select>
         </FormControl>
+        {selectedIds.length > 0 && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<SmartToyIcon />}
+            onClick={() => { setRunMode('selected'); setRunDialogOpen(true); }}
+            sx={{ px: 2 }}
+          >
+            Verify {selectedIds.length} Selected
+          </Button>
+        )}
         {selectedWithVerification > 0 && (
           <>
             <Button
@@ -470,7 +507,6 @@ export default function AiVerificationPage() {
         onPaginationModelChange={(m) => updateParams({ page: m.page + 1, pageSize: m.pageSize })}
         pageSizeOptions={[10, 25, 50, 100]}
         checkboxSelection
-        isRowSelectable={(params) => params.row.verificationId != null}
         rowSelectionModel={selectedIds}
         onRowSelectionModelChange={(ids) => setSelectedIds(ids)}
         sx={{ flexGrow: 1, minHeight: 0, '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' } }}
@@ -486,25 +522,44 @@ export default function AiVerificationPage() {
         </DialogTitle>
         <DialogContent>
           {!running && !runFinished ? (
-            <>
-              <Typography color="text.secondary" sx={{ mb: 2.5, fontSize: '0.875rem' }}>
-                Send all "Relevant" catalogue entries to Claude API for Ukrainian band verification.
-                Existing pending verifications will be replaced with fresh results.
-              </Typography>
-              <FormControl fullWidth size="small">
-                <InputLabel>Distributor (optional)</InputLabel>
-                <Select
-                  value={runDistributor}
-                  label="Distributor (optional)"
-                  onChange={(e) => setRunDistributor(e.target.value)}
-                >
-                  <MenuItem value="">All Distributors</MenuItem>
-                  {Object.entries(DISTRIBUTOR_CODES).map(([val, cfg]) => (
-                    <MenuItem key={val} value={val}>{cfg.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </>
+            runMode === 'selected' ? (
+              <>
+                <Typography color="text.secondary" sx={{ mb: 2, fontSize: '0.875rem' }}>
+                  Run AI verification for <strong>{selectedIds.length}</strong> selected catalogue {selectedIds.length === 1 ? 'entry' : 'entries'}.
+                  Only entries with "Relevant" status will be processed.
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography color="text.secondary" sx={{ mb: 2.5, fontSize: '0.875rem' }}>
+                  Send "Relevant" catalogue entries to Claude API for Ukrainian band verification.
+                  Existing pending verifications will be replaced with fresh results.
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Distributor (optional)</InputLabel>
+                    <Select
+                      value={runDistributor}
+                      label="Distributor (optional)"
+                      onChange={(e) => setRunDistributor(e.target.value)}
+                    >
+                      <MenuItem value="">All Distributors</MenuItem>
+                      {Object.entries(DISTRIBUTOR_CODES).map(([val, cfg]) => (
+                        <MenuItem key={val} value={val}>{cfg.label}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Search (optional)"
+                    placeholder="Filter by band name or album title..."
+                    value={runSearch}
+                    onChange={(e) => setRunSearch(e.target.value)}
+                  />
+                </Box>
+              </>
+            )
           ) : (
             <Box sx={{ py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
               {runError ? (

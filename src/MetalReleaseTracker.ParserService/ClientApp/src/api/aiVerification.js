@@ -3,10 +3,14 @@ import client from './client';
 export const fetchAiVerifications = (params) =>
   client.get('/ai-verification', { params });
 
-export const runVerification = (distributorCode) =>
-  client.post('/ai-verification/run', { distributorCode: distributorCode || null });
+export const runVerification = ({ distributorCode, search, catalogueIndexIds } = {}) =>
+  client.post('/ai-verification/run', {
+    distributorCode: distributorCode || null,
+    search: search || null,
+    catalogueIndexIds: catalogueIndexIds?.length ? catalogueIndexIds : null,
+  });
 
-export const runVerificationStream = async (distributorCode, onEvent) => {
+export const runVerificationStream = async ({ distributorCode, search, catalogueIndexIds } = {}, onEvent) => {
   const token = localStorage.getItem('admin_token');
   const response = await fetch('/api/admin/ai-verification/run', {
     method: 'POST',
@@ -14,7 +18,11 @@ export const runVerificationStream = async (distributorCode, onEvent) => {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ distributorCode: distributorCode || null }),
+    body: JSON.stringify({
+      distributorCode: distributorCode || null,
+      search: search || null,
+      catalogueIndexIds: catalogueIndexIds?.length ? catalogueIndexIds : null,
+    }),
   });
 
   if (!response.ok) {

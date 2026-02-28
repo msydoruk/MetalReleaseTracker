@@ -10,6 +10,8 @@ public record AiVerificationFilterDto
 
     public DistributorCode? DistributorCode { get; init; }
 
+    public string? Search { get; init; }
+
     public bool? IsUkrainian { get; init; }
 
     public bool? VerifiedOnly { get; init; }

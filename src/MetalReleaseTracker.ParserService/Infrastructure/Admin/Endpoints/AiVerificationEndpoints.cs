@@ -38,7 +38,7 @@ public static class AiVerificationEndpoints
                 var channel = Channel.CreateUnbounded<VerificationProgressEvent>();
 
                 var processingTask = aiVerificationService.RunVerificationStreamAsync(
-                    request.DistributorCode, channel.Writer, cancellationToken);
+                    request, channel.Writer, cancellationToken);
 
                 await foreach (var progressEvent in channel.Reader.ReadAllAsync(cancellationToken))
                 {
