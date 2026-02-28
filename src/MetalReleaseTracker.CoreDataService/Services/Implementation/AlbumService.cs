@@ -111,6 +111,8 @@ public class AlbumService : IAlbumService
                 Genre = primary.Genre,
                 Media = primary.Media,
                 Status = primary.Status,
+                CanonicalTitle = primary.CanonicalTitle,
+                OriginalYear = primary.OriginalYear,
                 Variants = variants
             });
         }

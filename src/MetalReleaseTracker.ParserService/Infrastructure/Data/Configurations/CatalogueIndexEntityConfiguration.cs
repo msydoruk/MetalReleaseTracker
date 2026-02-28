@@ -20,6 +20,11 @@ public class CatalogueIndexEntityConfiguration : IEntityTypeConfiguration<Catalo
         builder.Property(e => e.AlbumTitle)
             .HasMaxLength(500);
 
+        builder.HasOne(e => e.BandDiscography)
+            .WithMany()
+            .HasForeignKey(e => e.BandDiscographyId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(e => e.RawTitle)
             .HasMaxLength(1000);
 
@@ -36,9 +41,16 @@ public class CatalogueIndexEntityConfiguration : IEntityTypeConfiguration<Catalo
         builder.Property(e => e.UpdatedAt)
             .IsRequired();
 
+        builder.HasOne(e => e.BandReference)
+            .WithMany()
+            .HasForeignKey(e => e.BandReferenceId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(e => new { e.DetailUrl, e.DistributorCode })
             .IsUnique();
 
         builder.HasIndex(e => new { e.DistributorCode, e.Status });
+
+        builder.HasIndex(e => e.BandReferenceId);
     }
 }

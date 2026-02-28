@@ -1,4 +1,12 @@
-# Build stage
+# React admin UI build stage
+FROM node:22-slim AS client-build
+WORKDIR /app
+COPY MetalReleaseTracker.ParserService/ClientApp/package.json MetalReleaseTracker.ParserService/ClientApp/package-lock.json* ./
+RUN npm install --legacy-peer-deps
+COPY MetalReleaseTracker.ParserService/ClientApp/ ./
+RUN npm run build
+
+# .NET build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -35,4 +43,6 @@ EXPOSE 8080
 EXPOSE 8081
 
 COPY --from=build /app/publish .
+COPY --from=client-build /app/build ./wwwroot/admin
+
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.ParserService.dll"]

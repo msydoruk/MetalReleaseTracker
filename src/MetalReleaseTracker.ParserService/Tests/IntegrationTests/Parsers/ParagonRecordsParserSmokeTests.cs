@@ -14,7 +14,7 @@ public class ParagonRecordsParserSmokeTests : ParserSmokeTestBase
     {
         return new ParagonRecordsParser(
             CreateHtmlDocumentLoader(),
-            CreateParserSettings(),
+            CreateSettingsService(),
             NullLogger<ParagonRecordsParser>.Instance);
     }
 

@@ -14,7 +14,7 @@ public class BlackMetalStoreParserSmokeTests : ParserSmokeTestBase
     {
         return new BlackMetalStoreParser(
             CreateHtmlDocumentLoader(),
-            CreateParserSettings(),
+            CreateSettingsService(),
             NullLogger<BlackMetalStoreParser>.Instance);
     }
 

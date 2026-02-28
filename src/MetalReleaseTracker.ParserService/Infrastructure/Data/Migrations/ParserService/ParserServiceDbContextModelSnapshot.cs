@@ -102,10 +102,16 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.Parse
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("BandDiscographyId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("BandName")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("BandReferenceId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -134,12 +140,181 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.Parse
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BandDiscographyId");
+
+                    b.HasIndex("BandReferenceId");
+
                     b.HasIndex("DetailUrl", "DistributorCode")
                         .IsUnique();
 
                     b.HasIndex("DistributorCode", "Status");
 
                     b.ToTable("CatalogueIndex");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities.AiAgentEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApiKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DelayBetweenBatchesMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxConcurrentRequests")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SystemPrompt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("AiAgents");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities.AiVerificationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("AdminDecision")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("AdminDecisionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AiAnalysis")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("AlbumTitle")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("BandName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("CatalogueIndexId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("ConfidenceScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUkrainian")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MatchedBandDiscographyId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchedBandDiscographyId");
+
+                    b.HasIndex("CatalogueIndexId", "CreatedAt");
+
+                    b.ToTable("AiVerifications");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities.ParsingSourceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DistributorCode")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ParsingUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistributorCode")
+                        .IsUnique();
+
+                    b.ToTable("ParsingSources");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities.SettingEntity", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Key");
+
+                    b.HasIndex("Category");
+
+                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.AlbumParsedEventEntity", b =>
@@ -194,6 +369,41 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Migrations.Parse
                         .IsRequired();
 
                     b.Navigation("BandReference");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Domain.Models.Entities.CatalogueIndexEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.ParserService.Domain.Models.Entities.BandDiscographyEntity", "BandDiscography")
+                        .WithMany()
+                        .HasForeignKey("BandDiscographyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MetalReleaseTracker.ParserService.Domain.Models.Entities.BandReferenceEntity", "BandReference")
+                        .WithMany()
+                        .HasForeignKey("BandReferenceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BandDiscography");
+
+                    b.Navigation("BandReference");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities.AiVerificationEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.ParserService.Domain.Models.Entities.CatalogueIndexEntity", "CatalogueIndex")
+                        .WithMany()
+                        .HasForeignKey("CatalogueIndexId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MetalReleaseTracker.ParserService.Domain.Models.Entities.BandDiscographyEntity", "MatchedBandDiscography")
+                        .WithMany()
+                        .HasForeignKey("MatchedBandDiscographyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CatalogueIndex");
+
+                    b.Navigation("MatchedBandDiscography");
                 });
 
             modelBuilder.Entity("MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.AlbumParsedEventEntity", b =>

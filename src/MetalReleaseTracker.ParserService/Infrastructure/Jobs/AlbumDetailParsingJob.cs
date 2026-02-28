@@ -2,13 +2,13 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.Enums;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Models;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
@@ -20,7 +20,7 @@ public class AlbumDetailParsingJob
     private readonly IParsingSessionRepository _parsingSessionRepository;
     private readonly IAlbumParsedEventRepository _albumParsedEventRepository;
     private readonly IImageUploadService _imageUploadService;
-    private readonly GeneralParserSettings _generalParserSettings;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<AlbumDetailParsingJob> _logger;
     private readonly Random _random = new();
 
@@ -30,7 +30,7 @@ public class AlbumDetailParsingJob
         IParsingSessionRepository parsingSessionRepository,
         IAlbumParsedEventRepository albumParsedEventRepository,
         IImageUploadService imageUploadService,
-        IOptions<GeneralParserSettings> generalParserSettings,
+        ISettingsService settingsService,
         ILogger<AlbumDetailParsingJob> logger)
     {
         _detailParserResolver = detailParserResolver;
@@ -38,7 +38,7 @@ public class AlbumDetailParsingJob
         _parsingSessionRepository = parsingSessionRepository;
         _albumParsedEventRepository = albumParsedEventRepository;
         _imageUploadService = imageUploadService;
-        _generalParserSettings = generalParserSettings.Value;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -46,6 +46,15 @@ public class AlbumDetailParsingJob
     {
         try
         {
+            var source = await _settingsService.GetParsingSourceByCodeAsync(parserDataSource.DistributorCode, cancellationToken);
+            if (source == null || !source.IsEnabled)
+            {
+                _logger.LogInformation(
+                    "Skipping album detail parsing for disabled distributor: {DistributorCode}.",
+                    parserDataSource.DistributorCode);
+                return;
+            }
+
             await ParseRelevantEntries(parserDataSource, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -73,10 +82,11 @@ public class AlbumDetailParsingJob
 
     private async Task ParseRelevantEntries(ParserDataSource parserDataSource, CancellationToken cancellationToken)
     {
+        var generalParserSettings = await _settingsService.GetGeneralParserSettingsAsync(cancellationToken);
         var distributorCode = parserDataSource.DistributorCode;
-        var relevantEntries = await _catalogueIndexRepository.GetByStatusAsync(
+        var relevantEntries = await _catalogueIndexRepository.GetByStatusesWithDiscographyAsync(
             distributorCode,
-            CatalogueIndexStatus.Relevant,
+            new[] { CatalogueIndexStatus.Relevant, CatalogueIndexStatus.AiVerified },
             cancellationToken);
 
         if (relevantEntries.Count == 0)
@@ -115,6 +125,13 @@ public class AlbumDetailParsingJob
                     albumParsedEvent.Media = entry.MediaType;
                 }
 
+                albumParsedEvent.ParsedTitle = entry.AlbumTitle;
+                if (entry.BandDiscography != null)
+                {
+                    albumParsedEvent.CanonicalTitle = entry.BandDiscography.AlbumTitle;
+                    albumParsedEvent.OriginalYear = entry.BandDiscography.Year;
+                }
+
                 await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
 
                 await _albumParsedEventRepository.AddAsync(
@@ -130,7 +147,7 @@ public class AlbumDetailParsingJob
                     albumParsedEvent.BandName,
                     distributorCode);
 
-                await DelayBetweenRequests(cancellationToken);
+                await DelayBetweenRequests(generalParserSettings, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -179,11 +196,11 @@ public class AlbumDetailParsingJob
         }
     }
 
-    private async Task DelayBetweenRequests(CancellationToken cancellationToken)
+    private async Task DelayBetweenRequests(GeneralParserSettings generalParserSettings, CancellationToken cancellationToken)
     {
         var delaySeconds = _random.Next(
-            _generalParserSettings.MinDelayBetweenRequestsSeconds,
-            _generalParserSettings.MaxDelayBetweenRequestsSeconds);
+            generalParserSettings.MinDelayBetweenRequestsSeconds,
+            generalParserSettings.MaxDelayBetweenRequestsSeconds);
 
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
     }

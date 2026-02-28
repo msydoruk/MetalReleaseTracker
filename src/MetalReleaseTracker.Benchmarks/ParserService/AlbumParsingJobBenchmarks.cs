@@ -3,6 +3,7 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Repositories;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
@@ -10,7 +11,6 @@ using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Tests.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MetalReleaseTracker.Benchmarks.ParserService
@@ -43,12 +43,15 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
             _loggerMock = new Mock<ILogger<AlbumDetailParsingJob>>();
             _detailParserMock = new Mock<IAlbumDetailParser>();
 
-            var generalParserSettingsMock = new Mock<IOptions<GeneralParserSettings>>();
-            generalParserSettingsMock.Setup(x => x.Value).Returns(new GeneralParserSettings
-            {
-                MinDelayBetweenRequestsSeconds = 0,
-                MaxDelayBetweenRequestsSeconds = 1
-            });
+            var settingsServiceMock = new Mock<ISettingsService>();
+            settingsServiceMock.Setup(x => x.GetGeneralParserSettingsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new GeneralParserSettings
+                {
+                    MinDelayBetweenRequestsSeconds = 0,
+                    MaxDelayBetweenRequestsSeconds = 1,
+                });
+            settingsServiceMock.Setup(x => x.GetParsingSourceByCodeAsync(It.IsAny<DistributorCode>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities.ParsingSourceEntity { IsEnabled = true });
 
             _job = new AlbumDetailParsingJob(
                 _ => _detailParserMock.Object,
@@ -56,7 +59,7 @@ namespace MetalReleaseTracker.Benchmarks.ParserService
                 _parsingSessionRepo,
                 _albumParsedEventRepo,
                 _imageUploadServiceMock.Object,
-                generalParserSettingsMock.Object,
+                settingsServiceMock.Object,
                 _loggerMock.Object);
 
             ClearDatabase().GetAwaiter().GetResult();

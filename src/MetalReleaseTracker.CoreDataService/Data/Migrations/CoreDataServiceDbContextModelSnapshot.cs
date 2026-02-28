@@ -31,6 +31,9 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.Property<Guid>("BandId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CanonicalTitle")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -57,6 +60,12 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OriginalYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ParsedTitle")
                         .HasColumnType("text");
 
                     b.Property<string>("PhotoUrl")

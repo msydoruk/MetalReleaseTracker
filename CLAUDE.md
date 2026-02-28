@@ -32,6 +32,28 @@ dotnet ef migrations add <Name> --project src/MetalReleaseTracker.CoreDataServic
 dotnet ef migrations add <Name> --project src/MetalReleaseTracker.CoreDataService --context IdentityServerDbContext
 ```
 
+## Database Access
+
+Connect to service databases via Docker. Credentials and ports are in each service's `.env` and `docker-compose.yml`.
+
+```bash
+# Connect via Docker (credentials in each service's .env file)
+docker exec -i <postgres-container> env PGPASSWORD='<from .env>' psql -U <user> -d <dbname> -c "<SQL>"
+
+# Example: query ParserServiceDb
+docker exec -i metalrelease_postgres_parser env PGPASSWORD='...' psql -U parser_admin -d ParserServiceDb -c 'SELECT COUNT(*) FROM "CatalogueIndex";'
+```
+
+Service database ports: ParserService=5434, CatalogSyncService=5435, CoreDataService=5436. PostgreSQL column names are PascalCase and must be double-quoted in SQL.
+
+**ParserServiceDb** (PostgreSQL, port 5434): BandReferences, BandDiscography, CatalogueIndex, AiVerifications, AiAgents, ParsingSessions, AlbumParsedEvents, ParsingSources, Settings.
+
+**CatalogSyncServiceDb** (MongoDB, port 27017): ParsingSessionWithRawAlbums (30-day TTL), ProcessedAlbums. PostgreSQL (port 5435) used only for TickerQ scheduling.
+
+**CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, Feedbacks, RefreshTokens, UserFavorites + ASP.NET Identity tables.
+
+Full schema with columns, types, and FK relationships: [`docs/database-schema.md`](docs/database-schema.md).
+
 ## Architecture
 
 Event-driven pipeline for tracking Ukrainian metal band releases:
@@ -82,6 +104,7 @@ All temporary and generated files (screenshots, one-off scripts, drafts, test re
 
 ## Workflow Rules
 
+- **Plan before substantial changes**: All non-trivial changes (multi-file edits, new features, refactoring, bug investigations) MUST start with a plan. Use plan mode to explore the codebase, draft a step-by-step approach, and get explicit user approval before writing any code.
 - **Confirm before implementing**: Before making ANY code changes, explain the approach and reasoning. Wait for explicit user approval before writing/editing files. If there are multiple ways to solve a problem, present the options and let the user choose.
 - **No AI attribution in commits**: Never include `Co-Authored-By` or any other mention of AI/Claude/assistant in commit messages.
 - **Confirm before pushing**: Before `git push`, always show the user the full list of files being pushed and a summary of changes. Ask for explicit confirmation. Do not push one-time scripts, temporary files, screenshots, or other artifacts that don't belong in the repository.

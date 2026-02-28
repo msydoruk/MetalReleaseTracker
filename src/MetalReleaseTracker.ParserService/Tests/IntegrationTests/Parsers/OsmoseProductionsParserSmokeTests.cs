@@ -14,7 +14,7 @@ public class OsmoseProductionsParserSmokeTests : ParserSmokeTestBase
     {
         return new OsmoseProductionsParser(
             CreateHtmlDocumentLoader(),
-            CreateParserSettings(),
+            CreateSettingsService(),
             NullLogger<OsmoseProductionsParser>.Instance);
     }
 

@@ -14,7 +14,7 @@ public class NapalmRecordsParserSmokeTests : ParserSmokeTestBase
     {
         return new NapalmRecordsParser(
             CreateHtmlDocumentLoader(),
-            CreateParserSettings(),
+            CreateSettingsService(),
             NullLogger<NapalmRecordsParser>.Instance);
     }
 

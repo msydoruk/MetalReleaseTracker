@@ -1,7 +1,7 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
-using Microsoft.Extensions.Options;
 using TickerQ;
 using TickerQ.Utilities;
 using TickerQ.Utilities.Interfaces.Managers;
@@ -12,26 +12,37 @@ public class TickerQSchedulerService : BackgroundService
 {
     private readonly ICronTickerManager<CustomCronTicker> _cronTickerManager;
     private readonly ParserServiceTickerQDbContext _parserServiceTickerQDbContext;
-    private readonly List<ParserDataSource> _parserDataSources;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<TickerQSchedulerService> _logger;
 
     public TickerQSchedulerService(
         ICronTickerManager<CustomCronTicker> cronTickerManager,
         ParserServiceTickerQDbContext parserServiceTickerQDbContext,
-        IOptions<List<ParserDataSource>> parserDataSources,
+        IServiceScopeFactory serviceScopeFactory,
         ILogger<TickerQSchedulerService> logger)
     {
         _cronTickerManager = cronTickerManager;
         _parserServiceTickerQDbContext = parserServiceTickerQDbContext;
-        _parserDataSources = parserDataSources.Value;
+        _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var settingsService = scope.ServiceProvider.GetRequiredService<ISettingsService>();
+        var enabledSources = await settingsService.GetEnabledParsingSourcesAsync(cancellationToken);
+
+        var parserDataSources = enabledSources.Select(source => new ParserDataSource
+        {
+            DistributorCode = source.DistributorCode,
+            Name = source.Name,
+            ParsingUrl = source.ParsingUrl,
+        }).ToList();
+
         await RegisterBandReferenceSyncJob(cancellationToken);
-        await RegisterCatalogueIndexJobs(cancellationToken);
-        await RegisterAlbumDetailParsingJobs(cancellationToken);
+        await RegisterCatalogueIndexJobs(parserDataSources, cancellationToken);
+        await RegisterAlbumDetailParsingJobs(parserDataSources, cancellationToken);
         await RegisterParsedPublisherJob(cancellationToken);
     }
 
@@ -66,9 +77,9 @@ public class TickerQSchedulerService : BackgroundService
         }
     }
 
-    private async Task RegisterCatalogueIndexJobs(CancellationToken cancellationToken = default)
+    private async Task RegisterCatalogueIndexJobs(List<ParserDataSource> parserDataSources, CancellationToken cancellationToken = default)
     {
-        foreach (var parserDataSource in _parserDataSources)
+        foreach (var parserDataSource in parserDataSources)
         {
             try
             {
@@ -106,9 +117,9 @@ public class TickerQSchedulerService : BackgroundService
         }
     }
 
-    private async Task RegisterAlbumDetailParsingJobs(CancellationToken cancellationToken = default)
+    private async Task RegisterAlbumDetailParsingJobs(List<ParserDataSource> parserDataSources, CancellationToken cancellationToken = default)
     {
-        foreach (var parserDataSource in _parserDataSources)
+        foreach (var parserDataSource in parserDataSources)
         {
             try
             {

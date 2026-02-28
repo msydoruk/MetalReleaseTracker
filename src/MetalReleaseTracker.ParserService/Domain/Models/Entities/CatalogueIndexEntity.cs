@@ -16,6 +16,10 @@ public class CatalogueIndexEntity
 
     public string AlbumTitle { get; set; }
 
+    public Guid? BandDiscographyId { get; set; }
+
+    public BandDiscographyEntity? BandDiscography { get; set; }
+
     public string RawTitle { get; set; }
 
     [Required]
@@ -25,6 +29,10 @@ public class CatalogueIndexEntity
     public CatalogueIndexStatus Status { get; set; }
 
     public AlbumMediaType? MediaType { get; set; }
+
+    public Guid? BandReferenceId { get; set; }
+
+    public BandReferenceEntity? BandReference { get; set; }
 
     [Required]
     public DateTime CreatedAt { get; set; }

@@ -3,12 +3,11 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
-using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Exceptions;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Selectors;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
@@ -16,9 +15,9 @@ public class NapalmRecordsParser : BaseDistributorParser
 {
     public NapalmRecordsParser(
         IHtmlDocumentLoader htmlDocumentLoader,
-        IOptions<GeneralParserSettings> generalParserSettings,
+        ISettingsService settingsService,
         ILogger<NapalmRecordsParser> logger)
-        : base(htmlDocumentLoader, generalParserSettings, logger)
+        : base(htmlDocumentLoader, settingsService, logger)
     {
     }
 

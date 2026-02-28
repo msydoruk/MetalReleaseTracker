@@ -42,6 +42,18 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<CatalogueIndexEntity>> GetByStatusesWithDiscographyAsync(
+        DistributorCode code,
+        IEnumerable<CatalogueIndexStatus> statuses,
+        CancellationToken cancellationToken)
+    {
+        var statusList = statuses.ToList();
+        return await _context.CatalogueIndex
+            .Include(entry => entry.BandDiscography)
+            .Where(entry => entry.DistributorCode == code && statusList.Contains(entry.Status))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task UpsertAsync(CatalogueIndexEntity entity, CancellationToken cancellationToken)
     {
         var existing = await _context.CatalogueIndex
@@ -55,6 +67,7 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
             existing.AlbumTitle = entity.AlbumTitle;
             existing.RawTitle = entity.RawTitle;
             existing.MediaType = entity.MediaType;
+            existing.BandReferenceId = entity.BandReferenceId;
             existing.UpdatedAt = DateTime.UtcNow;
             _context.CatalogueIndex.Update(existing);
         }

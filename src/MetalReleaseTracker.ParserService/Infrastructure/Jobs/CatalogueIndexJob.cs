@@ -1,8 +1,8 @@
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
@@ -11,7 +11,8 @@ public class CatalogueIndexJob
     private readonly Func<DistributorCode, IListingParser> _listingParserResolver;
     private readonly ICatalogueIndexRepository _catalogueIndexRepository;
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
-    private readonly GeneralParserSettings _generalParserSettings;
+    private readonly IBandReferenceRepository _bandReferenceRepository;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<CatalogueIndexJob> _logger;
     private readonly Random _random = new();
 
@@ -19,13 +20,15 @@ public class CatalogueIndexJob
         Func<DistributorCode, IListingParser> listingParserResolver,
         ICatalogueIndexRepository catalogueIndexRepository,
         IBandDiscographyRepository bandDiscographyRepository,
-        IOptions<GeneralParserSettings> generalParserSettings,
+        IBandReferenceRepository bandReferenceRepository,
+        ISettingsService settingsService,
         ILogger<CatalogueIndexJob> logger)
     {
         _listingParserResolver = listingParserResolver;
         _catalogueIndexRepository = catalogueIndexRepository;
         _bandDiscographyRepository = bandDiscographyRepository;
-        _generalParserSettings = generalParserSettings.Value;
+        _bandReferenceRepository = bandReferenceRepository;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -33,6 +36,16 @@ public class CatalogueIndexJob
     {
         try
         {
+            var source = await _settingsService.GetParsingSourceByCodeAsync(parserDataSource.DistributorCode, cancellationToken);
+            if (source == null || !source.IsEnabled)
+            {
+                _logger.LogInformation(
+                    "Skipping catalogue indexing for disabled distributor: {DistributorCode}.",
+                    parserDataSource.DistributorCode);
+                return;
+            }
+
+            parserDataSource.ParsingUrl = source.ParsingUrl;
             await ExecuteIndexingAsync(parserDataSource, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -60,11 +73,13 @@ public class CatalogueIndexJob
 
     private async Task ExecuteIndexingAsync(ParserDataSource parserDataSource, CancellationToken cancellationToken)
     {
+        var generalParserSettings = await _settingsService.GetGeneralParserSettingsAsync(cancellationToken);
         var parser = _listingParserResolver(parserDataSource.DistributorCode);
         var currentUrl = parserDataSource.ParsingUrl;
         var totalIndexed = 0;
 
         var bandNames = await _bandDiscographyRepository.GetAllBandNamesAsync(cancellationToken);
+        var bandReferenceLookup = await BuildBandReferenceLookupAsync(cancellationToken);
 
         _logger.LogInformation(
             "Starting catalogue indexing for distributor: {DistributorCode}. Loaded {BandCount} Ukrainian band names for matching.",
@@ -83,6 +98,7 @@ public class CatalogueIndexJob
             foreach (var listing in result.Listings)
             {
                 var status = DetermineStatus(bandNames, listing.BandName);
+                bandReferenceLookup.TryGetValue(listing.BandName, out var bandReferenceId);
 
                 var entity = new CatalogueIndexEntity
                 {
@@ -92,7 +108,8 @@ public class CatalogueIndexJob
                     RawTitle = listing.RawTitle,
                     DetailUrl = listing.DetailUrl,
                     MediaType = listing.MediaType,
-                    Status = status
+                    Status = status,
+                    BandReferenceId = status == CatalogueIndexStatus.Relevant ? bandReferenceId : null,
                 };
 
                 await _catalogueIndexRepository.UpsertAsync(entity, cancellationToken);
@@ -107,7 +124,7 @@ public class CatalogueIndexJob
             if (result.HasMorePages)
             {
                 currentUrl = result.NextPageUrl;
-                await DelayBetweenPages(cancellationToken);
+                await DelayBetweenPages(generalParserSettings, cancellationToken);
             }
             else
             {
@@ -122,11 +139,28 @@ public class CatalogueIndexJob
             totalIndexed);
     }
 
-    private async Task DelayBetweenPages(CancellationToken cancellationToken)
+    private async Task<Dictionary<string, Guid>> BuildBandReferenceLookupAsync(CancellationToken cancellationToken)
+    {
+        var allBandReferences = await _bandReferenceRepository.GetAllAsync(cancellationToken);
+        var albumCounts = await _bandDiscographyRepository.GetAlbumCountsByBandReferenceAsync(cancellationToken);
+        var lookup = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+
+        var orderedReferences = allBandReferences
+            .OrderByDescending(bandReference => albumCounts.GetValueOrDefault(bandReference.Id, 0));
+
+        foreach (var bandReference in orderedReferences)
+        {
+            lookup.TryAdd(bandReference.BandName, bandReference.Id);
+        }
+
+        return lookup;
+    }
+
+    private async Task DelayBetweenPages(GeneralParserSettings generalParserSettings, CancellationToken cancellationToken)
     {
         var delaySeconds = _random.Next(
-            _generalParserSettings.MinDelayBetweenRequestsSeconds,
-            _generalParserSettings.MaxDelayBetweenRequestsSeconds);
+            generalParserSettings.MinDelayBetweenRequestsSeconds,
+            generalParserSettings.MaxDelayBetweenRequestsSeconds);
 
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
     }

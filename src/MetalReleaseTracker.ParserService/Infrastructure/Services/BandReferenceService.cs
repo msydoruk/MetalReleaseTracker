@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Services.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Services;
 
@@ -16,7 +16,7 @@ public class BandReferenceService : IBandReferenceService
     private readonly IBandReferenceRepository _bandReferenceRepository;
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
     private readonly IFlareSolverrClient _flareSolverrClient;
-    private readonly BandReferenceSettings _settings;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<BandReferenceService> _logger;
     private readonly Random _random = new();
 
@@ -24,18 +24,20 @@ public class BandReferenceService : IBandReferenceService
         IBandReferenceRepository bandReferenceRepository,
         IBandDiscographyRepository bandDiscographyRepository,
         IFlareSolverrClient flareSolverrClient,
-        IOptions<BandReferenceSettings> settings,
+        ISettingsService settingsService,
         ILogger<BandReferenceService> logger)
     {
         _bandReferenceRepository = bandReferenceRepository;
         _bandDiscographyRepository = bandDiscographyRepository;
         _flareSolverrClient = flareSolverrClient;
-        _settings = settings.Value;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
     public async Task SyncUkrainianBandsAsync(CancellationToken cancellationToken)
     {
+        var settings = await _settingsService.GetBandReferenceSettingsAsync(cancellationToken);
+
         _logger.LogInformation("Starting Ukrainian bands sync from Metal Archives.");
 
         var sessionId = await _flareSolverrClient.CreateSessionAsync(cancellationToken);
@@ -48,7 +50,7 @@ public class BandReferenceService : IBandReferenceService
 
             do
             {
-                var url = BuildSearchUrl(offset);
+                var url = BuildSearchUrl(settings, offset);
                 _logger.LogInformation("Fetching Metal Archives page at offset {Offset}.", offset);
 
                 var json = await FetchJsonWithRetry(url, sessionId, cancellationToken);
@@ -71,14 +73,14 @@ public class BandReferenceService : IBandReferenceService
 
                 if (offset < totalRecords)
                 {
-                    await DelayBetweenRequests(cancellationToken);
+                    await DelayBetweenRequests(settings, cancellationToken);
                 }
             }
             while (offset < totalRecords);
 
             _logger.LogInformation("Ukrainian bands sync completed. Total bands processed: {Total}.", totalProcessed);
 
-            await SyncDiscographiesAsync(sessionId, cancellationToken);
+            await SyncDiscographiesAsync(settings, sessionId, cancellationToken);
         }
         finally
         {
@@ -86,7 +88,7 @@ public class BandReferenceService : IBandReferenceService
         }
     }
 
-    private async Task SyncDiscographiesAsync(string sessionId, CancellationToken cancellationToken)
+    private async Task SyncDiscographiesAsync(BandReferenceSettings settings, string sessionId, CancellationToken cancellationToken)
     {
         var bands = await _bandReferenceRepository.GetAllAsync(cancellationToken);
         _logger.LogInformation("Starting discography sync for {Count} bands.", bands.Count);
@@ -97,7 +99,7 @@ public class BandReferenceService : IBandReferenceService
         {
             try
             {
-                var url = $"{_settings.MetalArchivesBaseUrl}/band/discography/id/{band.MetalArchivesId}/tab/all";
+                var url = $"{settings.MetalArchivesBaseUrl}/band/discography/id/{band.MetalArchivesId}/tab/all";
                 var html = await _flareSolverrClient.GetPageContentAsync(url, sessionId, cancellationToken);
                 var entries = ParseDiscographyHtml(html, band.Id);
 
@@ -123,7 +125,7 @@ public class BandReferenceService : IBandReferenceService
                     band.MetalArchivesId);
             }
 
-            await DelayBetweenRequests(cancellationToken);
+            await DelayBetweenRequests(settings, cancellationToken);
         }
 
         _logger.LogInformation("Discography sync completed. Synced {Count}/{Total} bands.", syncedCount, bands.Count);
@@ -174,10 +176,10 @@ public class BandReferenceService : IBandReferenceService
             $"Metal Archives did not return valid JSON after {MaxFetchRetries} attempts.");
     }
 
-    private string BuildSearchUrl(int offset)
+    private string BuildSearchUrl(BandReferenceSettings settings, int offset)
     {
-        return $"{_settings.MetalArchivesBaseUrl}/search/ajax-advanced/searching/bands/"
-            + $"?bandName=&country={_settings.SyncCountryCode}&status="
+        return $"{settings.MetalArchivesBaseUrl}/search/ajax-advanced/searching/bands/"
+            + $"?bandName=&country={settings.SyncCountryCode}&status="
             + $"&iDisplayStart={offset}&iDisplayLength={PageSize}";
     }
 
@@ -219,9 +221,9 @@ public class BandReferenceService : IBandReferenceService
         return (bands, totalRecords);
     }
 
-    private async Task DelayBetweenRequests(CancellationToken cancellationToken)
+    private async Task DelayBetweenRequests(BandReferenceSettings settings, CancellationToken cancellationToken)
     {
-        var delayMs = _random.Next(_settings.MinRequestDelayMs, _settings.MaxRequestDelayMs);
+        var delayMs = _random.Next(settings.MinRequestDelayMs, settings.MaxRequestDelayMs);
         await Task.Delay(delayMs, cancellationToken);
     }
 

@@ -14,7 +14,7 @@ public class SeasonOfMistParserSmokeTests : ParserSmokeTestBase
     {
         return new SeasonOfMistParser(
             CreateHtmlDocumentLoader(),
-            CreateParserSettings(),
+            CreateSettingsService(),
             NullLogger<SeasonOfMistParser>.Instance);
     }
 

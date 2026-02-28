@@ -18,5 +18,9 @@ public class GroupedAlbumDto
 
     public AlbumStatus? Status { get; set; }
 
+    public string? CanonicalTitle { get; set; }
+
+    public int? OriginalYear { get; set; }
+
     public List<AlbumVariantDto> Variants { get; set; } = [];
 }

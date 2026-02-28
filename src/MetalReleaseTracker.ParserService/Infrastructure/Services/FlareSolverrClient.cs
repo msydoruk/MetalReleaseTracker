@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Services.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Services;
 
@@ -17,22 +17,24 @@ public interface IFlareSolverrClient
 public class FlareSolverrClient : IFlareSolverrClient
 {
     private readonly HttpClient _httpClient;
-    private readonly FlareSolverrSettings _settings;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<FlareSolverrClient> _logger;
+    private FlareSolverrSettings? _cachedSettings;
 
     public FlareSolverrClient(
         HttpClient httpClient,
-        IOptions<FlareSolverrSettings> settings,
+        ISettingsService settingsService,
         ILogger<FlareSolverrClient> logger)
     {
         _httpClient = httpClient;
-        _settings = settings.Value;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
     public async Task<string> CreateSessionAsync(CancellationToken cancellationToken)
     {
-        var response = await PostCommandAsync(new { cmd = "sessions.create" }, cancellationToken);
+        _cachedSettings ??= await _settingsService.GetFlareSolverrSettingsAsync(cancellationToken);
+        var response = await PostCommandAsync(_cachedSettings, new { cmd = "sessions.create" }, cancellationToken);
         var session = response.RootElement.GetProperty("session").GetString()
             ?? throw new InvalidOperationException("FlareSolverr returned empty session ID.");
 
@@ -42,15 +44,17 @@ public class FlareSolverrClient : IFlareSolverrClient
 
     public async Task<string> GetPageContentAsync(string url, string sessionId, CancellationToken cancellationToken)
     {
+        _cachedSettings ??= await _settingsService.GetFlareSolverrSettingsAsync(cancellationToken);
+
         var payload = new
         {
             cmd = "request.get",
             url,
             session = sessionId,
-            maxTimeout = _settings.MaxTimeoutMs
+            maxTimeout = _cachedSettings.MaxTimeoutMs
         };
 
-        var response = await PostCommandAsync(payload, cancellationToken);
+        var response = await PostCommandAsync(_cachedSettings, payload, cancellationToken);
         var status = response.RootElement.GetProperty("status").GetString();
 
         if (status != "ok")
@@ -72,7 +76,8 @@ public class FlareSolverrClient : IFlareSolverrClient
     {
         try
         {
-            await PostCommandAsync(new { cmd = "sessions.destroy", session = sessionId }, cancellationToken);
+            _cachedSettings ??= await _settingsService.GetFlareSolverrSettingsAsync(cancellationToken);
+            await PostCommandAsync(_cachedSettings, new { cmd = "sessions.destroy", session = sessionId }, cancellationToken);
             _logger.LogInformation("Destroyed FlareSolverr session: {SessionId}.", sessionId);
         }
         catch (Exception exception)
@@ -81,12 +86,12 @@ public class FlareSolverrClient : IFlareSolverrClient
         }
     }
 
-    private async Task<JsonDocument> PostCommandAsync(object payload, CancellationToken cancellationToken)
+    private async Task<JsonDocument> PostCommandAsync(FlareSolverrSettings settings, object payload, CancellationToken cancellationToken)
     {
         var json = JsonSerializer.Serialize(payload);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync($"{_settings.BaseUrl}/v1", content, cancellationToken);
+        var response = await _httpClient.PostAsync($"{settings.BaseUrl}/v1", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);

@@ -8,5 +8,7 @@ public interface IBandDiscographyRepository
 
     Task<HashSet<string>> GetAllBandNamesAsync(CancellationToken cancellationToken);
 
+    Task<Dictionary<Guid, int>> GetAlbumCountsByBandReferenceAsync(CancellationToken cancellationToken);
+
     Task ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken);
 }
