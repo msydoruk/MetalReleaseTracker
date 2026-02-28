@@ -37,11 +37,11 @@ dotnet ef migrations add <Name> --project src/MetalReleaseTracker.CoreDataServic
 Connect to service databases via Docker. Credentials and ports are in each service's `.env` and `docker-compose.yml`.
 
 ```bash
-# ParserServiceDb (port 5434)
-docker exec -i <postgres-container> env PGPASSWORD='<password>' psql -U <user> -d <dbname> -c "<SQL>"
+# Connect via Docker (credentials in each service's .env file)
+docker exec -i <postgres-container> env PGPASSWORD='<from .env>' psql -U <user> -d <dbname> -c "<SQL>"
 
 # Example: query ParserServiceDb
-docker exec -i metalrelease_postgres_parser env PGPASSWORD='P@rserDbP@ss123!' psql -U parser_admin -d ParserServiceDb -c 'SELECT COUNT(*) FROM "CatalogueIndex";'
+docker exec -i metalrelease_postgres_parser env PGPASSWORD='...' psql -U parser_admin -d ParserServiceDb -c 'SELECT COUNT(*) FROM "CatalogueIndex";'
 ```
 
 Service database ports: ParserService=5434, CatalogSyncService=5435, CoreDataService=5436. All use PostgreSQL. Column names are PascalCase and must be double-quoted in SQL.
