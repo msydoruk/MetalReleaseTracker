@@ -36,8 +36,8 @@ import { useLanguage } from '../i18n/LanguageContext';
 const DEFAULTS = {
   page: 1,
   pageSize: 20,
-  sortBy: ALBUM_SORT_FIELDS.NAME,
-  sortAscending: true,
+  sortBy: ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
+  sortAscending: false,
   minPrice: 0,
   maxPrice: 200,
 };
@@ -51,13 +51,15 @@ const parseFiltersFromUrl = (searchParams) => ({
   page: parseIntParam(searchParams.get('page'), DEFAULTS.page),
   pageSize: parseIntParam(searchParams.get('pageSize'), DEFAULTS.pageSize),
   sortBy: parseIntParam(searchParams.get('sortBy'), DEFAULTS.sortBy),
-  sortAscending: searchParams.get('sortAscending') !== 'false',
+  sortAscending: searchParams.has('sortAscending') ? searchParams.get('sortAscending') !== 'false' : DEFAULTS.sortAscending,
   bandId: searchParams.get('bandId') || '',
   distributorId: searchParams.get('distributorId') || '',
   name: searchParams.get('name') || '',
   mediaType: searchParams.get('mediaType') || '',
   minPrice: parseIntParam(searchParams.get('minPrice'), DEFAULTS.minPrice),
   maxPrice: parseIntParam(searchParams.get('maxPrice'), DEFAULTS.maxPrice),
+  minYear: searchParams.get('minYear') ? parseIntParam(searchParams.get('minYear'), null) : null,
+  maxYear: searchParams.get('maxYear') ? parseIntParam(searchParams.get('maxYear'), null) : null,
 });
 
 const filtersToSearchParams = (filters) => {
@@ -65,13 +67,15 @@ const filtersToSearchParams = (filters) => {
   if (filters.page > DEFAULTS.page) params.set('page', filters.page);
   if (filters.pageSize !== DEFAULTS.pageSize) params.set('pageSize', filters.pageSize);
   if (filters.sortBy !== DEFAULTS.sortBy) params.set('sortBy', filters.sortBy);
-  if (filters.sortAscending === false) params.set('sortAscending', 'false');
+  if (filters.sortAscending !== DEFAULTS.sortAscending) params.set('sortAscending', String(filters.sortAscending));
   if (filters.bandId) params.set('bandId', filters.bandId);
   if (filters.distributorId) params.set('distributorId', filters.distributorId);
   if (filters.name) params.set('name', filters.name);
   if (filters.mediaType) params.set('mediaType', filters.mediaType);
   if (filters.minPrice > DEFAULTS.minPrice) params.set('minPrice', filters.minPrice);
   if (filters.maxPrice < DEFAULTS.maxPrice) params.set('maxPrice', filters.maxPrice);
+  if (filters.minYear) params.set('minYear', filters.minYear);
+  if (filters.maxYear) params.set('maxYear', filters.maxYear);
   return params;
 };
 

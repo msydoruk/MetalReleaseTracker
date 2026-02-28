@@ -121,6 +121,16 @@ const GroupedAlbumCard = ({ group }) => {
             }}>
               {group.bandName}
             </Typography>
+            {group.originalYear > 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{
+                display: 'block',
+                opacity: 0.6,
+                fontSize: '0.7rem',
+                mb: 0.5
+              }}>
+                {group.originalYear}
+              </Typography>
+            )}
           </Box>
 
           <Box sx={{ mt: 'auto' }}>

@@ -127,6 +127,16 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
             }}>
               {album.bandName}
             </Typography>
+            {album.originalYear > 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{
+                display: 'block',
+                opacity: 0.6,
+                fontSize: '0.7rem',
+                mb: 0.5
+              }}>
+                {album.originalYear}
+              </Typography>
+            )}
             {album.distributorName && (
               <Typography variant="caption" color="text.secondary" sx={{
                 overflow: 'hidden',

@@ -30,7 +30,11 @@ public static class AlbumFilteringExtensions
             .WhereIf(filter.MediaType.HasValue,
                 album => album.Media == filter.MediaType.Value)
             .WhereIf(filter.Status.HasValue,
-                album => album.Status == filter.Status.Value);
+                album => album.Status == filter.Status.Value)
+            .WhereIf(filter.MinYear.HasValue,
+                album => album.OriginalYear >= filter.MinYear.Value)
+            .WhereIf(filter.MaxYear.HasValue,
+                album => album.OriginalYear <= filter.MaxYear.Value);
     }
 
     private static IQueryable<T> WhereIf<T>(

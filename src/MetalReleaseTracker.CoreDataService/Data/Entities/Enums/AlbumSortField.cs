@@ -8,5 +8,6 @@ public enum AlbumSortField
     Band,
     Distributor,
     Media,
-    Status
+    Status,
+    OriginalYear
 }

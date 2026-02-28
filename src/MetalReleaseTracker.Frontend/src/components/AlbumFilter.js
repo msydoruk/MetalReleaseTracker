@@ -15,7 +15,8 @@ import {
   RadioGroup,
   FormControlLabel,
   FormLabel,
-  IconButton
+  IconButton,
+  TextField
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { fetchBands } from '../services/api';
@@ -31,8 +32,10 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
     mediaType: initialFilters.mediaType || '',
     minPrice: initialFilters.minPrice || 0,
     maxPrice: initialFilters.maxPrice || 200,
-    sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.NAME,
-    sortAscending: initialFilters.sortAscending ?? true,
+    minYear: initialFilters.minYear || null,
+    maxYear: initialFilters.maxYear || null,
+    sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
+    sortAscending: initialFilters.sortAscending ?? false,
     pageSize: initialFilters.pageSize || 20,
     ...initialFilters
   });
@@ -64,8 +67,10 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
       mediaType: initialFilters.mediaType || '',
       minPrice: initialFilters.minPrice || 0,
       maxPrice: initialFilters.maxPrice || 200,
-      sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.NAME,
-      sortAscending: initialFilters.sortAscending ?? true,
+      minYear: initialFilters.minYear || null,
+      maxYear: initialFilters.maxYear || null,
+      sortBy: initialFilters.sortBy ?? ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
+      sortAscending: initialFilters.sortAscending ?? false,
       pageSize: initialFilters.pageSize || 20,
       ...initialFilters
     });
@@ -114,8 +119,10 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
       mediaType: '',
       minPrice: 0,
       maxPrice: 200,
-      sortBy: ALBUM_SORT_FIELDS.NAME,
-      sortAscending: true,
+      minYear: null,
+      maxYear: null,
+      sortBy: ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
+      sortAscending: false,
       pageSize: 20
     };
 
@@ -128,6 +135,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   };
 
   const sortOptions = [
+    { value: ALBUM_SORT_FIELDS.ORIGINAL_YEAR, label: t('albumFilter.sortYear') },
     { value: ALBUM_SORT_FIELDS.NAME, label: t('albumFilter.sortName') },
     { value: ALBUM_SORT_FIELDS.BAND, label: t('albumFilter.sortBand') },
     { value: ALBUM_SORT_FIELDS.PRICE, label: t('albumFilter.sortPrice') }
@@ -404,6 +412,64 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                   {'\u2191'} {t('albumFilter.asc')}
                 </ToggleButton>
               </ToggleButtonGroup>
+            </Box>
+          </Box>
+
+          {/* Year range filter */}
+          <Box>
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
+                mb: 1,
+                fontWeight: 'medium'
+              }}
+            >
+              {t('albumFilter.yearRange')}
+            </FormLabel>
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
+              <TextField
+                size="small"
+                type="number"
+                placeholder={t('albumFilter.minYear')}
+                value={filters.minYear || ''}
+                onChange={(event) => {
+                  const value = event.target.value ? parseInt(event.target.value, 10) : null;
+                  setFilters({ ...filters, minYear: value });
+                }}
+                inputProps={{ min: 1970, max: 2030 }}
+                sx={{
+                  flex: 1,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  '& .MuiOutlinedInput-root': {
+                    height: '40px',
+                    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+                    '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+                  },
+                  '& .MuiInputBase-input': { color: 'white', fontSize: '0.85rem' },
+                }}
+              />
+              <TextField
+                size="small"
+                type="number"
+                placeholder={t('albumFilter.maxYear')}
+                value={filters.maxYear || ''}
+                onChange={(event) => {
+                  const value = event.target.value ? parseInt(event.target.value, 10) : null;
+                  setFilters({ ...filters, maxYear: value });
+                }}
+                inputProps={{ min: 1970, max: 2030 }}
+                sx={{
+                  flex: 1,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  '& .MuiOutlinedInput-root': {
+                    height: '40px',
+                    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+                    '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+                  },
+                  '& .MuiInputBase-input': { color: 'white', fontSize: '0.85rem' },
+                }}
+              />
             </Box>
           </Box>
 

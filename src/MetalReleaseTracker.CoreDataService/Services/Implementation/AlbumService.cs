@@ -105,7 +105,7 @@ public class AlbumService : IAlbumService
             groupedDtos.Add(new GroupedAlbumDto
             {
                 BandName = primary.Band?.Name ?? string.Empty,
-                AlbumName = primary.Name,
+                AlbumName = primary.CanonicalTitle ?? primary.Name,
                 PhotoUrl = photoUrl,
                 ReleaseDate = primary.ReleaseDate,
                 Genre = primary.Genre,
@@ -135,6 +135,11 @@ public class AlbumService : IAlbumService
 
     private static bool AreAlbumsMatching(Data.Entities.AlbumEntity albumA, Data.Entities.AlbumEntity albumB)
     {
+        if (string.IsNullOrWhiteSpace(albumA.CanonicalTitle) || string.IsNullOrWhiteSpace(albumB.CanonicalTitle))
+        {
+            return false;
+        }
+
         if (albumA.Media != albumB.Media)
         {
             return false;
@@ -148,15 +153,6 @@ public class AlbumService : IAlbumService
             return false;
         }
 
-        var nameA = albumA.Name.Trim();
-        var nameB = albumB.Name.Trim();
-
-        if (nameA.Equals(nameB, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return nameA.Contains(nameB, StringComparison.OrdinalIgnoreCase)
-            || nameB.Contains(nameA, StringComparison.OrdinalIgnoreCase);
+        return albumA.CanonicalTitle.Trim().Equals(albumB.CanonicalTitle.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 }

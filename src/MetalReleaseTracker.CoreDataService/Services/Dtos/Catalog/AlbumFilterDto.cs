@@ -22,11 +22,15 @@ public record AlbumFilterDto
 
     public AlbumStatus? Status { get; init; }
 
+    public int? MinYear { get; init; }
+
+    public int? MaxYear { get; init; }
+
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 10;
 
-    public AlbumSortField? SortBy { get; init; } = AlbumSortField.ReleaseDate;
+    public AlbumSortField? SortBy { get; init; } = AlbumSortField.OriginalYear;
 
-    public bool SortAscending { get; init; } = true;
+    public bool SortAscending { get; init; } = false;
 }

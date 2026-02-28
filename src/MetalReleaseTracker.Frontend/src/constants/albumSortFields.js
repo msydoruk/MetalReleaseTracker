@@ -9,7 +9,8 @@ export const ALBUM_SORT_FIELDS = {
   BAND: 3,        // AlbumSortField.Band
   DISTRIBUTOR: 4, // AlbumSortField.Distributor
   MEDIA: 5,       // AlbumSortField.Media
-  STATUS: 6       // AlbumSortField.Status
+  STATUS: 6,      // AlbumSortField.Status
+  ORIGINAL_YEAR: 7 // AlbumSortField.OriginalYear
 };
 
 // UI-friendly names for the sort fields
@@ -20,7 +21,8 @@ export const SORT_FIELD_NAMES = {
   [ALBUM_SORT_FIELDS.BAND]: 'Band',
   [ALBUM_SORT_FIELDS.DISTRIBUTOR]: 'Distributor',
   [ALBUM_SORT_FIELDS.MEDIA]: 'Media Type',
-  [ALBUM_SORT_FIELDS.STATUS]: 'Status'
+  [ALBUM_SORT_FIELDS.STATUS]: 'Status',
+  [ALBUM_SORT_FIELDS.ORIGINAL_YEAR]: 'Year'
 };
 
 export default ALBUM_SORT_FIELDS; 

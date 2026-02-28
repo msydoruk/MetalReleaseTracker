@@ -16,7 +16,8 @@ public static class AlbumSortingExtensions
             [AlbumSortField.Band] = (album => album.Band.Name, album => album.Band.Name),
             [AlbumSortField.Distributor] = (album => album.Distributor.Name, album => album.Distributor.Name),
             [AlbumSortField.Media] = (album => album.Media, album => album.Media),
-            [AlbumSortField.Status] = (album => album.Status, album => album.Status)
+            [AlbumSortField.Status] = (album => album.Status, album => album.Status),
+            [AlbumSortField.OriginalYear] = (album => album.OriginalYear, album => album.OriginalYear)
         };
 
     public static IQueryable<AlbumEntity> ApplyAlbumSorting(
@@ -24,11 +25,11 @@ public static class AlbumSortingExtensions
         AlbumSortField? sortBy,
         bool sortAscending)
     {
-        var field = sortBy ?? AlbumSortField.ReleaseDate;
+        var field = sortBy ?? AlbumSortField.OriginalYear;
 
         if (!SortExpressions.TryGetValue(field, out var sortExpressions))
         {
-            sortExpressions = SortExpressions[AlbumSortField.ReleaseDate];
+            sortExpressions = SortExpressions[AlbumSortField.OriginalYear];
         }
 
         return sortAscending
