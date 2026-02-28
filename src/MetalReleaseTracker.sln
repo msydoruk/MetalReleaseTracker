@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetalReleaseTracker.CoreDat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetalReleaseTracker.SharedLibraries", "MetalReleaseTracker.SharedLibraries\MetalReleaseTracker.SharedLibraries.csproj", "{7E2DB163-F784-48F4-AE44-31DB7DEB563F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetalReleaseTracker.Benchmarks", "MetalReleaseTracker.Benchmarks\MetalReleaseTracker.Benchmarks.csproj", "{A705BBA6-6D93-429D-BBC9-269A85E8A89A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{7E2DB163-F784-48F4-AE44-31DB7DEB563F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E2DB163-F784-48F4-AE44-31DB7DEB563F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E2DB163-F784-48F4-AE44-31DB7DEB563F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A705BBA6-6D93-429D-BBC9-269A85E8A89A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A705BBA6-6D93-429D-BBC9-269A85E8A89A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A705BBA6-6D93-429D-BBC9-269A85E8A89A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A705BBA6-6D93-429D-BBC9-269A85E8A89A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
