@@ -84,9 +84,9 @@ public class AlbumDetailParsingJob
     {
         var generalParserSettings = await _settingsService.GetGeneralParserSettingsAsync(cancellationToken);
         var distributorCode = parserDataSource.DistributorCode;
-        var relevantEntries = await _catalogueIndexRepository.GetByStatusAsync(
+        var relevantEntries = await _catalogueIndexRepository.GetByStatusesWithDiscographyAsync(
             distributorCode,
-            CatalogueIndexStatus.Relevant,
+            new[] { CatalogueIndexStatus.Relevant, CatalogueIndexStatus.AiVerified },
             cancellationToken);
 
         if (relevantEntries.Count == 0)
@@ -123,6 +123,13 @@ public class AlbumDetailParsingJob
                 if (entry.MediaType.HasValue)
                 {
                     albumParsedEvent.Media = entry.MediaType;
+                }
+
+                albumParsedEvent.ParsedTitle = entry.AlbumTitle;
+                if (entry.BandDiscography != null)
+                {
+                    albumParsedEvent.CanonicalTitle = entry.BandDiscography.AlbumTitle;
+                    albumParsedEvent.OriginalYear = entry.BandDiscography.Year;
                 }
 
                 await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
