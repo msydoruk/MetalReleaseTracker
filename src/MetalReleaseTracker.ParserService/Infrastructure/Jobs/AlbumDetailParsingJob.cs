@@ -86,7 +86,7 @@ public class AlbumDetailParsingJob
         var distributorCode = parserDataSource.DistributorCode;
         var relevantEntries = await _catalogueIndexRepository.GetByStatusesWithDiscographyAsync(
             distributorCode,
-            new[] { CatalogueIndexStatus.Relevant, CatalogueIndexStatus.AiVerified },
+            [CatalogueIndexStatus.AiVerified],
             cancellationToken);
 
         if (relevantEntries.Count == 0)
