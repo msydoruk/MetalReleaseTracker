@@ -28,9 +28,6 @@ public class AlbumEntity
     [Required(ErrorMessage = "The album name is required.")]
     public string Name { get; set; }
 
-    [DataType(DataType.Date)]
-    public DateTime ReleaseDate { get; set; }
-
     public string? Genre { get; set; }
 
     public float Price { get; set; }

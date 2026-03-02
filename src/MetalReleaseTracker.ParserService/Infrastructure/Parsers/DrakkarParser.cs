@@ -89,7 +89,6 @@ public class DrakkarParser : BaseDistributorParser
         var photoUrl = ParsePhotoUrl(jsonLd, htmlDocument);
         var label = ParseLabel(jsonLd, htmlDocument);
         var genre = ParseGenre(htmlDocument);
-        var releaseDate = ParseReleaseDate(htmlDocument);
         var description = ParseDescription(jsonLd, htmlDocument);
 
         return new AlbumParsedEvent
@@ -98,7 +97,6 @@ public class DrakkarParser : BaseDistributorParser
             BandName = bandName,
             SKU = sku,
             Name = albumName,
-            ReleaseDate = releaseDate,
             Genre = genre,
             Price = price,
             PurchaseUrl = detailUrl,
@@ -287,36 +285,6 @@ public class DrakkarParser : BaseDistributorParser
         }
 
         return string.Empty;
-    }
-
-    private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
-    {
-        var allLines = GetStructuredTextLines(htmlDocument, DrakkarSelectors.DetailShortDescription);
-        allLines.AddRange(GetStructuredTextLines(htmlDocument, DrakkarSelectors.DetailAttributes));
-
-        foreach (var line in allLines)
-        {
-            var match = Regex.Match(line, @"Release Year\s*:\s*(\d{4})", RegexOptions.IgnoreCase);
-            if (match.Success)
-            {
-                return AlbumParsingHelper.ParseYear(match.Groups[1].Value);
-            }
-        }
-
-        var categoryLinks = htmlDocument.DocumentNode.SelectNodes(DrakkarSelectors.DetailCategoryLinks);
-        if (categoryLinks != null)
-        {
-            foreach (var link in categoryLinks)
-            {
-                var text = link.InnerText?.Trim();
-                if (!string.IsNullOrEmpty(text) && Regex.IsMatch(text, @"^\d{4}$"))
-                {
-                    return AlbumParsingHelper.ParseYear(text);
-                }
-            }
-        }
-
-        return DateTime.MinValue;
     }
 
     private string ParseDescription(JsonElement? jsonLd, HtmlDocument htmlDocument)

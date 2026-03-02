@@ -94,7 +94,6 @@ public class BlackMetalStoreParser : BaseDistributorParser
             BandName = bandName,
             SKU = sku,
             Name = albumName,
-            ReleaseDate = DateTime.MinValue,
             Genre = genre,
             Price = price,
             PurchaseUrl = detailUrl,

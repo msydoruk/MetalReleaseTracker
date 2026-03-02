@@ -71,7 +71,6 @@ public class OsmoseProductionsParser : BaseDistributorParser
         var bandName = GetNodeValue(htmlDocument, OsmoseProductionsSelectors.DetailBandName);
         var sku = GetNodeValue(htmlDocument, OsmoseProductionsSelectors.DetailSku)?.Split(':').Last().Trim();
         var name = ParseAlbumName(htmlDocument);
-        var releaseDate = ParseReleaseDate(htmlDocument);
         var price = ParsePrice(htmlDocument);
         var photoUrl = ParsePhotoUrl(htmlDocument);
         var label = GetNodeValue(htmlDocument, OsmoseProductionsSelectors.DetailLabel);
@@ -88,7 +87,6 @@ public class OsmoseProductionsParser : BaseDistributorParser
             BandName = bandName,
             SKU = sku,
             Name = name,
-            ReleaseDate = releaseDate,
             Price = price,
             PurchaseUrl = detailUrl,
             PhotoUrl = photoUrl,
@@ -139,12 +137,6 @@ public class OsmoseProductionsParser : BaseDistributorParser
             : null;
 
         return name;
-    }
-
-    private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
-    {
-        var releaseDateText = GetNodeValue(htmlDocument, OsmoseProductionsSelectors.DetailReleaseDate);
-        return !string.IsNullOrEmpty(releaseDateText) ? AlbumParsingHelper.ParseYear(releaseDateText.Split(':').Last().Trim()) : DateTime.MinValue;
     }
 
     private float ParsePrice(HtmlDocument htmlDocument)

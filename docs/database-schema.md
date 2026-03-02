@@ -50,7 +50,6 @@ Container: `metalrelease_postgres_parser`, credentials in `.env`
 | BandName | varchar(500) | | |
 | SKU | varchar(200) | YES | |
 | Name | varchar(500) | YES | |
-| ReleaseDate | timestamptz | | |
 | Genre | varchar(500) | YES | |
 | Price | real | | |
 | PurchaseUrl | varchar(2000) | YES | |
@@ -144,7 +143,6 @@ Container: `metalrelease_postgres_coredata`, credentials in `.env`
 | BandId | uuid | | FK → Bands |
 | SKU | text | | |
 | Name | text | | |
-| ReleaseDate | timestamptz | | |
 | Genre | text | YES | |
 | Price | real | | |
 | PurchaseUrl | text | | |

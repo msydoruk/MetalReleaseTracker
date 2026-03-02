@@ -247,7 +247,6 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
             BandName = bandName,
             SKU = sku,
             Name = albumName,
-            ReleaseDate = DateTime.MinValue,
             Genre = string.Empty,
             Price = price,
             PurchaseUrl = detailUrl,

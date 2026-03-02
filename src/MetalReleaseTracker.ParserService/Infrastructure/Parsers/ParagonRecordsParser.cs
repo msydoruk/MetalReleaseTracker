@@ -113,7 +113,6 @@ public class ParagonRecordsParser : BaseDistributorParser
             BandName = bandName,
             SKU = AlbumParsingHelper.GenerateSkuFromUrl(detailUrl),
             Name = albumName,
-            ReleaseDate = DateTime.MinValue,
             Genre = genre,
             Price = price,
             PurchaseUrl = detailUrl,

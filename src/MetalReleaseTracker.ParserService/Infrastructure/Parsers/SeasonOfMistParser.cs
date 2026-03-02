@@ -1,4 +1,3 @@
-using System.Globalization;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
@@ -80,7 +79,6 @@ public class SeasonOfMistParser : BaseDistributorParser
         var price = ParsePrice(htmlDocument);
         var photoUrl = ParsePhotoUrl(htmlDocument);
         var genre = ParseGenre(htmlDocument);
-        var releaseDate = ParseReleaseDate(htmlDocument);
         var label = ParseLabel(htmlDocument);
         var status = ParseStatus(htmlDocument);
 
@@ -90,7 +88,6 @@ public class SeasonOfMistParser : BaseDistributorParser
             BandName = bandName,
             SKU = sku,
             Name = albumName,
-            ReleaseDate = releaseDate,
             Genre = genre,
             Price = price,
             PurchaseUrl = detailUrl,
@@ -182,32 +179,6 @@ public class SeasonOfMistParser : BaseDistributorParser
         }
 
         return ParseAttributeValue(htmlDocument, "Generic musical style");
-    }
-
-    private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
-    {
-        var dateText = ParseAttributeValue(htmlDocument, "Release Date");
-        if (string.IsNullOrEmpty(dateText))
-        {
-            return DateTime.MinValue;
-        }
-
-        if (DateTime.TryParseExact(dateText, "d MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-        {
-            return date;
-        }
-
-        if (DateTime.TryParseExact(dateText, "d MMMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-        {
-            return date;
-        }
-
-        if (DateTime.TryParseExact(dateText, "dd MMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-        {
-            return date;
-        }
-
-        return DateTime.MinValue;
     }
 
     private string ParseLabel(HtmlDocument htmlDocument)

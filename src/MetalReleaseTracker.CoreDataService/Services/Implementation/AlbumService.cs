@@ -107,7 +107,6 @@ public class AlbumService : IAlbumService
                 BandName = primary.Band?.Name ?? string.Empty,
                 AlbumName = primary.CanonicalTitle ?? primary.Name,
                 PhotoUrl = photoUrl,
-                ReleaseDate = primary.ReleaseDate,
                 Genre = primary.Genre,
                 Media = primary.Media,
                 Status = primary.Status,

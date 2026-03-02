@@ -71,7 +71,6 @@ public class AlbumPublisherJob
             BandName = detail.BandName,
             SKU = detail.SKU,
             Name = detail.Name,
-            ReleaseDate = detail.ReleaseDate,
             Genre = detail.Genre,
             Price = detail.Price,
             PurchaseUrl = detail.PurchaseUrl,
