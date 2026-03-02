@@ -11,6 +11,7 @@ import BandReferenceDetailPage from './pages/BandReferenceDetailPage';
 import CatalogueIndexPage from './pages/CatalogueIndexPage';
 import AiVerificationPage from './pages/AiVerificationPage';
 import CatalogueDetailsPage from './pages/CatalogueDetailsPage';
+import ParsingMonitorPage from './pages/ParsingMonitorPage';
 import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="catalogue-index" element={<CatalogueIndexPage />} />
               <Route path="catalogue-details" element={<CatalogueDetailsPage />} />
               <Route path="ai-verification" element={<AiVerificationPage />} />
+              <Route path="parsing-monitor" element={<ParsingMonitorPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

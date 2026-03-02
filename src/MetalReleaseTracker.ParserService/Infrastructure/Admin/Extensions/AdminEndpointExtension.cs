@@ -15,6 +15,7 @@ public static class AdminEndpointExtension
         CatalogueIndexEndpoints.MapEndpoints(adminGroup);
         CatalogueDetailEndpoints.MapEndpoints(adminGroup);
         AiVerificationEndpoints.MapEndpoints(adminGroup);
+        ParsingMonitorEndpoints.MapEndpoints(adminGroup);
         SettingsEndpoints.MapEndpoints(adminGroup);
     }
 }

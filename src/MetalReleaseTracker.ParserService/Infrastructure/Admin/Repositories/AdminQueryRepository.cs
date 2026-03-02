@@ -64,7 +64,7 @@ public class AdminQueryRepository : IAdminQueryRepository
             })
             .WhereIf(
                 !string.IsNullOrWhiteSpace(filter.Search),
-                dto => dto.BandName.Contains(filter.Search!));
+                dto => EF.Functions.ILike(dto.BandName, $"%{filter.Search}%"));
 
         query = ApplySorting(query, filter.SortBy ?? BandReferenceSortField.BandName, filter.SortAscending ?? true, BandReferenceSortExpressions);
 
@@ -130,7 +130,7 @@ public class AdminQueryRepository : IAdminQueryRepository
                 dto => dto.Status == filter.Status!.Value)
             .WhereIf(
                 !string.IsNullOrWhiteSpace(filter.Search),
-                dto => dto.BandName.Contains(filter.Search!) || dto.AlbumTitle.Contains(filter.Search!));
+                dto => EF.Functions.ILike(dto.BandName, $"%{filter.Search}%") || EF.Functions.ILike(dto.AlbumTitle, $"%{filter.Search}%"));
 
         query = ApplySorting(query, filter.SortBy ?? CatalogueIndexSortField.UpdatedAt, filter.SortAscending ?? false, CatalogueIndexSortExpressions);
 
@@ -172,11 +172,36 @@ public class AdminQueryRepository : IAdminQueryRepository
                 dto => dto.PublicationStatus == filter.PublicationStatus!.Value)
             .WhereIf(
                 !string.IsNullOrWhiteSpace(filter.Search),
-                dto => dto.BandName.Contains(filter.Search!) || dto.Name.Contains(filter.Search!));
+                dto => EF.Functions.ILike(dto.BandName, $"%{filter.Search}%") || EF.Functions.ILike(dto.Name, $"%{filter.Search}%"));
 
         query = ApplySorting(query, filter.SortBy ?? CatalogueDetailSortField.UpdatedAt, filter.SortAscending ?? false, CatalogueDetailSortExpressions);
 
         return await query.ToPagedResultAsync(filter.Page, filter.PageSize, cancellationToken);
+    }
+
+    public async Task<PagedResultDto<ParsingRunDto>> GetParsingRunsAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.ParsingRuns
+            .AsNoTracking()
+            .OrderByDescending(r => r.StartedAt)
+            .Select(r => new ParsingRunDto
+            {
+                Id = r.Id,
+                JobType = r.JobType,
+                DistributorCode = r.DistributorCode,
+                Status = r.Status,
+                TotalItems = r.TotalItems,
+                ProcessedItems = r.ProcessedItems,
+                FailedItems = r.FailedItems,
+                StartedAt = r.StartedAt,
+                CompletedAt = r.CompletedAt,
+                ErrorMessage = r.ErrorMessage,
+            });
+
+        return await query.ToPagedResultAsync(page, pageSize, cancellationToken);
     }
 
     private static IQueryable<T> ApplySorting<T, TField>(

@@ -40,6 +40,13 @@ public static class AdminRouteConstants
         public const string BulkDecision = $"{Prefix}/bulk-decision";
     }
 
+    public static class ParsingMonitor
+    {
+        private const string Prefix = $"{Base}/parsing-monitor";
+        public const string Live = $"{Prefix}/live";
+        public const string Runs = $"{Prefix}/runs";
+    }
+
     public static class Settings
     {
         private const string Prefix = $"{Base}/settings";

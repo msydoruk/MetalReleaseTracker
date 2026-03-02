@@ -50,6 +50,16 @@ public static class AlbumParsingHelper
         return Convert.ToHexStringLower(hashBytes)[..12];
     }
 
+    public static string? TruncateName(string? value) => Truncate(value, 500);
+
+    public static string? TruncateGenre(string? value) => Truncate(value, 500);
+
+    public static string? TruncateLabel(string? value) => Truncate(value, 500);
+
+    public static string? TruncatePress(string? value) => Truncate(value, 500);
+
+    public static string? TruncateSku(string? value) => Truncate(value, 200);
+
     public static float ParsePrice(string priceText)
     {
         if (!string.IsNullOrEmpty(priceText))
@@ -61,5 +71,15 @@ public static class AlbumParsingHelper
         }
 
         return 0.0f;
+    }
+
+    private static string? Truncate(string? input, int maxLength)
+    {
+        if (input == null || input.Length <= maxLength)
+        {
+            return input;
+        }
+
+        return input[..maxLength];
     }
 }
