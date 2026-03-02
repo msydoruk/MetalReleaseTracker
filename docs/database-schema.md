@@ -34,10 +34,37 @@ Container: `metalrelease_postgres_parser`, credentials in `.env`
 | AlbumTitle | varchar(500) | | |
 | RawTitle | varchar(1000) | | Original unparsed title |
 | DetailUrl | varchar(2000) | | Unique with DistributorCode |
-| Status | int | | 0=New, 1=Relevant, 2=NotRelevant, 3=Processed, 4=AiVerified |
+| Status | int | | 0=New, 1=Relevant, 2=NotRelevant, 3=AiVerified, 4=Deleted |
 | MediaType | int | YES | 0=CD, 1=LP, 2=Tape |
 | BandReferenceId | uuid | YES | FK → BandReferences |
 | BandDiscographyId | uuid | YES | FK → BandDiscography (set on AI confirm) |
+| CreatedAt | timestamptz | | |
+| UpdatedAt | timestamptz | | |
+
+**CatalogueIndexDetails** — Parsed album details (1:1 with CatalogueIndex)
+| Column | Type | Nullable | Notes |
+|--------|------|----------|-------|
+| Id | uuid | PK | |
+| CatalogueIndexId | uuid | | FK → CatalogueIndex (unique) |
+| DistributorCode | int | | |
+| BandName | varchar(500) | | |
+| SKU | varchar(200) | YES | |
+| Name | varchar(500) | YES | |
+| ReleaseDate | timestamptz | | |
+| Genre | varchar(500) | YES | |
+| Price | real | | |
+| PurchaseUrl | varchar(2000) | YES | |
+| PhotoUrl | varchar(2000) | YES | |
+| Media | int | YES | 0=CD, 1=LP, 2=Tape |
+| Label | varchar(500) | YES | |
+| Press | varchar(500) | YES | |
+| Description | text | YES | |
+| Status | int | YES | 0=New, 1=Restock, 2=PreOrder |
+| CanonicalTitle | varchar(500) | YES | From BandDiscography match |
+| OriginalYear | int | YES | From BandDiscography match |
+| ChangeType | int | | 0=New, 1=Updated, 2=Deleted, 3=Active |
+| PublicationStatus | int | | 0=Unpublished, 1=Published |
+| LastPublishedAt | timestamptz | YES | |
 | CreatedAt | timestamptz | | |
 | UpdatedAt | timestamptz | | |
 
@@ -72,22 +99,6 @@ Container: `metalrelease_postgres_parser`, credentials in `.env`
 | CreatedAt | timestamptz | | |
 | UpdatedAt | timestamptz | | |
 
-**ParsingSessions** — Parsing job sessions
-| Column | Type | Nullable | Notes |
-|--------|------|----------|-------|
-| Id | uuid | PK | |
-| DistributorCode | int | | |
-| LastUpdatedDate | timestamptz | | |
-| ParsingStatus | int | | |
-
-**AlbumParsedEvents** — Outbox events for Kafka
-| Column | Type | Nullable | Notes |
-|--------|------|----------|-------|
-| Id | uuid | PK | |
-| ParsingSessionId | uuid | | FK → ParsingSessions |
-| EventPayload | text | | Serialized event JSON |
-| CreatedDate | timestamptz | | |
-
 **ParsingSources** — Distributor URL configuration
 | Column | Type | Nullable | Notes |
 |--------|------|----------|-------|
@@ -111,73 +122,11 @@ Container: `metalrelease_postgres_parser`, credentials in `.env`
 ```
 AiVerifications.CatalogueIndexId → CatalogueIndex.Id
 AiVerifications.MatchedBandDiscographyId → BandDiscography.Id
-AlbumParsedEvents.ParsingSessionId → ParsingSessions.Id
 BandDiscography.BandReferenceId → BandReferences.Id (CASCADE)
 CatalogueIndex.BandDiscographyId → BandDiscography.Id (SET NULL)
 CatalogueIndex.BandReferenceId → BandReferences.Id (SET NULL)
+CatalogueIndexDetails.CatalogueIndexId → CatalogueIndex.Id (CASCADE, unique)
 ```
-
----
-
-## CatalogSyncServiceDb (MongoDB, port 27017)
-
-Container: `metalrelease_mongodb_catalogsync`, database: `CatalogSyncServiceDb`
-
-PostgreSQL (`TickerQDb_CatalogSync`, port 5435) is used only for TickerQ scheduling — no application tables.
-
-### Collections
-
-**ParsingSessionWithRawAlbums** — Raw album data from parsers (30-day TTL)
-| Field | Type | Notes |
-|-------|------|-------|
-| _id | string (Guid) | Parsing session ID |
-| DistributorCode | enum | BlackMetalVendor, Daoloth, MetalBlast |
-| ProcessingStatus | enum | Pending, Processed, Failed |
-| CreatedDate | DateTime | |
-| ProcessedDate | DateTime | YES |
-| LastUpdateDate | DateTime | YES |
-| RawAlbums | List\<RawAlbumEntity\> | Embedded documents |
-
-**RawAlbumEntity** (embedded in ParsingSessionWithRawAlbums.RawAlbums)
-| Field | Type | Notes |
-|-------|------|-------|
-| BandName | string | |
-| SKU | string | |
-| Name | string | Album name |
-| ReleaseDate | DateTime | |
-| Genre | string | YES |
-| Price | float | |
-| PurchaseUrl | string | |
-| PhotoUrl | string | |
-| Media | enum | CD, LP, Tape |
-| Label | string | |
-| Press | string | |
-| Description | string | YES |
-| Status | enum | New, Restock, PreOrder |
-
-**ProcessedAlbums** — Validated albums ready for Kafka publishing
-| Field | Type | Notes |
-|-------|------|-------|
-| _id | string (Guid) | Album record ID |
-| DistributorCode | enum | |
-| BandName | string | |
-| SKU | string | Unique index |
-| Name | string | Album name |
-| ReleaseDate | DateTime | |
-| Genre | string | YES |
-| Price | float | |
-| PurchaseUrl | string | |
-| PhotoUrl | string | |
-| Media | enum | CD, LP, Tape |
-| Label | string | |
-| Press | string | |
-| Description | string | YES |
-| Status | enum | New, Restock, PreOrder |
-| ProcessedStatus | enum | New, Updated, Deleted, Published |
-| CreatedDate | DateTime | |
-| LastUpdateDate | DateTime | YES |
-| LastCheckedDate | DateTime | YES |
-| LastPublishedDate | DateTime | YES |
 
 ---
 

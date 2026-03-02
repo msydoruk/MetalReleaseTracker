@@ -4,7 +4,6 @@ using MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Admin.Repositories;
@@ -29,12 +28,16 @@ public class AdminQueryRepository : IAdminQueryRepository
         [CatalogueIndexSortField.UpdatedAt] = dto => dto.UpdatedAt,
     };
 
-    private static readonly Dictionary<ParsingSessionSortField, Expression<Func<ParsingSessionDto, object>>> ParsingSessionSortExpressions = new()
+    private static readonly Dictionary<CatalogueDetailSortField, Expression<Func<CatalogueDetailDto, object>>> CatalogueDetailSortExpressions = new()
     {
-        [ParsingSessionSortField.DistributorCode] = dto => dto.DistributorCode,
-        [ParsingSessionSortField.LastUpdatedDate] = dto => dto.LastUpdatedDate,
-        [ParsingSessionSortField.ParsingStatus] = dto => dto.ParsingStatus,
-        [ParsingSessionSortField.EventCount] = dto => dto.EventCount,
+        [CatalogueDetailSortField.BandName] = dto => dto.BandName,
+        [CatalogueDetailSortField.Name] = dto => dto.Name,
+        [CatalogueDetailSortField.DistributorCode] = dto => dto.DistributorCode,
+        [CatalogueDetailSortField.ChangeType] = dto => dto.ChangeType,
+        [CatalogueDetailSortField.PublicationStatus] = dto => dto.PublicationStatus,
+        [CatalogueDetailSortField.Price] = dto => dto.Price,
+        [CatalogueDetailSortField.UpdatedAt] = dto => dto.UpdatedAt,
+        [CatalogueDetailSortField.LastPublishedAt] = dto => dto.LastPublishedAt!,
     };
 
     private readonly ParserServiceDbContext _context;
@@ -134,70 +137,46 @@ public class AdminQueryRepository : IAdminQueryRepository
         return await query.ToPagedResultAsync(filter.Page, filter.PageSize, cancellationToken);
     }
 
-    public async Task<PagedResultDto<ParsingSessionDto>> GetParsingSessionsAsync(
-        ParsingSessionFilterDto filter,
+    public async Task<PagedResultDto<CatalogueDetailDto>> GetCatalogueDetailsAsync(
+        CatalogueDetailFilterDto filter,
         CancellationToken cancellationToken)
     {
-        var query = _context.ParsingSessions
+        var query = _context.CatalogueIndexDetails
             .AsNoTracking()
-            .Select(session => new ParsingSessionDto
+            .Select(detail => new CatalogueDetailDto
             {
-                Id = session.Id,
-                DistributorCode = session.DistributorCode,
-                LastUpdatedDate = session.LastUpdatedDate,
-                ParsingStatus = session.ParsingStatus,
-                EventCount = _context.AlbumParsedEvents.Count(e => e.ParsingSessionId == session.Id),
+                Id = detail.Id,
+                CatalogueIndexId = detail.CatalogueIndexId,
+                DistributorCode = detail.DistributorCode,
+                BandName = detail.BandName,
+                Name = detail.Name,
+                SKU = detail.SKU,
+                Price = detail.Price,
+                Media = detail.Media,
+                CanonicalTitle = detail.CanonicalTitle,
+                OriginalYear = detail.OriginalYear,
+                ChangeType = detail.ChangeType,
+                PublicationStatus = detail.PublicationStatus,
+                LastPublishedAt = detail.LastPublishedAt,
+                CreatedAt = detail.CreatedAt,
+                UpdatedAt = detail.UpdatedAt,
             })
             .WhereIf(
                 filter.DistributorCode.HasValue,
                 dto => dto.DistributorCode == filter.DistributorCode!.Value)
             .WhereIf(
-                filter.ParsingStatus.HasValue,
-                dto => dto.ParsingStatus == filter.ParsingStatus!.Value);
+                filter.ChangeType.HasValue,
+                dto => dto.ChangeType == filter.ChangeType!.Value)
+            .WhereIf(
+                filter.PublicationStatus.HasValue,
+                dto => dto.PublicationStatus == filter.PublicationStatus!.Value)
+            .WhereIf(
+                !string.IsNullOrWhiteSpace(filter.Search),
+                dto => dto.BandName.Contains(filter.Search!) || dto.Name.Contains(filter.Search!));
 
-        query = ApplySorting(query, filter.SortBy ?? ParsingSessionSortField.LastUpdatedDate, filter.SortAscending ?? false, ParsingSessionSortExpressions);
+        query = ApplySorting(query, filter.SortBy ?? CatalogueDetailSortField.UpdatedAt, filter.SortAscending ?? false, CatalogueDetailSortExpressions);
 
         return await query.ToPagedResultAsync(filter.Page, filter.PageSize, cancellationToken);
-    }
-
-    public async Task<ParsingSessionDetailDto?> GetParsingSessionByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken)
-    {
-        var session = await _context.ParsingSessions
-            .AsNoTracking()
-            .Where(session => session.Id == id)
-            .Select(session => new ParsingSessionDetailDto
-            {
-                Id = session.Id,
-                DistributorCode = session.DistributorCode,
-                LastUpdatedDate = session.LastUpdatedDate,
-                ParsingStatus = session.ParsingStatus,
-                EventCount = _context.AlbumParsedEvents.Count(e => e.ParsingSessionId == session.Id),
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (session == null)
-        {
-            return null;
-        }
-
-        session.Events = await _context.AlbumParsedEvents
-            .AsNoTracking()
-            .Where(e => e.ParsingSessionId == id)
-            .OrderByDescending(e => e.CreatedDate)
-            .Select(e => new AlbumParsedEventDto
-            {
-                Id = e.Id,
-                ParsingSessionId = e.ParsingSessionId,
-                CreatedDate = e.CreatedDate,
-                EventPayloadPreview = e.EventPayload.Length > 200
-                    ? e.EventPayload.Substring(0, 200) + "..."
-                    : e.EventPayload,
-            })
-            .ToListAsync(cancellationToken);
-
-        return session;
     }
 
     private static IQueryable<T> ApplySorting<T, TField>(

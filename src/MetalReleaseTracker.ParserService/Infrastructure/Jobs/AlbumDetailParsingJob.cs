@@ -3,13 +3,9 @@ using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities.Enums;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Models;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
-using Newtonsoft.Json;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
@@ -17,8 +13,7 @@ public class AlbumDetailParsingJob
 {
     private readonly Func<DistributorCode, IAlbumDetailParser> _detailParserResolver;
     private readonly ICatalogueIndexRepository _catalogueIndexRepository;
-    private readonly IParsingSessionRepository _parsingSessionRepository;
-    private readonly IAlbumParsedEventRepository _albumParsedEventRepository;
+    private readonly ICatalogueIndexDetailRepository _catalogueIndexDetailRepository;
     private readonly IImageUploadService _imageUploadService;
     private readonly ISettingsService _settingsService;
     private readonly ILogger<AlbumDetailParsingJob> _logger;
@@ -27,16 +22,14 @@ public class AlbumDetailParsingJob
     public AlbumDetailParsingJob(
         Func<DistributorCode, IAlbumDetailParser> detailParserResolver,
         ICatalogueIndexRepository catalogueIndexRepository,
-        IParsingSessionRepository parsingSessionRepository,
-        IAlbumParsedEventRepository albumParsedEventRepository,
+        ICatalogueIndexDetailRepository catalogueIndexDetailRepository,
         IImageUploadService imageUploadService,
         ISettingsService settingsService,
         ILogger<AlbumDetailParsingJob> logger)
     {
         _detailParserResolver = detailParserResolver;
         _catalogueIndexRepository = catalogueIndexRepository;
-        _parsingSessionRepository = parsingSessionRepository;
-        _albumParsedEventRepository = albumParsedEventRepository;
+        _catalogueIndexDetailRepository = catalogueIndexDetailRepository;
         _imageUploadService = imageUploadService;
         _settingsService = settingsService;
         _logger = logger;
@@ -95,7 +88,6 @@ public class AlbumDetailParsingJob
             return;
         }
 
-        var parsingSession = await GetOrCreateParsingSessionAsync(distributorCode, cancellationToken);
         var parser = _detailParserResolver(distributorCode);
 
         _logger.LogInformation(
@@ -132,13 +124,7 @@ public class AlbumDetailParsingJob
                 }
 
                 await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
-
-                await _albumParsedEventRepository.AddAsync(
-                    parsingSession.Id,
-                    JsonConvert.SerializeObject(albumParsedEvent),
-                    cancellationToken);
-
-                await _catalogueIndexRepository.UpdateStatusAsync(entry.Id, CatalogueIndexStatus.Processed, cancellationToken);
+                await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
 
                 _logger.LogInformation(
                     "Parsed album: {SKU} - {BandName}. Distributor: {DistributorCode}.",
@@ -159,21 +145,99 @@ public class AlbumDetailParsingJob
                     "Failed to parse detail page for entry {EntryId} ({DetailUrl}).",
                     entry.Id,
                     entry.DetailUrl);
+
+                await HandleParseFailureAsync(entry, cancellationToken);
             }
         }
-
-        await _parsingSessionRepository.UpdateParsingStatus(
-            parsingSession.Id,
-            AlbumParsingStatus.Parsed,
-            cancellationToken);
     }
 
-    private async Task<ParsingSessionEntity> GetOrCreateParsingSessionAsync(
-        DistributorCode distributorCode,
+    private async Task UpsertDetailAsync(
+        CatalogueIndexEntity entry,
+        AlbumParsedEvent albumParsedEvent,
         CancellationToken cancellationToken)
     {
-        return await _parsingSessionRepository.GetIncompleteAsync(distributorCode, cancellationToken)
-            ?? await _parsingSessionRepository.AddAsync(distributorCode, cancellationToken);
+        var existingDetail = await _catalogueIndexDetailRepository.GetByCatalogueIndexIdAsync(entry.Id, cancellationToken);
+
+        if (existingDetail == null)
+        {
+            var detail = new CatalogueIndexDetailEntity
+            {
+                CatalogueIndexId = entry.Id,
+                ChangeType = ChangeType.New,
+                PublicationStatus = PublicationStatus.Unpublished,
+            };
+
+            MapAlbumFieldsToDetail(detail, albumParsedEvent);
+            await _catalogueIndexDetailRepository.AddAsync(detail, cancellationToken);
+        }
+        else if (HasAlbumChanged(existingDetail, albumParsedEvent))
+        {
+            MapAlbumFieldsToDetail(existingDetail, albumParsedEvent);
+            existingDetail.ChangeType = ChangeType.Updated;
+            existingDetail.PublicationStatus = PublicationStatus.Unpublished;
+            await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
+        }
+        else
+        {
+            existingDetail.ChangeType = ChangeType.Active;
+            await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
+        }
+    }
+
+    private async Task HandleParseFailureAsync(CatalogueIndexEntity entry, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _catalogueIndexRepository.UpdateStatusAsync(entry.Id, CatalogueIndexStatus.Deleted, cancellationToken);
+
+            var existingDetail = await _catalogueIndexDetailRepository.GetByCatalogueIndexIdAsync(entry.Id, cancellationToken);
+            if (existingDetail != null)
+            {
+                existingDetail.ChangeType = ChangeType.Deleted;
+                existingDetail.PublicationStatus = PublicationStatus.Unpublished;
+                await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to handle parse failure for entry {EntryId}.", entry.Id);
+        }
+    }
+
+    private static void MapAlbumFieldsToDetail(CatalogueIndexDetailEntity detail, AlbumParsedEvent source)
+    {
+        detail.DistributorCode = source.DistributorCode;
+        detail.BandName = source.BandName;
+        detail.SKU = source.SKU;
+        detail.Name = source.Name;
+        detail.ReleaseDate = source.ReleaseDate;
+        detail.Genre = source.Genre;
+        detail.Price = source.Price;
+        detail.PurchaseUrl = source.PurchaseUrl;
+        detail.PhotoUrl = source.PhotoUrl;
+        detail.Media = source.Media;
+        detail.Label = source.Label;
+        detail.Press = source.Press;
+        detail.Description = source.Description;
+        detail.Status = source.Status;
+        detail.CanonicalTitle = source.CanonicalTitle;
+        detail.OriginalYear = source.OriginalYear;
+    }
+
+    private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
+    {
+        return existing.Price != parsed.Price
+            || existing.Name != parsed.Name
+            || existing.PhotoUrl != parsed.PhotoUrl
+            || existing.PurchaseUrl != parsed.PurchaseUrl
+            || existing.Genre != parsed.Genre
+            || existing.Label != parsed.Label
+            || existing.Press != parsed.Press
+            || existing.Description != parsed.Description
+            || existing.Status != parsed.Status
+            || existing.Media != parsed.Media
+            || existing.CanonicalTitle != parsed.CanonicalTitle
+            || existing.OriginalYear != parsed.OriginalYear;
     }
 
     private async Task ProcessAlbumImageAsync(AlbumParsedEvent albumParsedEvent, CancellationToken cancellationToken)

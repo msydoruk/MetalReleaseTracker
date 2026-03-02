@@ -8,18 +8,18 @@ public class TickerQJobFunctions
     private readonly BandReferenceSyncJob _bandReferenceSyncJob;
     private readonly CatalogueIndexJob _catalogueIndexJob;
     private readonly AlbumDetailParsingJob _albumDetailParsingJob;
-    private readonly AlbumParsedPublisherJob _albumParsedPublisherJob;
+    private readonly AlbumPublisherJob _albumPublisherJob;
 
     public TickerQJobFunctions(
         BandReferenceSyncJob bandReferenceSyncJob,
         CatalogueIndexJob catalogueIndexJob,
         AlbumDetailParsingJob albumDetailParsingJob,
-        AlbumParsedPublisherJob albumParsedPublisherJob)
+        AlbumPublisherJob albumPublisherJob)
     {
         _bandReferenceSyncJob = bandReferenceSyncJob;
         _catalogueIndexJob = catalogueIndexJob;
         _albumDetailParsingJob = albumDetailParsingJob;
-        _albumParsedPublisherJob = albumParsedPublisherJob;
+        _albumPublisherJob = albumPublisherJob;
     }
 
     [TickerFunction("BandReferenceSyncJob")]
@@ -49,12 +49,12 @@ public class TickerQJobFunctions
         await _albumDetailParsingJob.RunDetailParsingJob(context.Request, cancellationToken);
     }
 
-    [TickerFunction("AlbumParsedPublisherJob")]
-    public async Task RunAlbumParsedPublisherJob(
+    [TickerFunction("AlbumPublisherJob")]
+    public async Task RunAlbumPublisherJob(
         TickerFunctionContext context,
         CancellationToken cancellationToken)
     {
         context.CronOccurrenceOperations.SkipIfAlreadyRunning();
-        await _albumParsedPublisherJob.RunPublisherJob(cancellationToken);
+        await _albumPublisherJob.RunPublisherJob(cancellationToken);
     }
 }

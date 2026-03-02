@@ -4,15 +4,12 @@ using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Entities;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
-using MetalReleaseTracker.ParserService.Infrastructure.Data.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Models;
 using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.UnitTests;
@@ -21,8 +18,7 @@ public class AlbumDetailParsingJobTests
 {
     private readonly Mock<IAlbumDetailParser> _parserMock = new();
     private readonly Mock<ICatalogueIndexRepository> _catalogueIndexRepoMock = new();
-    private readonly Mock<IParsingSessionRepository> _parsingSessionRepoMock = new();
-    private readonly Mock<IAlbumParsedEventRepository> _albumParsedEventRepoMock = new();
+    private readonly Mock<ICatalogueIndexDetailRepository> _catalogueIndexDetailRepoMock = new();
     private readonly Mock<IImageUploadService> _imageUploadServiceMock = new();
     private readonly Mock<ISettingsService> _settingsServiceMock = new();
 
@@ -66,9 +62,9 @@ public class AlbumDetailParsingJobTests
             Press = "EU",
         };
 
-        string? capturedPayload = null;
+        CatalogueIndexDetailEntity? capturedDetail = null;
 
-        SetupMocks(distributorCode, catalogueEntry, parsedEvent, payload => capturedPayload = payload);
+        SetupMocks(distributorCode, catalogueEntry, parsedEvent, detail => capturedDetail = detail);
 
         var job = CreateJob();
         var dataSource = new ParserDataSource
@@ -80,12 +76,11 @@ public class AlbumDetailParsingJobTests
 
         await job.RunDetailParsingJob(dataSource, CancellationToken.None);
 
-        Assert.NotNull(capturedPayload);
-
-        var deserialized = JsonConvert.DeserializeObject<AlbumParsedEvent>(capturedPayload!);
-        Assert.NotNull(deserialized);
-        Assert.Equal("Where Fear and Weapons Meet", deserialized!.CanonicalTitle);
-        Assert.Equal(2021, deserialized.OriginalYear);
+        Assert.NotNull(capturedDetail);
+        Assert.Equal("Where Fear and Weapons Meet", capturedDetail!.CanonicalTitle);
+        Assert.Equal(2021, capturedDetail.OriginalYear);
+        Assert.Equal(ChangeType.New, capturedDetail.ChangeType);
+        Assert.Equal(PublicationStatus.Unpublished, capturedDetail.PublicationStatus);
     }
 
     [Fact]
@@ -100,7 +95,7 @@ public class AlbumDetailParsingJobTests
             BandName = "Some Band",
             AlbumTitle = "Some Album (Digipak CD)",
             DetailUrl = "https://example.com/detail",
-            Status = CatalogueIndexStatus.Relevant,
+            Status = CatalogueIndexStatus.AiVerified,
             BandDiscographyId = null,
             BandDiscography = null,
         };
@@ -119,9 +114,9 @@ public class AlbumDetailParsingJobTests
             Press = "EU",
         };
 
-        string? capturedPayload = null;
+        CatalogueIndexDetailEntity? capturedDetail = null;
 
-        SetupMocks(distributorCode, catalogueEntry, parsedEvent, payload => capturedPayload = payload);
+        SetupMocks(distributorCode, catalogueEntry, parsedEvent, detail => capturedDetail = detail);
 
         var job = CreateJob();
         var dataSource = new ParserDataSource
@@ -133,12 +128,9 @@ public class AlbumDetailParsingJobTests
 
         await job.RunDetailParsingJob(dataSource, CancellationToken.None);
 
-        Assert.NotNull(capturedPayload);
-
-        var deserialized = JsonConvert.DeserializeObject<AlbumParsedEvent>(capturedPayload!);
-        Assert.NotNull(deserialized);
-        Assert.Null(deserialized!.CanonicalTitle);
-        Assert.Null(deserialized.OriginalYear);
+        Assert.NotNull(capturedDetail);
+        Assert.Null(capturedDetail!.CanonicalTitle);
+        Assert.Null(capturedDetail.OriginalYear);
     }
 
     [Fact]
@@ -181,9 +173,9 @@ public class AlbumDetailParsingJobTests
             Press = "US",
         };
 
-        string? capturedPayload = null;
+        CatalogueIndexDetailEntity? capturedDetail = null;
 
-        SetupMocks(distributorCode, catalogueEntry, parsedEvent, payload => capturedPayload = payload);
+        SetupMocks(distributorCode, catalogueEntry, parsedEvent, detail => capturedDetail = detail);
 
         var job = CreateJob();
         var dataSource = new ParserDataSource
@@ -195,12 +187,9 @@ public class AlbumDetailParsingJobTests
 
         await job.RunDetailParsingJob(dataSource, CancellationToken.None);
 
-        Assert.NotNull(capturedPayload);
-
-        var deserialized = JsonConvert.DeserializeObject<AlbumParsedEvent>(capturedPayload!);
-        Assert.NotNull(deserialized);
-        Assert.Equal("Canonical Album Title", deserialized!.CanonicalTitle);
-        Assert.Null(deserialized.OriginalYear);
+        Assert.NotNull(capturedDetail);
+        Assert.Equal("Canonical Album Title", capturedDetail!.CanonicalTitle);
+        Assert.Null(capturedDetail.OriginalYear);
     }
 
     private AlbumDetailParsingJob CreateJob()
@@ -208,8 +197,7 @@ public class AlbumDetailParsingJobTests
         return new AlbumDetailParsingJob(
             _ => _parserMock.Object,
             _catalogueIndexRepoMock.Object,
-            _parsingSessionRepoMock.Object,
-            _albumParsedEventRepoMock.Object,
+            _catalogueIndexDetailRepoMock.Object,
             _imageUploadServiceMock.Object,
             _settingsServiceMock.Object,
             NullLogger<AlbumDetailParsingJob>.Instance);
@@ -219,7 +207,7 @@ public class AlbumDetailParsingJobTests
         DistributorCode distributorCode,
         CatalogueIndexEntity catalogueEntry,
         AlbumParsedEvent parsedEvent,
-        Action<string> capturePayload)
+        Action<CatalogueIndexDetailEntity> captureDetail)
     {
         _settingsServiceMock
             .Setup(settingsService => settingsService.GetParsingSourceByCodeAsync(distributorCode, It.IsAny<CancellationToken>()))
@@ -247,24 +235,18 @@ public class AlbumDetailParsingJobTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CatalogueIndexEntity> { catalogueEntry });
 
-        var session = new ParsingSessionEntity
-        {
-            Id = Guid.NewGuid(),
-            DistributorCode = distributorCode,
-        };
+        _catalogueIndexDetailRepoMock
+            .Setup(repository => repository.GetByCatalogueIndexIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CatalogueIndexDetailEntity?)null);
 
-        _parsingSessionRepoMock
-            .Setup(repository => repository.GetIncompleteAsync(distributorCode, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(session);
+        _catalogueIndexDetailRepoMock
+            .Setup(repository => repository.AddAsync(It.IsAny<CatalogueIndexDetailEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<CatalogueIndexDetailEntity, CancellationToken>((detail, _) => captureDetail(detail))
+            .Returns(Task.CompletedTask);
 
         _parserMock
             .Setup(parser => parser.ParseAlbumDetailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(parsedEvent);
-
-        _albumParsedEventRepoMock
-            .Setup(repository => repository.AddAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Callback<Guid, string, CancellationToken>((_, payload, _) => capturePayload(payload))
-            .Returns(Task.CompletedTask);
 
         _imageUploadServiceMock
             .Setup(service => service.UploadAlbumImageAsync(It.IsAny<ImageUploadRequest>(), It.IsAny<CancellationToken>()))

@@ -1,10 +1,8 @@
 namespace MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
-public enum CatalogueIndexStatus
+public enum AlbumProcessedStatus
 {
     New,
-    Relevant,
-    NotRelevant,
-    AiVerified,
+    Updated,
     Deleted
 }

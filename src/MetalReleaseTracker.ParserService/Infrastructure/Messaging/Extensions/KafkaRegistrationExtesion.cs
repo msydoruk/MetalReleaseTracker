@@ -1,4 +1,4 @@
-﻿using Confluent.Kafka;
+using Confluent.Kafka;
 using MassTransit;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Infrastructure.Messaging.Configuration;
@@ -15,7 +15,7 @@ public static class KafkaRegistrationExtension
             configure.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
             configure.AddRider(rider =>
             {
-                rider.AddProducer<AlbumParsedPublicationEvent>(kafkaConfig.ParserServiceTopic);
+                rider.AddProducer<AlbumProcessedPublicationEvent>(kafkaConfig.AlbumProcessedTopic);
                 rider.UsingKafka((context, kafkaFactory) =>
                 {
                     kafkaFactory.SecurityProtocol = Enum.Parse<SecurityProtocol>(kafkaConfig.Security.SaslProtocol, true);

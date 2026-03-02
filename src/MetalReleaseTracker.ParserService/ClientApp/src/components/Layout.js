@@ -15,8 +15,8 @@ import Divider from '@mui/material/Divider';
 import MenuIcon from '@mui/icons-material/Menu';
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import ListAltIcon from '@mui/icons-material/ListAlt';
-import SyncIcon from '@mui/icons-material/Sync';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import InventoryIcon from '@mui/icons-material/Inventory';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../hooks/useAuth';
@@ -26,7 +26,7 @@ const DRAWER_WIDTH = 260;
 const NAV_ITEMS = [
   { label: 'Band References', path: '/', icon: <LibraryMusicIcon /> },
   { label: 'Catalogue Index', path: '/catalogue-index', icon: <ListAltIcon /> },
-  { label: 'Parsing Sessions', path: '/parsing-sessions', icon: <SyncIcon /> },
+  { label: 'Catalogue Details', path: '/catalogue-details', icon: <InventoryIcon /> },
   { label: 'AI Verification', path: '/ai-verification', icon: <SmartToyIcon /> },
   { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
 ];

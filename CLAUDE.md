@@ -8,7 +8,6 @@ dotnet build src/MetalReleaseTracker.sln
 
 # Run individual services (from repo root)
 dotnet run --project src/MetalReleaseTracker.ParserService
-dotnet run --project src/MetalReleaseTracker.CatalogSyncService
 dotnet run --project src/MetalReleaseTracker.CoreDataService
 
 # Frontend
@@ -17,13 +16,11 @@ cd src/MetalReleaseTracker.Frontend && npm install --legacy-peer-deps && npm sta
 # Docker: start shared infra first, then services
 docker compose -f src/MetalReleaseTracker.SharedInfrastructure/docker-compose.yml up -d
 docker compose -f src/MetalReleaseTracker.ParserService/docker-compose.yml up -d --build
-docker compose -f src/MetalReleaseTracker.CatalogSyncService/docker-compose.yml up -d --build
 docker compose -f src/MetalReleaseTracker.CoreDataService/docker-compose.yml up -d --build
 docker compose -f src/MetalReleaseTracker.Frontend/docker-compose.yml up -d --build
 
 # Tests (xUnit with Testcontainers - requires Docker running)
 dotnet test src/MetalReleaseTracker.ParserService
-dotnet test src/MetalReleaseTracker.CatalogSyncService
 dotnet test src/MetalReleaseTracker.CoreDataService
 
 # EF Core migrations
@@ -44,11 +41,9 @@ docker exec -i <postgres-container> env PGPASSWORD='<from .env>' psql -U <user> 
 docker exec -i metalrelease_postgres_parser env PGPASSWORD='...' psql -U parser_admin -d ParserServiceDb -c 'SELECT COUNT(*) FROM "CatalogueIndex";'
 ```
 
-Service database ports: ParserService=5434, CatalogSyncService=5435, CoreDataService=5436. PostgreSQL column names are PascalCase and must be double-quoted in SQL.
+Service database ports: ParserService=5434, CoreDataService=5436. PostgreSQL column names are PascalCase and must be double-quoted in SQL.
 
-**ParserServiceDb** (PostgreSQL, port 5434): BandReferences, BandDiscography, CatalogueIndex, AiVerifications, AiAgents, ParsingSessions, AlbumParsedEvents, ParsingSources, Settings.
-
-**CatalogSyncServiceDb** (MongoDB, port 27017): ParsingSessionWithRawAlbums (30-day TTL), ProcessedAlbums. PostgreSQL (port 5435) used only for TickerQ scheduling.
+**ParserServiceDb** (PostgreSQL, port 5434): BandReferences, BandDiscography, CatalogueIndex, CatalogueIndexDetails, AiVerifications, AiAgents, ParsingSources, Settings.
 
 **CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, Feedbacks, RefreshTokens, UserFavorites + ASP.NET Identity tables.
 
@@ -59,12 +54,10 @@ Full schema with columns, types, and FK relationships: [`docs/database-schema.md
 Event-driven pipeline for tracking Ukrainian metal band releases:
 
 ```
-ParserService -> Kafka (albums-parsed-topic) -> CatalogSyncService -> Kafka (albums-processed-topic) -> CoreDataService -> Frontend
+ParserService -> Kafka (albums-processed-topic) -> CoreDataService -> Frontend
 ```
 
-**ParserService** (.NET 10 Worker) - Scrapes album data from 3 distributor websites using HtmlAgilityPack and Selenium WebDriver. Uploads cover images to MinIO. Publishes parsed events via transactional outbox pattern. PostgreSQL (`ParserServiceDb`, port 5434).
-
-**CatalogSyncService** (.NET 10 Worker) - Consumes parsed events, validates with FluentValidation, detects new/updated/deleted albums. MongoDB for raw album storage (30-day TTL). PostgreSQL for TickerQ scheduling only (port 5435).
+**ParserService** (.NET 10 Worker) - Scrapes album data from distributor websites using HtmlAgilityPack and Selenium WebDriver. Uploads cover images to MinIO. Detects new/updated/deleted albums via CatalogueIndexDetails and publishes directly to Kafka. PostgreSQL (`ParserServiceDb`, port 5434).
 
 **CoreDataService** (.NET 10 API) - REST API with Minimal APIs. Consumes processed events, serves albums/bands/distributors to frontend. Google OAuth + JWT auth. PostgreSQL (`CoreDataServiceDb`, port 5436). Swagger at `/swagger`.
 
@@ -78,11 +71,9 @@ ParserService -> Kafka (albums-parsed-topic) -> CatalogSyncService -> Kafka (alb
 
 - **Minimal APIs** - CoreDataService uses `MapGet`/`MapPost` endpoint mapping (see `Endpoints/` folder)
 - **Repository + Service layers** - Each service has `Repositories/` and `Services/` with interface-based DI
-- **Autofac DI** - ParserService and CatalogSyncService replace default DI with `AutofacServiceProviderFactory`
+- **Autofac DI** - ParserService replaces default DI with `AutofacServiceProviderFactory`
 - **MassTransit + Kafka** - Dual transport (InMemory + Kafka Rider). Producers use `ITopicProducer<T>`, consumers implement `IConsumer<T>`
-- **TickerQ** - Scheduled jobs in ParserService and CatalogSyncService. Dashboard at `/tickerq/dashboard`
-- **FluentValidation** - `AbstractValidator<T>` in CatalogSyncService for raw album validation
-- **Transactional outbox** - ParserService persists events to DB before publishing to Kafka
+- **TickerQ** - Scheduled jobs in ParserService. Dashboard at `/tickerq/dashboard`
 - **MinIO** - Album cover storage with pre-signed URLs for frontend access
 - **Service registration extensions** - `*RegistrationExtension.cs` / `*Extension.cs` static classes with `IServiceCollection` extension methods
 - **OpenTelemetry** - Traces (Tempo), logs (Loki), metrics (Prometheus), dashboards (Grafana)

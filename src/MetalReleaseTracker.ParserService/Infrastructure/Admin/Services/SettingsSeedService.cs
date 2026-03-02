@@ -20,14 +20,21 @@ public class SettingsSeedService : ISettingsSeedService
         1. If a discography IS provided above, each entry is prefixed with a UUID in square brackets.
            It lists all known albums of a Ukrainian band with this name from Metal Archives.
            Multiple bands often share the same name.
-           - If "{{albumTitle}}" matches or closely matches an entry in the discography → isUkrainian: true,
-             and return the UUID of the matched entry as matchedAlbumId.
-           - IMPORTANT: Metal Archives often lists album titles in the band's native language
-             (Russian, Ukrainian, or other Cyrillic scripts), while distributors may use the English
-             translation, transliteration, or international title. Consider cross-language equivalents
-             when matching. For example, a Cyrillic title and its English translation are the SAME album.
-           - If "{{albumTitle}}" does NOT appear in the discography even after considering translations
-             and cross-language equivalents → this is most likely a DIFFERENT band
+           - MATCHING STEPS:
+             a) First, strip any format/edition suffixes from "{{albumTitle}}". Distributor titles often
+                include suffixes like "Digibook CD", "Vinyl", "Splatter Vinyl", "Galaxy Vinyl",
+                "Black Vinyl", "Marble Vinyl", "Donation Edition Vinyl" etc. separated by a period or dash.
+                Extract only the core album name for matching.
+             b) Metal Archives lists album titles in the band's native language (Ukrainian, Russian,
+                or other Cyrillic scripts), while distributors use the English translation, transliteration,
+                or international title. You MUST actively translate the core album title to Ukrainian/Russian
+                AND translate each discography entry to English, then compare both ways.
+                Examples: "Verity" = "Істина" (both mean "truth"), "Nechrist" = "Нехристь",
+                "The Voice of Steel" = "Голос сталі", "Kolovorot" = "Коловорот" (transliteration).
+             c) If the translated or transliterated title matches a discography entry → isUkrainian: true,
+                and return the UUID of the matched entry as matchedAlbumId.
+           - If "{{albumTitle}}" does NOT match any discography entry even after stripping suffixes,
+             translating, and transliterating → this is most likely a DIFFERENT band
              with the same name → isUkrainian: false, matchedAlbumId: null.
         2. If NO discography is provided, use your general knowledge of the metal scene to determine
            the band's country of origin. Consider: band name language, Metal Archives, Discogs,

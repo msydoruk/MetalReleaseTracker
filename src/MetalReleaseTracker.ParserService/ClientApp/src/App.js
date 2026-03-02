@@ -9,9 +9,8 @@ import Layout from './components/Layout';
 import BandReferencesPage from './pages/BandReferencesPage';
 import BandReferenceDetailPage from './pages/BandReferenceDetailPage';
 import CatalogueIndexPage from './pages/CatalogueIndexPage';
-import ParsingSessionsPage from './pages/ParsingSessionsPage';
-import ParsingSessionDetailPage from './pages/ParsingSessionDetailPage';
 import AiVerificationPage from './pages/AiVerificationPage';
+import CatalogueDetailsPage from './pages/CatalogueDetailsPage';
 import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
@@ -32,8 +31,7 @@ export default function App() {
               <Route index element={<BandReferencesPage />} />
               <Route path="band-references/:id" element={<BandReferenceDetailPage />} />
               <Route path="catalogue-index" element={<CatalogueIndexPage />} />
-              <Route path="parsing-sessions" element={<ParsingSessionsPage />} />
-              <Route path="parsing-sessions/:id" element={<ParsingSessionDetailPage />} />
+              <Route path="catalogue-details" element={<CatalogueDetailsPage />} />
               <Route path="ai-verification" element={<AiVerificationPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

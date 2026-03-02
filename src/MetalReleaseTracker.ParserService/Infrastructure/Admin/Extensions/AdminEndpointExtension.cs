@@ -13,7 +13,7 @@ public static class AdminEndpointExtension
         var adminGroup = app.MapGroup(string.Empty).RequireAuthorization().DisableAntiforgery();
         BandReferenceEndpoints.MapEndpoints(adminGroup);
         CatalogueIndexEndpoints.MapEndpoints(adminGroup);
-        ParsingSessionEndpoints.MapEndpoints(adminGroup);
+        CatalogueDetailEndpoints.MapEndpoints(adminGroup);
         AiVerificationEndpoints.MapEndpoints(adminGroup);
         SettingsEndpoints.MapEndpoints(adminGroup);
     }

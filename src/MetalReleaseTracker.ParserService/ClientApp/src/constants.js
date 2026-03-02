@@ -2,15 +2,8 @@ export const CATALOGUE_INDEX_STATUS = {
   0: { label: 'New', color: 'info' },
   1: { label: 'Relevant', color: 'success' },
   2: { label: 'Not Relevant', color: 'default' },
-  3: { label: 'Processed', color: 'primary' },
-  4: { label: 'AI Verified', color: 'success' },
-};
-
-export const PARSING_STATUS = {
-  0: { label: 'Incomplete', color: 'warning' },
-  1: { label: 'Parsed', color: 'success' },
-  2: { label: 'Published', color: 'primary' },
-  3: { label: 'Failed', color: 'error' },
+  3: { label: 'AI Verified', color: 'success' },
+  4: { label: 'Deleted', color: 'error' },
 };
 
 export const DISTRIBUTOR_CODES = {
@@ -27,4 +20,16 @@ export const MEDIA_TYPES = {
   0: 'CD',
   1: 'LP',
   2: 'Tape',
+};
+
+export const CHANGE_TYPE = {
+  0: { label: 'New', color: 'info' },
+  1: { label: 'Updated', color: 'warning' },
+  2: { label: 'Deleted', color: 'error' },
+  3: { label: 'Active', color: 'success' },
+};
+
+export const PUBLICATION_STATUS = {
+  0: { label: 'Unpublished', color: 'warning' },
+  1: { label: 'Published', color: 'success' },
 };
