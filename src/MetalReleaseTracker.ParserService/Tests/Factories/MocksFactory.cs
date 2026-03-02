@@ -3,9 +3,7 @@ using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
 using MetalReleaseTracker.ParserService.Domain.Models.Results;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
-using MetalReleaseTracker.ParserService.Infrastructure.Jobs.Configuration;
 using MetalReleaseTracker.SharedLibraries.Minio;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MetalReleaseTracker.ParserService.Tests.Factories;
@@ -46,25 +44,12 @@ public static class MocksFactory
         return fileStorageServiceMock;
     }
 
-    public static Mock<ITopicProducer<AlbumParsedPublicationEvent>> CreateTopicProducerMock()
+    public static Mock<ITopicProducer<AlbumProcessedPublicationEvent>> CreateTopicProducerMock()
     {
-        var topicProducerMock = new Mock<ITopicProducer<AlbumParsedPublicationEvent>>();
-        topicProducerMock.Setup(x => x.Produce(It.IsAny<AlbumParsedPublicationEvent>(), It.IsAny<CancellationToken>()))
+        var topicProducerMock = new Mock<ITopicProducer<AlbumProcessedPublicationEvent>>();
+        topicProducerMock.Setup(x => x.Produce(It.IsAny<AlbumProcessedPublicationEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         return topicProducerMock;
-    }
-
-    public static Mock<IOptions<AlbumParsedPublisherJobSettings>> CreateAlbumParsedPublisherJobSettingsMock(
-        int maxChunkSizeInBytes)
-    {
-        var albumParsedPublisherJobSettingsMock = new Mock<IOptions<AlbumParsedPublisherJobSettings>>();
-        albumParsedPublisherJobSettingsMock.Setup(x => x.Value)
-            .Returns(new AlbumParsedPublisherJobSettings
-            {
-                MaxChunkSizeInBytes = maxChunkSizeInBytes
-            });
-
-        return albumParsedPublisherJobSettingsMock;
     }
 }

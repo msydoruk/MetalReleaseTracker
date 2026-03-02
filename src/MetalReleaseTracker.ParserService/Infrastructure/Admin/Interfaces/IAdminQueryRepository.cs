@@ -16,11 +16,7 @@ public interface IAdminQueryRepository
         CatalogueIndexFilterDto filter,
         CancellationToken cancellationToken);
 
-    Task<PagedResultDto<ParsingSessionDto>> GetParsingSessionsAsync(
-        ParsingSessionFilterDto filter,
-        CancellationToken cancellationToken);
-
-    Task<ParsingSessionDetailDto?> GetParsingSessionByIdAsync(
-        Guid id,
+    Task<PagedResultDto<CatalogueDetailDto>> GetCatalogueDetailsAsync(
+        CatalogueDetailFilterDto filter,
         CancellationToken cancellationToken);
 }

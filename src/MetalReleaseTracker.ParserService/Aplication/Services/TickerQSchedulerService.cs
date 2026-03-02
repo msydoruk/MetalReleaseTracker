@@ -43,7 +43,7 @@ public class TickerQSchedulerService : BackgroundService
         await RegisterBandReferenceSyncJob(cancellationToken);
         await RegisterCatalogueIndexJobs(parserDataSources, cancellationToken);
         await RegisterAlbumDetailParsingJobs(parserDataSources, cancellationToken);
-        await RegisterParsedPublisherJob(cancellationToken);
+        await RegisterAlbumPublisherJob(cancellationToken);
     }
 
     private async Task RegisterBandReferenceSyncJob(CancellationToken cancellationToken = default)
@@ -158,11 +158,11 @@ public class TickerQSchedulerService : BackgroundService
         }
     }
 
-    private async Task RegisterParsedPublisherJob(CancellationToken cancellationToken = default)
+    private async Task RegisterAlbumPublisherJob(CancellationToken cancellationToken = default)
     {
         try
         {
-            var functionName = "AlbumParsedPublisherJob";
+            var functionName = "AlbumPublisherJob";
             var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
                 .FirstOrDefault(job => job.Function == functionName);
 
@@ -176,16 +176,16 @@ public class TickerQSchedulerService : BackgroundService
                 new CustomCronTicker
                 {
                     Function = functionName,
-                    Expression = "0 0 */6 * * *",
-                    Description = "Album publishing job every 6 hours"
+                    Expression = "0 0 */1 * * *",
+                    Description = "Album publishing job every 1 hour"
                 },
                 cancellationToken);
 
-            _logger.LogInformation("Scheduled album parsed publisher job.");
+            _logger.LogInformation("Scheduled album publisher job.");
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Failed to schedule album parsed publisher job.");
+            _logger.LogError(exception, "Failed to schedule album publisher job.");
         }
     }
 }

@@ -39,4 +39,6 @@ public class CatalogueIndexEntity
 
     [Required]
     public DateTime UpdatedAt { get; set; }
+
+    public CatalogueIndexDetailEntity? Detail { get; set; }
 }

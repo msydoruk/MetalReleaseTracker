@@ -24,12 +24,10 @@ public static class AdminRouteConstants
         public const string BatchUpdateStatus = $"{Prefix}/batch-status";
     }
 
-    public static class ParsingSessions
+    public static class CatalogueDetails
     {
-        private const string Prefix = $"{Base}/parsing-sessions";
+        private const string Prefix = $"{Base}/catalogue-details";
         public const string GetAll = Prefix;
-        public const string GetById = $"{Prefix}/{{id:guid}}";
-        public const string UpdateStatus = $"{Prefix}/{{id:guid}}/status";
     }
 
     public static class AiVerification
