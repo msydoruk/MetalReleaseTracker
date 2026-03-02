@@ -17,6 +17,7 @@ import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../hooks/useAuth';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { label: 'Catalogue Index', path: '/catalogue-index', icon: <ListAltIcon /> },
   { label: 'Catalogue Details', path: '/catalogue-details', icon: <InventoryIcon /> },
   { label: 'AI Verification', path: '/ai-verification', icon: <SmartToyIcon /> },
+  { label: 'Parsing Monitor', path: '/parsing-monitor', icon: <MonitorHeartIcon /> },
   { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
 ];
 

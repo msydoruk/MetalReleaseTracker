@@ -6,6 +6,7 @@ using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Models;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
+using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
@@ -16,6 +17,7 @@ public class AlbumDetailParsingJob
     private readonly ICatalogueIndexDetailRepository _catalogueIndexDetailRepository;
     private readonly IImageUploadService _imageUploadService;
     private readonly ISettingsService _settingsService;
+    private readonly IParsingProgressTracker _progressTracker;
     private readonly ILogger<AlbumDetailParsingJob> _logger;
     private readonly Random _random = new();
 
@@ -25,6 +27,7 @@ public class AlbumDetailParsingJob
         ICatalogueIndexDetailRepository catalogueIndexDetailRepository,
         IImageUploadService imageUploadService,
         ISettingsService settingsService,
+        IParsingProgressTracker progressTracker,
         ILogger<AlbumDetailParsingJob> logger)
     {
         _detailParserResolver = detailParserResolver;
@@ -32,6 +35,7 @@ public class AlbumDetailParsingJob
         _catalogueIndexDetailRepository = catalogueIndexDetailRepository;
         _imageUploadService = imageUploadService;
         _settingsService = settingsService;
+        _progressTracker = progressTracker;
         _logger = logger;
     }
 
@@ -89,65 +93,89 @@ public class AlbumDetailParsingJob
         }
 
         var parser = _detailParserResolver(distributorCode);
+        var runId = Guid.NewGuid();
 
         _logger.LogInformation(
             "Parsing {Count} relevant entries for {DistributorCode}.",
             relevantEntries.Count,
             distributorCode);
 
-        foreach (var entry in relevantEntries)
+        _progressTracker.StartRun(runId, ParsingJobType.DetailParsing, distributorCode, relevantEntries.Count);
+
+        try
         {
-            try
+            foreach (var entry in relevantEntries)
             {
-                _logger.LogInformation(
-                    "Scraping detail page for {BandName} - {AlbumTitle} ({DistributorCode}).",
-                    entry.BandName,
-                    entry.AlbumTitle,
-                    distributorCode);
+                var itemDescription = $"{entry.BandName} - {entry.AlbumTitle}";
 
-                var albumParsedEvent = await parser.ParseAlbumDetailAsync(entry.DetailUrl, cancellationToken);
-
-                if (!string.IsNullOrEmpty(albumParsedEvent.SKU))
+                try
                 {
-                    albumParsedEvent.SKU = $"{distributorCode}-{albumParsedEvent.SKU}";
-                }
+                    _logger.LogInformation(
+                        "Scraping detail page for {BandName} - {AlbumTitle} ({DistributorCode}).",
+                        entry.BandName,
+                        entry.AlbumTitle,
+                        distributorCode);
 
-                if (entry.MediaType.HasValue)
+                    var albumParsedEvent = await parser.ParseAlbumDetailAsync(entry.DetailUrl, cancellationToken);
+
+                    if (!string.IsNullOrEmpty(albumParsedEvent.SKU))
+                    {
+                        albumParsedEvent.SKU = $"{distributorCode}-{albumParsedEvent.SKU}";
+                    }
+
+                    if (entry.MediaType.HasValue)
+                    {
+                        albumParsedEvent.Media = entry.MediaType;
+                    }
+
+                    if (entry.BandDiscography != null)
+                    {
+                        albumParsedEvent.CanonicalTitle = entry.BandDiscography.AlbumTitle;
+                        albumParsedEvent.OriginalYear = entry.BandDiscography.Year;
+                    }
+
+                    await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
+                    await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
+
+                    _logger.LogInformation(
+                        "Parsed album: {SKU} - {BandName}. Distributor: {DistributorCode}.",
+                        albumParsedEvent.SKU,
+                        albumParsedEvent.BandName,
+                        distributorCode);
+
+                    _progressTracker.ItemProcessed(runId, itemDescription);
+
+                    await DelayBetweenRequests(generalParserSettings, cancellationToken);
+                }
+                catch (OperationCanceledException)
                 {
-                    albumParsedEvent.Media = entry.MediaType;
+                    throw;
                 }
-
-                if (entry.BandDiscography != null)
+                catch (Exception exception)
                 {
-                    albumParsedEvent.CanonicalTitle = entry.BandDiscography.AlbumTitle;
-                    albumParsedEvent.OriginalYear = entry.BandDiscography.Year;
+                    _logger.LogError(
+                        exception,
+                        "Failed to parse detail page for entry {EntryId} ({DetailUrl}).",
+                        entry.Id,
+                        entry.DetailUrl);
+
+                    _progressTracker.ItemFailed(runId, itemDescription, exception.Message);
+
+                    await HandleParseFailureAsync(entry, cancellationToken);
                 }
-
-                await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
-                await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
-
-                _logger.LogInformation(
-                    "Parsed album: {SKU} - {BandName}. Distributor: {DistributorCode}.",
-                    albumParsedEvent.SKU,
-                    albumParsedEvent.BandName,
-                    distributorCode);
-
-                await DelayBetweenRequests(generalParserSettings, cancellationToken);
             }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(
-                    exception,
-                    "Failed to parse detail page for entry {EntryId} ({DetailUrl}).",
-                    entry.Id,
-                    entry.DetailUrl);
 
-                await HandleParseFailureAsync(entry, cancellationToken);
-            }
+            _progressTracker.CompleteRun(runId);
+        }
+        catch (OperationCanceledException)
+        {
+            _progressTracker.FailRun(runId, "Cancelled");
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _progressTracker.FailRun(runId, exception.Message);
+            throw;
         }
     }
 
@@ -208,15 +236,15 @@ public class AlbumDetailParsingJob
     {
         detail.DistributorCode = source.DistributorCode;
         detail.BandName = source.BandName;
-        detail.SKU = source.SKU;
-        detail.Name = source.Name;
-        detail.Genre = source.Genre;
+        detail.SKU = AlbumParsingHelper.TruncateSku(source.SKU);
+        detail.Name = AlbumParsingHelper.TruncateName(source.Name);
+        detail.Genre = AlbumParsingHelper.TruncateGenre(source.Genre);
         detail.Price = source.Price;
         detail.PurchaseUrl = source.PurchaseUrl;
         detail.PhotoUrl = source.PhotoUrl;
         detail.Media = source.Media;
-        detail.Label = source.Label;
-        detail.Press = source.Press;
+        detail.Label = AlbumParsingHelper.TruncateLabel(source.Label);
+        detail.Press = AlbumParsingHelper.TruncatePress(source.Press);
         detail.Description = source.Description;
         detail.Status = source.Status;
         detail.CanonicalTitle = source.CanonicalTitle;

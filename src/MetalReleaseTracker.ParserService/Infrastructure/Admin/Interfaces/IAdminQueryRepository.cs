@@ -19,4 +19,9 @@ public interface IAdminQueryRepository
     Task<PagedResultDto<CatalogueDetailDto>> GetCatalogueDetailsAsync(
         CatalogueDetailFilterDto filter,
         CancellationToken cancellationToken);
+
+    Task<PagedResultDto<ParsingRunDto>> GetParsingRunsAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
 }

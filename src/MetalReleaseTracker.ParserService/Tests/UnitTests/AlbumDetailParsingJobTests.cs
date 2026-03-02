@@ -21,6 +21,7 @@ public class AlbumDetailParsingJobTests
     private readonly Mock<ICatalogueIndexDetailRepository> _catalogueIndexDetailRepoMock = new();
     private readonly Mock<IImageUploadService> _imageUploadServiceMock = new();
     private readonly Mock<ISettingsService> _settingsServiceMock = new();
+    private readonly Mock<IParsingProgressTracker> _progressTrackerMock = new();
 
     [Fact]
     public async Task ParseRelevantEntries_WithBandDiscography_SetsCanonicalFields()
@@ -197,6 +198,7 @@ public class AlbumDetailParsingJobTests
             _catalogueIndexDetailRepoMock.Object,
             _imageUploadServiceMock.Object,
             _settingsServiceMock.Object,
+            _progressTrackerMock.Object,
             NullLogger<AlbumDetailParsingJob>.Instance);
     }
 
