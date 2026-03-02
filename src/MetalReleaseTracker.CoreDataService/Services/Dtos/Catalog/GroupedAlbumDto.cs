@@ -10,8 +10,6 @@ public class GroupedAlbumDto
 
     public string PhotoUrl { get; set; } = string.Empty;
 
-    public DateTime? ReleaseDate { get; set; }
-
     public string? Genre { get; set; }
 
     public AlbumMediaType? Media { get; set; }

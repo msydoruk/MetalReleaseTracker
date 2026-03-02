@@ -19,10 +19,6 @@ public static class AlbumFilteringExtensions
                 album => album.Price >= (float)filter.MinPrice.Value)
             .WhereIf(filter.MaxPrice.HasValue,
                 album => album.Price <= (float)filter.MaxPrice.Value)
-            .WhereIf(filter.ReleaseDateFrom.HasValue,
-                album => album.ReleaseDate >= filter.ReleaseDateFrom.Value)
-            .WhereIf(filter.ReleaseDateTo.HasValue,
-                album => album.ReleaseDate <= filter.ReleaseDateTo.Value)
             .WhereIf(filter.BandId.HasValue,
                 album => album.BandId == filter.BandId.Value)
             .WhereIf(filter.DistributorId.HasValue,

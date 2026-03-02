@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
@@ -87,7 +86,6 @@ public class NapalmRecordsParser : BaseDistributorParser
         var price = ParsePrice(pageSource, htmlDocument);
         var photoUrl = ParsePhotoUrl(htmlDocument);
         var genre = ParseAttribute(htmlDocument, "Genre");
-        var releaseDate = ParseReleaseDate(htmlDocument);
         var description = ParseDescription(htmlDocument);
 
         return new AlbumParsedEvent
@@ -96,7 +94,6 @@ public class NapalmRecordsParser : BaseDistributorParser
             BandName = bandName,
             SKU = sku,
             Name = albumName,
-            ReleaseDate = releaseDate,
             Genre = genre,
             Price = price,
             PurchaseUrl = detailUrl,
@@ -230,33 +227,6 @@ public class NapalmRecordsParser : BaseDistributorParser
         }
 
         return string.Empty;
-    }
-
-    private DateTime ParseReleaseDate(HtmlDocument htmlDocument)
-    {
-        var dateText = ParseAttribute(htmlDocument, "Release Date");
-        if (string.IsNullOrEmpty(dateText))
-        {
-            return DateTime.MinValue;
-        }
-
-        if (DateTime.TryParseExact(dateText, "MMM d, yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-        {
-            return date;
-        }
-
-        if (DateTime.TryParseExact(dateText, "MMMM d, yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-        {
-            return date;
-        }
-
-        var yearMatch = Regex.Match(dateText, @"\d{4}");
-        if (yearMatch.Success)
-        {
-            return AlbumParsingHelper.ParseYear(yearMatch.Value);
-        }
-
-        return DateTime.MinValue;
     }
 
     private string ParseDescription(HtmlDocument htmlDocument)

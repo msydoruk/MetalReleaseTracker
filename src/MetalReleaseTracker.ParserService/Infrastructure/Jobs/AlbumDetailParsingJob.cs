@@ -210,7 +210,6 @@ public class AlbumDetailParsingJob
         detail.BandName = source.BandName;
         detail.SKU = source.SKU;
         detail.Name = source.Name;
-        detail.ReleaseDate = source.ReleaseDate;
         detail.Genre = source.Genre;
         detail.Price = source.Price;
         detail.PurchaseUrl = source.PurchaseUrl;

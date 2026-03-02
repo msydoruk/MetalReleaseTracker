@@ -45,35 +45,12 @@ api.interceptors.response.use(
   }
 );
 
-// Helper to format date for API
-const formatDateParam = (date) => {
-  if (!date) return null;
-  
-  try {
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return null;
-    
-    // Make sure the date is in UTC format
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return null;
-  }
-};
-
 export const fetchAlbums = (filters) => {
   const queryParams = new URLSearchParams();
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        if (key === 'releaseDateFrom' || key === 'releaseDateTo') {
-          const formattedDate = formatDateParam(value);
-          if (formattedDate) {
-            queryParams.append(key, formattedDate);
-          }
-        } else {
-          queryParams.append(key, value);
-        }
+        queryParams.append(key, value);
       }
     });
   }
@@ -85,14 +62,7 @@ export const fetchGroupedAlbums = (filters) => {
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        if (key === 'releaseDateFrom' || key === 'releaseDateTo') {
-          const formattedDate = formatDateParam(value);
-          if (formattedDate) {
-            queryParams.append(key, formattedDate);
-          }
-        } else {
-          queryParams.append(key, value);
-        }
+        queryParams.append(key, value);
       }
     });
   }

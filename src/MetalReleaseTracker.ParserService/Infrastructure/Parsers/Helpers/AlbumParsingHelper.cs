@@ -44,16 +44,6 @@ public static class AlbumParsingHelper
         return null;
     }
 
-    public static DateTime ParseYear(string year)
-    {
-        if (DateTime.TryParseExact(year?.Trim(), "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-        {
-            return date;
-        }
-
-        return DateTime.MinValue;
-    }
-
     public static string GenerateSkuFromUrl(string url)
     {
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(url));

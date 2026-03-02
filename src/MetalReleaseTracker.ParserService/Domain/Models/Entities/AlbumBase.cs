@@ -12,8 +12,6 @@ public class AlbumBase
 
     public string Name { get; set; }
 
-    public DateTime ReleaseDate { get; set; }
-
     public string? Genre { get; set; }
 
     public float Price { get; set; }

@@ -10,10 +10,6 @@ public record AlbumFilterDto
 
     public decimal? MaxPrice { get; init; }
 
-    public DateTime? ReleaseDateFrom { get; init; }
-
-    public DateTime? ReleaseDateTo { get; init; }
-
     public Guid? BandId { get; init; }
 
     public Guid? DistributorId { get; init; }

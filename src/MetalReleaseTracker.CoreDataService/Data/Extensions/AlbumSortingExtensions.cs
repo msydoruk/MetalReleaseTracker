@@ -12,7 +12,6 @@ public static class AlbumSortingExtensions
         {
             [AlbumSortField.Name] = (album => album.Name, album => album.Name),
             [AlbumSortField.Price] = (album => album.Price, album => album.Price),
-            [AlbumSortField.ReleaseDate] = (album => album.ReleaseDate, album => album.ReleaseDate),
             [AlbumSortField.Band] = (album => album.Band.Name, album => album.Band.Name),
             [AlbumSortField.Distributor] = (album => album.Distributor.Name, album => album.Distributor.Name),
             [AlbumSortField.Media] = (album => album.Media, album => album.Media),

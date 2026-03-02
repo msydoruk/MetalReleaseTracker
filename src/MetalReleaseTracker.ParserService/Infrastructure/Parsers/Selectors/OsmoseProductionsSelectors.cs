@@ -12,7 +12,6 @@ public static class OsmoseProductionsSelectors
     public const string DetailBandName = "//span[@class='cufonAb']/a";
     public const string DetailAlbumName = "//div[@class='column twelve']//span[@class='cufonAb']";
     public const string DetailSku = "//span[@class='cufonEb' and contains(text(), 'Press :')]";
-    public const string DetailReleaseDate = "//span[@class='cufonEb' and contains(text(), 'Year :')]";
     public const string DetailPrice = "//span[@class='cufonCd ']";
     public const string DetailPhoto = "//div[@class='photo_prod_container']/a";
     public const string DetailLabel = "//span[@class='cufonEb' and contains(text(), 'Label :')]//a";
