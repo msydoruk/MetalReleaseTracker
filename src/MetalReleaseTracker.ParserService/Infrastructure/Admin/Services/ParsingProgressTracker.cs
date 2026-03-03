@@ -97,6 +97,11 @@ public class ParsingProgressTracker : IParsingProgressTracker
 
         state.AddItem(new ParsingRunItemRecord(itemDescription, true, null, categories, DateTime.UtcNow));
 
+        if (state.ProcessedItems % 10 == 0)
+        {
+            UpdateRunInDbAsync(runId, ParsingRunStatus.Running, state.ProcessedItems, state.FailedItems, null, state.GetCountersSnapshot(), state.TotalItems).FireAndForget(_logger);
+        }
+
         Broadcast(new ParsingProgressEvent(
             ParsingEventType.Progress,
             runId,
@@ -126,6 +131,11 @@ public class ParsingProgressTracker : IParsingProgressTracker
         }
 
         state.AddItem(new ParsingRunItemRecord(itemDescription, false, error, categories, DateTime.UtcNow));
+
+        if ((state.ProcessedItems + state.FailedItems) % 10 == 0)
+        {
+            UpdateRunInDbAsync(runId, ParsingRunStatus.Running, state.ProcessedItems, state.FailedItems, null, state.GetCountersSnapshot(), state.TotalItems).FireAndForget(_logger);
+        }
 
         Broadcast(new ParsingProgressEvent(
             ParsingEventType.Error,
@@ -274,8 +284,12 @@ public class ParsingProgressTracker : IParsingProgressTracker
         entity.ProcessedItems = processedItems;
         entity.FailedItems = failedItems;
         entity.TotalItems = totalItems;
-        entity.CompletedAt = DateTime.UtcNow;
         entity.ErrorMessage = errorMessage?.Length > 2000 ? errorMessage[..2000] : errorMessage;
+
+        if (status != ParsingRunStatus.Running)
+        {
+            entity.CompletedAt = DateTime.UtcNow;
+        }
 
         if (counters != null && counters.Count > 0)
         {

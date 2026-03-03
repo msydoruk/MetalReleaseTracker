@@ -201,14 +201,14 @@ public class AlbumDetailParsingJob
                 PublicationStatus = PublicationStatus.Unpublished,
             };
 
-            MapAlbumFieldsToDetail(detail, albumParsedEvent);
+            MapAlbumFieldsToDetail(detail, albumParsedEvent, entry);
             await _catalogueIndexDetailRepository.AddAsync(detail, cancellationToken);
             return ChangeType.New;
         }
 
-        if (HasAlbumChanged(existingDetail, albumParsedEvent))
+        if (HasAlbumChanged(existingDetail, albumParsedEvent, entry))
         {
-            MapAlbumFieldsToDetail(existingDetail, albumParsedEvent);
+            MapAlbumFieldsToDetail(existingDetail, albumParsedEvent, entry);
             existingDetail.ChangeType = ChangeType.Updated;
             existingDetail.PublicationStatus = PublicationStatus.Unpublished;
             await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
@@ -240,12 +240,12 @@ public class AlbumDetailParsingJob
         }
     }
 
-    private static void MapAlbumFieldsToDetail(CatalogueIndexDetailEntity detail, AlbumParsedEvent source)
+    private static void MapAlbumFieldsToDetail(CatalogueIndexDetailEntity detail, AlbumParsedEvent source, CatalogueIndexEntity entry)
     {
         detail.DistributorCode = source.DistributorCode;
-        detail.BandName = source.BandName;
+        detail.BandName = entry.BandName;
         detail.SKU = AlbumParsingHelper.TruncateSku(source.SKU);
-        detail.Name = AlbumParsingHelper.TruncateName(source.Name);
+        detail.Name = AlbumParsingHelper.TruncateName(entry.AlbumTitle);
         detail.Genre = AlbumParsingHelper.TruncateGenre(source.Genre);
         detail.Price = source.Price;
         detail.PurchaseUrl = source.PurchaseUrl;
@@ -259,10 +259,11 @@ public class AlbumDetailParsingJob
         detail.OriginalYear = source.OriginalYear;
     }
 
-    private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
+    private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed, CatalogueIndexEntity entry)
     {
-        return existing.Price != parsed.Price
-            || existing.Name != parsed.Name
+        return existing.BandName != entry.BandName
+            || existing.Price != parsed.Price
+            || existing.Name != AlbumParsingHelper.TruncateName(entry.AlbumTitle)
             || existing.PhotoUrl != parsed.PhotoUrl
             || existing.PurchaseUrl != parsed.PurchaseUrl
             || existing.Genre != parsed.Genre

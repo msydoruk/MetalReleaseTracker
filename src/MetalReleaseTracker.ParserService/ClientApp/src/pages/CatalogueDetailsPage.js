@@ -96,12 +96,18 @@ export default function CatalogueDetailsPage() {
       headerName: 'Album',
       flex: 1,
       minWidth: 150,
-    },
-    {
-      field: 'price',
-      headerName: 'Price',
-      width: 80,
-      renderCell: ({ value }) => value != null ? `${value.toFixed(2)}` : '-',
+      renderCell: ({ row }) => row.purchaseUrl ? (
+        <a
+          href={row.purchaseUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          style={{ color: '#e53935', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+        >
+          {row.name}
+          <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>↗</span>
+        </a>
+      ) : row.name,
     },
     {
       field: 'media',
@@ -113,6 +119,12 @@ export default function CatalogueDetailsPage() {
           <Chip label={label} size="small" variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.15)', fontSize: '0.7rem' }} />
         ) : '-';
       },
+    },
+    {
+      field: 'price',
+      headerName: 'Price',
+      width: 80,
+      renderCell: ({ value }) => value != null ? `${value.toFixed(2)}` : '-',
     },
     {
       field: 'canonicalTitle',
