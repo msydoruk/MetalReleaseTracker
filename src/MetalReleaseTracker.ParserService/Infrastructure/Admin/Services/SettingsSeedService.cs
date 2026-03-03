@@ -79,6 +79,7 @@ public class SettingsSeedService : ISettingsSeedService
         await SeedAiAgentAsync(cancellationToken);
         await SeedParsingSourcesAsync(cancellationToken);
         await SeedCategorySettingsAsync(cancellationToken);
+        await UpgradeDelaySettingsAsync(cancellationToken);
     }
 
     private async Task SeedAiAgentAsync(CancellationToken cancellationToken)
@@ -152,18 +153,56 @@ public class SettingsSeedService : ISettingsSeedService
         {
             CreateSetting("BandReference", "MetalArchivesBaseUrl", "https://www.metal-archives.com"),
             CreateSetting("BandReference", "SyncCountryCode", "UA"),
-            CreateSetting("BandReference", "MinRequestDelayMs", "3000"),
-            CreateSetting("BandReference", "MaxRequestDelayMs", "5000"),
+            CreateSetting("BandReference", "MinRequestDelayMs", "5000"),
+            CreateSetting("BandReference", "MaxRequestDelayMs", "10000"),
             CreateSetting("FlareSolverr", "BaseUrl", "http://flaresolverr:8191"),
             CreateSetting("FlareSolverr", "MaxTimeoutMs", "60000"),
-            CreateSetting("GeneralParser", "MinDelayBetweenRequestsSeconds", "1"),
-            CreateSetting("GeneralParser", "MaxDelayBetweenRequestsSeconds", "5"),
+            CreateSetting("GeneralParser", "MinDelayBetweenRequestsSeconds", "3"),
+            CreateSetting("GeneralParser", "MaxDelayBetweenRequestsSeconds", "8"),
         };
 
         _context.Settings.AddRange(settings);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Seeded {Count} category settings.", settings.Count);
+    }
+
+    private async Task UpgradeDelaySettingsAsync(CancellationToken cancellationToken)
+    {
+        var upgrades = new (string Category, string Key, string OldValue, string NewValue)[]
+        {
+            ("GeneralParser", "MinDelayBetweenRequestsSeconds", "1", "3"),
+            ("GeneralParser", "MaxDelayBetweenRequestsSeconds", "5", "8"),
+            ("BandReference", "MinRequestDelayMs", "3000", "5000"),
+            ("BandReference", "MaxRequestDelayMs", "5000", "10000"),
+        };
+
+        var updated = false;
+
+        foreach (var (category, key, oldValue, newValue) in upgrades)
+        {
+            var setting = await _context.Settings
+                .FirstOrDefaultAsync(setting => setting.Category == category && setting.Key == key, cancellationToken);
+
+            if (setting != null && setting.Value == oldValue)
+            {
+                setting.Value = newValue;
+                setting.UpdatedAt = DateTime.UtcNow;
+                updated = true;
+
+                _logger.LogInformation(
+                    "Upgraded setting {Category}.{Key} from {OldValue} to {NewValue}.",
+                    category,
+                    key,
+                    oldValue,
+                    newValue);
+            }
+        }
+
+        if (updated)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private static SettingEntity CreateSetting(string category, string key, string value)

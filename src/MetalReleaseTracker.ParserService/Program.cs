@@ -115,7 +115,7 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = adminFileProvider,
 });
-app.UseTickerQ(TickerQStartMode.Manual);
+app.UseTickerQ();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapAdminEndpoints();

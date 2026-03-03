@@ -1,4 +1,5 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
@@ -85,12 +86,24 @@ public class TickerQSchedulerService : BackgroundService
             {
                 var functionName = "CatalogueIndexJob";
                 var request = TickerHelper.CreateTickerRequest(parserDataSource);
+                var cronExpression = BuildWeeklyCron(parserDataSource.DistributorCode, 2);
                 var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
                     .FirstOrDefault(job => job.Function == functionName && job.Request == request);
 
                 if (existingJob != null)
                 {
-                    _logger.LogDebug("Skipping job {FunctionName} with request {Request}.", functionName, request);
+                    if (existingJob.Expression != cronExpression)
+                    {
+                        existingJob.Expression = cronExpression;
+                        existingJob.Description = $"Weekly catalogue index for {parserDataSource.Name}";
+                        await _parserServiceTickerQDbContext.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation(
+                            "Updated catalogue index job schedule for distributor: {DistributorCode} to {CronExpression}.",
+                            parserDataSource.DistributorCode,
+                            cronExpression);
+                    }
+
                     continue;
                 }
 
@@ -99,14 +112,15 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 2 */3 * *",
-                        Description = $"Catalogue index every 3 days for {parserDataSource.Name}"
+                        Expression = cronExpression,
+                        Description = $"Weekly catalogue index for {parserDataSource.Name}"
                     },
                     cancellationToken);
 
                 _logger.LogInformation(
-                    "Scheduled catalogue index job for distributor: {DistributorCode}.",
-                    parserDataSource.DistributorCode);
+                    "Scheduled catalogue index job for distributor: {DistributorCode} ({CronExpression}).",
+                    parserDataSource.DistributorCode,
+                    cronExpression);
             }
             catch (Exception exception)
             {
@@ -125,12 +139,24 @@ public class TickerQSchedulerService : BackgroundService
             {
                 var functionName = "AlbumDetailParsingJob";
                 var request = TickerHelper.CreateTickerRequest(parserDataSource);
+                var cronExpression = BuildWeeklyCron(parserDataSource.DistributorCode, 8);
                 var existingJob = _parserServiceTickerQDbContext.Set<CustomCronTicker>()
                     .FirstOrDefault(job => job.Function == functionName && job.Request == request);
 
                 if (existingJob != null)
                 {
-                    _logger.LogDebug("Skipping job {FunctionName} with request {Request}.", functionName, request);
+                    if (existingJob.Expression != cronExpression)
+                    {
+                        existingJob.Expression = cronExpression;
+                        existingJob.Description = $"Weekly album detail parsing for {parserDataSource.Name}";
+                        await _parserServiceTickerQDbContext.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation(
+                            "Updated album detail parsing job schedule for distributor: {DistributorCode} to {CronExpression}.",
+                            parserDataSource.DistributorCode,
+                            cronExpression);
+                    }
+
                     continue;
                 }
 
@@ -139,14 +165,15 @@ public class TickerQSchedulerService : BackgroundService
                     {
                         Function = functionName,
                         Request = request,
-                        Expression = "0 0 8 */3 * *",
-                        Description = $"Album detail parsing every 3 days for {parserDataSource.Name}"
+                        Expression = cronExpression,
+                        Description = $"Weekly album detail parsing for {parserDataSource.Name}"
                     },
                     cancellationToken);
 
                 _logger.LogInformation(
-                    "Scheduled album detail parsing job for distributor: {DistributorCode}.",
-                    parserDataSource.DistributorCode);
+                    "Scheduled album detail parsing job for distributor: {DistributorCode} ({CronExpression}).",
+                    parserDataSource.DistributorCode,
+                    cronExpression);
             }
             catch (Exception exception)
             {
@@ -187,5 +214,11 @@ public class TickerQSchedulerService : BackgroundService
         {
             _logger.LogError(exception, "Failed to schedule album publisher job.");
         }
+    }
+
+    private static string BuildWeeklyCron(DistributorCode code, int hour)
+    {
+        var dayOfWeek = (int)code % 7;
+        return $"0 0 {hour} * * {dayOfWeek}";
     }
 }
