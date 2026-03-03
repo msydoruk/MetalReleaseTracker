@@ -34,35 +34,50 @@ public class AlbumPublisherJob
 
         try
         {
-            var unpublished = await _catalogueIndexDetailRepository.GetUnpublishedAsync(BatchSize, cancellationToken);
+            var totalPublished = 0;
 
-            if (unpublished.Count == 0)
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var unpublished = await _catalogueIndexDetailRepository.GetUnpublishedAsync(BatchSize, cancellationToken);
+
+                if (unpublished.Count == 0)
+                {
+                    break;
+                }
+
+                if (!trackingStarted)
+                {
+                    _progressTracker.StartRun(runId, ParsingJobType.AlbumPublisher, unpublished.Count);
+                    trackingStarted = true;
+                }
+
+                _logger.LogInformation("Publishing batch of {Count} album changes.", unpublished.Count);
+
+                foreach (var detail in unpublished)
+                {
+                    var publicationEvent = MapToPublicationEvent(detail);
+                    await _topicProducer.Produce(publicationEvent, cancellationToken);
+
+                    detail.PublicationStatus = PublicationStatus.Published;
+                    detail.LastPublishedAt = DateTime.UtcNow;
+                    await _catalogueIndexDetailRepository.UpdateAsync(detail, cancellationToken);
+
+                    var category = MapChangeTypeToCategory(detail.ChangeType);
+                    _progressTracker.ItemProcessed(runId, $"{detail.BandName} - {detail.Name}", category);
+                }
+
+                totalPublished += unpublished.Count;
+            }
+
+            if (totalPublished == 0)
             {
                 _logger.LogInformation("No unpublished album changes to publish.");
-                return;
             }
-
-            _progressTracker.StartRun(runId, ParsingJobType.AlbumPublisher, unpublished.Count);
-            trackingStarted = true;
-
-            _logger.LogInformation("Publishing {Count} album changes.", unpublished.Count);
-
-            foreach (var detail in unpublished)
+            else
             {
-                var publicationEvent = MapToPublicationEvent(detail);
-                await _topicProducer.Produce(publicationEvent, cancellationToken);
-
-                detail.PublicationStatus = PublicationStatus.Published;
-                detail.LastPublishedAt = DateTime.UtcNow;
-                await _catalogueIndexDetailRepository.UpdateAsync(detail, cancellationToken);
-
-                var category = MapChangeTypeToCategory(detail.ChangeType);
-                _progressTracker.ItemProcessed(runId, $"{detail.BandName} - {detail.Name}", category);
+                _progressTracker.CompleteRun(runId);
+                _logger.LogInformation("Published {Count} album changes to albums-processed-topic.", totalPublished);
             }
-
-            _progressTracker.CompleteRun(runId);
-
-            _logger.LogInformation("Published {Count} album changes to albums-processed-topic.", unpublished.Count);
         }
         catch (Exception exception)
         {
