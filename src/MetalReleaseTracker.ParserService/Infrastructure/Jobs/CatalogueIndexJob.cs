@@ -1,6 +1,7 @@
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
+using MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 
@@ -13,6 +14,7 @@ public class CatalogueIndexJob
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
     private readonly IBandReferenceRepository _bandReferenceRepository;
     private readonly ISettingsService _settingsService;
+    private readonly IParsingProgressTracker _progressTracker;
     private readonly ILogger<CatalogueIndexJob> _logger;
     private readonly Random _random = new();
 
@@ -22,6 +24,7 @@ public class CatalogueIndexJob
         IBandDiscographyRepository bandDiscographyRepository,
         IBandReferenceRepository bandReferenceRepository,
         ISettingsService settingsService,
+        IParsingProgressTracker progressTracker,
         ILogger<CatalogueIndexJob> logger)
     {
         _listingParserResolver = listingParserResolver;
@@ -29,6 +32,7 @@ public class CatalogueIndexJob
         _bandDiscographyRepository = bandDiscographyRepository;
         _bandReferenceRepository = bandReferenceRepository;
         _settingsService = settingsService;
+        _progressTracker = progressTracker;
         _logger = logger;
     }
 
@@ -77,6 +81,7 @@ public class CatalogueIndexJob
         var parser = _listingParserResolver(parserDataSource.DistributorCode);
         var currentUrl = parserDataSource.ParsingUrl;
         var totalIndexed = 0;
+        var runId = Guid.NewGuid();
 
         var bandNames = await _bandDiscographyRepository.GetAllBandNamesAsync(cancellationToken);
         var bandReferenceLookup = await BuildBandReferenceLookupAsync(cancellationToken);
@@ -86,57 +91,79 @@ public class CatalogueIndexJob
             parserDataSource.DistributorCode,
             bandNames.Count);
 
-        do
+        _progressTracker.StartRun(runId, ParsingJobType.CatalogueIndex, parserDataSource.DistributorCode);
+
+        try
         {
-            _logger.LogInformation(
-                "Parsing listing page for {DistributorCode}: {Url}.",
-                parserDataSource.DistributorCode,
-                currentUrl);
-
-            var result = await parser.ParseListingsAsync(currentUrl, cancellationToken);
-
-            foreach (var listing in result.Listings)
+            do
             {
-                var status = DetermineStatus(bandNames, listing.BandName);
-                bandReferenceLookup.TryGetValue(listing.BandName, out var bandReferenceId);
+                _logger.LogInformation(
+                    "Parsing listing page for {DistributorCode}: {Url}.",
+                    parserDataSource.DistributorCode,
+                    currentUrl);
 
-                var entity = new CatalogueIndexEntity
+                var result = await parser.ParseListingsAsync(currentUrl, cancellationToken);
+
+                foreach (var listing in result.Listings)
                 {
-                    DistributorCode = parserDataSource.DistributorCode,
-                    BandName = listing.BandName,
-                    AlbumTitle = listing.AlbumTitle,
-                    RawTitle = listing.RawTitle,
-                    DetailUrl = listing.DetailUrl,
-                    MediaType = listing.MediaType,
-                    Status = status,
-                    BandReferenceId = status == CatalogueIndexStatus.Relevant ? bandReferenceId : null,
-                };
+                    var status = DetermineStatus(bandNames, listing.BandName);
+                    bandReferenceLookup.TryGetValue(listing.BandName, out var bandReferenceId);
 
-                await _catalogueIndexRepository.UpsertAsync(entity, cancellationToken);
-                totalIndexed++;
+                    var entity = new CatalogueIndexEntity
+                    {
+                        DistributorCode = parserDataSource.DistributorCode,
+                        BandName = listing.BandName,
+                        AlbumTitle = listing.AlbumTitle,
+                        RawTitle = listing.RawTitle,
+                        DetailUrl = listing.DetailUrl,
+                        MediaType = listing.MediaType,
+                        Status = status,
+                        BandReferenceId = status == CatalogueIndexStatus.Relevant ? bandReferenceId : null,
+                    };
+
+                    var isNew = await _catalogueIndexRepository.UpsertAsync(entity, cancellationToken);
+                    totalIndexed++;
+
+                    var itemDescription = $"{listing.BandName} - {listing.AlbumTitle}";
+                    var entryCategory = isNew ? "newEntry" : "existingEntry";
+                    var statusCategory = status == CatalogueIndexStatus.Relevant ? "relevant" : "notRelevant";
+                    _progressTracker.ItemProcessed(runId, itemDescription, entryCategory, statusCategory);
+                }
+
+                _logger.LogInformation(
+                    "Indexed {Count} listings from page. Total so far: {Total}.",
+                    result.Listings.Count,
+                    totalIndexed);
+
+                if (result.HasMorePages)
+                {
+                    currentUrl = result.NextPageUrl;
+                    await DelayBetweenPages(generalParserSettings, cancellationToken);
+                }
+                else
+                {
+                    currentUrl = null;
+                }
             }
+            while (!string.IsNullOrEmpty(currentUrl));
+
+            _progressTracker.CompleteRun(runId);
 
             _logger.LogInformation(
-                "Indexed {Count} listings from page. Total so far: {Total}.",
-                result.Listings.Count,
+                "Catalogue indexing completed for {DistributorCode}. Total entries: {Total}.",
+                parserDataSource.DistributorCode,
                 totalIndexed);
-
-            if (result.HasMorePages)
-            {
-                currentUrl = result.NextPageUrl;
-                await DelayBetweenPages(generalParserSettings, cancellationToken);
-            }
-            else
-            {
-                currentUrl = null;
-            }
         }
-        while (!string.IsNullOrEmpty(currentUrl));
-
-        _logger.LogInformation(
-            "Catalogue indexing completed for {DistributorCode}. Total entries: {Total}.",
-            parserDataSource.DistributorCode,
-            totalIndexed);
+        catch (OperationCanceledException)
+        {
+            _progressTracker.FailRun(runId, "Cancelled");
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _progressTracker.FailRun(runId, exception.Message);
+            throw;
+        }
     }
 
     private async Task<Dictionary<string, Guid>> BuildBandReferenceLookupAsync(CancellationToken cancellationToken)

@@ -24,4 +24,14 @@ public interface IAdminQueryRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken);
+
+    Task<ParsingRunDto?> GetParsingRunByIdAsync(
+        Guid runId,
+        CancellationToken cancellationToken);
+
+    Task<PagedResultDto<ParsingRunItemDto>> GetParsingRunItemsAsync(
+        Guid runId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
 }

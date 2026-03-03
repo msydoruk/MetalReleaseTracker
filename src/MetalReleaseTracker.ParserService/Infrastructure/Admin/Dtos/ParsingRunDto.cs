@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Admin.Dtos;
@@ -23,4 +25,12 @@ public class ParsingRunDto
     public DateTime? CompletedAt { get; set; }
 
     public string? ErrorMessage { get; set; }
+
+    [JsonIgnore]
+    public string? CountersJson { get; set; }
+
+    public Dictionary<string, int>? Counters =>
+        !string.IsNullOrEmpty(CountersJson)
+            ? JsonSerializer.Deserialize<Dictionary<string, int>>(CountersJson)
+            : null;
 }

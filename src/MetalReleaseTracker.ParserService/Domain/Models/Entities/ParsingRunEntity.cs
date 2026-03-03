@@ -29,4 +29,8 @@ public class ParsingRunEntity
     public DateTime? CompletedAt { get; set; }
 
     public string? ErrorMessage { get; set; }
+
+    public string? CountersJson { get; set; }
+
+    public ICollection<ParsingRunItemEntity> Items { get; set; } = new List<ParsingRunItemEntity>();
 }

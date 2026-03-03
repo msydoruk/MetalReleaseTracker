@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading.Channels;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
@@ -53,7 +54,34 @@ public class ParsingProgressTracker : IParsingProgressTracker
             DateTime.UtcNow));
     }
 
-    public void ItemProcessed(Guid runId, string itemDescription)
+    public void StartRun(Guid runId, ParsingJobType jobType, DistributorCode code)
+    {
+        var state = new ParsingRunState
+        {
+            RunId = runId,
+            JobType = jobType,
+            DistributorCode = code,
+            TotalItems = 0,
+            StartedAt = DateTime.UtcNow,
+        };
+
+        _activeRuns[runId] = state;
+        PersistRunAsync(runId, state).FireAndForget(_logger);
+
+        Broadcast(new ParsingProgressEvent(
+            ParsingEventType.Started,
+            runId,
+            jobType,
+            code,
+            0,
+            0,
+            0,
+            null,
+            "Started indexing",
+            DateTime.UtcNow));
+    }
+
+    public void ItemProcessed(Guid runId, string itemDescription, params string[] categories)
     {
         if (!_activeRuns.TryGetValue(runId, out var state))
         {
@@ -61,6 +89,13 @@ public class ParsingProgressTracker : IParsingProgressTracker
         }
 
         state.IncrementProcessed();
+
+        foreach (var category in categories)
+        {
+            state.IncrementCounter(category);
+        }
+
+        state.AddItem(new ParsingRunItemRecord(itemDescription, true, null, categories, DateTime.UtcNow));
 
         Broadcast(new ParsingProgressEvent(
             ParsingEventType.Progress,
@@ -72,10 +107,11 @@ public class ParsingProgressTracker : IParsingProgressTracker
             state.FailedItems,
             itemDescription,
             null,
-            DateTime.UtcNow));
+            DateTime.UtcNow,
+            state.GetCountersSnapshot()));
     }
 
-    public void ItemFailed(Guid runId, string itemDescription, string error)
+    public void ItemFailed(Guid runId, string itemDescription, string error, params string[] categories)
     {
         if (!_activeRuns.TryGetValue(runId, out var state))
         {
@@ -83,6 +119,13 @@ public class ParsingProgressTracker : IParsingProgressTracker
         }
 
         state.IncrementFailed();
+
+        foreach (var category in categories)
+        {
+            state.IncrementCounter(category);
+        }
+
+        state.AddItem(new ParsingRunItemRecord(itemDescription, false, error, categories, DateTime.UtcNow));
 
         Broadcast(new ParsingProgressEvent(
             ParsingEventType.Error,
@@ -94,7 +137,8 @@ public class ParsingProgressTracker : IParsingProgressTracker
             state.FailedItems,
             itemDescription,
             error,
-            DateTime.UtcNow));
+            DateTime.UtcNow,
+            state.GetCountersSnapshot()));
     }
 
     public void CompleteRun(Guid runId)
@@ -104,7 +148,12 @@ public class ParsingProgressTracker : IParsingProgressTracker
             return;
         }
 
-        UpdateRunInDbAsync(runId, ParsingRunStatus.Completed, state.ProcessedItems, state.FailedItems, null).FireAndForget(_logger);
+        var finalTotal = state.TotalItems > 0 ? state.TotalItems : state.ProcessedItems;
+        var counters = state.GetCountersSnapshot();
+        var items = state.GetItems();
+
+        UpdateRunInDbAsync(runId, ParsingRunStatus.Completed, state.ProcessedItems, state.FailedItems, null, counters, finalTotal).FireAndForget(_logger);
+        PersistRunItemsAsync(runId, items).FireAndForget(_logger);
 
         Broadcast(new ParsingProgressEvent(
             ParsingEventType.Completed,
@@ -112,11 +161,12 @@ public class ParsingProgressTracker : IParsingProgressTracker
             state.JobType,
             state.DistributorCode,
             state.ProcessedItems,
-            state.TotalItems,
+            finalTotal,
             state.FailedItems,
             null,
             "Completed",
-            DateTime.UtcNow));
+            DateTime.UtcNow,
+            counters));
     }
 
     public void FailRun(Guid runId, string errorMessage)
@@ -126,7 +176,12 @@ public class ParsingProgressTracker : IParsingProgressTracker
             return;
         }
 
-        UpdateRunInDbAsync(runId, ParsingRunStatus.Failed, state.ProcessedItems, state.FailedItems, errorMessage).FireAndForget(_logger);
+        var finalTotal = state.TotalItems > 0 ? state.TotalItems : state.ProcessedItems;
+        var counters = state.GetCountersSnapshot();
+        var items = state.GetItems();
+
+        UpdateRunInDbAsync(runId, ParsingRunStatus.Failed, state.ProcessedItems, state.FailedItems, errorMessage, counters, finalTotal).FireAndForget(_logger);
+        PersistRunItemsAsync(runId, items).FireAndForget(_logger);
 
         Broadcast(new ParsingProgressEvent(
             ParsingEventType.Completed,
@@ -134,11 +189,12 @@ public class ParsingProgressTracker : IParsingProgressTracker
             state.JobType,
             state.DistributorCode,
             state.ProcessedItems,
-            state.TotalItems,
+            finalTotal,
             state.FailedItems,
             null,
             errorMessage,
-            DateTime.UtcNow));
+            DateTime.UtcNow,
+            counters));
     }
 
     public async IAsyncEnumerable<ParsingProgressEvent> SubscribeAsync(
@@ -201,7 +257,9 @@ public class ParsingProgressTracker : IParsingProgressTracker
         ParsingRunStatus status,
         int processedItems,
         int failedItems,
-        string? errorMessage)
+        string? errorMessage,
+        Dictionary<string, int>? counters,
+        int totalItems)
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ParserServiceDbContext>();
@@ -215,14 +273,48 @@ public class ParsingProgressTracker : IParsingProgressTracker
         entity.Status = status;
         entity.ProcessedItems = processedItems;
         entity.FailedItems = failedItems;
+        entity.TotalItems = totalItems;
         entity.CompletedAt = DateTime.UtcNow;
         entity.ErrorMessage = errorMessage?.Length > 2000 ? errorMessage[..2000] : errorMessage;
 
+        if (counters != null && counters.Count > 0)
+        {
+            entity.CountersJson = JsonSerializer.Serialize(counters);
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private async Task PersistRunItemsAsync(Guid runId, List<ParsingRunItemRecord> items)
+    {
+        if (items.Count == 0)
+        {
+            return;
+        }
+
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ParserServiceDbContext>();
+
+        var entities = items.Select(item => new ParsingRunItemEntity
+        {
+            Id = Guid.NewGuid(),
+            ParsingRunId = runId,
+            ItemDescription = item.ItemDescription.Length > 500 ? item.ItemDescription[..500] : item.ItemDescription,
+            IsSuccess = item.IsSuccess,
+            ErrorMessage = item.ErrorMessage?.Length > 2000 ? item.ErrorMessage[..2000] : item.ErrorMessage,
+            Categories = item.Categories,
+            ProcessedAt = item.ProcessedAt,
+        }).ToList();
+
+        await context.ParsingRunItems.AddRangeAsync(entities);
         await context.SaveChangesAsync();
     }
 
     private class ParsingRunState
     {
+        private readonly ConcurrentDictionary<string, int> _counters = new();
+        private readonly List<ParsingRunItemRecord> _items = [];
+        private readonly object _itemsLock = new();
         private int _processedItems;
         private int _failedItems;
 
@@ -243,8 +335,41 @@ public class ParsingProgressTracker : IParsingProgressTracker
         public int IncrementProcessed() => Interlocked.Increment(ref _processedItems);
 
         public int IncrementFailed() => Interlocked.Increment(ref _failedItems);
+
+        public void IncrementCounter(string name)
+        {
+            _counters.AddOrUpdate(name, 1, (_, current) => current + 1);
+        }
+
+        public Dictionary<string, int> GetCountersSnapshot()
+        {
+            return new Dictionary<string, int>(_counters);
+        }
+
+        public void AddItem(ParsingRunItemRecord item)
+        {
+            lock (_itemsLock)
+            {
+                _items.Add(item);
+            }
+        }
+
+        public List<ParsingRunItemRecord> GetItems()
+        {
+            lock (_itemsLock)
+            {
+                return new List<ParsingRunItemRecord>(_items);
+            }
+        }
     }
 }
+
+internal record ParsingRunItemRecord(
+    string ItemDescription,
+    bool IsSuccess,
+    string? ErrorMessage,
+    string[] Categories,
+    DateTime ProcessedAt);
 
 internal static class TaskExtensions
 {

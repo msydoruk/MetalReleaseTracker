@@ -26,6 +26,8 @@ public class ParserServiceDbContext : DbContext
 
     public DbSet<ParsingRunEntity> ParsingRuns { get; set; }
 
+    public DbSet<ParsingRunItemEntity> ParsingRunItems { get; set; }
+
     public ParserServiceDbContext(DbContextOptions<ParserServiceDbContext> options) : base(options)
     {
     }
@@ -43,5 +45,6 @@ public class ParserServiceDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ParsingSourceEntityConfiguration());
         modelBuilder.ApplyConfiguration(new SettingEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ParsingRunEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ParsingRunItemEntityConfiguration());
     }
 }

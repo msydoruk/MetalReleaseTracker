@@ -7,9 +7,11 @@ public interface IParsingProgressTracker
 {
     void StartRun(Guid runId, ParsingJobType jobType, DistributorCode code, int totalItems);
 
-    void ItemProcessed(Guid runId, string itemDescription);
+    void StartRun(Guid runId, ParsingJobType jobType, DistributorCode code);
 
-    void ItemFailed(Guid runId, string itemDescription, string error);
+    void ItemProcessed(Guid runId, string itemDescription, params string[] categories);
+
+    void ItemFailed(Guid runId, string itemDescription, string error, params string[] categories);
 
     void CompleteRun(Guid runId);
 

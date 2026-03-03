@@ -12,6 +12,7 @@ import CatalogueIndexPage from './pages/CatalogueIndexPage';
 import AiVerificationPage from './pages/AiVerificationPage';
 import CatalogueDetailsPage from './pages/CatalogueDetailsPage';
 import ParsingMonitorPage from './pages/ParsingMonitorPage';
+import ParsingRunDetailPage from './pages/ParsingRunDetailPage';
 import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="catalogue-details" element={<CatalogueDetailsPage />} />
               <Route path="ai-verification" element={<AiVerificationPage />} />
               <Route path="parsing-monitor" element={<ParsingMonitorPage />} />
+              <Route path="parsing-monitor/:runId" element={<ParsingRunDetailPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

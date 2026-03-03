@@ -135,7 +135,7 @@ public class AlbumDetailParsingJob
                     }
 
                     await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
-                    await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
+                    var changeType = await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
 
                     _logger.LogInformation(
                         "Parsed album: {SKU} - {BandName}. Distributor: {DistributorCode}.",
@@ -143,7 +143,13 @@ public class AlbumDetailParsingJob
                         albumParsedEvent.BandName,
                         distributorCode);
 
-                    _progressTracker.ItemProcessed(runId, itemDescription);
+                    var category = changeType switch
+                    {
+                        ChangeType.New => "new",
+                        ChangeType.Updated => "updated",
+                        _ => "active",
+                    };
+                    _progressTracker.ItemProcessed(runId, itemDescription, category);
 
                     await DelayBetweenRequests(generalParserSettings, cancellationToken);
                 }
@@ -159,7 +165,7 @@ public class AlbumDetailParsingJob
                         entry.Id,
                         entry.DetailUrl);
 
-                    _progressTracker.ItemFailed(runId, itemDescription, exception.Message);
+                    _progressTracker.ItemFailed(runId, itemDescription, exception.Message, "deleted");
 
                     await HandleParseFailureAsync(entry, cancellationToken);
                 }
@@ -179,7 +185,7 @@ public class AlbumDetailParsingJob
         }
     }
 
-    private async Task UpsertDetailAsync(
+    private async Task<ChangeType> UpsertDetailAsync(
         CatalogueIndexEntity entry,
         AlbumParsedEvent albumParsedEvent,
         CancellationToken cancellationToken)
@@ -197,19 +203,21 @@ public class AlbumDetailParsingJob
 
             MapAlbumFieldsToDetail(detail, albumParsedEvent);
             await _catalogueIndexDetailRepository.AddAsync(detail, cancellationToken);
+            return ChangeType.New;
         }
-        else if (HasAlbumChanged(existingDetail, albumParsedEvent))
+
+        if (HasAlbumChanged(existingDetail, albumParsedEvent))
         {
             MapAlbumFieldsToDetail(existingDetail, albumParsedEvent);
             existingDetail.ChangeType = ChangeType.Updated;
             existingDetail.PublicationStatus = PublicationStatus.Unpublished;
             await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
+            return ChangeType.Updated;
         }
-        else
-        {
-            existingDetail.ChangeType = ChangeType.Active;
-            await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
-        }
+
+        existingDetail.ChangeType = ChangeType.Active;
+        await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
+        return ChangeType.Active;
     }
 
     private async Task HandleParseFailureAsync(CatalogueIndexEntity entry, CancellationToken cancellationToken)
