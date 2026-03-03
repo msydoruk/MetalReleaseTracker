@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Services.Configuration;
 
@@ -17,6 +18,7 @@ public class BandReferenceService : IBandReferenceService
     private readonly IBandDiscographyRepository _bandDiscographyRepository;
     private readonly IFlareSolverrClient _flareSolverrClient;
     private readonly ISettingsService _settingsService;
+    private readonly IParsingProgressTracker _progressTracker;
     private readonly ILogger<BandReferenceService> _logger;
     private readonly Random _random = new();
 
@@ -25,12 +27,14 @@ public class BandReferenceService : IBandReferenceService
         IBandDiscographyRepository bandDiscographyRepository,
         IFlareSolverrClient flareSolverrClient,
         ISettingsService settingsService,
+        IParsingProgressTracker progressTracker,
         ILogger<BandReferenceService> logger)
     {
         _bandReferenceRepository = bandReferenceRepository;
         _bandDiscographyRepository = bandDiscographyRepository;
         _flareSolverrClient = flareSolverrClient;
         _settingsService = settingsService;
+        _progressTracker = progressTracker;
         _logger = logger;
     }
 
@@ -39,6 +43,9 @@ public class BandReferenceService : IBandReferenceService
         var settings = await _settingsService.GetBandReferenceSettingsAsync(cancellationToken);
 
         _logger.LogInformation("Starting Ukrainian bands sync from Metal Archives.");
+
+        var runId = Guid.NewGuid();
+        _progressTracker.StartRun(runId, ParsingJobType.BandReferenceSync);
 
         var sessionId = await _flareSolverrClient.CreateSessionAsync(cancellationToken);
 
@@ -61,6 +68,7 @@ public class BandReferenceService : IBandReferenceService
                 {
                     await _bandReferenceRepository.UpsertAsync(band, cancellationToken);
                     totalProcessed++;
+                    _progressTracker.ItemProcessed(runId, band.BandName, "bandReference");
                 }
 
                 _logger.LogInformation(
@@ -80,7 +88,14 @@ public class BandReferenceService : IBandReferenceService
 
             _logger.LogInformation("Ukrainian bands sync completed. Total bands processed: {Total}.", totalProcessed);
 
-            await SyncDiscographiesAsync(settings, sessionId, cancellationToken);
+            await SyncDiscographiesAsync(settings, sessionId, runId, cancellationToken);
+
+            _progressTracker.CompleteRun(runId);
+        }
+        catch (Exception exception)
+        {
+            _progressTracker.FailRun(runId, exception.Message);
+            throw;
         }
         finally
         {
@@ -88,7 +103,7 @@ public class BandReferenceService : IBandReferenceService
         }
     }
 
-    private async Task SyncDiscographiesAsync(BandReferenceSettings settings, string sessionId, CancellationToken cancellationToken)
+    private async Task SyncDiscographiesAsync(BandReferenceSettings settings, string sessionId, Guid runId, CancellationToken cancellationToken)
     {
         var bands = await _bandReferenceRepository.GetAllAsync(cancellationToken);
         _logger.LogInformation("Starting discography sync for {Count} bands.", bands.Count);
@@ -103,8 +118,18 @@ public class BandReferenceService : IBandReferenceService
                 var html = await _flareSolverrClient.GetPageContentAsync(url, sessionId, cancellationToken);
                 var entries = ParseDiscographyHtml(html, band.Id);
 
-                await _bandDiscographyRepository.ReplaceForBandAsync(band.Id, entries, cancellationToken);
+                var syncResult = await _bandDiscographyRepository.ReplaceForBandAsync(band.Id, entries, cancellationToken);
                 syncedCount++;
+
+                if (syncResult.NewAlbumTitles.Count > 0)
+                {
+                    var albumList = string.Join(", ", syncResult.NewAlbumTitles);
+                    _progressTracker.ItemProcessed(runId, $"{band.BandName}: {albumList}", "newAlbums");
+                }
+                else
+                {
+                    _progressTracker.ItemProcessed(runId, band.BandName, "unchanged");
+                }
 
                 _logger.LogInformation(
                     "Synced discography for band '{BandName}' (MA ID: {MaId}): {AlbumCount} albums.",
@@ -118,6 +143,8 @@ public class BandReferenceService : IBandReferenceService
             }
             catch (Exception exception)
             {
+                _progressTracker.ItemFailed(runId, band.BandName, exception.Message);
+
                 _logger.LogWarning(
                     exception,
                     "Failed to sync discography for band '{BandName}' (MA ID: {MaId}). Skipping.",

@@ -81,6 +81,60 @@ public class ParsingProgressTracker : IParsingProgressTracker
             DateTime.UtcNow));
     }
 
+    public void StartRun(Guid runId, ParsingJobType jobType, int totalItems)
+    {
+        var state = new ParsingRunState
+        {
+            RunId = runId,
+            JobType = jobType,
+            DistributorCode = null,
+            TotalItems = totalItems,
+            StartedAt = DateTime.UtcNow,
+        };
+
+        _activeRuns[runId] = state;
+        PersistRunAsync(runId, state).FireAndForget(_logger);
+
+        Broadcast(new ParsingProgressEvent(
+            ParsingEventType.Started,
+            runId,
+            jobType,
+            null,
+            0,
+            totalItems,
+            0,
+            null,
+            $"Started processing {totalItems} items",
+            DateTime.UtcNow));
+    }
+
+    public void StartRun(Guid runId, ParsingJobType jobType)
+    {
+        var state = new ParsingRunState
+        {
+            RunId = runId,
+            JobType = jobType,
+            DistributorCode = null,
+            TotalItems = 0,
+            StartedAt = DateTime.UtcNow,
+        };
+
+        _activeRuns[runId] = state;
+        PersistRunAsync(runId, state).FireAndForget(_logger);
+
+        Broadcast(new ParsingProgressEvent(
+            ParsingEventType.Started,
+            runId,
+            jobType,
+            null,
+            0,
+            0,
+            0,
+            null,
+            "Started processing",
+            DateTime.UtcNow));
+    }
+
     public void ItemProcessed(Guid runId, string itemDescription, params string[] categories)
     {
         if (!_activeRuns.TryGetValue(runId, out var state))
@@ -336,7 +390,7 @@ public class ParsingProgressTracker : IParsingProgressTracker
 
         public ParsingJobType JobType { get; set; }
 
-        public DistributorCode DistributorCode { get; set; }
+        public DistributorCode? DistributorCode { get; set; }
 
         public int TotalItems { get; set; }
 

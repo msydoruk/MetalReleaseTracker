@@ -14,7 +14,7 @@ import PageHeader from '../components/PageHeader';
 import DistributorChip from '../components/DistributorChip';
 import { fetchParsingRunById, fetchParsingRunItems } from '../api/parsingMonitor';
 
-const JOB_TYPES = { 0: 'Detail Parsing', 1: 'Catalogue Index' };
+const JOB_TYPES = { 0: 'Detail Parsing', 1: 'Catalogue Index', 2: 'Band Reference Sync', 3: 'Album Publisher' };
 const RUN_STATUS = {
   0: { label: 'Running', color: 'info' },
   1: { label: 'Completed', color: 'success' },
@@ -31,6 +31,9 @@ const COUNTER_DISPLAY = {
   existingEntry: { label: 'Existing', color: '#90a4ae' },
   relevant: { label: 'Relevant', color: '#42a5f5' },
   notRelevant: { label: 'Not Relevant', color: '#78909c' },
+  bandReference: { label: 'Bands Synced', color: '#7e57c2' },
+  newAlbums: { label: 'New Albums', color: '#4caf50' },
+  unchanged: { label: 'Unchanged', color: '#90a4ae' },
 };
 
 const CATEGORY_DISPLAY = {
@@ -42,6 +45,9 @@ const CATEGORY_DISPLAY = {
   existingEntry: { label: 'Existing', color: '#90a4ae' },
   relevant: { label: 'Relevant', color: '#42a5f5' },
   notRelevant: { label: 'Not Relevant', color: '#78909c' },
+  bandReference: { label: 'Band Reference', color: '#7e57c2' },
+  newAlbums: { label: 'New Albums', color: '#4caf50' },
+  unchanged: { label: 'Unchanged', color: '#90a4ae' },
 };
 
 function formatDuration(startedAt, completedAt) {
@@ -211,7 +217,7 @@ export default function ParsingRunDetailPage() {
             <Box>
               <Typography variant="h5">{JOB_TYPES[run.jobType] || 'Unknown Job'}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                <DistributorChip code={run.distributorCode} />
+                {run.distributorCode != null && <DistributorChip code={run.distributorCode} />}
                 <Chip label={statusCfg.label} size="small" color={statusCfg.color} variant="outlined" />
               </Box>
             </Box>
