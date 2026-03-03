@@ -12,20 +12,26 @@ public class AlbumPublisherJob
 
     private readonly ICatalogueIndexDetailRepository _catalogueIndexDetailRepository;
     private readonly ITopicProducer<AlbumProcessedPublicationEvent> _topicProducer;
+    private readonly IParsingProgressTracker _progressTracker;
     private readonly ILogger<AlbumPublisherJob> _logger;
 
     public AlbumPublisherJob(
         ICatalogueIndexDetailRepository catalogueIndexDetailRepository,
         ITopicProducer<AlbumProcessedPublicationEvent> topicProducer,
+        IParsingProgressTracker progressTracker,
         ILogger<AlbumPublisherJob> logger)
     {
         _catalogueIndexDetailRepository = catalogueIndexDetailRepository;
         _topicProducer = topicProducer;
+        _progressTracker = progressTracker;
         _logger = logger;
     }
 
     public async Task RunPublisherJob(CancellationToken cancellationToken)
     {
+        var trackingStarted = false;
+        var runId = Guid.NewGuid();
+
         try
         {
             var unpublished = await _catalogueIndexDetailRepository.GetUnpublishedAsync(BatchSize, cancellationToken);
@@ -35,6 +41,9 @@ public class AlbumPublisherJob
                 _logger.LogInformation("No unpublished album changes to publish.");
                 return;
             }
+
+            _progressTracker.StartRun(runId, ParsingJobType.AlbumPublisher, unpublished.Count);
+            trackingStarted = true;
 
             _logger.LogInformation("Publishing {Count} album changes.", unpublished.Count);
 
@@ -46,12 +55,22 @@ public class AlbumPublisherJob
                 detail.PublicationStatus = PublicationStatus.Published;
                 detail.LastPublishedAt = DateTime.UtcNow;
                 await _catalogueIndexDetailRepository.UpdateAsync(detail, cancellationToken);
+
+                var category = MapChangeTypeToCategory(detail.ChangeType);
+                _progressTracker.ItemProcessed(runId, $"{detail.BandName} - {detail.Name}", category);
             }
+
+            _progressTracker.CompleteRun(runId);
 
             _logger.LogInformation("Published {Count} album changes to albums-processed-topic.", unpublished.Count);
         }
         catch (Exception exception)
         {
+            if (trackingStarted)
+            {
+                _progressTracker.FailRun(runId, exception.Message);
+            }
+
             _logger.LogError(exception, "Error occurred while publishing album changes.");
             throw;
         }
@@ -93,6 +112,17 @@ public class AlbumPublisherJob
             ChangeType.Updated => AlbumProcessedStatus.Updated,
             ChangeType.Deleted => AlbumProcessedStatus.Deleted,
             _ => throw new ArgumentOutOfRangeException(nameof(changeType), changeType, "Unexpected ChangeType for publishing."),
+        };
+    }
+
+    private static string MapChangeTypeToCategory(ChangeType changeType)
+    {
+        return changeType switch
+        {
+            ChangeType.New => "new",
+            ChangeType.Updated => "updated",
+            ChangeType.Deleted => "deleted",
+            _ => "new",
         };
     }
 }

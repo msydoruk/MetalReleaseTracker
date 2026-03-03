@@ -1,4 +1,5 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Domain.Interfaces;
 
@@ -10,5 +11,5 @@ public interface IBandDiscographyRepository
 
     Task<Dictionary<Guid, int>> GetAlbumCountsByBandReferenceAsync(CancellationToken cancellationToken);
 
-    Task ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken);
+    Task<DiscographySyncResult> ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken);
 }

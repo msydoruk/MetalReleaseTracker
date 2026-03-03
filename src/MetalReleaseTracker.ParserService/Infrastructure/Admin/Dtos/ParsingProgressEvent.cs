@@ -6,7 +6,7 @@ public record ParsingProgressEvent(
     ParsingEventType Type,
     Guid RunId,
     ParsingJobType JobType,
-    DistributorCode DistributorCode,
+    DistributorCode? DistributorCode,
     int Processed,
     int Total,
     int Failed,

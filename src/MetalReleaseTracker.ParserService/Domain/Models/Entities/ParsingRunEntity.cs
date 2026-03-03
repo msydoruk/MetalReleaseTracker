@@ -11,8 +11,7 @@ public class ParsingRunEntity
     [Required]
     public ParsingJobType JobType { get; set; }
 
-    [Required]
-    public DistributorCode DistributorCode { get; set; }
+    public DistributorCode? DistributorCode { get; set; }
 
     [Required]
     public ParsingRunStatus Status { get; set; }

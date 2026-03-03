@@ -10,7 +10,7 @@ public class ParsingRunDto
 
     public ParsingJobType JobType { get; set; }
 
-    public DistributorCode DistributorCode { get; set; }
+    public DistributorCode? DistributorCode { get; set; }
 
     public ParsingRunStatus Status { get; set; }
 

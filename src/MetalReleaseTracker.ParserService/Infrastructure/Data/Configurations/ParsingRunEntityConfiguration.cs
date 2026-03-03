@@ -14,7 +14,7 @@ public class ParsingRunEntityConfiguration : IEntityTypeConfiguration<ParsingRun
             .IsRequired();
 
         builder.Property(e => e.DistributorCode)
-            .IsRequired();
+            .IsRequired(false);
 
         builder.Property(e => e.Status)
             .IsRequired();

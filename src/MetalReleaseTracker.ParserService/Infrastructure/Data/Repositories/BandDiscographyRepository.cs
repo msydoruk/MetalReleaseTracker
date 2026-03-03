@@ -1,5 +1,6 @@
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
+using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Data.Repositories;
@@ -65,11 +66,20 @@ public class BandDiscographyRepository : IBandDiscographyRepository
             .ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken);
     }
 
-    public async Task ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken)
+    public async Task<DiscographySyncResult> ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken)
     {
         var existing = await _context.BandDiscography
             .Where(d => d.BandReferenceId == bandReferenceId)
             .ToListAsync(cancellationToken);
+
+        var existingTitles = new HashSet<string>(
+            existing.Select(e => e.NormalizedAlbumTitle),
+            StringComparer.OrdinalIgnoreCase);
+
+        var newAlbumTitles = entries
+            .Where(e => !existingTitles.Contains(e.NormalizedAlbumTitle))
+            .Select(e => e.AlbumTitle)
+            .ToList();
 
         _context.BandDiscography.RemoveRange(existing);
 
@@ -79,5 +89,11 @@ public class BandDiscographyRepository : IBandDiscographyRepository
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        return new DiscographySyncResult
+        {
+            TotalCount = entries.Count,
+            NewAlbumTitles = newAlbumTitles,
+        };
     }
 }

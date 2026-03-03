@@ -15,7 +15,7 @@ import PageHeader from '../components/PageHeader';
 import { DISTRIBUTOR_CODES } from '../constants';
 import { fetchParsingRuns, subscribeToLiveWithAuth } from '../api/parsingMonitor';
 
-const JOB_TYPES = { 0: 'Detail Parsing', 1: 'Catalogue Index' };
+const JOB_TYPES = { 0: 'Detail Parsing', 1: 'Catalogue Index', 2: 'Band Reference Sync', 3: 'Album Publisher' };
 const RUN_STATUS = {
   0: { label: 'Running', color: 'info' },
   1: { label: 'Completed', color: 'success' },
@@ -32,6 +32,9 @@ const COUNTER_DISPLAY = {
   existingEntry: { label: 'Existing', color: '#90a4ae' },
   relevant: { label: 'Relevant', color: '#42a5f5' },
   notRelevant: { label: 'Not Relevant', color: '#78909c' },
+  bandReference: { label: 'Bands Synced', color: '#7e57c2' },
+  newAlbums: { label: 'New Albums', color: '#4caf50' },
+  unchanged: { label: 'Unchanged', color: '#90a4ae' },
 };
 
 function formatDuration(startedAt, completedAt) {
@@ -89,7 +92,7 @@ function ActiveRunCard({ run }) {
               {JOB_TYPES[run.jobType] || 'Unknown'}
             </Typography>
           </Box>
-          <DistributorChip code={run.distributorCode} />
+          {run.distributorCode != null && <DistributorChip code={run.distributorCode} />}
         </Box>
 
         <Box sx={{ mb: 1.5 }}>
