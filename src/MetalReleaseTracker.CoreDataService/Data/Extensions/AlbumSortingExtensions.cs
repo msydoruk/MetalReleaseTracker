@@ -26,6 +26,13 @@ public static class AlbumSortingExtensions
     {
         var field = sortBy ?? AlbumSortField.OriginalYear;
 
+        if (field == AlbumSortField.OriginalYear)
+        {
+            return sortAscending
+                ? query.OrderBy(album => album.OriginalYear == null).ThenBy(album => album.OriginalYear)
+                : query.OrderBy(album => album.OriginalYear == null).ThenByDescending(album => album.OriginalYear);
+        }
+
         if (!SortExpressions.TryGetValue(field, out var sortExpressions))
         {
             sortExpressions = SortExpressions[AlbumSortField.OriginalYear];
