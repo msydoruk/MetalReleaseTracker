@@ -4,6 +4,7 @@ export const CATALOGUE_INDEX_STATUS = {
   2: { label: 'Not Relevant', color: 'default' },
   3: { label: 'AI Verified', color: 'success' },
   4: { label: 'Deleted', color: 'error' },
+  5: { label: 'AI Rejected', color: 'warning' },
 };
 
 export const DISTRIBUTOR_CODES = {

@@ -287,7 +287,7 @@ public class AiVerificationService : IAiVerificationService
 
         if (decision == AiVerificationDecision.Rejected)
         {
-            await _catalogueIndexRepository.UpdateStatusAsync(verification.CatalogueIndexId, CatalogueIndexStatus.NotRelevant, cancellationToken);
+            await _catalogueIndexRepository.UpdateStatusAsync(verification.CatalogueIndexId, CatalogueIndexStatus.AiRejected, cancellationToken);
         }
         else if (decision == AiVerificationDecision.Confirmed)
         {
@@ -335,7 +335,7 @@ public class AiVerificationService : IAiVerificationService
 
         if (rejectedCatalogueIds.Count > 0)
         {
-            await _catalogueIndexRepository.UpdateStatusBatchAsync(rejectedCatalogueIds, CatalogueIndexStatus.NotRelevant, cancellationToken);
+            await _catalogueIndexRepository.UpdateStatusBatchAsync(rejectedCatalogueIds, CatalogueIndexStatus.AiRejected, cancellationToken);
         }
 
         if (confirmedCatalogueIds.Count > 0)
@@ -418,7 +418,7 @@ public class AiVerificationService : IAiVerificationService
 
         if (rejectedCatalogueIds.Count > 0)
         {
-            await _catalogueIndexRepository.UpdateStatusBatchAsync(rejectedCatalogueIds, CatalogueIndexStatus.NotRelevant, cancellationToken);
+            await _catalogueIndexRepository.UpdateStatusBatchAsync(rejectedCatalogueIds, CatalogueIndexStatus.AiRejected, cancellationToken);
         }
 
         if (confirmedCatalogueIds.Count > 0)
