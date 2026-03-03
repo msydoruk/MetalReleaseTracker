@@ -45,6 +45,8 @@ public static class AdminRouteConstants
         private const string Prefix = $"{Base}/parsing-monitor";
         public const string Live = $"{Prefix}/live";
         public const string Runs = $"{Prefix}/runs";
+        public const string RunById = $"{Prefix}/runs/{{runId:guid}}";
+        public const string RunItems = $"{Prefix}/runs/{{runId:guid}}/items";
     }
 
     public static class Settings

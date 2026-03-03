@@ -3,6 +3,12 @@ import client from './client';
 export const fetchParsingRuns = (params) =>
   client.get('/parsing-monitor/runs', { params });
 
+export const fetchParsingRunById = (runId) =>
+  client.get(`/parsing-monitor/runs/${runId}`);
+
+export const fetchParsingRunItems = (runId, params) =>
+  client.get(`/parsing-monitor/runs/${runId}/items`, { params });
+
 export const subscribeToLiveWithAuth = (onEvent, onError) => {
   const token = localStorage.getItem('admin_token');
   const controller = new AbortController();

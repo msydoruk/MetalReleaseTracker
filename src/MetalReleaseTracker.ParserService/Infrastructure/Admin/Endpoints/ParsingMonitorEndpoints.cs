@@ -51,5 +51,31 @@ public static class ParsingMonitorEndpoints
             .WithName("GetParsingRuns")
             .WithTags("Admin Parsing Monitor")
             .Produces<PagedResultDto<ParsingRunDto>>();
+
+        endpoints.MapGet(AdminRouteConstants.ParsingMonitor.RunById, async (
+                Guid runId,
+                IAdminQueryRepository repository,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await repository.GetParsingRunByIdAsync(runId, cancellationToken);
+                return result != null ? Results.Ok(result) : Results.NotFound();
+            })
+            .WithName("GetParsingRunById")
+            .WithTags("Admin Parsing Monitor")
+            .Produces<ParsingRunDto>();
+
+        endpoints.MapGet(AdminRouteConstants.ParsingMonitor.RunItems, async (
+                Guid runId,
+                int page,
+                int pageSize,
+                IAdminQueryRepository repository,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await repository.GetParsingRunItemsAsync(runId, page, pageSize, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetParsingRunItems")
+            .WithTags("Admin Parsing Monitor")
+            .Produces<PagedResultDto<ParsingRunItemDto>>();
     }
 }

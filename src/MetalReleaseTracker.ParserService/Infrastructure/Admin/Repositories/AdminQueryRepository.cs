@@ -199,6 +199,54 @@ public class AdminQueryRepository : IAdminQueryRepository
                 StartedAt = r.StartedAt,
                 CompletedAt = r.CompletedAt,
                 ErrorMessage = r.ErrorMessage,
+                CountersJson = r.CountersJson,
+            });
+
+        return await query.ToPagedResultAsync(page, pageSize, cancellationToken);
+    }
+
+    public async Task<ParsingRunDto?> GetParsingRunByIdAsync(
+        Guid runId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.ParsingRuns
+            .AsNoTracking()
+            .Where(r => r.Id == runId)
+            .Select(r => new ParsingRunDto
+            {
+                Id = r.Id,
+                JobType = r.JobType,
+                DistributorCode = r.DistributorCode,
+                Status = r.Status,
+                TotalItems = r.TotalItems,
+                ProcessedItems = r.ProcessedItems,
+                FailedItems = r.FailedItems,
+                StartedAt = r.StartedAt,
+                CompletedAt = r.CompletedAt,
+                ErrorMessage = r.ErrorMessage,
+                CountersJson = r.CountersJson,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<ParsingRunItemDto>> GetParsingRunItemsAsync(
+        Guid runId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.ParsingRunItems
+            .AsNoTracking()
+            .Where(i => i.ParsingRunId == runId)
+            .OrderBy(i => i.ProcessedAt)
+            .Select(i => new ParsingRunItemDto
+            {
+                Id = i.Id,
+                ItemDescription = i.ItemDescription,
+                IsSuccess = i.IsSuccess,
+                ErrorMessage = i.ErrorMessage,
+                Categories = i.Categories,
+                ProcessedAt = i.ProcessedAt,
             });
 
         return await query.ToPagedResultAsync(page, pageSize, cancellationToken);

@@ -13,7 +13,7 @@ public interface ICatalogueIndexRepository
 
     Task<List<CatalogueIndexEntity>> GetByStatusesWithDiscographyAsync(DistributorCode code, IEnumerable<CatalogueIndexStatus> statuses, CancellationToken cancellationToken);
 
-    Task UpsertAsync(CatalogueIndexEntity entity, CancellationToken cancellationToken);
+    Task<bool> UpsertAsync(CatalogueIndexEntity entity, CancellationToken cancellationToken);
 
     Task UpdateStatusAsync(Guid id, CatalogueIndexStatus status, CancellationToken cancellationToken);
 

@@ -12,4 +12,5 @@ public record ParsingProgressEvent(
     int Failed,
     string? CurrentItem,
     string? Message,
-    DateTime Timestamp);
+    DateTime Timestamp,
+    Dictionary<string, int>? Counters = null);

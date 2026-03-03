@@ -54,13 +54,14 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task UpsertAsync(CatalogueIndexEntity entity, CancellationToken cancellationToken)
+    public async Task<bool> UpsertAsync(CatalogueIndexEntity entity, CancellationToken cancellationToken)
     {
         var existing = await _context.CatalogueIndex
             .FirstOrDefaultAsync(
                 e => e.DistributorCode == entity.DistributorCode && e.DetailUrl == entity.DetailUrl,
                 cancellationToken);
 
+        bool isNew;
         if (existing != null)
         {
             existing.BandName = entity.BandName;
@@ -70,6 +71,7 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
             existing.BandReferenceId = entity.BandReferenceId;
             existing.UpdatedAt = DateTime.UtcNow;
             _context.CatalogueIndex.Update(existing);
+            isNew = false;
         }
         else
         {
@@ -77,9 +79,11 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
             entity.CreatedAt = DateTime.UtcNow;
             entity.UpdatedAt = DateTime.UtcNow;
             await _context.CatalogueIndex.AddAsync(entity, cancellationToken);
+            isNew = true;
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+        return isNew;
     }
 
     public async Task UpdateStatusAsync(Guid id, CatalogueIndexStatus status, CancellationToken cancellationToken)

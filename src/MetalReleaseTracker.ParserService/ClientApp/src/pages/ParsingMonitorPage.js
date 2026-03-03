@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
@@ -23,6 +23,17 @@ const RUN_STATUS = {
   3: { label: 'Cancelled', color: 'warning' },
 };
 
+const COUNTER_DISPLAY = {
+  new: { label: 'New', color: '#4caf50' },
+  updated: { label: 'Updated', color: '#ff9800' },
+  active: { label: 'Active', color: '#90a4ae' },
+  deleted: { label: 'Deleted', color: '#ef5350' },
+  newEntry: { label: 'New', color: '#4caf50' },
+  existingEntry: { label: 'Existing', color: '#90a4ae' },
+  relevant: { label: 'Relevant', color: '#42a5f5' },
+  notRelevant: { label: 'Not Relevant', color: '#78909c' },
+};
+
 function formatDuration(startedAt, completedAt) {
   const start = new Date(startedAt);
   const end = completedAt ? new Date(completedAt) : new Date();
@@ -33,8 +44,36 @@ function formatDuration(startedAt, completedAt) {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
+function CounterChips({ counters, size = 'small' }) {
+  if (!counters || Object.keys(counters).length === 0) return null;
+
+  return (
+    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+      {Object.entries(counters).map(([key, value]) => {
+        const display = COUNTER_DISPLAY[key];
+        if (!display || value === 0) return null;
+        return (
+          <Chip
+            key={key}
+            label={`${value} ${display.label}`}
+            size={size}
+            sx={{
+              backgroundColor: `${display.color}20`,
+              color: display.color,
+              fontWeight: 600,
+              fontSize: '0.7rem',
+              height: 22,
+            }}
+          />
+        );
+      })}
+    </Box>
+  );
+}
+
 function ActiveRunCard({ run }) {
-  const progress = run.total > 0 ? (run.processed / run.total) * 100 : 0;
+  const isIndeterminate = run.total === 0;
+  const progress = !isIndeterminate && run.total > 0 ? (run.processed / run.total) * 100 : 0;
 
   return (
     <Card sx={{
@@ -56,7 +95,9 @@ function ActiveRunCard({ run }) {
         <Box sx={{ mb: 1.5 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
             <Typography variant="caption" color="text.secondary">
-              {run.processed} / {run.total} items
+              {isIndeterminate
+                ? `${run.processed} items processed`
+                : `${run.processed} / ${run.total} items`}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {run.failed > 0 && (
@@ -68,11 +109,13 @@ function ActiveRunCard({ run }) {
             </Typography>
           </Box>
           <LinearProgress
-            variant="determinate"
+            variant={isIndeterminate ? 'indeterminate' : 'determinate'}
             value={progress}
             sx={{ height: 6, borderRadius: 3 }}
           />
         </Box>
+
+        <CounterChips counters={run.counters} />
 
         {run.currentItem && (
           <Typography
@@ -83,6 +126,7 @@ function ActiveRunCard({ run }) {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              mt: run.counters ? 1 : 0,
             }}
           >
             Current: {run.currentItem}
@@ -101,6 +145,7 @@ export default function ParsingMonitorPage() {
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
   const disconnectRef = useRef(null);
+  const navigate = useNavigate();
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = parseInt(searchParams.get('pageSize') || '25', 10);
@@ -135,6 +180,7 @@ export default function ParsingMonitorPage() {
               total: event.total,
               failed: event.failed,
               currentItem: event.currentItem,
+              counters: event.counters,
               startedAt: event.timestamp,
             },
           }));
@@ -149,6 +195,7 @@ export default function ParsingMonitorPage() {
                 processed: event.processed,
                 failed: event.failed,
                 currentItem: event.currentItem,
+                counters: event.counters || existing.counters,
               },
             };
           });
@@ -162,6 +209,7 @@ export default function ParsingMonitorPage() {
                 ...existing,
                 failed: event.failed,
                 currentItem: event.currentItem,
+                counters: event.counters || existing.counters,
               },
             };
           });
@@ -234,6 +282,7 @@ export default function ParsingMonitorPage() {
       headerName: 'Total',
       width: 80,
       type: 'number',
+      renderCell: ({ value }) => value === 0 ? '-' : value,
     },
     {
       field: 'processedItems',
@@ -256,6 +305,14 @@ export default function ParsingMonitorPage() {
       ),
     },
     {
+      field: 'counters',
+      headerName: 'Breakdown',
+      flex: 1,
+      minWidth: 200,
+      sortable: false,
+      renderCell: ({ row }) => <CounterChips counters={row.counters} />,
+    },
+    {
       field: 'startedAt',
       headerName: 'Started',
       width: 170,
@@ -270,8 +327,7 @@ export default function ParsingMonitorPage() {
     {
       field: 'errorMessage',
       headerName: 'Error',
-      flex: 1,
-      minWidth: 120,
+      width: 150,
       renderCell: ({ value }) =>
         value ? (
           <Typography
@@ -324,7 +380,7 @@ export default function ParsingMonitorPage() {
 
       {activeRunList.length === 0 && !loading && rows.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          No parsing runs yet. Runs will appear here when detail parsing jobs are triggered via TickerQ.
+          No parsing runs yet. Runs will appear here when parsing jobs are triggered via TickerQ.
         </Alert>
       )}
 
@@ -341,8 +397,14 @@ export default function ParsingMonitorPage() {
         paginationModel={{ page: page - 1, pageSize }}
         onPaginationModelChange={(m) => updateParams({ page: m.page + 1, pageSize: m.pageSize })}
         pageSizeOptions={[10, 25, 50]}
-        sx={{ flexGrow: 1, minHeight: 0, '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' } }}
+        sx={{
+          flexGrow: 1,
+          minHeight: 0,
+          '& .MuiDataGrid-virtualScroller': { overflowX: 'hidden' },
+          '& .MuiDataGrid-row': { cursor: 'pointer' },
+        }}
         disableRowSelectionOnClick
+        onRowClick={(params) => navigate(`/admin/parsing-monitor/${params.id}`)}
       />
     </Box>
   );

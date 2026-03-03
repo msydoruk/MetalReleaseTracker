@@ -25,6 +25,14 @@ public class ParsingRunEntityConfiguration : IEntityTypeConfiguration<ParsingRun
         builder.Property(e => e.ErrorMessage)
             .HasMaxLength(2000);
 
+        builder.Property(e => e.CountersJson)
+            .HasColumnType("jsonb");
+
+        builder.HasMany(e => e.Items)
+            .WithOne(i => i.ParsingRun)
+            .HasForeignKey(i => i.ParsingRunId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(e => e.StartedAt);
         builder.HasIndex(e => e.Status);
     }
