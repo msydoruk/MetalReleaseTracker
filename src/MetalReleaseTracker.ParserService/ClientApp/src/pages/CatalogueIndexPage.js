@@ -114,6 +114,18 @@ export default function CatalogueIndexPage() {
       headerName: 'Album',
       flex: 1,
       minWidth: 150,
+      renderCell: ({ row }) => row.detailUrl ? (
+        <a
+          href={row.detailUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          style={{ color: '#e53935', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+        >
+          {row.albumTitle}
+          <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>↗</span>
+        </a>
+      ) : row.albumTitle,
     },
     {
       field: 'mediaType',

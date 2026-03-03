@@ -188,7 +188,7 @@ export default function ParsingRunDetailPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/admin/parsing-monitor')}
+        onClick={() => navigate('/parsing-monitor')}
         sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.6)', '&:hover': { color: 'rgba(255, 255, 255, 0.9)' }, alignSelf: 'flex-start' }}
       >
         Back to Parsing Monitor

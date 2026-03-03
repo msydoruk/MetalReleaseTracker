@@ -18,6 +18,8 @@ public class CatalogueDetailDto
 
     public float Price { get; set; }
 
+    public string? PurchaseUrl { get; set; }
+
     public AlbumMediaType? Media { get; set; }
 
     public string? CanonicalTitle { get; set; }

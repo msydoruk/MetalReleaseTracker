@@ -152,6 +152,7 @@ public class AdminQueryRepository : IAdminQueryRepository
                 Name = detail.Name,
                 SKU = detail.SKU,
                 Price = detail.Price,
+                PurchaseUrl = detail.PurchaseUrl,
                 Media = detail.Media,
                 CanonicalTitle = detail.CanonicalTitle,
                 OriginalYear = detail.OriginalYear,

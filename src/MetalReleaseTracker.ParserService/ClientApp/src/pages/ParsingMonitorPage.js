@@ -404,7 +404,7 @@ export default function ParsingMonitorPage() {
           '& .MuiDataGrid-row': { cursor: 'pointer' },
         }}
         disableRowSelectionOnClick
-        onRowClick={(params) => navigate(`/admin/parsing-monitor/${params.id}`)}
+        onRowClick={(params) => navigate(`/parsing-monitor/${params.id}`)}
       />
     </Box>
   );
