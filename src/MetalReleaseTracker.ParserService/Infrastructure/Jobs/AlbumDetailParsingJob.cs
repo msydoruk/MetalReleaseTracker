@@ -83,7 +83,7 @@ public class AlbumDetailParsingJob
         var distributorCode = parserDataSource.DistributorCode;
         var relevantEntries = await _catalogueIndexRepository.GetByStatusesWithDiscographyAsync(
             distributorCode,
-            [CatalogueIndexStatus.AiVerified],
+            [CatalogueIndexStatus.AiVerified, CatalogueIndexStatus.ZeroPriced],
             cancellationToken);
 
         if (relevantEntries.Count == 0)
@@ -135,7 +135,7 @@ public class AlbumDetailParsingJob
                     }
 
                     await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
-                    var changeType = await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
+                    var (changeType, isZeroPriced) = await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
 
                     _logger.LogInformation(
                         "Parsed album: {SKU} - {BandName}. Distributor: {DistributorCode}.",
@@ -143,12 +143,14 @@ public class AlbumDetailParsingJob
                         albumParsedEvent.BandName,
                         distributorCode);
 
-                    var category = changeType switch
-                    {
-                        ChangeType.New => "new",
-                        ChangeType.Updated => "updated",
-                        _ => "active",
-                    };
+                    var category = isZeroPriced
+                        ? "zero-priced"
+                        : changeType switch
+                        {
+                            ChangeType.New => "new",
+                            ChangeType.Updated => "updated",
+                            _ => "active",
+                        };
                     _progressTracker.ItemProcessed(runId, itemDescription, category);
 
                     await DelayBetweenRequests(generalParserSettings, cancellationToken);
@@ -185,7 +187,7 @@ public class AlbumDetailParsingJob
         }
     }
 
-    private async Task<ChangeType> UpsertDetailAsync(
+    private async Task<(ChangeType ChangeType, bool IsZeroPriced)> UpsertDetailAsync(
         CatalogueIndexEntity entry,
         AlbumParsedEvent albumParsedEvent,
         CancellationToken cancellationToken)
@@ -194,30 +196,54 @@ public class AlbumDetailParsingJob
 
         if (existingDetail == null)
         {
+            var publicationStatus = DeterminePublicationStatus(albumParsedEvent.Price, entry.Status);
             var detail = new CatalogueIndexDetailEntity
             {
                 CatalogueIndexId = entry.Id,
                 ChangeType = ChangeType.New,
-                PublicationStatus = PublicationStatus.Unpublished,
+                PublicationStatus = publicationStatus,
             };
 
             MapAlbumFieldsToDetail(detail, albumParsedEvent, entry);
+
+            if (publicationStatus == PublicationStatus.SkippedZeroPrice)
+            {
+                await _catalogueIndexRepository.UpdateStatusAsync(entry.Id, CatalogueIndexStatus.ZeroPriced, cancellationToken);
+                _logger.LogWarning(
+                    "Album {BandName} - {AlbumTitle} has zero price, marking as ZeroPriced.",
+                    entry.BandName,
+                    entry.AlbumTitle);
+            }
+
             await _catalogueIndexDetailRepository.AddAsync(detail, cancellationToken);
-            return ChangeType.New;
+            return (ChangeType.New, publicationStatus == PublicationStatus.SkippedZeroPrice);
         }
 
         if (HasAlbumChanged(existingDetail, albumParsedEvent, entry))
         {
             MapAlbumFieldsToDetail(existingDetail, albumParsedEvent, entry);
+            var publicationStatus = DeterminePublicationStatus(existingDetail.Price, entry.Status);
             existingDetail.ChangeType = ChangeType.Updated;
-            existingDetail.PublicationStatus = PublicationStatus.Unpublished;
+            existingDetail.PublicationStatus = publicationStatus;
+
+            if (publicationStatus == PublicationStatus.SkippedZeroPrice && entry.Status != CatalogueIndexStatus.ZeroPriced)
+            {
+                await _catalogueIndexRepository.UpdateStatusAsync(entry.Id, CatalogueIndexStatus.ZeroPriced, cancellationToken);
+                _logger.LogWarning(
+                    "Album {BandName} - {AlbumTitle} has zero price, marking as ZeroPriced.",
+                    entry.BandName,
+                    entry.AlbumTitle);
+            }
+
             await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
-            return ChangeType.Updated;
+            return (ChangeType.Updated, publicationStatus == PublicationStatus.SkippedZeroPrice);
         }
 
+        var activePublicationStatus = DeterminePublicationStatus(existingDetail.Price, entry.Status);
         existingDetail.ChangeType = ChangeType.Active;
+        existingDetail.PublicationStatus = activePublicationStatus;
         await _catalogueIndexDetailRepository.UpdateAsync(existingDetail, cancellationToken);
-        return ChangeType.Active;
+        return (ChangeType.Active, activePublicationStatus == PublicationStatus.SkippedZeroPrice);
     }
 
     private async Task HandleParseFailureAsync(CatalogueIndexEntity entry, CancellationToken cancellationToken)
@@ -302,5 +328,20 @@ public class AlbumDetailParsingJob
             generalParserSettings.MaxDelayBetweenRequestsSeconds);
 
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+    }
+
+    private static PublicationStatus DeterminePublicationStatus(float price, CatalogueIndexStatus entryStatus)
+    {
+        if (price <= 0)
+        {
+            return PublicationStatus.SkippedZeroPrice;
+        }
+
+        if (entryStatus == CatalogueIndexStatus.ZeroPriced)
+        {
+            return PublicationStatus.SkippedZeroPrice;
+        }
+
+        return PublicationStatus.Unpublished;
     }
 }
