@@ -19,6 +19,7 @@ public class AlbumParsedEventConsumerTests : IClassFixture<TestPostgresDatabaseF
     private readonly AlbumRepository _albumRepository;
     private readonly BandRepository _bandRepository;
     private readonly DistributorRepository _distributorRepository;
+    private readonly AlbumChangeLogRepository _albumChangeLogRepository;
     private readonly Mock<ILogger<AlbumProcessedEventConsumer>> _albumProcessedEventConsumerLoggerMock;
     private readonly IMapper _mapper;
     private readonly AlbumProcessedEventConsumer _albumProcessedEventConsumer;
@@ -28,6 +29,7 @@ public class AlbumParsedEventConsumerTests : IClassFixture<TestPostgresDatabaseF
         _albumRepository = new AlbumRepository(fixture.DbContext);
         _bandRepository = new BandRepository(fixture.DbContext);
         _distributorRepository = new DistributorRepository(fixture.DbContext);
+        _albumChangeLogRepository = new AlbumChangeLogRepository(fixture.DbContext);
         _albumProcessedEventConsumerLoggerMock = new();
         _mapper = new MapperConfiguration(cfg => cfg.CreateMap<AlbumProcessedPublicationEvent, AlbumEntity>()).CreateMapper();
 
@@ -35,6 +37,7 @@ public class AlbumParsedEventConsumerTests : IClassFixture<TestPostgresDatabaseF
             _albumRepository,
             _bandRepository,
             _distributorRepository,
+            _albumChangeLogRepository,
             _albumProcessedEventConsumerLoggerMock.Object,
             _mapper);
     }

@@ -84,3 +84,6 @@ export const fetchFavoriteIds = () => api.get('/favorites/ids');
 export const checkFavorite = (albumId) => api.get(`/favorites/${albumId}/check`);
 
 export const submitFeedback = (data) => api.post('/feedback', data);
+
+export const fetchChangelog = (page, pageSize) =>
+  api.get(`/changelog?page=${page}&pageSize=${pageSize}`);

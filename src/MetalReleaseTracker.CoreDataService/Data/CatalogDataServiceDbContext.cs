@@ -19,6 +19,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<FeedbackEntity> Feedbacks { get; set; }
 
+    public DbSet<AlbumChangeLogEntity> AlbumChangeLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -41,5 +43,8 @@ public class CoreDataServiceDbContext : DbContext
         modelBuilder.Entity<UserFavoriteEntity>()
             .HasIndex(favorite => new { favorite.UserId, favorite.AlbumId })
             .IsUnique();
+
+        modelBuilder.Entity<AlbumChangeLogEntity>()
+            .HasIndex(changeLog => changeLog.ChangedAt);
     }
 }

@@ -33,7 +33,8 @@ import {
   Info as InfoIcon,
   Newspaper as NewspaperIcon,
   Language as LanguageIcon,
-  ContactMail as ContactMailIcon
+  ContactMail as ContactMailIcon,
+  History as HistoryIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
@@ -141,7 +142,8 @@ const Header = () => {
     { title: t('nav.distributors'), path: '/distributors', icon: <StoreIcon /> },
     { title: t('nav.news'), path: '/news', icon: <NewspaperIcon /> },
     { title: t('nav.about'), path: '/about', icon: <InfoIcon /> },
-    { title: t('nav.feedback'), path: '/feedback', icon: <ContactMailIcon /> }
+    { title: t('nav.feedback'), path: '/feedback', icon: <ContactMailIcon /> },
+    { title: t('nav.changelog'), path: '/changelog', icon: <HistoryIcon /> }
   ];
   
   const getInitials = (name) => {

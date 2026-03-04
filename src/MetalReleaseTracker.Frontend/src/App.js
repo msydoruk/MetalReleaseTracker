@@ -15,6 +15,7 @@ import DistributorsPage from './pages/DistributorsPage';
 import AboutPage from './pages/AboutPage';
 import NewsPage from './pages/NewsPage';
 import FeedbackPage from './pages/FeedbackPage';
+import ChangelogPage from './pages/ChangelogPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
@@ -178,6 +179,7 @@ function App() {
                   <Route path="/news" element={<NewsPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/feedback" element={<FeedbackPage />} />
+                  <Route path="/changelog" element={<ChangelogPage />} />
 
                   {/* Protected routes */}
                   <Route
