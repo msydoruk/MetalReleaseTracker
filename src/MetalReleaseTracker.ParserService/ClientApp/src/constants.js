@@ -5,6 +5,7 @@ export const CATALOGUE_INDEX_STATUS = {
   3: { label: 'AI Verified', color: 'success' },
   4: { label: 'Deleted', color: 'error' },
   5: { label: 'AI Rejected', color: 'warning' },
+  6: { label: 'Zero Priced', color: 'warning' },
 };
 
 export const DISTRIBUTOR_CODES = {
@@ -33,4 +34,5 @@ export const CHANGE_TYPE = {
 export const PUBLICATION_STATUS = {
   0: { label: 'Unpublished', color: 'warning' },
   1: { label: 'Published', color: 'success' },
+  2: { label: 'Skipped (Zero Price)', color: 'error' },
 };

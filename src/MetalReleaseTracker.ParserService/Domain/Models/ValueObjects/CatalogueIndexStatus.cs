@@ -7,5 +7,6 @@ public enum CatalogueIndexStatus
     NotRelevant,
     AiVerified,
     Deleted,
-    AiRejected
+    AiRejected,
+    ZeroPriced
 }
