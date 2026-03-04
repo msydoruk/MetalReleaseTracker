@@ -48,6 +48,12 @@ public static class RouteConstants
             public const string Submit = Base;
         }
 
+        public static class ChangeLog
+        {
+            private const string Base = $"{ApiBase}/changelog";
+            public const string GetPaged = Base;
+        }
+
         public static class Favorites
         {
             private const string Base = $"{ApiBase}/favorites";

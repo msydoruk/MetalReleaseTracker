@@ -23,5 +23,7 @@ public class MappingProfile : Profile
         CreateMap<BandEntity, BandDto>();
 
         CreateMap<DistributorEntity, DistributorDto>();
+
+        CreateMap<AlbumChangeLogEntity, AlbumChangeLogDto>();
     }
 }

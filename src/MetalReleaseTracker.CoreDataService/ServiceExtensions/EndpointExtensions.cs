@@ -28,5 +28,6 @@ public static class EndpointExtensions
         DistributorEndpoints.MapEndpoints(routeBuilder);
         UserFavoriteEndpoints.MapEndpoints(routeBuilder);
         FeedbackEndpoints.MapEndpoints(routeBuilder);
+        ChangeLogEndpoints.MapEndpoints(routeBuilder);
     }
 }

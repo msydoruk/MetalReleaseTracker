@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using MassTransit;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
@@ -10,22 +10,25 @@ namespace MetalReleaseTracker.CoreDataService.Consumers;
 
 public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEvent>
 {
-    private IAlbumRepository _albumRepository;
-    private IBandRepository _bandRepository;
-    private IDistributorsRepository _distributorsRepository;
-    private ILogger<AlbumProcessedEventConsumer> _logger;
-    private IMapper _mapper;
+    private readonly IAlbumRepository _albumRepository;
+    private readonly IBandRepository _bandRepository;
+    private readonly IDistributorsRepository _distributorsRepository;
+    private readonly IAlbumChangeLogRepository _albumChangeLogRepository;
+    private readonly ILogger<AlbumProcessedEventConsumer> _logger;
+    private readonly IMapper _mapper;
 
     public AlbumProcessedEventConsumer(
         IAlbumRepository albumRepository,
         IBandRepository bandRepository,
         IDistributorsRepository distributorsRepository,
+        IAlbumChangeLogRepository albumChangeLogRepository,
         ILogger<AlbumProcessedEventConsumer> logger,
         IMapper mapper)
     {
         _albumRepository = albumRepository;
         _bandRepository = bandRepository;
         _distributorsRepository = distributorsRepository;
+        _albumChangeLogRepository = albumChangeLogRepository;
         _logger = logger;
         _mapper = mapper;
     }
@@ -65,11 +68,30 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
                 await _albumRepository.DeleteAsync(albumSyncedPublicationEvent.Id);
                 _logger.LogInformation($"Album {albumSyncedPublicationEvent.Name} was deleted.");
             }
+
+            await LogChangeAsync(albumSyncedPublicationEvent, distributorName);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, $"Error occurred while consuming processed albums.");
             throw;
         }
+    }
+
+    private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName)
+    {
+        var changeLogEntry = new AlbumChangeLogEntity
+        {
+            Id = Guid.NewGuid(),
+            AlbumName = albumEvent.Name,
+            BandName = albumEvent.BandName,
+            DistributorName = distributorName,
+            Price = albumEvent.Price,
+            PurchaseUrl = albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted ? null : albumEvent.PurchaseUrl,
+            ChangeType = albumEvent.ProcessedStatus.ToString(),
+            ChangedAt = DateTime.UtcNow,
+        };
+
+        await _albumChangeLogRepository.AddAsync(changeLogEntry);
     }
 }
