@@ -69,14 +69,34 @@ public class AlbumRepository : IAlbumRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var existingEntity = await GetAsync(id, cancellationToken);
 
-        if (existingEntity != null)
+        if (existingEntity == null)
         {
-            _dbContext.Albums.Remove(existingEntity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            return false;
         }
+
+        _dbContext.Albums.Remove(existingEntity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> DeleteBySkuAsync(string sku, CancellationToken cancellationToken = default)
+    {
+        var existingEntity = await _dbContext.Albums
+            .FirstOrDefaultAsync(album => album.SKU == sku, cancellationToken);
+
+        if (existingEntity == null)
+        {
+            return false;
+        }
+
+        _dbContext.Albums.Remove(existingEntity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 }
