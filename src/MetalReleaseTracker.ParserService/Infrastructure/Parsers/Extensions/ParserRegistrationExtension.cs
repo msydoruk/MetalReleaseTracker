@@ -16,6 +16,10 @@ public static class ParserRegistrationExtension
             .As<IHtmlDocumentLoader>()
             .SingleInstance();
 
+        builder.RegisterType<FlareSolverrHtmlDocumentLoader>()
+            .AsSelf()
+            .InstancePerDependency();
+
         builder.RegisterType<SeleniumWebDriverFactory>()
             .As<ISeleniumWebDriverFactory>()
             .SingleInstance();

@@ -37,45 +37,77 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
     {
         try
         {
-            var albumSyncedPublicationEvent = context.Message;
-            var bandId = await _bandRepository.GetOrAddAsync(albumSyncedPublicationEvent.BandName);
-            string distributorName = albumSyncedPublicationEvent.DistributorCode.TryGetDisplayName();
+            var albumEvent = context.Message;
+            string distributorName = albumEvent.DistributorCode.TryGetDisplayName();
+
+            if (albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted)
+            {
+                await HandleDeleteAsync(albumEvent, distributorName);
+                return;
+            }
 
             if (string.IsNullOrEmpty(distributorName))
             {
                 _logger.LogWarning(
-                    $"Distributor name not mapped for code: {albumSyncedPublicationEvent.DistributorCode}.");
+                    $"Distributor name not mapped for code: {albumEvent.DistributorCode}.");
             }
 
+            var bandId = await _bandRepository.GetOrAddAsync(albumEvent.BandName);
             var distributorId = await _distributorsRepository.GetOrAddAsync(distributorName);
-            var albumEntity = _mapper.Map<AlbumProcessedPublicationEvent, AlbumEntity>(albumSyncedPublicationEvent);
+            var albumEntity = _mapper.Map<AlbumProcessedPublicationEvent, AlbumEntity>(albumEvent);
 
             albumEntity.BandId = bandId;
             albumEntity.DistributorId = distributorId;
 
-            if (albumSyncedPublicationEvent.ProcessedStatus == AlbumProcessedStatus.New)
+            if (albumEvent.ProcessedStatus == AlbumProcessedStatus.New)
             {
                 await _albumRepository.AddAsync(albumEntity);
-                _logger.LogInformation($"Album {albumSyncedPublicationEvent.Name} was processed.");
+                _logger.LogInformation($"Album {albumEvent.Name} was processed.");
             }
-            else if (albumSyncedPublicationEvent.ProcessedStatus == AlbumProcessedStatus.Updated)
+            else if (albumEvent.ProcessedStatus == AlbumProcessedStatus.Updated)
             {
                 await _albumRepository.UpdateAsync(albumEntity);
-                _logger.LogInformation($"Album {albumSyncedPublicationEvent.Name} was processed.");
-            }
-            else if (albumSyncedPublicationEvent.ProcessedStatus == AlbumProcessedStatus.Deleted)
-            {
-                await _albumRepository.DeleteAsync(albumSyncedPublicationEvent.Id);
-                _logger.LogInformation($"Album {albumSyncedPublicationEvent.Name} was deleted.");
+                _logger.LogInformation($"Album {albumEvent.Name} was updated.");
             }
 
-            await LogChangeAsync(albumSyncedPublicationEvent, distributorName);
+            await LogChangeAsync(albumEvent, distributorName);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, $"Error occurred while consuming processed albums.");
             throw;
         }
+    }
+
+    private async Task HandleDeleteAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName)
+    {
+        var deleted = await _albumRepository.DeleteAsync(albumEvent.Id);
+
+        if (!deleted && !string.IsNullOrEmpty(albumEvent.SKU))
+        {
+            _logger.LogWarning(
+                "Album '{Name}' not found by Id {Id}, attempting SKU fallback: {SKU}.",
+                albumEvent.Name,
+                albumEvent.Id,
+                albumEvent.SKU);
+
+            deleted = await _albumRepository.DeleteBySkuAsync(albumEvent.SKU);
+        }
+
+        if (deleted)
+        {
+            _logger.LogInformation("Album '{Name}' was deleted.", albumEvent.Name);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Album '{Name}' (Id={Id}, SKU={SKU}) not found for deletion — skipping.",
+                albumEvent.Name,
+                albumEvent.Id,
+                albumEvent.SKU);
+        }
+
+        await LogChangeAsync(albumEvent, distributorName);
     }
 
     private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName)
