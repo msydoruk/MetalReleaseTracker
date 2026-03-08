@@ -1,9 +1,6 @@
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers;
-using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
-using MetalReleaseTracker.ParserService.Infrastructure.Services;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
@@ -15,13 +12,8 @@ public class BlackMetalStoreParserSmokeTests : ParserSmokeTestBase
 
     private BlackMetalStoreParser CreateParser()
     {
-        var flareSolverrLoader = new FlareSolverrHtmlDocumentLoader(
-            Mock.Of<IFlareSolverrClient>(),
-            NullLogger<FlareSolverrHtmlDocumentLoader>.Instance);
-
         return new BlackMetalStoreParser(
             CreateHtmlDocumentLoader(),
-            flareSolverrLoader,
             CreateSettingsService(),
             NullLogger<BlackMetalStoreParser>.Instance);
     }

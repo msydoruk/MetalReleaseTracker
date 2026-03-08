@@ -40,9 +40,32 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             var albumEvent = context.Message;
             string distributorName = albumEvent.DistributorCode.TryGetDisplayName();
 
+            if (string.IsNullOrEmpty(albumEvent.SKU))
+            {
+                _logger.LogWarning(
+                    "Album '{Name}' has no SKU — skipping.",
+                    albumEvent.Name);
+                return;
+            }
+
+            var existingAlbum = await _albumRepository.GetBySkuAsync(albumEvent.SKU);
+
             if (albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted)
             {
-                await HandleDeleteAsync(albumEvent, distributorName);
+                if (existingAlbum != null)
+                {
+                    await _albumRepository.DeleteAsync(existingAlbum.Id);
+                    _logger.LogInformation("Album '{Name}' (SKU={SKU}) was deleted.", albumEvent.Name, albumEvent.SKU);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Album '{Name}' (SKU={SKU}) not found for deletion — skipping.",
+                        albumEvent.Name,
+                        albumEvent.SKU);
+                }
+
+                await LogChangeAsync(albumEvent, distributorName);
                 return;
             }
 
@@ -59,15 +82,17 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             albumEntity.BandId = bandId;
             albumEntity.DistributorId = distributorId;
 
-            if (albumEvent.ProcessedStatus == AlbumProcessedStatus.New)
+            if (existingAlbum != null)
             {
-                await _albumRepository.AddAsync(albumEntity);
-                _logger.LogInformation($"Album {albumEvent.Name} was processed.");
-            }
-            else if (albumEvent.ProcessedStatus == AlbumProcessedStatus.Updated)
-            {
+                albumEntity.Id = existingAlbum.Id;
                 await _albumRepository.UpdateAsync(albumEntity);
-                _logger.LogInformation($"Album {albumEvent.Name} was updated.");
+                _logger.LogInformation("Album '{Name}' (SKU={SKU}) was updated.", albumEvent.Name, albumEvent.SKU);
+            }
+            else
+            {
+                albumEntity.Id = Guid.NewGuid();
+                await _albumRepository.AddAsync(albumEntity);
+                _logger.LogInformation("Album '{Name}' (SKU={SKU}) was added.", albumEvent.Name, albumEvent.SKU);
             }
 
             await LogChangeAsync(albumEvent, distributorName);
@@ -77,37 +102,6 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             _logger.LogError(exception, $"Error occurred while consuming processed albums.");
             throw;
         }
-    }
-
-    private async Task HandleDeleteAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName)
-    {
-        var deleted = await _albumRepository.DeleteAsync(albumEvent.Id);
-
-        if (!deleted && !string.IsNullOrEmpty(albumEvent.SKU))
-        {
-            _logger.LogWarning(
-                "Album '{Name}' not found by Id {Id}, attempting SKU fallback: {SKU}.",
-                albumEvent.Name,
-                albumEvent.Id,
-                albumEvent.SKU);
-
-            deleted = await _albumRepository.DeleteBySkuAsync(albumEvent.SKU);
-        }
-
-        if (deleted)
-        {
-            _logger.LogInformation("Album '{Name}' was deleted.", albumEvent.Name);
-        }
-        else
-        {
-            _logger.LogWarning(
-                "Album '{Name}' (Id={Id}, SKU={SKU}) not found for deletion — skipping.",
-                albumEvent.Name,
-                albumEvent.Id,
-                albumEvent.SKU);
-        }
-
-        await LogChangeAsync(albumEvent, distributorName);
     }
 
     private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName)

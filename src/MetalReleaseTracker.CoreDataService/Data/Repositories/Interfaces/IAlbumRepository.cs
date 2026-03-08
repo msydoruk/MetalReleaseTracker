@@ -19,5 +19,7 @@ public interface IAlbumRepository
 
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<AlbumEntity?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default);
+
     Task<bool> DeleteBySkuAsync(string sku, CancellationToken cancellationToken = default);
 }

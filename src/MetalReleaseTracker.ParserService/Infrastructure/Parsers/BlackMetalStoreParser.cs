@@ -15,16 +15,12 @@ public class BlackMetalStoreParser : BaseDistributorParser
 {
     private static readonly char[] TitleSeparators = ['\u2013', '\u2014', '-'];
 
-    private readonly FlareSolverrHtmlDocumentLoader _flareSolverrLoader;
-
     public BlackMetalStoreParser(
         IHtmlDocumentLoader htmlDocumentLoader,
-        FlareSolverrHtmlDocumentLoader flareSolverrLoader,
         ISettingsService settingsService,
         ILogger<BlackMetalStoreParser> logger)
         : base(htmlDocumentLoader, settingsService, logger)
     {
-        _flareSolverrLoader = flareSolverrLoader;
     }
 
     public override DistributorCode DistributorCode => DistributorCode.BlackMetalStore;
@@ -76,7 +72,7 @@ public class BlackMetalStoreParser : BaseDistributorParser
 
     protected override async Task<AlbumParsedEvent> ParseAlbumDetails(string detailUrl, CancellationToken cancellationToken)
     {
-        var htmlDocument = await _flareSolverrLoader.LoadHtmlDocumentAsync(detailUrl, cancellationToken);
+        var htmlDocument = await LoadHtmlDocument(detailUrl, cancellationToken);
         var jsonLd = ParserHelper.ExtractProductJsonLd(htmlDocument);
 
         var titleNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailTitle);

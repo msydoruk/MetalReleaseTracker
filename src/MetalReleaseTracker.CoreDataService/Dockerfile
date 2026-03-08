@@ -1,4 +1,20 @@
-# Build stage
+# Frontend build stage
+FROM node:18-alpine AS frontend-build
+WORKDIR /app
+
+COPY MetalReleaseTracker.Frontend/package.json MetalReleaseTracker.Frontend/package-lock.json* ./
+RUN npm install --legacy-peer-deps
+
+COPY MetalReleaseTracker.Frontend/ .
+
+ARG REACT_APP_API_URL=/api
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+ENV NODE_OPTIONS=--max-old-space-size=1024
+ENV GENERATE_SOURCEMAP=false
+RUN npm run build
+
+# .NET build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -19,4 +35,6 @@ EXPOSE 8080
 EXPOSE 8081
 
 COPY --from=build /app/publish .
+COPY --from=frontend-build /app/build ./wwwroot
+
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.CoreDataService.dll"]

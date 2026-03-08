@@ -16,6 +16,7 @@ public class MappingProfile : Profile
                 options => options.MapFrom(source => source.Distributor.Name));
 
         CreateMap<AlbumProcessedPublicationEvent, AlbumEntity>()
+            .ForMember(destination => destination.Id, options => options.Ignore())
             .ForMember(destination => destination.CreatedDate, options => options.MapFrom(source => source.CreatedDate))
             .ForMember(destination => destination.LastUpdateDate,
                 options => options.MapFrom(source => source.LastUpdateDate));

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace MetalReleaseTracker.CoreDataService.ServiceExtensions;
 
@@ -24,8 +24,7 @@ public static class CorsExtensions
 
     private static void ConfigureSpaPolicy(CorsPolicyBuilder policy)
     {
-        policy.WithOrigins("https://localhost:3000", "http://localhost:3000")
-            .AllowAnyMethod()
+        policy.AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()
             .SetIsOriginAllowed(_ => true);
