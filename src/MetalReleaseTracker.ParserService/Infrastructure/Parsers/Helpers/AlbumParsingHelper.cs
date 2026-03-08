@@ -45,16 +45,21 @@ public static class AlbumParsingHelper
     public static string GenerateSkuFromUrl(string url)
     {
         var uri = new Uri(url);
-        var lastSegment = uri.Segments[^1].TrimEnd('/');
-        var slug = Path.GetFileNameWithoutExtension(lastSegment);
+        var path = uri.AbsolutePath.Trim('/');
 
-        var separatorIndex = slug.IndexOf("::", StringComparison.Ordinal);
-        if (separatorIndex >= 0)
+        var extensionIndex = path.LastIndexOf(".html", StringComparison.OrdinalIgnoreCase);
+        if (extensionIndex >= 0)
         {
-            slug = slug[..separatorIndex];
+            path = path[..extensionIndex];
         }
 
-        return slug;
+        var separatorIndex = path.IndexOf("::", StringComparison.Ordinal);
+        if (separatorIndex >= 0)
+        {
+            path = path[..separatorIndex];
+        }
+
+        return path.Replace('/', '-');
     }
 
     public static string? TruncateName(string? value) => Truncate(value, 500);
