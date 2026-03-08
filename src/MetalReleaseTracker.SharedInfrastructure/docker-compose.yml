@@ -110,19 +110,7 @@ services:
     networks:
       - metalrelease_shared_net
     depends_on:
-      - tempo
       - loki
-    restart: unless-stopped
-
-  tempo:
-    image: grafana/tempo:2.6.1
-    container_name: metalrelease-tempo
-    command: ["-config.file=/etc/tempo-config.yml"]
-    volumes:
-      - ./tempo-config.yml:/etc/tempo-config.yml:ro
-      - tempo_data:/var/tempo
-    networks:
-      - metalrelease_shared_net
     restart: unless-stopped
 
   loki:
@@ -132,16 +120,6 @@ services:
     volumes:
       - ./loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/loki
-    networks:
-      - metalrelease_shared_net
-    restart: unless-stopped
-
-  prometheus:
-    image: prom/prometheus:v3.1.0
-    container_name: metalrelease-prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
     networks:
       - metalrelease_shared_net
     restart: unless-stopped
@@ -159,9 +137,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
-      - prometheus
       - loki
-      - tempo
     networks:
       - metalrelease_shared_net
     restart: unless-stopped
@@ -178,12 +154,8 @@ volumes:
     name: metalrelease_zookeeper_logs
   kafka_data:
     name: metalrelease_kafka_data
-  tempo_data:
-    name: metalrelease_tempo_data
   loki_data:
     name: metalrelease_loki_data
-  prometheus_data:
-    name: metalrelease_prometheus_data
   grafana_data:
     name: metalrelease_grafana_data
   minio_data:

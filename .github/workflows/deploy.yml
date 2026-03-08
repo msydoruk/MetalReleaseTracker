@@ -12,7 +12,6 @@ on:
           - shared-infrastructure
           - parser-service
           - core-data-service
-          - frontend
 
 concurrency:
   group: deploy-production
@@ -122,34 +121,20 @@ jobs:
           ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           set -e
-          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService
+          DEPLOY=${{ env.DEPLOY_DIR }}/src
+
+          echo "Stopping parser-service to free memory for build..."
+          cd $DEPLOY/MetalReleaseTracker.ParserService && docker compose stop parser-service || true
+
+          cd $DEPLOY/MetalReleaseTracker.CoreDataService
           docker compose up -d --build
           echo "Waiting for services to start..."
           sleep 10
-          docker compose ps
-          SCRIPT
 
-      - name: Deploy frontend
-        if: inputs.service == 'frontend' || inputs.service == 'all'
-        run: |
-          ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
-          set -e
-          DEPLOY=${{ env.DEPLOY_DIR }}/src
-
-          echo "Stopping .NET services to free memory for frontend build..."
-          cd $DEPLOY/MetalReleaseTracker.ParserService && docker compose stop parser-service || true
-          cd $DEPLOY/MetalReleaseTracker.CoreDataService && docker compose stop coredata-service || true
-
-          cd $DEPLOY/MetalReleaseTracker.Frontend
-          docker compose up -d --build
-          echo "Frontend built and started"
-
-          echo "Restarting .NET services..."
+          echo "Restarting parser-service..."
           cd $DEPLOY/MetalReleaseTracker.ParserService && docker compose start parser-service
-          cd $DEPLOY/MetalReleaseTracker.CoreDataService && docker compose start coredata-service
 
-          cd $DEPLOY/MetalReleaseTracker.Frontend
+          cd $DEPLOY/MetalReleaseTracker.CoreDataService
           docker compose ps
           SCRIPT
 

@@ -37,12 +37,16 @@ builder.Services
     .AddApplicationDatabases(builder.Configuration)
     .AddApplicationAuthentication(builder.Configuration)
     .AddApplicationCors()
-    .AddApplicationSwagger();
+    .AddApplicationSwagger()
+    .AddHttpForwarder();
 
 var app = builder.Build();
 
 app.UseApplicationMiddleware(builder.Environment)
     .MapApplicationEndpoints()
+    .MapMinioForwarder()
     .ApplyMigrations();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

@@ -10,14 +10,13 @@ dotnet build src/MetalReleaseTracker.sln
 dotnet run --project src/MetalReleaseTracker.ParserService
 dotnet run --project src/MetalReleaseTracker.CoreDataService
 
-# Frontend
+# Frontend (dev mode, proxies to CoreDataService at localhost:5002)
 cd src/MetalReleaseTracker.Frontend && npm install --legacy-peer-deps && npm start
 
 # Docker: start shared infra first, then services
 docker compose -f src/MetalReleaseTracker.SharedInfrastructure/docker-compose.yml up -d
 docker compose -f src/MetalReleaseTracker.ParserService/docker-compose.yml up -d --build
 docker compose -f src/MetalReleaseTracker.CoreDataService/docker-compose.yml up -d --build
-docker compose -f src/MetalReleaseTracker.Frontend/docker-compose.yml up -d --build
 
 # Tests (xUnit with Testcontainers - requires Docker running)
 dotnet test src/MetalReleaseTracker.ParserService
@@ -54,18 +53,18 @@ Full schema with columns, types, and FK relationships: [`docs/database-schema.md
 Event-driven pipeline for tracking Ukrainian metal band releases:
 
 ```
-ParserService -> Kafka (albums-processed-topic) -> CoreDataService -> Frontend
+ParserService -> Kafka (albums-processed-topic) -> CoreDataService (API + SPA)
 ```
 
 **ParserService** (.NET 10 Worker) - Scrapes album data from distributor websites using HtmlAgilityPack and Selenium WebDriver. Uploads cover images to MinIO. Detects new/updated/deleted albums via CatalogueIndexDetails and publishes directly to Kafka. PostgreSQL (`ParserServiceDb`, port 5434).
 
-**CoreDataService** (.NET 10 API) - REST API with Minimal APIs. Consumes processed events, serves albums/bands/distributors to frontend. Google OAuth + JWT auth. PostgreSQL (`CoreDataServiceDb`, port 5436). Swagger at `/swagger`.
+**CoreDataService** (.NET 10 API + React SPA) - REST API with Minimal APIs + serves React frontend from `wwwroot/`. Consumes processed events, serves albums/bands/distributors. YARP reverse proxy for MinIO storage (`/storage/` -> MinIO). Google OAuth + JWT auth. PostgreSQL (`CoreDataServiceDb`, port 5436). Swagger at `/swagger`.
 
-**Frontend** (React 19 + Material-UI 7) - SPA proxied to CoreDataService at `localhost:5002`. Nginx in Docker.
+**Frontend** (React 19 + Material-UI 7) - Source in `src/MetalReleaseTracker.Frontend/`, built and bundled into CoreDataService Docker image. For local dev, run `npm start` which proxies to `localhost:5002`.
 
 **SharedLibraries** - Shared project referenced by services.
 
-**SharedInfrastructure** - Docker Compose for Kafka, Zookeeper, MinIO, Kafdrop, OpenTelemetry Collector, Grafana, Tempo, Loki, Prometheus.
+**SharedInfrastructure** - Docker Compose for Kafka, Zookeeper, MinIO, Kafdrop, OpenTelemetry Collector, Grafana, Loki.
 
 ## Key Patterns
 
@@ -76,7 +75,8 @@ ParserService -> Kafka (albums-processed-topic) -> CoreDataService -> Frontend
 - **TickerQ** - Scheduled jobs in ParserService. Dashboard at `/tickerq/dashboard`
 - **MinIO** - Album cover storage with pre-signed URLs for frontend access
 - **Service registration extensions** - `*RegistrationExtension.cs` / `*Extension.cs` static classes with `IServiceCollection` extension methods
-- **OpenTelemetry** - Traces (Tempo), logs (Loki), metrics (Prometheus), dashboards (Grafana)
+- **YARP** - Reverse proxy in CoreDataService for MinIO storage URLs (`/storage/` -> MinIO)
+- **OpenTelemetry** - Logs (Loki), dashboards (Grafana). Services send OTLP telemetry; OTEL Collector forwards logs only
 - **Tests** - Embedded in each service under `Tests/` folder (not separate projects). xUnit + Moq + Testcontainers
 
 ## Code Style
@@ -102,4 +102,4 @@ All temporary and generated files (screenshots, one-off scripts, drafts, test re
 - **Confirm before DB changes**: Before executing any SQL scripts against the production database, always show the user the full SQL script and ask for explicit confirmation. Never run UPDATE/DELETE/INSERT queries on production without prior approval.
 - **Split merge requests by scope**: When changes span unrelated areas (e.g., TickerQ refactoring + frontend UI + parser logic), create separate branches and PRs for each logical group. Never mix unrelated changes into a single PR.
 - **Deploy via GitHub Actions only**: Never deploy directly to the server instance via SSH. All deployments go through GitHub Actions workflow (`.github/workflows/deploy.yml`). Push to `main` triggers the deployment pipeline automatically.
-- **Mandatory UI testing**: For any frontend UI changes, build Docker locally (`docker compose -f src/MetalReleaseTracker.Frontend/docker-compose.yml up -d --build`), then verify changes with Playwright browser tools on both desktop and mobile (375x812) viewports.
+- **Mandatory UI testing**: For any frontend UI changes, build Docker locally (`docker compose -f src/MetalReleaseTracker.CoreDataService/docker-compose.yml up -d --build`), then verify changes with Playwright browser tools on both desktop and mobile (375x812) viewports.

@@ -84,6 +84,14 @@ public class AlbumRepository : IAlbumRepository
         return true;
     }
 
+    public async Task<AlbumEntity?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .FirstOrDefaultAsync(album => album.SKU == sku, cancellationToken);
+    }
+
     public async Task<bool> DeleteBySkuAsync(string sku, CancellationToken cancellationToken = default)
     {
         var existingEntity = await _dbContext.Albums
