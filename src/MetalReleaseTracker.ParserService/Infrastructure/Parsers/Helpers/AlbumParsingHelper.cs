@@ -1,6 +1,4 @@
 ﻿using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
@@ -46,8 +44,17 @@ public static class AlbumParsingHelper
 
     public static string GenerateSkuFromUrl(string url)
     {
-        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(url));
-        return Convert.ToHexStringLower(hashBytes)[..12];
+        var uri = new Uri(url);
+        var lastSegment = uri.Segments[^1].TrimEnd('/');
+        var slug = Path.GetFileNameWithoutExtension(lastSegment);
+
+        var separatorIndex = slug.IndexOf("::", StringComparison.Ordinal);
+        if (separatorIndex >= 0)
+        {
+            slug = slug[..separatorIndex];
+        }
+
+        return slug;
     }
 
     public static string? TruncateName(string? value) => Truncate(value, 500);
