@@ -64,7 +64,7 @@ ParserService -> Kafka (albums-processed-topic) -> CoreDataService (API + SPA)
 
 **SharedLibraries** - Shared project referenced by services.
 
-**SharedInfrastructure** - Docker Compose for Kafka, Zookeeper, MinIO, Kafdrop, OpenTelemetry Collector, Grafana, Loki.
+**SharedInfrastructure** - Docker Compose for Kafka (KRaft mode), MinIO, OpenTelemetry Collector, Grafana, Loki.
 
 ## Key Patterns
 
