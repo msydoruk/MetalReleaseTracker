@@ -118,7 +118,7 @@ public class AlbumDetailParsingJob
 
                     var albumParsedEvent = await parser.ParseAlbumDetailAsync(entry.DetailUrl, cancellationToken);
 
-                    albumParsedEvent.SKU = $"{distributorCode}-{AlbumParsingHelper.GenerateSkuFromUrl(entry.DetailUrl)}";
+                    albumParsedEvent.SKU = $"{(int)distributorCode}-{AlbumParsingHelper.GenerateSkuFromUrl(entry.DetailUrl)}";
 
                     if (entry.MediaType.HasValue)
                     {
@@ -131,8 +131,13 @@ public class AlbumDetailParsingJob
                         albumParsedEvent.OriginalYear = entry.BandDiscography.Year;
                     }
 
-                    await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
-                    var (changeType, isZeroPriced) = await UpsertDetailAsync(entry, albumParsedEvent, cancellationToken);
+                    var existingDetail = await _catalogueIndexDetailRepository.GetByCatalogueIndexIdAsync(entry.Id, cancellationToken);
+                    if (existingDetail == null)
+                    {
+                        await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
+                    }
+
+                    var (changeType, isZeroPriced) = await UpsertDetailAsync(entry, existingDetail, albumParsedEvent, cancellationToken);
 
                     _logger.LogInformation(
                         "Parsed album: {SKU} - {BandName}. Distributor: {DistributorCode}.",
@@ -186,11 +191,10 @@ public class AlbumDetailParsingJob
 
     private async Task<(ChangeType ChangeType, bool IsZeroPriced)> UpsertDetailAsync(
         CatalogueIndexEntity entry,
+        CatalogueIndexDetailEntity? existingDetail,
         AlbumParsedEvent albumParsedEvent,
         CancellationToken cancellationToken)
     {
-        var existingDetail = await _catalogueIndexDetailRepository.GetByCatalogueIndexIdAsync(entry.Id, cancellationToken);
-
         if (existingDetail == null)
         {
             var publicationStatus = DeterminePublicationStatus(albumParsedEvent.Price, entry.Status);
@@ -216,9 +220,11 @@ public class AlbumDetailParsingJob
             return (ChangeType.New, publicationStatus == PublicationStatus.SkippedZeroPrice);
         }
 
-        if (HasAlbumChanged(existingDetail, albumParsedEvent, entry))
+        if (HasAlbumChanged(existingDetail, albumParsedEvent))
         {
+            var existingPhotoUrl = existingDetail.PhotoUrl;
             MapAlbumFieldsToDetail(existingDetail, albumParsedEvent, entry);
+            existingDetail.PhotoUrl = existingPhotoUrl;
             var publicationStatus = DeterminePublicationStatus(existingDetail.Price, entry.Status);
             existingDetail.ChangeType = ChangeType.Updated;
             existingDetail.PublicationStatus = publicationStatus;
@@ -282,21 +288,9 @@ public class AlbumDetailParsingJob
         detail.OriginalYear = source.OriginalYear;
     }
 
-    private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed, CatalogueIndexEntity entry)
+    private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
     {
-        return existing.BandName != entry.BandName
-            || existing.Price != parsed.Price
-            || existing.Name != AlbumParsingHelper.TruncateName(entry.AlbumTitle)
-            || existing.PhotoUrl != parsed.PhotoUrl
-            || existing.PurchaseUrl != parsed.PurchaseUrl
-            || existing.Genre != parsed.Genre
-            || existing.Label != parsed.Label
-            || existing.Press != parsed.Press
-            || existing.Description != parsed.Description
-            || existing.Status != parsed.Status
-            || existing.Media != parsed.Media
-            || existing.CanonicalTitle != parsed.CanonicalTitle
-            || existing.OriginalYear != parsed.OriginalYear;
+        return existing.Price != parsed.Price;
     }
 
     private async Task ProcessAlbumImageAsync(AlbumParsedEvent albumParsedEvent, CancellationToken cancellationToken)
