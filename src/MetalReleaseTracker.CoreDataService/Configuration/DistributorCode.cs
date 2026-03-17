@@ -23,5 +23,11 @@ public enum DistributorCode
     SeasonOfMist = 6,
 
     [Display(Name = "Paragon Records")]
-    ParagonRecords = 7
+    ParagonRecords = 7,
+
+    [Display(Name = "Werewolf")]
+    Werewolf = 8,
+
+    [Display(Name = "Avantgarde Music")]
+    AvantgardeMusic = 9
 }
