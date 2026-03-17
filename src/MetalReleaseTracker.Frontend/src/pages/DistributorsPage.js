@@ -37,6 +37,8 @@ const distributorLogos = {
   'napalm': '/logos/napalm-records.png',
   'blackmetalstore': '/logos/black-metal-store.webp',
   'black metal store': '/logos/black-metal-store.webp',
+  'werewolf': '/logos/werewolf.gif',
+  'avantgarde': '/logos/avantgarde-music.jpg',
 };
 
 const distributorInfo = {
@@ -69,6 +71,14 @@ const distributorInfo = {
       country: '\uD83C\uDDFA\uD83C\uDDF8',
       description: 'American metal label and distributor founded in 2000. Based in New York. Specializes in black, death and doom metal.',
     },
+    'werewolf': {
+      country: '\uD83C\uDDF5\uD83C\uDDF1',
+      description: 'Polish underground label and distro founded in 2007. Werewolf Promotion — Slavonic Forge and Armoury of Underground Heathen Art. Black, pagan and folk metal.',
+    },
+    'avantgarde music': {
+      country: '\uD83C\uDDEE\uD83C\uDDF9',
+      description: 'Italian extreme metal label founded in 1993 by Roberto Mammarella. Based in Milan. Webshop operated via Sound Cave. Black, death and avant-garde metal.',
+    },
   },
   ua: {
     'osmose productions': {
@@ -98,6 +108,14 @@ const distributorInfo = {
     'paragon records': {
       country: '\uD83C\uDDFA\uD83C\uDDF8',
       description: '\u0410\u043C\u0435\u0440\u0438\u043A\u0430\u043D\u0441\u044C\u043A\u0438\u0439 \u043C\u0435\u0442\u0430\u043B-\u043B\u0435\u0439\u0431\u043B \u0442\u0430 \u0434\u0438\u0441\u0442\u0440\u0438\u0431\u2019\u044E\u0442\u043E\u0440, \u0437\u0430\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0439 \u0443 2000 \u0440\u043E\u0446\u0456. \u041D\u044C\u044E-\u0419\u043E\u0440\u043A. \u0421\u043F\u0435\u0446\u0456\u0430\u043B\u0456\u0437\u0443\u0454\u0442\u044C\u0441\u044F \u043D\u0430 \u0431\u043B\u0435\u043A, \u0434\u0435\u0442 \u0442\u0430 \u0434\u0443\u043C-\u043C\u0435\u0442\u0430\u043B\u0456.',
+    },
+    'werewolf': {
+      country: '\uD83C\uDDF5\uD83C\uDDF1',
+      description: '\u041F\u043E\u043B\u044C\u0441\u044C\u043A\u0438\u0439 \u0430\u043D\u0434\u0435\u0440\u0433\u0440\u0430\u0443\u043D\u0434-\u043B\u0435\u0439\u0431\u043B \u0442\u0430 \u0434\u0438\u0441\u0442\u0440\u043E, \u0437\u0430\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0439 \u0443 2007 \u0440\u043E\u0446\u0456. Werewolf Promotion \u2014 Slavonic Forge. \u0411\u043B\u0435\u043A, \u043F\u0430\u0433\u0430\u043D \u0442\u0430 \u0444\u043E\u043B\u043A-\u043C\u0435\u0442\u0430\u043B.',
+    },
+    'avantgarde music': {
+      country: '\uD83C\uDDEE\uD83C\uDDF9',
+      description: '\u0406\u0442\u0430\u043B\u0456\u0439\u0441\u044C\u043A\u0438\u0439 \u0435\u043A\u0441\u0442\u0440\u0435\u043C\u0430\u043B\u044C\u043D\u0438\u0439 \u043C\u0435\u0442\u0430\u043B-\u043B\u0435\u0439\u0431\u043B, \u0437\u0430\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0439 \u0443 1993 \u0440\u043E\u0446\u0456. \u041C\u0456\u043B\u0430\u043D. \u0412\u0435\u0431-\u043C\u0430\u0433\u0430\u0437\u0438\u043D Sound Cave. \u0411\u043B\u0435\u043A, \u0434\u0435\u0442 \u0442\u0430 \u0430\u0432\u0430\u043D\u0433\u0430\u0440\u0434\u043D\u0438\u0439 \u043C\u0435\u0442\u0430\u043B.',
     },
   },
 };

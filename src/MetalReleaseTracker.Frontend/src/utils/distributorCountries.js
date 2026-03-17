@@ -9,6 +9,8 @@ const distributorCountries = {
   'season of mist': '\uD83C\uDDEB\uD83C\uDDF7',
   'paragon records': '\uD83C\uDDFA\uD83C\uDDF8',
   'paragon': '\uD83C\uDDFA\uD83C\uDDF8',
+  'werewolf': '\uD83C\uDDF5\uD83C\uDDF1',
+  'avantgarde': '\uD83C\uDDEE\uD83C\uDDF9',
 };
 
 export const getDistributorCountry = (distributorName) => {
