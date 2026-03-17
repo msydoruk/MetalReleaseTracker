@@ -21,6 +21,10 @@ public static class ParserRegistrationExtension
             .As<ISeleniumWebDriverFactory>()
             .SingleInstance();
 
+        builder.RegisterType<FlareSolverrHtmlDocumentLoader>()
+            .AsSelf()
+            .InstancePerDependency();
+
         builder.RegisterType<OsmoseProductionsParser>()
             .As<IListingParser>()
             .As<IAlbumDetailParser>()
@@ -37,6 +41,9 @@ public static class ParserRegistrationExtension
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.BlackMetalVendor));
 
         builder.RegisterType<BlackMetalStoreParser>()
+            .WithParameter(new ResolvedParameter(
+                (parameterInfo, context) => parameterInfo.ParameterType == typeof(IHtmlDocumentLoader),
+                (parameterInfo, context) => context.Resolve<FlareSolverrHtmlDocumentLoader>()))
             .As<IListingParser>()
             .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.BlackMetalStore));
@@ -55,10 +62,6 @@ public static class ParserRegistrationExtension
             .As<IListingParser>()
             .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.ParagonRecords));
-
-        builder.RegisterType<FlareSolverrHtmlDocumentLoader>()
-            .AsSelf()
-            .InstancePerDependency();
 
         builder.RegisterType<WerewolfParser>()
             .WithParameter(new ResolvedParameter(
