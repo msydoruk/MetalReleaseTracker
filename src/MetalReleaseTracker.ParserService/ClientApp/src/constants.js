@@ -16,6 +16,8 @@ export const DISTRIBUTOR_CODES = {
   5: { label: 'Napalm Records', color: '#ba68c8' },
   6: { label: 'Season of Mist', color: '#4dd0e1' },
   7: { label: 'Paragon Records', color: '#ff8a65' },
+  8: { label: 'Werewolf', color: '#a1887f' },
+  9: { label: 'Avantgarde Music', color: '#7986cb' },
 };
 
 export const MEDIA_TYPES = {
