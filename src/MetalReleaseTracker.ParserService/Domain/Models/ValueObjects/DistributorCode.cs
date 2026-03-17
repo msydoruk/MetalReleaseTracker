@@ -8,5 +8,7 @@ public enum DistributorCode
     BlackMetalStore = 4,
     NapalmRecords = 5,
     SeasonOfMist = 6,
-    ParagonRecords = 7
+    ParagonRecords = 7,
+    Werewolf = 8,
+    AvantgardeMusic = 9
 }

@@ -1,4 +1,5 @@
 using Autofac;
+using Autofac.Core;
 using Autofac.Features.Metadata;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
@@ -54,6 +55,23 @@ public static class ParserRegistrationExtension
             .As<IListingParser>()
             .As<IAlbumDetailParser>()
             .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.ParagonRecords));
+
+        builder.RegisterType<FlareSolverrHtmlDocumentLoader>()
+            .AsSelf()
+            .InstancePerDependency();
+
+        builder.RegisterType<WerewolfParser>()
+            .WithParameter(new ResolvedParameter(
+                (parameterInfo, context) => parameterInfo.ParameterType == typeof(IHtmlDocumentLoader),
+                (parameterInfo, context) => context.Resolve<FlareSolverrHtmlDocumentLoader>()))
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.Werewolf));
+
+        builder.RegisterType<AvantgardeMusicParser>()
+            .As<IListingParser>()
+            .As<IAlbumDetailParser>()
+            .WithMetadata<ParserMetadata>(m => m.For(meta => meta.DistributorCode, DistributorCode.AvantgardeMusic));
 
         builder.Register<Func<DistributorCode, IListingParser>>(context =>
         {

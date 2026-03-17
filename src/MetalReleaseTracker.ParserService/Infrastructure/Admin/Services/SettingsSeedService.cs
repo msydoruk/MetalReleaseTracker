@@ -61,6 +61,8 @@ public class SettingsSeedService : ISettingsSeedService
         (DistributorCode.NapalmRecords, "napalmrecords.com", "https://napalmrecords.com/english/music/cds?product_list_dir=desc&product_list_order=release_date"),
         (DistributorCode.SeasonOfMist, "shop.season-of-mist.com", "https://shop.season-of-mist.com/music?cat=3"),
         (DistributorCode.ParagonRecords, "paragonrecords.org", "https://www.paragonrecords.org/collections/cd"),
+        (DistributorCode.Werewolf, "werewolf-webshop.pl", "https://werewolf-webshop.pl/product-category/cds?v=3943d8795e03"),
+        (DistributorCode.AvantgardeMusic, "sound-cave.com", "https://www.sound-cave.com/en/shop/cd"),
     ];
 
     private readonly ParserServiceDbContext _context;
