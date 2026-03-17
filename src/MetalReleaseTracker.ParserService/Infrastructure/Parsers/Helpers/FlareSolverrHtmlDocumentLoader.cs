@@ -15,6 +15,12 @@ public class FlareSolverrHtmlDocumentLoader : IHtmlDocumentLoader, IAsyncDisposa
     private string? _sessionId;
     private bool _disposed;
     private bool _isFirstRequest = true;
+    private List<FlareSolverrCookie> _lastCookies = [];
+    private string? _lastUserAgent;
+
+    public List<FlareSolverrCookie> LastCookies => _lastCookies;
+
+    public string? LastUserAgent => _lastUserAgent;
 
     public FlareSolverrHtmlDocumentLoader(
         IFlareSolverrClient flareSolverrClient,
@@ -35,21 +41,31 @@ public class FlareSolverrHtmlDocumentLoader : IHtmlDocumentLoader, IAsyncDisposa
 
         var sessionId = await EnsureSessionAsync(cancellationToken);
 
-        string pageContent;
+        FlareSolverrResponse flareSolverrResponse;
         try
         {
-            pageContent = await _flareSolverrClient.GetPageContentAsync(url, sessionId, cancellationToken);
+            flareSolverrResponse = await _flareSolverrClient.GetPageAsync(url, sessionId, cancellationToken);
         }
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "FlareSolverr request failed for {Url}. Waiting {Delay}ms, recreating session and retrying.", url, DelayBeforeRetryMs);
             await Task.Delay(DelayBeforeRetryMs, cancellationToken);
             sessionId = await RecreateSessionAsync(cancellationToken);
-            pageContent = await _flareSolverrClient.GetPageContentAsync(url, sessionId, cancellationToken);
+            flareSolverrResponse = await _flareSolverrClient.GetPageAsync(url, sessionId, cancellationToken);
+        }
+
+        if (flareSolverrResponse.Cookies.Count > 0)
+        {
+            _lastCookies = flareSolverrResponse.Cookies;
+        }
+
+        if (!string.IsNullOrEmpty(flareSolverrResponse.UserAgent))
+        {
+            _lastUserAgent = flareSolverrResponse.UserAgent;
         }
 
         var htmlDocument = new HtmlDocument();
-        htmlDocument.LoadHtml(pageContent);
+        htmlDocument.LoadHtml(flareSolverrResponse.Content);
 
         return htmlDocument;
     }

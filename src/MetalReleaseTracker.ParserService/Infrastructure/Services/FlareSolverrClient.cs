@@ -5,9 +5,15 @@ using MetalReleaseTracker.ParserService.Infrastructure.Services.Configuration;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Services;
 
+public record FlareSolverrCookie(string Name, string Value, string Domain);
+
+public record FlareSolverrResponse(string Content, List<FlareSolverrCookie> Cookies, string? UserAgent);
+
 public interface IFlareSolverrClient
 {
     Task<string> CreateSessionAsync(CancellationToken cancellationToken);
+
+    Task<FlareSolverrResponse> GetPageAsync(string url, string sessionId, CancellationToken cancellationToken);
 
     Task<string> GetPageContentAsync(string url, string sessionId, CancellationToken cancellationToken);
 
@@ -42,7 +48,7 @@ public class FlareSolverrClient : IFlareSolverrClient
         return session;
     }
 
-    public async Task<string> GetPageContentAsync(string url, string sessionId, CancellationToken cancellationToken)
+    public async Task<FlareSolverrResponse> GetPageAsync(string url, string sessionId, CancellationToken cancellationToken)
     {
         _cachedSettings ??= await _settingsService.GetFlareSolverrSettingsAsync(cancellationToken);
 
@@ -68,8 +74,34 @@ public class FlareSolverrClient : IFlareSolverrClient
 
         _logger.LogInformation("FlareSolverr fetched {Url} with HTTP status {Status}.", url, httpStatus);
 
-        return solution.GetProperty("response").GetString()
+        var content = solution.GetProperty("response").GetString()
             ?? throw new InvalidOperationException("FlareSolverr returned empty response body.");
+
+        var cookies = new List<FlareSolverrCookie>();
+        if (solution.TryGetProperty("cookies", out var cookiesElement) && cookiesElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var cookie in cookiesElement.EnumerateArray())
+            {
+                var name = cookie.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+                var value = cookie.TryGetProperty("value", out var valueEl) ? valueEl.GetString() : null;
+                var domain = cookie.TryGetProperty("domain", out var domainEl) ? domainEl.GetString() : null;
+
+                if (!string.IsNullOrEmpty(name) && value != null)
+                {
+                    cookies.Add(new FlareSolverrCookie(name, value, domain ?? string.Empty));
+                }
+            }
+        }
+
+        var userAgent = solution.TryGetProperty("userAgent", out var uaElement) ? uaElement.GetString() : null;
+
+        return new FlareSolverrResponse(content, cookies, userAgent);
+    }
+
+    public async Task<string> GetPageContentAsync(string url, string sessionId, CancellationToken cancellationToken)
+    {
+        var response = await GetPageAsync(url, sessionId, cancellationToken);
+        return response.Content;
     }
 
     public async Task DestroySessionAsync(string sessionId, CancellationToken cancellationToken)

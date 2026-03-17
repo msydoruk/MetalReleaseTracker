@@ -7,6 +7,7 @@ using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Interfaces;
+using MetalReleaseTracker.ParserService.Infrastructure.Services;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 
@@ -107,6 +108,21 @@ public abstract class BaseDistributorParser : IListingParser, IAlbumDetailParser
     protected abstract Exception CreateParserException(string message, Exception? innerException = null);
 
     protected abstract bool IsOwnException(Exception exception);
+
+    public (string? CookieHeader, string? UserAgent) GetFlareSolverrCredentials()
+    {
+        if (_htmlDocumentLoader is FlareSolverrHtmlDocumentLoader flareSolverrLoader)
+        {
+            var cookies = flareSolverrLoader.LastCookies;
+            var cookieHeader = cookies.Count > 0
+                ? string.Join("; ", cookies.Select(cookie => $"{cookie.Name}={cookie.Value}"))
+                : null;
+
+            return (cookieHeader, flareSolverrLoader.LastUserAgent);
+        }
+
+        return (null, null);
+    }
 
     protected async Task<HtmlDocument> LoadHtmlDocument(string url, CancellationToken cancellationToken)
     {

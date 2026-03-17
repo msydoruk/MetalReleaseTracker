@@ -46,7 +46,7 @@ public class ImageUploadService : IImageUploadService
 
         try
         {
-            var imageBytes = await DownloadImageAsync(request.ImageUrl, cancellationToken);
+            var imageBytes = await DownloadImageAsync(request.ImageUrl, cancellationToken, request.CookieHeader, request.UserAgent);
             if (imageBytes == null || !IsValidImage(imageBytes))
             {
                 _logger.LogWarning("Invalid image for album {AlbumSku} from {ImageUrl}", request.AlbumSku, request.ImageUrl);
@@ -71,16 +71,22 @@ public class ImageUploadService : IImageUploadService
         }
     }
 
-    private async Task<byte[]?> DownloadImageAsync(string imageUrl, CancellationToken cancellationToken)
+    private async Task<byte[]?> DownloadImageAsync(string imageUrl, CancellationToken cancellationToken, string? cookieHeader = null, string? userAgent = null)
     {
-        var userAgent = _userAgentProvider.GetRandomUserAgent();
+        var effectiveUserAgent = userAgent ?? _userAgentProvider.GetRandomUserAgent();
 
-        return await imageUrl
+        var request = imageUrl
             .WithTimeout(TimeSpan.FromSeconds(_settings.RequestTimeoutSeconds))
-            .WithHeader("User-Agent", userAgent)
+            .WithHeader("User-Agent", effectiveUserAgent)
             .WithHeader("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
-            .WithHeader("Accept-Encoding", "gzip, deflate, br")
-            .GetBytesAsync(cancellationToken: cancellationToken);
+            .WithHeader("Accept-Encoding", "gzip, deflate, br");
+
+        if (!string.IsNullOrEmpty(cookieHeader))
+        {
+            request = request.WithHeader("Cookie", cookieHeader);
+        }
+
+        return await request.GetBytesAsync(cancellationToken: cancellationToken);
     }
 
     private bool IsValidImage(byte[] imageBytes)

@@ -13,4 +13,8 @@ public class ImageUploadRequest
     public string? AlbumName { get; set; }
 
     public string? BandName { get; set; }
+
+    public string? CookieHeader { get; set; }
+
+    public string? UserAgent { get; set; }
 }

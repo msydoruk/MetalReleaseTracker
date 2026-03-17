@@ -5,8 +5,10 @@ using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 using MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Images.Models;
+using MetalReleaseTracker.ParserService.Infrastructure.Parsers;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Configuration;
 using MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
+using MetalReleaseTracker.ParserService.Infrastructure.Services;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
@@ -134,7 +136,7 @@ public class AlbumDetailParsingJob
                     var existingDetail = await _catalogueIndexDetailRepository.GetByCatalogueIndexIdAsync(entry.Id, cancellationToken);
                     if (existingDetail == null)
                     {
-                        await ProcessAlbumImageAsync(albumParsedEvent, cancellationToken);
+                        await ProcessAlbumImageAsync(albumParsedEvent, parser, cancellationToken);
                     }
 
                     var (changeType, isZeroPriced) = await UpsertDetailAsync(entry, existingDetail, albumParsedEvent, cancellationToken);
@@ -293,7 +295,7 @@ public class AlbumDetailParsingJob
         return existing.Price != parsed.Price;
     }
 
-    private async Task ProcessAlbumImageAsync(AlbumParsedEvent albumParsedEvent, CancellationToken cancellationToken)
+    private async Task ProcessAlbumImageAsync(AlbumParsedEvent albumParsedEvent, IAlbumDetailParser parser, CancellationToken cancellationToken)
     {
         var imageUploadRequest = new ImageUploadRequest
         {
@@ -303,6 +305,13 @@ public class AlbumDetailParsingJob
             AlbumName = albumParsedEvent.Name,
             BandName = albumParsedEvent.BandName
         };
+
+        if (parser is BaseDistributorParser baseParser)
+        {
+            var (cookieHeader, userAgent) = baseParser.GetFlareSolverrCredentials();
+            imageUploadRequest.CookieHeader = cookieHeader;
+            imageUploadRequest.UserAgent = userAgent;
+        }
 
         var uploadResult = await _imageUploadService.UploadAlbumImageAsync(imageUploadRequest, cancellationToken);
 
