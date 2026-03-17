@@ -11,12 +11,32 @@ import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import BuildIcon from '@mui/icons-material/Build';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import StoreIcon from '@mui/icons-material/Store';
 import { useLanguage } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
 
 const getNewsItems = (language) => {
   if (language === 'ua') {
     return [
+      {
+        date: '2026-03-17',
+        icon: <StoreIcon sx={{ fontSize: 28 }} />,
+        chipLabel: 'Нове',
+        chipColor: 'success',
+        title: 'Підключено 2 нових дистриб\'ютори',
+        content:
+          'Додано підтримку двох нових дистриб\'юторів: Werewolf (Польща) та Avantgarde Music / Sound Cave (Італія). Тепер каталог охоплює 9 дистриб\'юторів по всій Європі.',
+      },
+      {
+        date: '2026-03-17',
+        icon: <TrackChangesIcon sx={{ fontSize: 28 }} />,
+        chipLabel: 'Нове',
+        chipColor: 'success',
+        title: 'Додано сторінку оновлень каталогу',
+        content:
+          'Тепер ви можете відстежувати всі зміни в каталозі в реальному часі на сторінці "Журнал змін": нові релізи, оновлення цін та видалені позиції. Сторінка доступна через навігаційне меню.',
+      },
       {
         date: '2026-02-20',
         icon: <FavoriteIcon sx={{ fontSize: 28 }} />,
@@ -57,6 +77,24 @@ const getNewsItems = (language) => {
   }
 
   return [
+    {
+      date: '2026-03-17',
+      icon: <StoreIcon sx={{ fontSize: 28 }} />,
+      chipLabel: 'New',
+      chipColor: 'success',
+      title: '2 new distributors connected',
+      content:
+        'We have added support for two new distributors: Werewolf (Poland) and Avantgarde Music / Sound Cave (Italy). The catalog now covers 9 distributors across Europe.',
+    },
+    {
+      date: '2026-03-17',
+      icon: <TrackChangesIcon sx={{ fontSize: 28 }} />,
+      chipLabel: 'New',
+      chipColor: 'success',
+      title: 'Catalog changelog page added',
+      content:
+        'You can now track all catalog changes in real time on the "Changelog" page: new releases, price updates, and removed items. Access it through the navigation menu.',
+    },
     {
       date: '2026-02-20',
       icon: <FavoriteIcon sx={{ fontSize: 28 }} />,
