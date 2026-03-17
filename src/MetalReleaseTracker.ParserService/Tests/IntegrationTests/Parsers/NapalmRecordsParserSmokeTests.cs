@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class NapalmRecordsParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://napalmrecords.com/english/music/cds?product_list_dir=desc&product_list_order=release_date";

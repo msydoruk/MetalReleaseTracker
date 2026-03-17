@@ -12,7 +12,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "SmokeFlareSolverr")]
+[Trait("Category", "SmokeLocal")]
 public class BlackMetalStoreParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://blackmetalstore.com/categoria-produto/cds/";

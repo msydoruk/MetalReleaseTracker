@@ -12,7 +12,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class WerewolfParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://werewolf-webshop.pl/product-category/cds?v=3943d8795e03";

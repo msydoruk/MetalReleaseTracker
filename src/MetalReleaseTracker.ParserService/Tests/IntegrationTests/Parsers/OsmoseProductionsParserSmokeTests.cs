@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class OsmoseProductionsParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://www.osmoseproductions.com/liste/?lng=2&fmt=11";

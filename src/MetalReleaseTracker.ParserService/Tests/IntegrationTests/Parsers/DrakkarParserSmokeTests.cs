@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class DrakkarParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://www.drakkar666.com/product-category/audio/cds/";
