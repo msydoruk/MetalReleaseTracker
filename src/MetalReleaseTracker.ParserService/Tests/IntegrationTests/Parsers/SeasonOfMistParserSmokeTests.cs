@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class SeasonOfMistParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://shop.season-of-mist.com/music?cat=3";

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class ParagonRecordsParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://www.paragonrecords.org/collections/cd";

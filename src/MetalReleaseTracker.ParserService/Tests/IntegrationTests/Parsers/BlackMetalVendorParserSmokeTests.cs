@@ -6,7 +6,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 [Trait("Requires", "Chrome")]
 public class BlackMetalVendorParserSmokeTests : ParserSmokeTestBase
 {

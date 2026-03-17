@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MetalReleaseTracker.ParserService.Tests.IntegrationTests.Parsers;
 
-[Trait("Category", "Smoke")]
+[Trait("Category", "SmokeLocal")]
 public class AvantgardeMusicParserSmokeTests : ParserSmokeTestBase
 {
     private const string StartUrl = "https://www.sound-cave.com/en/shop/cd";
