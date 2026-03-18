@@ -16,6 +16,7 @@ public static class KafkaRegistrationExtension
             configure.AddRider(rider =>
             {
                 rider.AddProducer<AlbumProcessedPublicationEvent>(kafkaConfig.AlbumProcessedTopic);
+                rider.AddProducer<BandPhotoSyncedEvent>(kafkaConfig.BandPhotoSyncedTopic);
                 rider.UsingKafka((context, kafkaFactory) =>
                 {
                     kafkaFactory.SecurityProtocol = Enum.Parse<SecurityProtocol>(kafkaConfig.Security.SaslProtocol, true);

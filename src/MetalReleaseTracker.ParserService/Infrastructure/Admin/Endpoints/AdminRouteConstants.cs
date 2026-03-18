@@ -49,6 +49,12 @@ public static class AdminRouteConstants
         public const string RunItems = $"{Prefix}/runs/{{runId:guid}}/items";
     }
 
+    public static class BandPhotos
+    {
+        private const string Prefix = $"{Base}/band-photos";
+        public const string Sync = $"{Prefix}/sync";
+    }
+
     public static class Settings
     {
         private const string Prefix = $"{Base}/settings";

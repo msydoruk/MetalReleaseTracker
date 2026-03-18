@@ -89,6 +89,7 @@ builder.Services.AddHttpClient<IFlareSolverrClient, FlareSolverrClient>();
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 builder.Services.AddScoped<IBandReferenceService, BandReferenceService>();
+builder.Services.AddScoped<IBandPhotoSyncService, BandPhotoSyncService>();
 builder.Services.AddScoped<BandReferenceSyncJob>();
 builder.Services.AddScoped<CatalogueIndexJob>();
 builder.Services.AddScoped<AlbumDetailParsingJob>();

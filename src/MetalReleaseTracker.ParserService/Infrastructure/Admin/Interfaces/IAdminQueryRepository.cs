@@ -4,6 +4,8 @@ namespace MetalReleaseTracker.ParserService.Infrastructure.Admin.Interfaces;
 
 public interface IAdminQueryRepository
 {
+    Task<List<BandPhotoMetadataDto>> GetBandPhotoMetadataAsync(CancellationToken cancellationToken);
+
     Task<PagedResultDto<BandReferenceDto>> GetBandReferencesAsync(
         BandReferenceFilterDto filter,
         CancellationToken cancellationToken);

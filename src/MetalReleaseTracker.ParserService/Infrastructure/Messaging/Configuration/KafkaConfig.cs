@@ -6,5 +6,7 @@ public class KafkaConfig
 
     public string AlbumProcessedTopic { get; set; }
 
+    public string BandPhotoSyncedTopic { get; set; }
+
     public KafkaSecurityConfig Security { get; set; }
 }

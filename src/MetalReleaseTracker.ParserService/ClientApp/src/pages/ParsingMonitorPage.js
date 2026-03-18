@@ -15,7 +15,7 @@ import PageHeader from '../components/PageHeader';
 import { DISTRIBUTOR_CODES } from '../constants';
 import { fetchParsingRuns, subscribeToLiveWithAuth } from '../api/parsingMonitor';
 
-const JOB_TYPES = { 0: 'Detail Parsing', 1: 'Catalogue Index', 2: 'Band Reference Sync', 3: 'Album Publisher' };
+const JOB_TYPES = { 0: 'Detail Parsing', 1: 'Catalogue Index', 2: 'Band Reference Sync', 3: 'Album Publisher', 4: 'Band Photo Sync' };
 const RUN_STATUS = {
   0: { label: 'Running', color: 'info' },
   1: { label: 'Completed', color: 'success' },
@@ -35,6 +35,9 @@ const COUNTER_DISPLAY = {
   bandReference: { label: 'Bands Synced', color: '#7e57c2' },
   newAlbums: { label: 'New Albums', color: '#4caf50' },
   unchanged: { label: 'Unchanged', color: '#90a4ae' },
+  photoUploaded: { label: 'Uploaded', color: '#4caf50' },
+  photoSkipped: { label: 'Skipped', color: '#90a4ae' },
+  photoFailed: { label: 'Failed', color: '#ef5350' },
 };
 
 function formatDuration(startedAt, completedAt) {
