@@ -54,7 +54,7 @@ const GroupedAlbumCard = ({ group }) => {
         <Box sx={{ position: 'relative', overflow: 'hidden' }}>
           <CardMedia
             component="img"
-            image={group.photoUrl || '/placeholder-album.png'}
+            image={group.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E"}
             alt={`${group.bandName} - ${group.albumName}`}
             onClick={() => setLightboxOpen(true)}
             sx={{
@@ -294,7 +294,7 @@ const GroupedAlbumCard = ({ group }) => {
         </IconButton>
         <Box
           component="img"
-          src={group.photoUrl || '/placeholder-album.png'}
+          src={group.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E"}
           alt={`${group.bandName} - ${group.albumName}`}
           sx={{ width: '100%', maxHeight: '90vh', objectFit: 'contain' }}
         />
