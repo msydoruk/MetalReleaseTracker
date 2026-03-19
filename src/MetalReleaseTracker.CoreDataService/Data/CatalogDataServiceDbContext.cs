@@ -17,7 +17,7 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<UserFavoriteEntity> UserFavorites { get; set; }
 
-    public DbSet<FeedbackEntity> Feedbacks { get; set; }
+    public DbSet<ReviewEntity> Reviews { get; set; }
 
     public DbSet<AlbumChangeLogEntity> AlbumChangeLogs { get; set; }
 

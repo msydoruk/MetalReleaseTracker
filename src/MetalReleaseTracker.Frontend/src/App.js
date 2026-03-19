@@ -14,7 +14,7 @@ import BandsPage from './pages/BandsPage';
 import DistributorsPage from './pages/DistributorsPage';
 import AboutPage from './pages/AboutPage';
 import NewsPage from './pages/NewsPage';
-import FeedbackPage from './pages/FeedbackPage';
+import ReviewsPage from './pages/ReviewsPage';
 import ChangelogPage from './pages/ChangelogPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -178,7 +178,7 @@ function App() {
                   <Route path="/distributors" element={<DistributorsPage />} />
                   <Route path="/news" element={<NewsPage />} />
                   <Route path="/about" element={<AboutPage />} />
-                  <Route path="/feedback" element={<FeedbackPage />} />
+                  <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/changelog" element={<ChangelogPage />} />
 
                   {/* Protected routes */}
