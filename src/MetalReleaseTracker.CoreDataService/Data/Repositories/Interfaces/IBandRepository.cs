@@ -13,4 +13,8 @@ public interface IBandRepository
 
     Task<List<BandWithAlbumCountDto>> GetBandsWithAlbumCountAsync(
         CancellationToken cancellationToken = default);
+
+    Task<BandEntity?> GetByNameAsync(string bandName, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(BandEntity band, CancellationToken cancellationToken = default);
 }

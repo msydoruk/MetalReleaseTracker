@@ -8,5 +8,9 @@ public class KafkaConfig
 
     public string CatalogSyncServiceTopic { get; set; }
 
+    public string BandPhotoSyncedTopic { get; set; }
+
+    public string BandPhotoSyncedConsumerGroup { get; set; }
+
     public KafkaSecurityConfig Security { get; set; }
 }

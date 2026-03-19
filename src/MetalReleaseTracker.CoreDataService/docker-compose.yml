@@ -34,6 +34,8 @@ services:
       - Kafka__BootstrapServers=kafka:9092
       - Kafka__CatalogSyncServiceConsumerGroup=albums-processed-consumer-group
       - Kafka__CatalogSyncServiceTopic=albums-processed-topic
+      - Kafka__BandPhotoSyncedTopic=band-photos-synced-topic
+      - Kafka__BandPhotoSyncedConsumerGroup=band-photos-synced-consumer-group
       - Minio__Endpoint=minio:9001
       - Minio__AccessKey=${MINIO_ROOT_USER}
       - Minio__SecretKey=${MINIO_ROOT_PASSWORD}

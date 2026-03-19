@@ -62,4 +62,16 @@ public class BandRepository : IBandRepository
             .OrderBy(bandDto => bandDto.Name)
             .ToListAsync(cancellationToken: cancellationToken);
     }
+
+    public async Task<BandEntity?> GetByNameAsync(string bandName, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Bands
+            .FirstOrDefaultAsync(band => band.Name.ToUpper() == bandName.ToUpper(), cancellationToken: cancellationToken);
+    }
+
+    public async Task UpdateAsync(BandEntity band, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Bands.Update(band);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

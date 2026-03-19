@@ -47,6 +47,21 @@ public class AdminQueryRepository : IAdminQueryRepository
         _context = context;
     }
 
+    public async Task<List<BandPhotoMetadataDto>> GetBandPhotoMetadataAsync(CancellationToken cancellationToken)
+    {
+        return await _context.CatalogueIndex
+            .AsNoTracking()
+            .Where(catalogue => catalogue.BandReferenceId != null && catalogue.BandReference != null)
+            .Select(catalogue => new BandPhotoMetadataDto
+            {
+                BandName = catalogue.BandReference!.BandName,
+                MetalArchivesId = catalogue.BandReference.MetalArchivesId,
+                Genre = catalogue.BandReference.Genre,
+            })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PagedResultDto<BandReferenceDto>> GetBandReferencesAsync(
         BandReferenceFilterDto filter,
         CancellationToken cancellationToken)

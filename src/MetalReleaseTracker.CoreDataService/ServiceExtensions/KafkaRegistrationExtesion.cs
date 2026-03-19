@@ -17,6 +17,7 @@ public static class KafkaRegistrationExtension
             configure.AddRider(rider =>
             {
                 rider.AddConsumer<AlbumProcessedEventConsumer>();
+                rider.AddConsumer<BandPhotoSyncedEventConsumer>();
 
                 rider.UsingKafka((context, kafkaFactory) =>
                 {
@@ -27,6 +28,12 @@ public static class KafkaRegistrationExtension
                     {
                         endpoint.AutoOffsetReset = AutoOffsetReset.Earliest;
                         endpoint.ConfigureConsumer<AlbumProcessedEventConsumer>(context);
+                    });
+
+                    kafkaFactory.TopicEndpoint<BandPhotoSyncedEvent>(kafkaConfig.BandPhotoSyncedTopic, kafkaConfig.BandPhotoSyncedConsumerGroup, endpoint =>
+                    {
+                        endpoint.AutoOffsetReset = AutoOffsetReset.Earliest;
+                        endpoint.ConfigureConsumer<BandPhotoSyncedEventConsumer>(context);
                     });
                 });
             });
