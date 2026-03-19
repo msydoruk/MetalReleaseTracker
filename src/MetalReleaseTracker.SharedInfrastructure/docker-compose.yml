@@ -39,6 +39,7 @@ services:
     command:
       - |
         kafka-topics --create --if-not-exists --topic albums-processed-topic --partitions 1 --replication-factor 1 --bootstrap-server kafka:9092
+        kafka-topics --create --if-not-exists --topic band-photos-synced-topic --partitions 1 --replication-factor 1 --bootstrap-server kafka:9092
         echo 'Topics created successfully'
     restart: "no"
 

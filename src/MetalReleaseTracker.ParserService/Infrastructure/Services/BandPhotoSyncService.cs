@@ -1,5 +1,6 @@
 using FileTypeChecker.Extensions;
 using Flurl.Http;
+using HtmlAgilityPack;
 using MassTransit;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Domain.Models.Events;
@@ -88,7 +89,18 @@ public class BandPhotoSyncService : IBandPhotoSyncService
                         continue;
                     }
 
-                    var photoUrl = $"{settings.MetalArchivesBaseUrl}/images/{band.MetalArchivesId}/{band.MetalArchivesId}_photo.jpg";
+                    var bandPageUrl = $"{settings.MetalArchivesBaseUrl}/bands/_/{band.MetalArchivesId}";
+                    var bandPageHtml = await _flareSolverrClient.GetPageContentAsync(bandPageUrl, sessionId, cancellationToken);
+                    var photoUrl = ExtractPhotoUrl(bandPageHtml);
+
+                    if (photoUrl == null)
+                    {
+                        _logger.LogWarning("No photo URL found on page for band '{BandName}' (MA ID: {MaId}).", band.BandName, band.MetalArchivesId);
+                        _progressTracker.ItemFailed(runId, band.BandName, "No photo on band page", "photoFailed");
+                        await DelayBetweenRequests(settings, cancellationToken);
+                        continue;
+                    }
+
                     var imageBytes = await DownloadImageAsync(photoUrl, cookieHeader, userAgent, cancellationToken);
 
                     if (imageBytes == null || !IsValidImage(imageBytes))
@@ -180,6 +192,21 @@ public class BandPhotoSyncService : IBandPhotoSyncService
     {
         var delayMs = _random.Next(settings.MinRequestDelayMs, settings.MaxRequestDelayMs);
         await Task.Delay(delayMs, cancellationToken);
+    }
+
+    private static string? ExtractPhotoUrl(string bandPageHtml)
+    {
+        var document = new HtmlDocument();
+        document.LoadHtml(bandPageHtml);
+
+        var photoLink = document.DocumentNode.SelectSingleNode("//a[@class='image' and contains(@href, '_photo')]");
+        if (photoLink != null)
+        {
+            return photoLink.GetAttributeValue("href", null);
+        }
+
+        var photoImg = document.DocumentNode.SelectSingleNode("//img[contains(@src, '_photo')]");
+        return photoImg?.GetAttributeValue("src", null);
     }
 
     private static string? BuildCookieHeader(List<FlareSolverrCookie> cookies)
