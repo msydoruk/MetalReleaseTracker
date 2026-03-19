@@ -138,7 +138,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
     { value: ALBUM_SORT_FIELDS.ORIGINAL_YEAR, label: t('albumFilter.sortYear') },
     { value: ALBUM_SORT_FIELDS.NAME, label: t('albumFilter.sortName') },
     { value: ALBUM_SORT_FIELDS.BAND, label: t('albumFilter.sortBand') },
-    { value: ALBUM_SORT_FIELDS.PRICE, label: t('albumFilter.sortPrice') }
+    { value: ALBUM_SORT_FIELDS.PRICE, label: t('albumFilter.sortPrice') },
+    { value: ALBUM_SORT_FIELDS.DATE_ADDED, label: t('albumFilter.sortDate') }
   ];
 
   return (

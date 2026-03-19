@@ -199,14 +199,26 @@ public class BandPhotoSyncService : IBandPhotoSyncService
         var document = new HtmlDocument();
         document.LoadHtml(bandPageHtml);
 
-        var photoLink = document.DocumentNode.SelectSingleNode("//a[@class='image' and contains(@href, '_photo')]");
+        var photoLink = document.DocumentNode.SelectSingleNode("//a[contains(@class, 'image') and contains(@href, '_photo')]");
         if (photoLink != null)
         {
             return photoLink.GetAttributeValue("href", null);
         }
 
         var photoImg = document.DocumentNode.SelectSingleNode("//img[contains(@src, '_photo')]");
-        return photoImg?.GetAttributeValue("src", null);
+        if (photoImg != null)
+        {
+            return photoImg.GetAttributeValue("src", null);
+        }
+
+        var logoLink = document.DocumentNode.SelectSingleNode("//a[contains(@class, 'image') and contains(@href, '_logo')]");
+        if (logoLink != null)
+        {
+            return logoLink.GetAttributeValue("href", null);
+        }
+
+        var logoImg = document.DocumentNode.SelectSingleNode("//img[contains(@src, '_logo')]");
+        return logoImg?.GetAttributeValue("src", null);
     }
 
     private static string? BuildCookieHeader(List<FlareSolverrCookie> cookies)

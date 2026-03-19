@@ -8,5 +8,6 @@ public enum AlbumSortField
     Distributor = 4,
     Media = 5,
     Status = 6,
-    OriginalYear = 7
+    OriginalYear = 7,
+    DateAdded = 8
 }

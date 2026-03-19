@@ -12,6 +12,8 @@ public class AlbumChangeLogDto
 
     public float Price { get; set; }
 
+    public float? OldPrice { get; set; }
+
     public string? PurchaseUrl { get; set; }
 
     public string ChangeType { get; set; }

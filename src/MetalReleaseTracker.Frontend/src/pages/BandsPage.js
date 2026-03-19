@@ -186,17 +186,19 @@ const BandsPage = () => {
                   />
                 )}
 
-                <Typography variant="body2" color="text.secondary" sx={{
-                  mb: 2,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  height: '4.5em'
-                }}>
-                  {band.description || t('bands.noDescription')}
-                </Typography>
+                {band.description && (
+                  <Typography variant="body2" color="text.secondary" sx={{
+                    mb: 2,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    height: '4.5em'
+                  }}>
+                    {band.description}
+                  </Typography>
+                )}
 
                 <Box sx={{
                   display: 'flex',

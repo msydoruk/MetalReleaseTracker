@@ -158,7 +158,11 @@ const ChangelogPage = () => {
                     </TableCell>
                     {!isMobile && (
                       <TableCell>
-                        {item.changeType !== 'Deleted' ? `\u20AC${item.price.toFixed(2)}` : '\u2014'}
+                        {item.changeType === 'Deleted'
+                          ? '\u2014'
+                          : item.changeType === 'Updated' && item.oldPrice != null
+                            ? `\u20AC${item.oldPrice.toFixed(2)} \u2192 \u20AC${item.price.toFixed(2)}`
+                            : `\u20AC${item.price.toFixed(2)}`}
                       </TableCell>
                     )}
                     <TableCell>{item.distributorName}</TableCell>

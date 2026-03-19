@@ -23,6 +23,8 @@ public class AlbumChangeLogEntity
 
     public float Price { get; set; }
 
+    public float? OldPrice { get; set; }
+
     public string? PurchaseUrl { get; set; }
 
     [Required]

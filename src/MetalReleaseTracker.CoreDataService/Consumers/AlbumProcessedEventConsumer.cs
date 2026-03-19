@@ -49,6 +49,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             }
 
             var existingAlbum = await _albumRepository.GetBySkuAsync(albumEvent.SKU);
+            float? oldPrice = existingAlbum?.Price;
 
             if (albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted)
             {
@@ -65,7 +66,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
                         albumEvent.SKU);
                 }
 
-                await LogChangeAsync(albumEvent, distributorName);
+                await LogChangeAsync(albumEvent, distributorName, oldPrice);
                 return;
             }
 
@@ -95,7 +96,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
                 _logger.LogInformation("Album '{Name}' (SKU={SKU}) was added.", albumEvent.Name, albumEvent.SKU);
             }
 
-            await LogChangeAsync(albumEvent, distributorName);
+            await LogChangeAsync(albumEvent, distributorName, oldPrice);
         }
         catch (Exception exception)
         {
@@ -104,7 +105,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
         }
     }
 
-    private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName)
+    private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName, float? oldPrice = null)
     {
         var changeLogEntry = new AlbumChangeLogEntity
         {
@@ -113,6 +114,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             BandName = albumEvent.BandName,
             DistributorName = distributorName,
             Price = albumEvent.Price,
+            OldPrice = oldPrice,
             PurchaseUrl = albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted ? null : albumEvent.PurchaseUrl,
             ChangeType = albumEvent.ProcessedStatus.ToString(),
             ChangedAt = DateTime.UtcNow,

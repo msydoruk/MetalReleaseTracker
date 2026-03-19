@@ -16,7 +16,8 @@ public static class AlbumSortingExtensions
             [AlbumSortField.Distributor] = (album => album.Distributor.Name, album => album.Distributor.Name),
             [AlbumSortField.Media] = (album => album.Media, album => album.Media),
             [AlbumSortField.Status] = (album => album.Status, album => album.Status),
-            [AlbumSortField.OriginalYear] = (album => album.OriginalYear, album => album.OriginalYear)
+            [AlbumSortField.OriginalYear] = (album => album.OriginalYear, album => album.OriginalYear),
+            [AlbumSortField.DateAdded] = (album => album.CreatedDate, album => album.CreatedDate)
         };
 
     public static IQueryable<AlbumEntity> ApplyAlbumSorting(
