@@ -50,6 +50,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        if: inputs.service == 'core-data-service' || inputs.service == 'all'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build frontend in CI
+        if: inputs.service == 'core-data-service' || inputs.service == 'all'
+        working-directory: src/MetalReleaseTracker.Frontend
+        run: |
+          npm install --legacy-peer-deps
+          REACT_APP_API_URL=/api GENERATE_SOURCEMAP=false npm run build
+          rm -rf node_modules
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -121,20 +135,10 @@ jobs:
           ssh ${{ env.SSH_OPTS }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           set -e
-          DEPLOY=${{ env.DEPLOY_DIR }}/src
-
-          echo "Stopping parser-service to free memory for build..."
-          cd $DEPLOY/MetalReleaseTracker.ParserService && docker compose stop parser-service || true
-
-          cd $DEPLOY/MetalReleaseTracker.CoreDataService
-          docker compose up -d --build
+          cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService
+          SKIP_FRONTEND_BUILD=true docker compose up -d --build
           echo "Waiting for services to start..."
           sleep 10
-
-          echo "Restarting parser-service..."
-          cd $DEPLOY/MetalReleaseTracker.ParserService && docker compose start parser-service
-
-          cd $DEPLOY/MetalReleaseTracker.CoreDataService
           docker compose ps
           SCRIPT
 
