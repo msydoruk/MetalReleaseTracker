@@ -275,6 +275,12 @@ const translations = {
       title: 'Price History',
       noData: 'No price history available',
     },
+    rating: {
+      average: '{count} ratings',
+      averageOne: '1 rating',
+      loginToRate: 'Log in to rate',
+      yourRating: 'Your rating',
+    },
     footer: {
       rights: 'All rights reserved.',
       suggestDistributor: 'Suggest a Distributor',
@@ -555,6 +561,12 @@ const translations = {
     priceHistory: {
       title: 'Історія цін',
       noData: 'Історія цін недоступна',
+    },
+    rating: {
+      average: '{count} оцінок',
+      averageOne: '1 оцінка',
+      loginToRate: 'Увійдіть, щоб оцінити',
+      yourRating: 'Ваша оцінка',
     },
     footer: {
       rights: 'Всі права захищені.',

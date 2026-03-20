@@ -21,6 +21,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CloseIcon from '@mui/icons-material/Close';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
 import MediaTypeIcon from '../components/MediaTypeIcon';
+import AlbumRating from '../components/AlbumRating';
 import PriceHistoryChart from '../components/PriceHistoryChart';
 import { fetchAlbumDetail, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
 import authService from '../services/auth';
@@ -188,6 +189,8 @@ const AlbumDetailPage = () => {
               <Chip label={album.genre} size="small" color="secondary" />
             )}
           </Box>
+
+          <AlbumRating albumId={album.primaryAlbumId} isLoggedIn={isLoggedIn} />
 
           {album.label && (
             <Typography variant="body2" color="text.secondary">

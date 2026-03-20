@@ -87,6 +87,10 @@ export const fetchFavorites = (page, pageSize) => api.get(`/favorites?page=${pag
 export const fetchFavoriteIds = () => api.get('/favorites/ids');
 export const checkFavorite = (albumId) => api.get(`/favorites/${albumId}/check`);
 
+export const fetchAlbumRating = (albumId) => api.get(`/ratings/${albumId}`);
+export const submitAlbumRating = (albumId, rating) => api.post(`/ratings/${albumId}`, { rating });
+export const deleteAlbumRating = (albumId) => api.delete(`/ratings/${albumId}`);
+
 export const fetchReviews = () => api.get('/reviews');
 export const submitReview = (data) => api.post('/reviews', data);
 

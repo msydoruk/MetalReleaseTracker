@@ -21,6 +21,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<AlbumChangeLogEntity> AlbumChangeLogs { get; set; }
 
+    public DbSet<AlbumRatingEntity> AlbumRatings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -46,5 +48,9 @@ public class CoreDataServiceDbContext : DbContext
 
         modelBuilder.Entity<AlbumChangeLogEntity>()
             .HasIndex(changeLog => changeLog.ChangedAt);
+
+        modelBuilder.Entity<AlbumRatingEntity>()
+            .HasIndex(rating => new { rating.UserId, rating.AlbumId })
+            .IsUnique();
     }
 }

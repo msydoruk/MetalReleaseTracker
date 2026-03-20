@@ -66,6 +66,14 @@ public static class RouteConstants
             public const string Rss = $"{Base}/rss";
         }
 
+        public static class Ratings
+        {
+            private const string Base = $"{ApiBase}/ratings";
+            public const string Submit = $"{Base}/{{albumId:guid}}";
+            public const string Get = $"{Base}/{{albumId:guid}}";
+            public const string Delete = $"{Base}/{{albumId:guid}}";
+        }
+
         public static class Favorites
         {
             private const string Base = $"{ApiBase}/favorites";
