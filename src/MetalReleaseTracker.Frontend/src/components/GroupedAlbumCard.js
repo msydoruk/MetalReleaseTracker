@@ -17,10 +17,12 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MediaTypeIcon from './MediaTypeIcon';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
 
 const GroupedAlbumCard = ({ group }) => {
   const { t } = useLanguage();
+  const { format: formatPrice } = useCurrency();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -30,8 +32,8 @@ const GroupedAlbumCard = ({ group }) => {
   const minPrice = Math.min(...group.variants.map((v) => v.price));
   const maxPrice = Math.max(...group.variants.map((v) => v.price));
   const priceDisplay = minPrice === maxPrice
-    ? `\u20AC${minPrice.toFixed(2)}`
-    : `\u20AC${minPrice.toFixed(2)} \u2013 \u20AC${maxPrice.toFixed(2)}`;
+    ? formatPrice(minPrice)
+    : `${formatPrice(minPrice)} \u2013 ${formatPrice(maxPrice)}`;
 
   return (
     <>
@@ -200,7 +202,7 @@ const GroupedAlbumCard = ({ group }) => {
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'white' }}>
-                        {'\u20AC'}{variant.price.toFixed(2)}
+                        {formatPrice(variant.price)}
                       </Typography>
                       <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
                         {getDistributorCountry(variant.distributorName)} {variant.distributorName}
@@ -276,7 +278,7 @@ const GroupedAlbumCard = ({ group }) => {
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mr: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'white' }}>
-                          {'\u20AC'}{variant.price.toFixed(2)}
+                          {formatPrice(variant.price)}
                         </Typography>
                         <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 1 }}>
                           {getDistributorCountry(variant.distributorName)} {variant.distributorName}

@@ -37,6 +37,7 @@ import {
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -44,9 +45,14 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const [currencyAnchorEl, setCurrencyAnchorEl] = useState(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { language, toggleLanguage, t } = useLanguage();
+  const { currency, changeCurrency } = useCurrency();
+
+  const CURRENCY_OPTIONS = ['EUR', 'UAH', 'USD'];
   
   const checkUserStatus = async () => {
     try {
@@ -379,9 +385,39 @@ const Header = () => {
               ))}
             </Box>
             
-            {/* Language toggle + Auth buttons */}
+            {/* Currency + Language toggle + Auth buttons */}
             {!loading && (
               <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
+                <Tooltip title={t('header.currencyTooltip')}>
+                  <Button
+                    color="inherit"
+                    onClick={(event) => setCurrencyAnchorEl(event.currentTarget)}
+                    sx={{ minWidth: 'auto', px: 1, mr: { xs: -0.5, md: 0.5 }, fontSize: '0.85rem' }}
+                  >
+                    {currency}
+                  </Button>
+                </Tooltip>
+                <Menu
+                  anchorEl={currencyAnchorEl}
+                  open={Boolean(currencyAnchorEl)}
+                  onClose={() => setCurrencyAnchorEl(null)}
+                  keepMounted
+                  transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+                >
+                  {CURRENCY_OPTIONS.map((option) => (
+                    <MenuItem
+                      key={option}
+                      selected={option === currency}
+                      onClick={() => {
+                        changeCurrency(option);
+                        setCurrencyAnchorEl(null);
+                      }}
+                    >
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Menu>
                 <Tooltip title={language === 'en' ? 'Українська' : 'English'}>
                   <Button
                     color="inherit"

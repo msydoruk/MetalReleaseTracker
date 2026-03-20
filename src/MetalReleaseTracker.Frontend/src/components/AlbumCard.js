@@ -16,10 +16,12 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useNavigate, Link } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
 
 const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = false }) => {
   const { t } = useLanguage();
+  const { format: formatPrice } = useCurrency();
   const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -181,7 +183,7 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
             borderTop: '1px solid rgba(0,0,0,0.05)'
           }}>
             <Typography variant="body1" color="text.primary" sx={{ fontWeight: 'bold' }}>
-              {'\u20AC'}{album.price.toFixed(2)}
+              {formatPrice(album.price)}
             </Typography>
             <Button
               size="small"

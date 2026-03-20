@@ -20,6 +20,7 @@ import {
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { fetchChangelog } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import usePageMeta from '../hooks/usePageMeta';
 import Pagination from '../components/Pagination';
 
@@ -31,6 +32,7 @@ const statusConfig = {
 
 const ChangelogPage = () => {
   const { t } = useLanguage();
+  const { format: formatPrice } = useCurrency();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   usePageMeta(t('pageMeta.changelogTitle'), t('pageMeta.changelogDescription'));
@@ -153,8 +155,8 @@ const ChangelogPage = () => {
                     {item.changeType !== 'Deleted' && (
                       <Typography variant="caption" color="text.secondary">
                         {item.changeType === 'Updated' && item.oldPrice != null
-                          ? `\u20AC${item.oldPrice.toFixed(2)} \u2192 \u20AC${item.price.toFixed(2)}`
-                          : `\u20AC${item.price.toFixed(2)}`}
+                          ? `${formatPrice(item.oldPrice)} \u2192 ${formatPrice(item.price)}`
+                          : formatPrice(item.price)}
                       </Typography>
                     )}
                   </Box>
@@ -202,8 +204,8 @@ const ChangelogPage = () => {
                         {item.changeType === 'Deleted'
                           ? '\u2014'
                           : item.changeType === 'Updated' && item.oldPrice != null
-                            ? `\u20AC${item.oldPrice.toFixed(2)} \u2192 \u20AC${item.price.toFixed(2)}`
-                            : `\u20AC${item.price.toFixed(2)}`}
+                            ? `${formatPrice(item.oldPrice)} \u2192 ${formatPrice(item.price)}`
+                            : formatPrice(item.price)}
                       </TableCell>
                       <TableCell>{item.distributorName}</TableCell>
                       <TableCell>{getStatusChip(item.changeType)}</TableCell>

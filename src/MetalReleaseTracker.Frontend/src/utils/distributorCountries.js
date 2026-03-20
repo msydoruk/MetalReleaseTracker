@@ -13,11 +13,35 @@ const distributorCountries = {
   'avantgarde': '\uD83C\uDDEE\uD83C\uDDF9',
 };
 
+const distributorCountryNames = {
+  'osmose productions': 'France',
+  'drakkar': 'Germany',
+  'black metal vendor': 'Germany',
+  'black metal store': 'Brazil',
+  'blackmetalstore': 'Brazil',
+  'napalm records': 'Austria',
+  'napalm': 'Austria',
+  'season of mist': 'France',
+  'paragon records': 'USA',
+  'paragon': 'USA',
+  'werewolf': 'Poland',
+  'avantgarde': 'Italy',
+};
+
 export const getDistributorCountry = (distributorName) => {
   if (!distributorName) return '';
   const name = distributorName.toLowerCase();
   for (const [key, flag] of Object.entries(distributorCountries)) {
     if (name.includes(key) || key.includes(name)) return flag;
+  }
+  return '';
+};
+
+export const getDistributorCountryName = (distributorName) => {
+  if (!distributorName) return '';
+  const name = distributorName.toLowerCase();
+  for (const [key, countryName] of Object.entries(distributorCountryNames)) {
+    if (name.includes(key) || key.includes(name)) return countryName;
   }
   return '';
 };

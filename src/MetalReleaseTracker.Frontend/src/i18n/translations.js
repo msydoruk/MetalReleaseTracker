@@ -25,6 +25,7 @@ const translations = {
     },
     header: {
       flagTooltip: 'Ukrainian metal releases sold by foreign distributors',
+      currencyTooltip: 'Display currency',
     },
     albums: {
       heroTitle: 'Metal Release Tracker',
@@ -264,6 +265,8 @@ const translations = {
       error: 'Failed to load album details.',
       label: 'Label',
       press: 'Press',
+      shipsFrom: 'Ships from',
+      listenOnBandcamp: 'Listen on Bandcamp',
     },
     footer: {
       rights: 'All rights reserved.',
@@ -296,6 +299,7 @@ const translations = {
     },
     header: {
       flagTooltip: 'Релізи українського металу від закордонних дистриб\'юторів',
+      currencyTooltip: 'Валюта відображення',
     },
     albums: {
       heroTitle: 'Metal Release Tracker',
@@ -535,6 +539,8 @@ const translations = {
       error: 'Не вдалося завантажити інформацію про альбом.',
       label: 'Лейбл',
       press: 'Тираж',
+      shipsFrom: 'Доставка з',
+      listenOnBandcamp: 'Слухати на Bandcamp',
     },
     footer: {
       rights: 'Всі права захищені.',

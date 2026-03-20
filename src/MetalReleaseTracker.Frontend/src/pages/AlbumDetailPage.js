@@ -19,16 +19,19 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CloseIcon from '@mui/icons-material/Close';
+import HeadphonesIcon from '@mui/icons-material/Headphones';
 import MediaTypeIcon from '../components/MediaTypeIcon';
 import { fetchAlbumDetail, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
-import { getDistributorCountry } from '../utils/distributorCountries';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { getDistributorCountry, getDistributorCountryName } from '../utils/distributorCountries';
 
 const AlbumDetailPage = () => {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { format: formatPrice } = useCurrency();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -200,14 +203,26 @@ const AlbumDetailPage = () => {
             </Typography>
           )}
 
-          {isLoggedIn && (
-            <IconButton
-              onClick={handleToggleFavorite}
-              sx={{ mt: 1, color: isFavorited ? 'error.main' : 'text.secondary' }}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            {isLoggedIn && (
+              <IconButton
+                onClick={handleToggleFavorite}
+                sx={{ color: isFavorited ? 'error.main' : 'text.secondary' }}
+              >
+                {isFavorited ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              </IconButton>
+            )}
+            <Button
+              variant="outlined"
+              startIcon={<HeadphonesIcon />}
+              href={`https://bandcamp.com/search?q=${encodeURIComponent(album.bandName + ' ' + album.albumName)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ textTransform: 'none', borderRadius: 5, fontWeight: 600 }}
             >
-              {isFavorited ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-            </IconButton>
-          )}
+              {t('albumDetail.listenOnBandcamp')}
+            </Button>
+          </Box>
         </Box>
       </Box>
 
@@ -218,6 +233,7 @@ const AlbumDetailPage = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
         {album.variants.map((variant) => {
           const flag = getDistributorCountry(variant.distributorName);
+          const countryName = getDistributorCountryName(variant.distributorName);
           return (
             <Paper
               key={variant.albumId}
@@ -238,10 +254,10 @@ const AlbumDetailPage = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, minWidth: 80 }}>
-                  €{variant.price.toFixed(2)}
+                  {formatPrice(variant.price)}
                 </Typography>
                 <Typography variant="body1">
-                  {flag} {variant.distributorName}
+                  {flag}{countryName ? ` ${t('albumDetail.shipsFrom')} ${countryName} \u00B7 ` : ' '}{variant.distributorName}
                 </Typography>
               </Box>
               <Button
@@ -307,7 +323,7 @@ const AlbumDetailPage = () => {
                     {related.albumName}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {related.originalYear > 0 && `${related.originalYear} · `}€{related.minPrice.toFixed(2)}
+                    {related.originalYear > 0 && `${related.originalYear} \u00B7 `}{formatPrice(related.minPrice)}
                   </Typography>
                 </Box>
               </Paper>

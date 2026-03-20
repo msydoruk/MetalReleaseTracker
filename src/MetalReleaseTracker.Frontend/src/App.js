@@ -22,6 +22,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
 import { LanguageProvider } from './i18n/LanguageContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 import BackToTop from './components/BackToTop';
 
 // Create a dark theme for the metal music theme
@@ -163,7 +164,8 @@ function App() {
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <LanguageProvider>
-          <Router>
+          <CurrencyProvider>
+            <Router>
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
               <Box component="main" sx={{ flexGrow: 1 }}>
@@ -200,7 +202,8 @@ function App() {
               <Footer />
               <BackToTop />
             </Box>
-          </Router>
+            </Router>
+          </CurrencyProvider>
         </LanguageProvider>
       </LocalizationProvider>
     </ThemeProvider>
