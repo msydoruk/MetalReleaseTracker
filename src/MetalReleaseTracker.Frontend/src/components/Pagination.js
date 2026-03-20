@@ -45,11 +45,9 @@ const Pagination = ({
       gap: { xs: 0.5, sm: 2 },
       mb: compact ? 0 : 2
     }}>
-      {!isMobile && (
-        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-          {showingText}
-        </Typography>
-      )}
+      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+        {showingText}
+      </Typography>
 
       <MuiPagination
         count={totalPages}

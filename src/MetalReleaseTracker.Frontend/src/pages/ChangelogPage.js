@@ -120,43 +120,86 @@ const ChangelogPage = () => {
 
       {!loading && !error && data && data.items.length > 0 && (
         <>
-          <TableContainer component={Paper} sx={{ mb: 3 }}>
-            <Table size={isMobile ? 'small' : 'medium'}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t('changelog.date')}</TableCell>
-                  <TableCell>{t('changelog.band')}</TableCell>
-                  <TableCell>{t('changelog.album')}</TableCell>
-                  {!isMobile && <TableCell>{t('changelog.price')}</TableCell>}
-                  <TableCell>{t('changelog.distributor')}</TableCell>
-                  <TableCell>{t('changelog.status')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {data.items.map((item) => (
-                  <TableRow key={item.id} hover>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+          {isMobile ? (
+            <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {data.items.map((item) => (
+                <Paper key={item.id} sx={{ p: 1.5 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary">
                       {formatDate(item.changedAt)}
-                    </TableCell>
-                    <TableCell>{item.bandName}</TableCell>
-                    <TableCell>
-                      {item.purchaseUrl && item.changeType !== 'Deleted' ? (
-                        <Link
-                          href={item.purchaseUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          color="primary"
-                          underline="hover"
-                          sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-                        >
-                          {item.albumName}
-                          <OpenInNewIcon sx={{ fontSize: 14 }} />
-                        </Link>
-                      ) : (
-                        item.albumName
-                      )}
-                    </TableCell>
-                    {!isMobile && (
+                    </Typography>
+                    {getStatusChip(item.changeType)}
+                  </Box>
+                  <Typography variant="subtitle2">{item.bandName}</Typography>
+                  <Typography variant="body2">
+                    {item.purchaseUrl && item.changeType !== 'Deleted' ? (
+                      <Link
+                        href={item.purchaseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="primary"
+                        underline="hover"
+                        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                      >
+                        {item.albumName}
+                        <OpenInNewIcon sx={{ fontSize: 14 }} />
+                      </Link>
+                    ) : (
+                      item.albumName
+                    )}
+                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {item.distributorName}
+                    </Typography>
+                    {item.changeType !== 'Deleted' && (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.changeType === 'Updated' && item.oldPrice != null
+                          ? `\u20AC${item.oldPrice.toFixed(2)} \u2192 \u20AC${item.price.toFixed(2)}`
+                          : `\u20AC${item.price.toFixed(2)}`}
+                      </Typography>
+                    )}
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mb: 3 }}>
+              <Table size="medium">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('changelog.date')}</TableCell>
+                    <TableCell>{t('changelog.band')}</TableCell>
+                    <TableCell>{t('changelog.album')}</TableCell>
+                    <TableCell>{t('changelog.price')}</TableCell>
+                    <TableCell>{t('changelog.distributor')}</TableCell>
+                    <TableCell>{t('changelog.status')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.items.map((item) => (
+                    <TableRow key={item.id} hover>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        {formatDate(item.changedAt)}
+                      </TableCell>
+                      <TableCell>{item.bandName}</TableCell>
+                      <TableCell>
+                        {item.purchaseUrl && item.changeType !== 'Deleted' ? (
+                          <Link
+                            href={item.purchaseUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            color="primary"
+                            underline="hover"
+                            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                          >
+                            {item.albumName}
+                            <OpenInNewIcon sx={{ fontSize: 14 }} />
+                          </Link>
+                        ) : (
+                          item.albumName
+                        )}
+                      </TableCell>
                       <TableCell>
                         {item.changeType === 'Deleted'
                           ? '\u2014'
@@ -164,14 +207,14 @@ const ChangelogPage = () => {
                             ? `\u20AC${item.oldPrice.toFixed(2)} \u2192 \u20AC${item.price.toFixed(2)}`
                             : `\u20AC${item.price.toFixed(2)}`}
                       </TableCell>
-                    )}
-                    <TableCell>{item.distributorName}</TableCell>
-                    <TableCell>{getStatusChip(item.changeType)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      <TableCell>{item.distributorName}</TableCell>
+                      <TableCell>{getStatusChip(item.changeType)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
 
           <Pagination
             currentPage={data.currentPage}
