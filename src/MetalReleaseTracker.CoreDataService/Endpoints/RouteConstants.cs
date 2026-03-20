@@ -59,6 +59,12 @@ public static class RouteConstants
             public const string GetPaged = Base;
         }
 
+        public static class Feed
+        {
+            private const string Base = $"{ApiBase}/feed";
+            public const string Rss = $"{Base}/rss";
+        }
+
         public static class Favorites
         {
             private const string Base = $"{ApiBase}/favorites";

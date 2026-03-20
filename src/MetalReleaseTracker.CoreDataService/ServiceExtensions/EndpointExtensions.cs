@@ -1,4 +1,5 @@
-﻿using MetalReleaseTracker.CoreDataService.Endpoints.Authentication;
+﻿using MetalReleaseTracker.CoreDataService.Endpoints;
+using MetalReleaseTracker.CoreDataService.Endpoints.Authentication;
 using MetalReleaseTracker.CoreDataService.Endpoints.Catalog;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -29,5 +30,6 @@ public static class EndpointExtensions
         UserFavoriteEndpoints.MapEndpoints(routeBuilder);
         ReviewEndpoints.MapEndpoints(routeBuilder);
         ChangeLogEndpoints.MapEndpoints(routeBuilder);
+        FeedEndpoints.MapEndpoints(routeBuilder);
     }
 }

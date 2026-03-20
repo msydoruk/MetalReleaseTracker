@@ -1,11 +1,22 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const usePageMeta = (title, description) => {
+const setMetaTag = (attribute, value, content) => {
+  let element = document.querySelector(`meta[${attribute}="${value}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attribute, value);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+};
+
+const usePageMeta = (title, description, image) => {
   const location = useLocation();
 
   useEffect(() => {
     const suffix = 'Metal Release Tracker';
+    const effectiveTitle = title || suffix;
     document.title = title ? `${title} | ${suffix}` : suffix;
 
     if (description) {
@@ -22,25 +33,23 @@ const usePageMeta = (title, description) => {
       canonical.setAttribute('href', canonicalUrl);
     }
 
-    let ogUrl = document.querySelector('meta[property="og:url"]');
-    if (ogUrl) {
-      ogUrl.setAttribute('content', canonicalUrl);
+    setMetaTag('property', 'og:title', effectiveTitle);
+    setMetaTag('property', 'og:description', description || '');
+    setMetaTag('property', 'og:url', canonicalUrl);
+    setMetaTag('property', 'og:type', 'website');
+
+    if (image) {
+      setMetaTag('property', 'og:image', image);
     }
 
-    let ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) {
-      ogTitle.setAttribute('content', title || suffix);
-    }
-
-    let ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc && description) {
-      ogDesc.setAttribute('content', description);
-    }
+    setMetaTag('name', 'twitter:card', image ? 'summary_large_image' : 'summary');
+    setMetaTag('name', 'twitter:title', effectiveTitle);
+    setMetaTag('name', 'twitter:description', description || '');
 
     return () => {
       document.title = suffix;
     };
-  }, [title, description, location.pathname]);
+  }, [title, description, image, location.pathname]);
 };
 
 export default usePageMeta;

@@ -41,7 +41,8 @@ const BandDetailPage = () => {
 
   usePageMeta(
     band ? `${band.name} - Metal Release Tracker` : 'Metal Release Tracker',
-    band ? `${band.name} releases from foreign distributors` : ''
+    band ? `${band.name} releases from foreign distributors` : '',
+    band?.photoUrl
   );
 
   useEffect(() => {

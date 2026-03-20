@@ -44,7 +44,8 @@ const AlbumDetailPage = () => {
 
   usePageMeta(
     album ? `${album.albumName} - ${album.bandName} | Metal Release Tracker` : 'Metal Release Tracker',
-    album ? `Buy ${album.albumName} by ${album.bandName} from ${album.variants.length} stores` : ''
+    album ? `Buy ${album.albumName} by ${album.bandName} from ${album.variants.length} stores` : '',
+    album?.photoUrl
   );
 
   useEffect(() => {
