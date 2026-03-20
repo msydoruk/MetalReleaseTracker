@@ -1,40 +1,60 @@
 # Metal Release Tracker :ukraine:
 
-Aggregator for physical releases (vinyl, CD, tape) of Ukrainian metal bands sold by foreign distributors and labels. Automatically scrapes distributor catalogs, processes data through a Kafka event pipeline, and presents everything in a single searchable catalog with direct links to stores.
+Aggregator for physical releases (vinyl, CD, tape) of Ukrainian metal bands sold by foreign distributors and labels. Automatically scrapes distributor catalogs, detects new/updated/deleted albums, publishes changes through a Kafka event pipeline, and presents everything in a single searchable catalog with direct links to stores.
+
+**Production**: https://metal-release.com
 
 ## Architecture
 
 ```
-ParserService → Kafka → CatalogSyncService → Kafka → CoreDataService → Frontend
+ParserService → Kafka (albums-processed-topic) → CoreDataService (API + React SPA)
 ```
 
-### Services
+### ParserService (.NET 10 Worker)
 
-**ParserService** (Worker)
-- Scrapes album data from distributor websites (HtmlAgilityPack + Selenium for anti-bot protected sites)
-- Uploads album covers to MinIO
-- Publishes to `albums-parsed-topic` via transactional outbox
-- Stack: PostgreSQL (EF Core), TickerQ, Selenium WebDriver, Kafka (MassTransit)
+Scrapes album data from 9 distributor websites, detects catalog changes, and publishes events to Kafka.
 
-**CatalogSyncService** (Worker)
-- Validates and transforms raw album data
-- Detects changes (new/updated/deleted albums)
-- Publishes to `albums-processed-topic`
-- Stack: MongoDB (30-day TTL), TickerQ, PostgreSQL (TickerQ only), Kafka (MassTransit)
+- **Four-job pipeline**: BandReferenceSyncJob → CatalogueIndexJob → AlbumDetailParsingJob → AlbumPublisherJob
+- **BandReferenceSyncJob** — syncs Ukrainian band list from Metal Archives
+- **CatalogueIndexJob** — crawls distributor catalogs, builds index of all listings
+- **AlbumDetailParsingJob** — parses album details (price, media type, cover art), detects changes
+- **AlbumPublisherJob** — publishes new/updated/deleted albums to Kafka
+- **AI Verification** — uses Claude API to match catalog items to Metal Archives discographies, resolving band name collisions
+- Uploads album covers and band photos to MinIO
+- Scraping: HtmlAgilityPack for most sites, Selenium WebDriver + FlareSolverr for anti-bot protected sites
+- Stack: PostgreSQL (EF Core), TickerQ, Autofac DI, MassTransit Kafka Rider
 
-**CoreDataService** (API)
-- REST API for frontend
-- Authentication (Google OAuth + JWT)
-- Generates pre-signed MinIO URLs for images
-- Stack: PostgreSQL (EF Core), ASP.NET Core, Kafka consumer
+### CoreDataService (.NET 10 API + SPA)
 
-**Frontend** (React)
-- React 19 + Material-UI 7
-- Nginx container with API proxy to CoreDataService
+REST API (Minimal APIs) that serves the React frontend and consumes processed album events from Kafka.
+
+- Consumes `albums-processed-topic` and `band-photos-synced-topic` via MassTransit
+- Authentication: Google OAuth + email/password with JWT tokens
+- YARP reverse proxy for MinIO storage (`/storage/` → MinIO) — no pre-signed URLs
+- React SPA built into `wwwroot/` and served by Kestrel (no separate nginx container)
+- Swagger UI at `/swagger`
+- Stack: PostgreSQL (EF Core + ASP.NET Identity), MassTransit Kafka Rider
+
+### Frontend (React 19 + Material-UI 7)
+
+Single-page application bundled into the CoreDataService Docker image at build time.
+
+- Pages: Albums (with filters, search, grouping), Bands, Distributors, News, About, Reviews, Changelog
+- Features: favorites, full-size cover viewing, price comparison across stores, i18n (EN/UA)
+- For local dev: `npm start` proxies API calls to `localhost:5002`
+
+### SharedLibraries
+
+Shared project with MinIO helpers referenced by both services.
+
+### SharedInfrastructure
+
+Docker Compose for shared dependencies: Kafka (KRaft mode), MinIO, OpenTelemetry Collector, Loki, Grafana.
 
 ## Quick Start
 
 ### Prerequisites
+
 - .NET 10.0 SDK
 - Docker & Docker Compose
 - Node.js 18+ (for local frontend dev)
@@ -42,41 +62,31 @@ ParserService → Kafka → CatalogSyncService → Kafka → CoreDataService →
 ### 1. Shared Infrastructure (start first)
 
 ```bash
-cd src/MetalReleaseTracker.SharedInfrastructure
-docker compose up -d
+docker compose -f src/MetalReleaseTracker.SharedInfrastructure/docker-compose.yml up -d
 ```
 
 ### 2. Services
 
 ```bash
 # ParserService
-cd src/MetalReleaseTracker.ParserService
-docker compose up -d --build
+docker compose -f src/MetalReleaseTracker.ParserService/docker-compose.yml up -d --build
 
-# CatalogSyncService
-cd src/MetalReleaseTracker.CatalogSyncService
-docker compose up -d --build
-
-# CoreDataService
-cd src/MetalReleaseTracker.CoreDataService
-docker compose up -d --build
-
-# Frontend
-cd src/MetalReleaseTracker.Frontend
-docker compose up -d --build
+# CoreDataService (includes React frontend)
+docker compose -f src/MetalReleaseTracker.CoreDataService/docker-compose.yml up -d --build
 ```
 
 ### Local Development (without Docker)
 
 ```bash
-cd src
-dotnet build MetalReleaseTracker.sln
+# Build
+dotnet build src/MetalReleaseTracker.sln
 
-dotnet run --project MetalReleaseTracker.ParserService
-dotnet run --project MetalReleaseTracker.CatalogSyncService
-dotnet run --project MetalReleaseTracker.CoreDataService
+# Run services (from repo root)
+dotnet run --project src/MetalReleaseTracker.ParserService
+dotnet run --project src/MetalReleaseTracker.CoreDataService
 
-cd MetalReleaseTracker.Frontend && npm install --legacy-peer-deps && npm start
+# Frontend (dev mode, proxies to localhost:5002)
+cd src/MetalReleaseTracker.Frontend && npm install --legacy-peer-deps && npm start
 ```
 
 ## Ports
@@ -85,28 +95,24 @@ cd MetalReleaseTracker.Frontend && npm install --legacy-peer-deps && npm start
 
 | Port | Service |
 |------|---------|
-| 3001 | Frontend (nginx) |
-| 5000 | ParserService |
-| 5001 | CatalogSyncService |
-| 5002 | CoreDataService API |
+| 5000 | ParserService (API + TickerQ dashboard) |
+| 5002 | CoreDataService (API + React SPA) |
+| 8191 | FlareSolverr (anti-bot proxy) |
 
 ### Databases
 
 | Port | Service | Database |
 |------|---------|----------|
-| 5434 | PostgreSQL | ParserServiceDb (data + TickerQ) |
-| 5435 | PostgreSQL | TickerQDb_CatalogSync |
-| 5436 | PostgreSQL | core_data_service_db |
-| 27017 | MongoDB | CatalogSyncServiceDb |
+| 5434 | PostgreSQL | ParserServiceDb |
+| 5436 | PostgreSQL | CoreDataServiceDb |
 
 ### Infrastructure
 
 | Port | Service |
 |------|---------|
-| 3000 | Grafana (logs, metrics, traces) |
+| 3000 | Grafana (logs) |
 | 9001 | MinIO API |
 | 9002 | MinIO Console |
-| 9003 | Kafdrop (Kafka UI) |
 | 9092/9093 | Kafka (internal/external) |
 | 4317/4318 | OTel Collector (gRPC/HTTP) |
 
@@ -114,42 +120,39 @@ cd MetalReleaseTracker.Frontend && npm install --legacy-peer-deps && npm start
 
 | Dashboard | URL |
 |-----------|-----|
-| Frontend | http://localhost:3001 |
+| CoreDataService (SPA) | http://localhost:5002 |
+| Swagger | http://localhost:5002/swagger |
+| TickerQ | http://localhost:5000/tickerq/dashboard |
 | Grafana | http://localhost:3000 |
-| Parser TickerQ | http://localhost:5000/tickerq/dashboard |
-| CatalogSync TickerQ | http://localhost:5001/tickerq/dashboard |
 | MinIO Console | http://localhost:9002 |
-| Kafdrop | http://localhost:9003 |
 
 ## Development
 
 ### Build & Test
 
 ```bash
-dotnet build MetalReleaseTracker.sln
-dotnet test MetalReleaseTracker.sln
-dotnet test --filter "FullyQualifiedName~AlbumParsingJobTests"
+dotnet build src/MetalReleaseTracker.sln
+dotnet test src/MetalReleaseTracker.ParserService
+dotnet test src/MetalReleaseTracker.CoreDataService
 ```
+
+Tests use xUnit + Moq + Testcontainers (requires Docker running). Tests are embedded in each service under `Tests/` folder.
 
 ### Database Migrations
 
 ```bash
 # ParserService
-cd MetalReleaseTracker.ParserService
-dotnet ef migrations add <Name>
+dotnet ef migrations add <Name> --project src/MetalReleaseTracker.ParserService
 
 # CoreDataService
-cd MetalReleaseTracker.CoreDataService
-dotnet ef migrations add <Name> --context CatalogDataServiceDbContext
-dotnet ef migrations add <Name> --context IdentityServerDbContext
+dotnet ef migrations add <Name> --project src/MetalReleaseTracker.CoreDataService --context CoreDataServiceDbContext
+dotnet ef migrations add <Name> --project src/MetalReleaseTracker.CoreDataService --context IdentityServerDbContext
 ```
 
 ## Deploy
 
-**Production**: https://metal-release.com
-
 GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
-- `all` | `shared-infrastructure` | `parser-service` | `catalog-sync-service` | `core-data-service` | `frontend`
+- `all` | `shared-infrastructure` | `parser-service` | `core-data-service`
 
 ### Required GitHub Secrets
 
@@ -160,7 +163,6 @@ GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
 | `SSH_HOST` | Server IP |
 | `ENV_SHARED_INFRA` | SharedInfrastructure .env |
 | `ENV_PARSER_SERVICE` | ParserService .env |
-| `ENV_CATALOG_SYNC` | CatalogSyncService .env |
 | `ENV_CORE_DATA` | CoreDataService .env |
 
 ### SSL Certificate
@@ -168,7 +170,7 @@ GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
 - **Provider**: Let's Encrypt (certbot)
 - **Domain**: metal-release.com, www.metal-release.com
 - **Auto-renewal**: certbot timer (systemd)
-- **Nginx reverse proxy**: `/etc/nginx/sites-enabled/metaltracker` → localhost:3001
+- **Nginx reverse proxy**: `/etc/nginx/sites-enabled/metaltracker` → localhost:5002
 - **Renewal check**: `sudo certbot renew --dry-run`
 
 ## Technology Stack
@@ -176,26 +178,25 @@ GitHub Actions workflow (`.github/workflows/deploy.yml`) — manual dispatch:
 | Category | Technologies |
 |----------|-------------|
 | Runtime | .NET 10.0 |
-| API | ASP.NET Core |
-| Database | PostgreSQL (EF Core), MongoDB |
-| Messaging | Kafka (MassTransit 8.3) |
-| Scheduling | TickerQ 10.1.1 |
-| Storage | MinIO (S3-compatible) |
-| Observability | OpenTelemetry, Grafana, Tempo, Loki, Prometheus |
-| Scraping | HtmlAgilityPack, Selenium WebDriver (headless Chrome) |
-| Validation | FluentValidation |
-| Frontend | React 19, Material-UI 7, nginx |
-| Testing | xUnit, Testcontainers |
+| API | ASP.NET Core Minimal APIs |
+| Database | PostgreSQL 15, EF Core, ASP.NET Identity |
+| Messaging | Apache Kafka (KRaft), MassTransit Kafka Rider |
+| Scheduling | TickerQ |
+| Object Storage | MinIO (S3-compatible), YARP reverse proxy |
+| Observability | OpenTelemetry, Grafana, Loki |
+| Scraping | HtmlAgilityPack, Selenium WebDriver, FlareSolverr |
+| AI | Claude API (album verification) |
+| DI | Autofac (ParserService), built-in (CoreDataService) |
+| Frontend | React 19, Material-UI 7 |
+| Testing | xUnit, Moq, Testcontainers |
 
 ## Project Structure
 
 ```
 src/
-├── MetalReleaseTracker.ParserService/       # Album scraper worker
-├── MetalReleaseTracker.CatalogSyncService/  # Data validation worker
-├── MetalReleaseTracker.CoreDataService/     # REST API
-├── MetalReleaseTracker.Frontend/            # React UI (nginx)
-├── MetalReleaseTracker.SharedInfrastructure/ # Kafka, MinIO, OTel, Grafana
-├── MetalReleaseTracker.SharedLibraries/     # Shared utilities
-└── MetalReleaseTracker.Benchmarks/          # Performance tests
+├── MetalReleaseTracker.ParserService/       # Scraper + change detection + Kafka producer
+├── MetalReleaseTracker.CoreDataService/     # REST API + SPA host + Kafka consumer
+├── MetalReleaseTracker.Frontend/            # React SPA (built into CoreDataService wwwroot/)
+├── MetalReleaseTracker.SharedInfrastructure/ # Kafka, MinIO, OTel, Loki, Grafana
+└── MetalReleaseTracker.SharedLibraries/     # Shared MinIO helpers
 ```
