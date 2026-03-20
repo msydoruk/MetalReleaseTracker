@@ -57,6 +57,7 @@ export const fetchAlbums = (filters) => {
   return api.get(`/albums/filtered?${queryParams.toString()}`);
 };
 export const fetchAlbumById = (id) => api.get(`/albums/${id}`);
+export const fetchAlbumDetail = (id) => api.get(`/albums/${id}/detail`);
 export const fetchGroupedAlbums = (filters) => {
   const queryParams = new URLSearchParams();
   if (filters) {

@@ -130,7 +130,138 @@ public class AlbumService : IAlbumService
     public async Task<AlbumDto?> GetAlbumById(Guid id, CancellationToken cancellationToken = default)
     {
         var album = await _albumRepository.GetAsync(id, cancellationToken);
-        return album == null ? null : _mapper.Map<AlbumDto>(album);
+        if (album == null)
+        {
+            return null;
+        }
+
+        var dto = _mapper.Map<AlbumDto>(album);
+        dto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+        return dto;
+    }
+
+    public async Task<AlbumDetailDto?> GetAlbumDetail(Guid id, CancellationToken cancellationToken = default)
+    {
+        var album = await _albumRepository.GetAsync(id, cancellationToken);
+        if (album == null)
+        {
+            return null;
+        }
+
+        var photoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+
+        List<AlbumVariantDto> variants;
+        if (!string.IsNullOrWhiteSpace(album.CanonicalTitle))
+        {
+            var matchingAlbums = await _albumRepository.GetMatchingAlbumsAsync(
+                album.CanonicalTitle, album.Media, album.BandId, cancellationToken);
+
+            variants = matchingAlbums.Select(matchingAlbum => new AlbumVariantDto
+            {
+                AlbumId = matchingAlbum.Id,
+                DistributorId = matchingAlbum.DistributorId,
+                DistributorName = matchingAlbum.Distributor?.Name ?? string.Empty,
+                Price = matchingAlbum.Price,
+                PurchaseUrl = matchingAlbum.PurchaseUrl
+            }).ToList();
+        }
+        else
+        {
+            variants =
+            [
+                new AlbumVariantDto
+                {
+                    AlbumId = album.Id,
+                    DistributorId = album.DistributorId,
+                    DistributorName = album.Distributor?.Name ?? string.Empty,
+                    Price = album.Price,
+                    PurchaseUrl = album.PurchaseUrl
+                }
+            ];
+        }
+
+        var bandAlbums = await _albumRepository.GetAlbumsByBandIdAsync(album.BandId, cancellationToken);
+
+        var relatedGroups = new List<List<Data.Entities.AlbumEntity>>();
+        var assignedIndices = new HashSet<int>();
+
+        for (var i = 0; i < bandAlbums.Count; i++)
+        {
+            if (assignedIndices.Contains(i))
+            {
+                continue;
+            }
+
+            var group = new List<Data.Entities.AlbumEntity> { bandAlbums[i] };
+            assignedIndices.Add(i);
+
+            for (var j = i + 1; j < bandAlbums.Count; j++)
+            {
+                if (!assignedIndices.Contains(j) && AreAlbumsMatching(bandAlbums[i], bandAlbums[j]))
+                {
+                    group.Add(bandAlbums[j]);
+                    assignedIndices.Add(j);
+                }
+            }
+
+            relatedGroups.Add(group);
+        }
+
+        var currentCanonical = album.CanonicalTitle?.Trim().ToLower();
+        var relatedReleases = new List<RelatedAlbumDto>();
+        foreach (var group in relatedGroups)
+        {
+            var primary = group[0];
+            var groupCanonical = primary.CanonicalTitle?.Trim().ToLower();
+
+            if (currentCanonical != null && groupCanonical == currentCanonical && primary.Media == album.Media)
+            {
+                continue;
+            }
+
+            var relatedPhotoUrl = await _fileStorageService.GetFileUrlAsync(primary.PhotoUrl, cancellationToken);
+            relatedReleases.Add(new RelatedAlbumDto
+            {
+                AlbumId = primary.Id,
+                AlbumName = primary.CanonicalTitle ?? primary.Name,
+                PhotoUrl = relatedPhotoUrl,
+                Media = primary.Media,
+                OriginalYear = primary.OriginalYear,
+                MinPrice = group.Min(albumEntity => albumEntity.Price)
+            });
+
+            if (relatedReleases.Count >= 10)
+            {
+                break;
+            }
+        }
+
+        string? bandPhotoUrl = null;
+        if (album.Band?.PhotoUrl != null)
+        {
+            bandPhotoUrl = await _fileStorageService.GetFileUrlAsync(album.Band.PhotoUrl, cancellationToken);
+        }
+
+        return new AlbumDetailDto
+        {
+            PrimaryAlbumId = album.Id,
+            AlbumName = album.CanonicalTitle ?? album.Name,
+            PhotoUrl = photoUrl,
+            Genre = album.Genre,
+            Media = album.Media,
+            Status = album.Status,
+            CanonicalTitle = album.CanonicalTitle,
+            OriginalYear = album.OriginalYear,
+            Description = album.Description,
+            Label = album.Label,
+            Press = album.Press,
+            BandId = album.BandId,
+            BandName = album.Band?.Name ?? string.Empty,
+            BandPhotoUrl = bandPhotoUrl,
+            BandGenre = album.Band?.Genre,
+            Variants = variants,
+            RelatedReleases = relatedReleases
+        };
     }
 
     private static bool AreAlbumsMatching(Data.Entities.AlbumEntity albumA, Data.Entities.AlbumEntity albumB)

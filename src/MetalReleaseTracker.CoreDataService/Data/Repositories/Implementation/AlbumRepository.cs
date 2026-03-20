@@ -1,4 +1,5 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data.Entities;
+using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Extensions;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
@@ -106,5 +107,29 @@ public class AlbumRepository : IAlbumRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    public async Task<List<AlbumEntity>> GetMatchingAlbumsAsync(string canonicalTitle, AlbumMediaType? media, Guid bandId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .AsNoTracking()
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .Where(album => album.BandId == bandId
+                && album.Media == media
+                && album.CanonicalTitle != null
+                && album.CanonicalTitle.ToLower().Trim() == canonicalTitle.ToLower().Trim())
+            .OrderBy(album => album.Price)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<AlbumEntity>> GetAlbumsByBandIdAsync(Guid bandId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .AsNoTracking()
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .Where(album => album.BandId == bandId)
+            .ToListAsync(cancellationToken);
     }
 }

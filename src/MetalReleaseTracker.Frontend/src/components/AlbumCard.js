@@ -104,18 +104,29 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <MediaTypeIcon mediaType={album.media} />
             </Box>
-            <Typography gutterBottom variant="h6" component="div" sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              mb: 0.5,
-              fontWeight: 600,
-              fontSize: '1.1rem',
-              lineHeight: 1.3,
-              height: '2.8rem'
-            }} title={album.name}>
+            <Typography
+              component={Link}
+              to={`/albums/${album.id}`}
+              gutterBottom
+              variant="h6"
+              onClick={(event) => event.stopPropagation()}
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                mb: 0.5,
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                lineHeight: 1.3,
+                height: '2.8rem',
+                textDecoration: 'none',
+                color: 'inherit',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+              title={album.name}
+            >
               {album.name}
             </Typography>
             <Typography

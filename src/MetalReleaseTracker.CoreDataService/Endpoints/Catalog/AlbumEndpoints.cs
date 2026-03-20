@@ -46,5 +46,18 @@ public static class AlbumEndpoints
             .WithTags("Albums")
             .Produces<AlbumDto>(200)
             .Produces(404);
+
+        endpoints.MapGet(RouteConstants.Api.Albums.GetDetail, async (
+                Guid id,
+                IAlbumService albumService,
+                CancellationToken cancellationToken) =>
+            {
+                var detail = await albumService.GetAlbumDetail(id, cancellationToken);
+                return detail is null ? Results.NotFound() : Results.Ok(detail);
+            })
+            .WithName("GetAlbumDetail")
+            .WithTags("Albums")
+            .Produces<AlbumDetailDto>(200)
+            .Produces(404);
     }
 }

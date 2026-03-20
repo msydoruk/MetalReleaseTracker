@@ -12,6 +12,7 @@ import GoogleCallback from './pages/GoogleCallback';
 import ProfilePage from './pages/ProfilePage';
 import BandsPage from './pages/BandsPage';
 import BandDetailPage from './pages/BandDetailPage';
+import AlbumDetailPage from './pages/AlbumDetailPage';
 import DistributorsPage from './pages/DistributorsPage';
 import AboutPage from './pages/AboutPage';
 import NewsPage from './pages/NewsPage';
@@ -175,6 +176,7 @@ function App() {
                   {/* Public catalog routes */}
                   <Route path="/" element={<AlbumsPage isHome />} />
                   <Route path="/albums" element={<AlbumsPage />} />
+                  <Route path="/albums/:id" element={<AlbumDetailPage />} />
                   <Route path="/bands" element={<BandsPage />} />
                   <Route path="/bands/:id" element={<BandDetailPage />} />
                   <Route path="/distributors" element={<DistributorsPage />} />

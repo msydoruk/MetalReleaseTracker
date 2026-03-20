@@ -24,6 +24,7 @@ public static class RouteConstants
             public const string GetFiltered = $"{Base}/filtered";
             public const string GetGrouped = $"{Base}/grouped";
             public const string GetById = $"{Base}/{{id:guid}}";
+            public const string GetDetail = $"{Base}/{{id:guid}}/detail";
         }
 
         public static class Bands
