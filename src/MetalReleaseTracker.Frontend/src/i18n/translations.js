@@ -239,6 +239,11 @@ const translations = {
       changelogTitle: 'Changelog - Metal Release Tracker',
       changelogDescription: 'History of album synchronization events. Track new, updated, and deleted releases across all distributors.',
     },
+    newArrivals: {
+      title: 'New Arrivals',
+      subtitle: 'Added in the last 14 days',
+      viewAll: 'View all new arrivals',
+    },
     footer: {
       rights: 'All rights reserved.',
     },
@@ -482,6 +487,11 @@ const translations = {
       changelogDescription: 'Хронологія подій синхронізації альбомів. Відстежуйте нові, оновлені та видалені релізи від усіх дистриб\'юторів.',
       loginTitle: 'Увійти - Metal Release Tracker',
       registerTitle: 'Реєстрація - Metal Release Tracker',
+    },
+    newArrivals: {
+      title: 'Нові надходження',
+      subtitle: 'Додано за останні 14 днів',
+      viewAll: 'Переглянути всі нові надходження',
     },
     footer: {
       rights: 'Всі права захищені.',

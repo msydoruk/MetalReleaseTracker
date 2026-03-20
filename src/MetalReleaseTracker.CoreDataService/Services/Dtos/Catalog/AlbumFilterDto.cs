@@ -22,6 +22,10 @@ public record AlbumFilterDto
 
     public int? MaxYear { get; init; }
 
+    public DateTime? AddedAfter { get; init; }
+
+    public DateTime? AddedBefore { get; init; }
+
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 10;

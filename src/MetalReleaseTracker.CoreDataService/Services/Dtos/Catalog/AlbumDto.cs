@@ -39,4 +39,6 @@ public class AlbumDto
     public string? CanonicalTitle { get; set; }
 
     public int? OriginalYear { get; set; }
+
+    public DateTime CreatedDate { get; set; }
 }

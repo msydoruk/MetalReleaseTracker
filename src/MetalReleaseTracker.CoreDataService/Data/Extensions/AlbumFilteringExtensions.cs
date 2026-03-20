@@ -30,7 +30,11 @@ public static class AlbumFilteringExtensions
             .WhereIf(filter.MinYear.HasValue,
                 album => album.OriginalYear >= filter.MinYear.Value)
             .WhereIf(filter.MaxYear.HasValue,
-                album => album.OriginalYear <= filter.MaxYear.Value);
+                album => album.OriginalYear <= filter.MaxYear.Value)
+            .WhereIf(filter.AddedAfter.HasValue,
+                album => album.CreatedDate >= filter.AddedAfter.Value)
+            .WhereIf(filter.AddedBefore.HasValue,
+                album => album.CreatedDate <= filter.AddedBefore.Value);
     }
 
     private static IQueryable<T> WhereIf<T>(

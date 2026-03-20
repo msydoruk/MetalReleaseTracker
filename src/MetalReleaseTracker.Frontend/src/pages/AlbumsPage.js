@@ -24,6 +24,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from '@mui/icons-material/Search';
 import AlbumCard from '../components/AlbumCard';
+import NewArrivalsSection from '../components/NewArrivalsSection';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
@@ -262,6 +263,13 @@ const AlbumsPage = ({ isHome = false }) => {
           </Button>
           <Divider sx={{ mt: 3 }} />
         </Box>
+      )}
+      {isHome && (
+        <NewArrivalsSection
+          favoriteIds={favoriteIds}
+          onToggleFavorite={handleToggleFavorite}
+          isLoggedIn={isLoggedIn}
+        />
       )}
       <Box sx={{
         display: 'flex',
