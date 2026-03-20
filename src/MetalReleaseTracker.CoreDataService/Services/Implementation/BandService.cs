@@ -61,4 +61,28 @@ public class BandService : IBandService
     {
         return await _bandRepository.GetDistinctGenresAsync(cancellationToken);
     }
+
+    public async Task<List<BandDto>> GetSimilarBandsAsync(Guid bandId, int limit = 8, CancellationToken cancellationToken = default)
+    {
+        var band = await _bandRepository.GetByIdAsync(bandId, cancellationToken);
+        if (band?.Genre == null)
+        {
+            return [];
+        }
+
+        var similarBands = await _bandRepository.GetBandsByGenreAsync(band.Genre, bandId, limit, cancellationToken);
+        var dtos = new List<BandDto>();
+        foreach (var similarBand in similarBands)
+        {
+            var dto = _mapper.Map<BandDto>(similarBand);
+            if (similarBand.PhotoUrl != null)
+            {
+                dto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(similarBand.PhotoUrl, cancellationToken);
+            }
+
+            dtos.Add(dto);
+        }
+
+        return dtos;
+    }
 }

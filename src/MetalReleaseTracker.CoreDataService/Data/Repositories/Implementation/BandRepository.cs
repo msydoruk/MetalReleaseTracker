@@ -85,4 +85,15 @@ public class BandRepository : IBandRepository
             .OrderBy(genre => genre)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<BandEntity>> GetBandsByGenreAsync(string genre, Guid excludeBandId, int limit, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Bands
+            .AsNoTracking()
+            .Where(band => band.Id != excludeBandId
+                && band.Genre != null
+                && EF.Functions.ILike(band.Genre, $"%{genre}%"))
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+    }
 }

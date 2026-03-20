@@ -55,5 +55,17 @@ public static class BandEndpoints
             .WithName("GetDistinctGenres")
             .WithTags("Bands")
             .Produces<List<string>>();
+
+        endpoints.MapGet(RouteConstants.Api.Bands.GetSimilar, async (
+                Guid id,
+                IBandService bandService,
+                CancellationToken cancellationToken) =>
+            {
+                var similar = await bandService.GetSimilarBandsAsync(id, 8, cancellationToken);
+                return Results.Ok(similar);
+            })
+            .WithName("GetSimilarBands")
+            .WithTags("Bands")
+            .Produces<List<BandDto>>();
     }
 }

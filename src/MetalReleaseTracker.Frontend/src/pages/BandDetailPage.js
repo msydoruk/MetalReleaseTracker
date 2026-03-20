@@ -16,7 +16,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
-import { fetchBandById, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
+import { fetchBandById, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, fetchSimilarBands } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -37,6 +37,7 @@ const BandDetailPage = () => {
   const [pageSize, setPageSize] = useState(20);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [similarBands, setSimilarBands] = useState([]);
 
   usePageMeta(
     band ? `${band.name} - Metal Release Tracker` : 'Metal Release Tracker',
@@ -59,6 +60,19 @@ const BandDetailPage = () => {
 
     loadBand();
   }, [id, t]);
+
+  useEffect(() => {
+    const loadSimilarBands = async () => {
+      try {
+        const response = await fetchSimilarBands(id);
+        setSimilarBands(response.data);
+      } catch {
+        setSimilarBands([]);
+      }
+    };
+
+    loadSimilarBands();
+  }, [id]);
 
   const loadAlbums = useCallback(async () => {
     try {
@@ -241,6 +255,64 @@ const BandDetailPage = () => {
             {t('bandDetail.noAlbums')}
           </Typography>
         </Paper>
+      )}
+
+      {similarBands.length > 0 && (
+        <>
+          <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 2, mt: 4 }}>
+            {t('bandDetail.similarBands')}
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              overflowX: 'auto',
+              pb: 1,
+              mx: -1,
+              px: 1,
+              '&::-webkit-scrollbar': { height: 6 },
+              '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
+            }}
+          >
+            {similarBands.map((similarBand) => (
+              <Paper
+                key={similarBand.id}
+                component={Link}
+                to={`/bands/${similarBand.id}`}
+                sx={{
+                  minWidth: 180,
+                  maxWidth: 180,
+                  flexShrink: 0,
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  overflow: 'hidden',
+                  borderRadius: 2,
+                  transition: 'transform 0.2s',
+                  '&:hover': { transform: 'translateY(-4px)' },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={similarBand.photoUrl || placeholderImg}
+                  alt={similarBand.name}
+                  sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
+                />
+                <Box sx={{ p: 1.5 }}>
+                  <Typography variant="subtitle2" sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {similarBand.name}
+                  </Typography>
+                  {similarBand.genre && (
+                    <Chip label={similarBand.genre} size="small" color="secondary" sx={{ mt: 0.5 }} />
+                  )}
+                </Box>
+              </Paper>
+            ))}
+          </Box>
+        </>
       )}
     </Container>
   );

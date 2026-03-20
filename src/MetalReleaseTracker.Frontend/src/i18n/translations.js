@@ -40,6 +40,8 @@ const translations = {
       tryAdjusting: 'Try adjusting your filters to see more results.',
       comparePrices: 'Group by album',
       searchPlaceholder: 'Search by band or album name...',
+      suggestionBand: 'Band',
+      suggestionAlbum: 'Album',
     },
     grouped: {
       stores: 'stores',
@@ -254,6 +256,7 @@ const translations = {
       backToBands: 'Back to Bands',
       error: 'Failed to load band details. Please try again later.',
       notFound: 'Band not found.',
+      similarBands: 'Similar Bands',
     },
     albumDetail: {
       backToAlbums: 'Back to Albums',
@@ -314,6 +317,8 @@ const translations = {
       tryAdjusting: 'Спробуйте змінити фільтри, щоб побачити більше результатів.',
       comparePrices: 'Групувати за альбомом',
       searchPlaceholder: 'Пошук за назвою гурту або альбому...',
+      suggestionBand: 'Гурт',
+      suggestionAlbum: 'Альбом',
     },
     grouped: {
       stores: 'магазинів',
@@ -528,6 +533,7 @@ const translations = {
       backToBands: 'Назад до гуртів',
       error: 'Не вдалося завантажити інформацію про гурт. Спробуйте пізніше.',
       notFound: 'Гурт не знайдено.',
+      similarBands: 'Схожі гурти',
     },
     albumDetail: {
       backToAlbums: 'Назад до альбомів',

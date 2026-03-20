@@ -12,4 +12,6 @@ public interface IAlbumService
     Task<AlbumDto?> GetAlbumById(Guid id, CancellationToken cancellationToken = default);
 
     Task<AlbumDetailDto?> GetAlbumDetail(Guid id, CancellationToken cancellationToken = default);
+
+    Task<List<AlbumSuggestionDto>> GetSuggestions(string query, CancellationToken cancellationToken = default);
 }

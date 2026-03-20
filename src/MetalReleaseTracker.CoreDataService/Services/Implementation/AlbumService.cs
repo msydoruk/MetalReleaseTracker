@@ -271,6 +271,51 @@ public class AlbumService : IAlbumService
         };
     }
 
+    public async Task<List<AlbumSuggestionDto>> GetSuggestions(string query, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+        {
+            return [];
+        }
+
+        var albums = await _albumRepository.GetFilteredAlbumsAsync(
+            new AlbumFilterDto { Name = query, PageSize = 5, Page = 1 }, cancellationToken);
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var suggestions = new List<AlbumSuggestionDto>();
+
+        foreach (var album in albums.Items)
+        {
+            if (album.Band != null && seen.Add(album.Band.Name))
+            {
+                suggestions.Add(new AlbumSuggestionDto
+                {
+                    Text = album.Band.Name,
+                    Type = "band",
+                    Id = album.BandId
+                });
+            }
+
+            var albumName = album.CanonicalTitle ?? album.Name;
+            if (seen.Add(albumName))
+            {
+                suggestions.Add(new AlbumSuggestionDto
+                {
+                    Text = albumName,
+                    Type = "album",
+                    Id = album.Id
+                });
+            }
+
+            if (suggestions.Count >= 7)
+            {
+                break;
+            }
+        }
+
+        return suggestions;
+    }
+
     private static bool AreAlbumsMatching(Data.Entities.AlbumEntity albumA, Data.Entities.AlbumEntity albumB)
     {
         if (string.IsNullOrWhiteSpace(albumA.CanonicalTitle) || string.IsNullOrWhiteSpace(albumB.CanonicalTitle))

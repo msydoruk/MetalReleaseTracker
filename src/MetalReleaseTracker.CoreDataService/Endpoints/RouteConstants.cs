@@ -23,6 +23,7 @@ public static class RouteConstants
             private const string Base = $"{ApiBase}/albums";
             public const string GetFiltered = $"{Base}/filtered";
             public const string GetGrouped = $"{Base}/grouped";
+            public const string GetSuggestions = $"{Base}/suggest";
             public const string GetById = $"{Base}/{{id:guid}}";
             public const string GetDetail = $"{Base}/{{id:guid}}/detail";
         }
@@ -34,6 +35,7 @@ public static class RouteConstants
             public const string GetById = $"{Base}/{{id:guid}}";
             public const string GetWithAlbumCount = $"{Base}/with-album-count";
             public const string GetGenres = $"{Base}/genres";
+            public const string GetSimilar = $"{Base}/{{id:guid}}/similar";
         }
 
         public static class Distributors

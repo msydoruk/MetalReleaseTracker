@@ -34,6 +34,18 @@ public static class AlbumEndpoints
             .WithTags("Albums")
             .Produces<PagedResultDto<GroupedAlbumDto>>();
 
+        endpoints.MapGet(RouteConstants.Api.Albums.GetSuggestions, async (
+                string q,
+                IAlbumService albumService,
+                CancellationToken cancellationToken) =>
+            {
+                var suggestions = await albumService.GetSuggestions(q, cancellationToken);
+                return Results.Ok(suggestions);
+            })
+            .WithName("GetAlbumSuggestions")
+            .WithTags("Albums")
+            .Produces<List<AlbumSuggestionDto>>();
+
         endpoints.MapGet(RouteConstants.Api.Albums.GetById, async (
                 Guid id,
                 IAlbumService albumService,
