@@ -264,6 +264,7 @@ const translations = {
     },
     footer: {
       rights: 'All rights reserved.',
+      suggestDistributor: 'Suggest a Distributor',
     },
   },
   ua: {
@@ -531,6 +532,7 @@ const translations = {
     },
     footer: {
       rights: 'Всі права захищені.',
+      suggestDistributor: 'Запропонувати дистриб\'ютора',
     },
   },
 };
