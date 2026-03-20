@@ -16,12 +16,10 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Tooltip,
-  Chip
+  Tooltip
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Person as PersonIcon,
   Home as HomeIcon,
   Album as AlbumIcon,
   MusicNote as MusicNoteIcon,
@@ -108,14 +106,6 @@ const Header = () => {
   
   const handleRegister = () => {
     navigate('/register');
-  };
-  
-  const handleLoginWithGoogle = async () => {
-    try {
-      await authService.login();
-    } catch (error) {
-      console.error('Login error:', error);
-    }
   };
   
   const handleLogout = async () => {

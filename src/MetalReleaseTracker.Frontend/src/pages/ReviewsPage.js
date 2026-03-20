@@ -8,8 +8,7 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Avatar,
-  Divider
+  Avatar
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import RateReviewIcon from '@mui/icons-material/RateReview';

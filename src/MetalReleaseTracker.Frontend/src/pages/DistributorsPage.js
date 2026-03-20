@@ -10,9 +10,7 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Link,
   Chip,
-  Avatar,
   CardActions,
   Paper
 } from '@mui/material';
@@ -163,7 +161,7 @@ const DistributorsPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
   const handleDistributorClick = (distributorId) => {
     navigate(`/albums?distributorId=${distributorId}`);

@@ -184,7 +184,7 @@ const AlbumsPage = ({ isHome = false }) => {
     };
 
     fetchData();
-  }, [filters, isGrouped]);
+  }, [filters, isGrouped, t]);
 
   const handleFilterChange = (newFilters) => {
     updateFilters({ ...newFilters, page: 1 });

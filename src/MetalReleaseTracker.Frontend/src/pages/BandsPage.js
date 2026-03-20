@@ -11,8 +11,6 @@ import {
   CircularProgress,
   Alert,
   Chip,
-  Avatar,
-  Divider,
   Paper,
   TextField,
   InputAdornment
@@ -56,7 +54,7 @@ const BandsPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
   const handleBandClick = (bandId) => {
     navigate(`/albums?bandId=${bandId}`);

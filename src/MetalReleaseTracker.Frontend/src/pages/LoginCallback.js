@@ -50,7 +50,6 @@ const LoadingDisplay = () => (
 
 const LoginCallback = () => {
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const handleRetry = () => {
@@ -75,7 +74,6 @@ const LoginCallback = () => {
       } catch (error) {
         console.error('Error processing authentication callback', error);
         setError(error.message || 'Authentication failed');
-        setLoading(false);
       }
     };
 

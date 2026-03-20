@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -70,13 +70,7 @@ const ProfilePage = () => {
     checkAuthentication();
   }, [navigate]);
 
-  useEffect(() => {
-    if (isAuthenticated && activeTab === 0) {
-      loadFavorites();
-    }
-  }, [isAuthenticated, activeTab, favoritesPage, favoritesPageSize]);
-
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     try {
       setFavoritesLoading(true);
       const response = await fetchFavorites(favoritesPage, favoritesPageSize);
@@ -90,7 +84,13 @@ const ProfilePage = () => {
     } finally {
       setFavoritesLoading(false);
     }
-  };
+  }, [favoritesPage, favoritesPageSize]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 0) {
+      loadFavorites();
+    }
+  }, [isAuthenticated, activeTab, favoritesPage, favoritesPageSize, loadFavorites]);
 
   const handleToggleFavorite = async (albumId) => {
     try {
