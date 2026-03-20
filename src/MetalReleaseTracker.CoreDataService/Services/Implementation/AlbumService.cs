@@ -77,6 +77,13 @@ public class AlbumService : IAlbumService
             groups.Add(group);
         }
 
+        if (filter.SortBy == Data.Entities.Enums.AlbumSortField.StoreCount)
+        {
+            groups = filter.SortAscending
+                ? groups.OrderBy(group => group.Count).ToList()
+                : groups.OrderByDescending(group => group.Count).ToList();
+        }
+
         var totalCount = groups.Count;
         var pageSize = filter.PageSize;
         var page = filter.Page;

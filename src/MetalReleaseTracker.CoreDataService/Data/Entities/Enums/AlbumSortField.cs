@@ -9,5 +9,6 @@ public enum AlbumSortField
     Media = 5,
     Status = 6,
     OriginalYear = 7,
-    DateAdded = 8
+    DateAdded = 8,
+    StoreCount = 9
 }

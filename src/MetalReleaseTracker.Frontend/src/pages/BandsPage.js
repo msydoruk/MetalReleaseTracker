@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -22,6 +22,7 @@ import AlbumIcon from '@mui/icons-material/Album';
 import SearchIcon from '@mui/icons-material/Search';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
+import Pagination from '../components/Pagination';
 
 const BandsPage = () => {
   const { t } = useLanguage();
@@ -31,12 +32,35 @@ const BandsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const navigate = useNavigate();
 
   const filteredBands = useMemo(() => {
     if (!searchQuery.trim()) return bands;
     return bands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [bands, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredBands.length / pageSize));
+
+  const paginatedBands = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredBands.slice(start, start + pageSize);
+  }, [filteredBands, page, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
+
+  const handlePageChange = useCallback((newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize) => {
+    setPageSize(newPageSize);
+    setPage(1);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,6 +143,15 @@ const BandsPage = () => {
           <CircularProgress />
         </Box>
       ) : filteredBands.length > 0 ? (
+        <>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={filteredBands.length}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
         <Grid
           container
           spacing={3}
@@ -134,7 +167,7 @@ const BandsPage = () => {
             gap: 3
           }}
         >
-          {filteredBands.map((band) => (
+          {paginatedBands.map((band) => (
             <Card
               key={band.id}
               sx={{
@@ -234,6 +267,17 @@ const BandsPage = () => {
             </Card>
           ))}
         </Grid>
+        <Box sx={{ mt: 3 }}>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={filteredBands.length}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </Box>
+        </>
       ) : bands.length > 0 && searchQuery.trim() ? (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">

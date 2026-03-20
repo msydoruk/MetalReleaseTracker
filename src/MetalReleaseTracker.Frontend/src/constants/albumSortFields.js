@@ -10,7 +10,8 @@ export const ALBUM_SORT_FIELDS = {
   MEDIA: 5,       // AlbumSortField.Media
   STATUS: 6,      // AlbumSortField.Status
   ORIGINAL_YEAR: 7, // AlbumSortField.OriginalYear
-  DATE_ADDED: 8    // AlbumSortField.DateAdded
+  DATE_ADDED: 8,   // AlbumSortField.DateAdded
+  STORE_COUNT: 9   // AlbumSortField.StoreCount
 };
 
 // UI-friendly names for the sort fields
@@ -22,7 +23,8 @@ export const SORT_FIELD_NAMES = {
   [ALBUM_SORT_FIELDS.MEDIA]: 'Media Type',
   [ALBUM_SORT_FIELDS.STATUS]: 'Status',
   [ALBUM_SORT_FIELDS.ORIGINAL_YEAR]: 'Year',
-  [ALBUM_SORT_FIELDS.DATE_ADDED]: 'Date Added'
+  [ALBUM_SORT_FIELDS.DATE_ADDED]: 'Date Added',
+  [ALBUM_SORT_FIELDS.STORE_COUNT]: 'Stores'
 };
 
 export default ALBUM_SORT_FIELDS; 
