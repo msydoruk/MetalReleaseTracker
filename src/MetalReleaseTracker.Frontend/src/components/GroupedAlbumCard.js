@@ -15,6 +15,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MediaTypeIcon from './MediaTypeIcon';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
 
@@ -112,13 +113,24 @@ const GroupedAlbumCard = ({ group }) => {
             }} title={group.albumName}>
               {group.albumName}
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              mb: 0.5,
-              fontWeight: 500
-            }}>
+            <Typography
+              component={Link}
+              to={`/bands/${group.bandId}`}
+              variant="body2"
+              color="text.secondary"
+              gutterBottom
+              onClick={(event) => event.stopPropagation()}
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                mb: 0.5,
+                fontWeight: 500,
+                display: 'block',
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
               {group.bandName}
             </Typography>
             {group.originalYear > 0 && (

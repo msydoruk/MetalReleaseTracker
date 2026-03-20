@@ -11,6 +11,7 @@ import LoginCallback from './pages/LoginCallback';
 import GoogleCallback from './pages/GoogleCallback';
 import ProfilePage from './pages/ProfilePage';
 import BandsPage from './pages/BandsPage';
+import BandDetailPage from './pages/BandDetailPage';
 import DistributorsPage from './pages/DistributorsPage';
 import AboutPage from './pages/AboutPage';
 import NewsPage from './pages/NewsPage';
@@ -175,6 +176,7 @@ function App() {
                   <Route path="/" element={<AlbumsPage isHome />} />
                   <Route path="/albums" element={<AlbumsPage />} />
                   <Route path="/bands" element={<BandsPage />} />
+                  <Route path="/bands/:id" element={<BandDetailPage />} />
                   <Route path="/distributors" element={<DistributorsPage />} />
                   <Route path="/news" element={<NewsPage />} />
                   <Route path="/about" element={<AboutPage />} />

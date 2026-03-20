@@ -4,6 +4,8 @@ namespace MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
 
 public class GroupedAlbumDto
 {
+    public Guid BandId { get; set; }
+
     public string BandName { get; set; } = string.Empty;
 
     public string AlbumName { get; set; } = string.Empty;

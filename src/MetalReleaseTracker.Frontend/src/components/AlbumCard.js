@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
@@ -118,13 +118,24 @@ const AlbumCard = ({ album, isFavorited = false, onToggleFavorite, isLoggedIn = 
             }} title={album.name}>
               {album.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              mb: 0.5,
-              fontWeight: 500
-            }}>
+            <Typography
+              component={Link}
+              to={`/bands/${album.bandId}`}
+              variant="body2"
+              color="text.secondary"
+              gutterBottom
+              onClick={(event) => event.stopPropagation()}
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                mb: 0.5,
+                fontWeight: 500,
+                display: 'block',
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
               {album.bandName}
             </Typography>
             {album.originalYear > 0 && (

@@ -104,6 +104,7 @@ public class AlbumService : IAlbumService
 
             groupedDtos.Add(new GroupedAlbumDto
             {
+                BandId = primary.BandId,
                 BandName = primary.Band?.Name ?? string.Empty,
                 AlbumName = primary.CanonicalTitle ?? primary.Name,
                 PhotoUrl = photoUrl,

@@ -57,7 +57,7 @@ const BandsPage = () => {
   }, [t]);
 
   const handleBandClick = (bandId) => {
-    navigate(`/albums?bandId=${bandId}`);
+    navigate(`/bands/${bandId}`);
   };
 
   return (

@@ -244,6 +244,13 @@ const translations = {
       subtitle: 'Added in the last 14 days',
       viewAll: 'View all new arrivals',
     },
+    bandDetail: {
+      albumsBy: 'Releases by {bandName}',
+      noAlbums: 'No releases found for this band.',
+      backToBands: 'Back to Bands',
+      error: 'Failed to load band details. Please try again later.',
+      notFound: 'Band not found.',
+    },
     footer: {
       rights: 'All rights reserved.',
     },
@@ -492,6 +499,13 @@ const translations = {
       title: 'Нові надходження',
       subtitle: 'Додано за останні 14 днів',
       viewAll: 'Переглянути всі нові надходження',
+    },
+    bandDetail: {
+      albumsBy: 'Релізи гурту {bandName}',
+      noAlbums: 'Релізів цього гурту не знайдено.',
+      backToBands: 'Назад до гуртів',
+      error: 'Не вдалося завантажити інформацію про гурт. Спробуйте пізніше.',
+      notFound: 'Гурт не знайдено.',
     },
     footer: {
       rights: 'Всі права захищені.',
