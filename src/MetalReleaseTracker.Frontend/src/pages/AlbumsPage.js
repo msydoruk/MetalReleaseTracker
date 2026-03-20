@@ -31,7 +31,7 @@ import NewArrivalsSection from '../components/NewArrivalsSection';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
-import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite, fetchSuggestions } from '../services/api';
+import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSuggestions } from '../services/api';
 import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
@@ -107,7 +107,7 @@ const AlbumsPage = ({ isHome = false }) => {
   const [pageCount, setPageCount] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [distributors, setDistributors] = useState([]);
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
@@ -142,7 +142,7 @@ const AlbumsPage = ({ isHome = false }) => {
         setIsLoggedIn(loggedIn);
         if (loggedIn) {
           const response = await fetchFavoriteIds();
-          setFavoriteIds(new Set(response.data));
+          setFavoriteIds(response.data || {});
         }
       } catch (error) {
         console.error('Error loading favorites:', error);
@@ -215,21 +215,29 @@ const AlbumsPage = ({ isHome = false }) => {
     setIsFilterOpen(!isFilterOpen);
   };
 
-  const handleToggleFavorite = async (albumId) => {
+  const handleCollectionChange = async (albumId, status) => {
     try {
-      if (favoriteIds.has(albumId)) {
-        await removeFavorite(albumId);
-        setFavoriteIds((previous) => {
-          const next = new Set(previous);
-          next.delete(albumId);
-          return next;
-        });
+      if (albumId in favoriteIds) {
+        await updateFavoriteStatus(albumId, status);
       } else {
-        await addFavorite(albumId);
-        setFavoriteIds((previous) => new Set(previous).add(albumId));
+        await addFavorite(albumId, status);
       }
+      setFavoriteIds((previous) => ({ ...previous, [albumId]: status }));
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      console.error('Error updating collection:', error);
+    }
+  };
+
+  const handleRemoveFromCollection = async (albumId) => {
+    try {
+      await removeFavorite(albumId);
+      setFavoriteIds((previous) => {
+        const next = { ...previous };
+        delete next[albumId];
+        return next;
+      });
+    } catch (error) {
+      console.error('Error removing from collection:', error);
     }
   };
 
@@ -313,7 +321,8 @@ const AlbumsPage = ({ isHome = false }) => {
       {isHome && (
         <NewArrivalsSection
           favoriteIds={favoriteIds}
-          onToggleFavorite={handleToggleFavorite}
+          onCollectionChange={handleCollectionChange}
+          onRemoveFromCollection={handleRemoveFromCollection}
           isLoggedIn={isLoggedIn}
         />
       )}
@@ -600,8 +609,9 @@ const AlbumsPage = ({ isHome = false }) => {
                   >
                     <AlbumCard
                       album={album}
-                      isFavorited={favoriteIds.has(album.id)}
-                      onToggleFavorite={handleToggleFavorite}
+                      collectionStatus={album.id in favoriteIds ? favoriteIds[album.id] : undefined}
+                      onCollectionChange={(albumId, status) => handleCollectionChange(albumId, status)}
+                      onRemoveFromCollection={(albumId) => handleRemoveFromCollection(albumId)}
                       isLoggedIn={isLoggedIn}
                     />
                   </Box>

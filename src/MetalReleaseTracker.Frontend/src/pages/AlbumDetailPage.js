@@ -8,7 +8,6 @@ import {
   Paper,
   Chip,
   Button,
-  IconButton,
   Dialog,
   useMediaQuery,
   useTheme
@@ -16,14 +15,14 @@ import {
 import { useParams, Link } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CloseIcon from '@mui/icons-material/Close';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
+import { IconButton } from '@mui/material';
 import MediaTypeIcon from '../components/MediaTypeIcon';
 import AlbumRating from '../components/AlbumRating';
+import CollectionStatusMenu from '../components/CollectionStatusMenu';
 import PriceHistoryChart from '../components/PriceHistoryChart';
-import { fetchAlbumDetail, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
+import { fetchAlbumDetail, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -41,7 +40,7 @@ const AlbumDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   usePageMeta(
@@ -74,7 +73,7 @@ const AlbumDetailPage = () => {
       if (loggedIn) {
         try {
           const response = await fetchFavoriteIds();
-          setFavoriteIds(new Set(response.data));
+          setFavoriteIds(response.data || {});
         } catch {
           // ignore
         }
@@ -84,21 +83,35 @@ const AlbumDetailPage = () => {
     loadAuth();
   }, []);
 
-  const handleToggleFavorite = useCallback(async () => {
+  const handleCollectionChange = useCallback(async (status) => {
     if (!isLoggedIn || !album) return;
     const albumId = album.primaryAlbumId;
     try {
-      if (favoriteIds.has(albumId)) {
-        await removeFavorite(albumId);
-        setFavoriteIds((prev) => { const next = new Set(prev); next.delete(albumId); return next; });
+      if (albumId in favoriteIds) {
+        await updateFavoriteStatus(albumId, status);
       } else {
-        await addFavorite(albumId);
-        setFavoriteIds((prev) => new Set(prev).add(albumId));
+        await addFavorite(albumId, status);
       }
+      setFavoriteIds((prev) => ({ ...prev, [albumId]: status }));
     } catch {
       // ignore
     }
   }, [isLoggedIn, album, favoriteIds]);
+
+  const handleCollectionRemove = useCallback(async () => {
+    if (!isLoggedIn || !album) return;
+    const albumId = album.primaryAlbumId;
+    try {
+      await removeFavorite(albumId);
+      setFavoriteIds((prev) => {
+        const next = { ...prev };
+        delete next[albumId];
+        return next;
+      });
+    } catch {
+      // ignore
+    }
+  }, [isLoggedIn, album]);
 
   const placeholderImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
 
@@ -123,7 +136,7 @@ const AlbumDetailPage = () => {
     );
   }
 
-  const isFavorited = favoriteIds.has(album.primaryAlbumId);
+  const currentStatus = album.primaryAlbumId in favoriteIds ? favoriteIds[album.primaryAlbumId] : undefined;
   const storeCount = album.variants.length;
   const storesText = storeCount === 1
     ? t('albumDetail.availableAtOne')
@@ -210,12 +223,12 @@ const AlbumDetailPage = () => {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, justifyContent: isMobile ? 'center' : 'flex-start' }}>
             {isLoggedIn && (
-              <IconButton
-                onClick={handleToggleFavorite}
-                sx={{ color: isFavorited ? 'error.main' : 'text.secondary' }}
-              >
-                {isFavorited ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-              </IconButton>
+              <CollectionStatusMenu
+                currentStatus={currentStatus}
+                onSelect={(status) => handleCollectionChange(status)}
+                onRemove={handleCollectionRemove}
+                sx={{ color: 'text.secondary' }}
+              />
             )}
             <Button
               variant="outlined"

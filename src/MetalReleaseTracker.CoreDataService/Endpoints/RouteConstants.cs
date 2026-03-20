@@ -82,6 +82,7 @@ public static class RouteConstants
             public const string GetAll = Base;
             public const string GetIds = $"{Base}/ids";
             public const string Check = $"{Base}/{{albumId:guid}}/check";
+            public const string UpdateStatus = $"{Base}/{{albumId:guid}}/status";
         }
     }
 }

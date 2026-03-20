@@ -132,6 +132,12 @@ const translations = {
       searchPlaceholder: 'Search by band name...',
       noResults: 'No bands found matching your search.',
     },
+    collection: {
+      favorite: 'Favorite',
+      want: 'Want',
+      owned: 'Owned',
+      remove: 'Remove',
+    },
     profile: {
       loading: 'Loading profile...',
       authInfo: 'Authentication Information',
@@ -144,6 +150,8 @@ const translations = {
       username: 'Username',
       emailNotProvided: 'Email not provided',
       favorites: 'Favorites',
+      wishlist: 'Wishlist',
+      collection: 'Collection',
       profileTab: 'Profile',
     },
     reviews: {
@@ -419,6 +427,12 @@ const translations = {
       searchPlaceholder: 'Пошук за назвою гурту...',
       noResults: 'Гуртів за вашим запитом не знайдено.',
     },
+    collection: {
+      favorite: 'Улюблене',
+      want: 'Хочу',
+      owned: 'Маю',
+      remove: 'Видалити',
+    },
     profile: {
       loading: 'Завантаження профілю...',
       authInfo: 'Інформація про автентифікацію',
@@ -430,7 +444,9 @@ const translations = {
       email: 'Електронна пошта',
       username: 'Ім\'я користувача',
       emailNotProvided: 'Електронна пошта не вказана',
-      favorites: 'Обране',
+      favorites: 'Улюблені',
+      wishlist: 'Список бажань',
+      collection: 'Колекція',
       profileTab: 'Профіль',
     },
     reviews: {

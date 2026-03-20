@@ -46,6 +46,10 @@ public class CoreDataServiceDbContext : DbContext
             .HasIndex(favorite => new { favorite.UserId, favorite.AlbumId })
             .IsUnique();
 
+        modelBuilder.Entity<UserFavoriteEntity>()
+            .Property(favorite => favorite.Status)
+            .HasConversion<int>();
+
         modelBuilder.Entity<AlbumChangeLogEntity>()
             .HasIndex(changeLog => changeLog.ChangedAt);
 

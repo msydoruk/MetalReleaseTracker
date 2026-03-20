@@ -16,7 +16,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
-import { fetchBandById, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, fetchSimilarBands } from '../services/api';
+import { fetchBandById, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -35,7 +35,7 @@ const BandDetailPage = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [similarBands, setSimilarBands] = useState([]);
 
@@ -104,7 +104,7 @@ const BandDetailPage = () => {
       if (loggedIn) {
         try {
           const response = await fetchFavoriteIds();
-          setFavoriteIds(new Set(response.data));
+          setFavoriteIds(response.data || {});
         } catch {
           // ignore
         }
@@ -114,15 +114,27 @@ const BandDetailPage = () => {
     loadAuth();
   }, []);
 
-  const handleToggleFavorite = async (albumId) => {
+  const handleCollectionChange = async (albumId, status) => {
     try {
-      if (favoriteIds.has(albumId)) {
-        await removeFavorite(albumId);
-        setFavoriteIds((prev) => { const next = new Set(prev); next.delete(albumId); return next; });
+      if (albumId in favoriteIds) {
+        await updateFavoriteStatus(albumId, status);
       } else {
-        await addFavorite(albumId);
-        setFavoriteIds((prev) => new Set(prev).add(albumId));
+        await addFavorite(albumId, status);
       }
+      setFavoriteIds((prev) => ({ ...prev, [albumId]: status }));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleRemoveFromCollection = async (albumId) => {
+    try {
+      await removeFavorite(albumId);
+      setFavoriteIds((prev) => {
+        const next = { ...prev };
+        delete next[albumId];
+        return next;
+      });
     } catch {
       // ignore
     }
@@ -235,8 +247,9 @@ const BandDetailPage = () => {
               <AlbumCard
                 key={album.id}
                 album={album}
-                isFavorited={favoriteIds.has(album.id)}
-                onToggleFavorite={handleToggleFavorite}
+                collectionStatus={album.id in favoriteIds ? favoriteIds[album.id] : undefined}
+                onCollectionChange={(albumId, status) => handleCollectionChange(albumId, status)}
+                onRemoveFromCollection={(albumId) => handleRemoveFromCollection(albumId)}
                 isLoggedIn={isLoggedIn}
               />
             ))}

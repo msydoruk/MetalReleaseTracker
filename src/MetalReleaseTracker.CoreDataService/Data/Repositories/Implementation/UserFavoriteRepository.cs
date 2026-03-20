@@ -1,4 +1,5 @@
 using MetalReleaseTracker.CoreDataService.Data.Entities;
+using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Extensions;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
@@ -40,20 +41,26 @@ public class UserFavoriteRepository : IUserFavoriteRepository
             .AnyAsync(favorite => favorite.UserId == userId && favorite.AlbumId == albumId, cancellationToken);
     }
 
-    public async Task<List<Guid>> GetFavoriteAlbumIdsAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<Guid, UserCollectionStatus>> GetFavoriteAlbumIdsAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await _dbContext.UserFavorites
             .AsNoTracking()
             .Where(favorite => favorite.UserId == userId)
-            .Select(favorite => favorite.AlbumId)
-            .ToListAsync(cancellationToken);
+            .ToDictionaryAsync(favorite => favorite.AlbumId, favorite => favorite.Status, cancellationToken);
     }
 
-    public async Task<PagedResultDto<AlbumEntity>> GetFavoriteAlbumsAsync(string userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedResultDto<AlbumEntity>> GetFavoriteAlbumsAsync(string userId, int page, int pageSize, UserCollectionStatus? status = null, CancellationToken cancellationToken = default)
     {
-        var albumIds = _dbContext.UserFavorites
+        var favoritesQuery = _dbContext.UserFavorites
             .AsNoTracking()
-            .Where(favorite => favorite.UserId == userId)
+            .Where(favorite => favorite.UserId == userId);
+
+        if (status.HasValue)
+        {
+            favoritesQuery = favoritesQuery.Where(favorite => favorite.Status == status.Value);
+        }
+
+        var albumIds = favoritesQuery
             .OrderByDescending(favorite => favorite.CreatedDate)
             .Select(favorite => favorite.AlbumId);
 
@@ -64,5 +71,17 @@ public class UserFavoriteRepository : IUserFavoriteRepository
             .Include(album => album.Distributor);
 
         return await query.ToPagedResultAsync(page, pageSize, cancellationToken);
+    }
+
+    public async Task UpdateStatusAsync(string userId, Guid albumId, UserCollectionStatus status, CancellationToken cancellationToken = default)
+    {
+        var entity = await _dbContext.UserFavorites
+            .FirstOrDefaultAsync(favorite => favorite.UserId == userId && favorite.AlbumId == albumId, cancellationToken);
+
+        if (entity != null)
+        {
+            entity.Status = status;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

@@ -81,11 +81,16 @@ export const fetchDistributors = () => api.get('/distributors/all');
 export const fetchDistributorById = (id) => api.get(`/distributors/${id}`);
 export const fetchDistributorsWithAlbumCount = () => api.get('/distributors/with-album-count');
 
-export const addFavorite = (albumId) => api.post(`/favorites/${albumId}`);
+export const addFavorite = (albumId, status = 0) => api.post(`/favorites/${albumId}?status=${status}`);
 export const removeFavorite = (albumId) => api.delete(`/favorites/${albumId}`);
-export const fetchFavorites = (page, pageSize) => api.get(`/favorites?page=${page}&pageSize=${pageSize}`);
+export const fetchFavorites = (page, pageSize, status) => {
+  const params = new URLSearchParams({ page, pageSize });
+  if (status !== undefined && status !== null) params.append('status', status);
+  return api.get(`/favorites?${params.toString()}`);
+};
 export const fetchFavoriteIds = () => api.get('/favorites/ids');
 export const checkFavorite = (albumId) => api.get(`/favorites/${albumId}/check`);
+export const updateFavoriteStatus = (albumId, status) => api.put(`/favorites/${albumId}/status`, { status });
 
 export const fetchAlbumRating = (albumId) => api.get(`/ratings/${albumId}`);
 export const submitAlbumRating = (albumId, rating) => api.post(`/ratings/${albumId}`, { rating });

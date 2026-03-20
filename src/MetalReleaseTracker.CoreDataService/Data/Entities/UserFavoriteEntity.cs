@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 
 namespace MetalReleaseTracker.CoreDataService.Data.Entities;
 
@@ -19,4 +20,6 @@ public class UserFavoriteEntity
     public AlbumEntity Album { get; set; }
 
     public DateTime CreatedDate { get; set; }
+
+    public UserCollectionStatus Status { get; set; }
 }

@@ -9,7 +9,7 @@ import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 
 const DAYS_LOOKBACK = 14;
 
-const NewArrivalsSection = ({ favoriteIds, onToggleFavorite, isLoggedIn }) => {
+const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromCollection, isLoggedIn }) => {
   const { t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -89,8 +89,9 @@ const NewArrivalsSection = ({ favoriteIds, onToggleFavorite, isLoggedIn }) => {
           >
             <AlbumCard
               album={album}
-              isFavorited={favoriteIds.has(album.id)}
-              onToggleFavorite={onToggleFavorite}
+              collectionStatus={album.id in favoriteIds ? favoriteIds[album.id] : undefined}
+              onCollectionChange={(albumId, status) => onCollectionChange(albumId, status)}
+              onRemoveFromCollection={(albumId) => onRemoveFromCollection(albumId)}
               isLoggedIn={isLoggedIn}
             />
           </Box>

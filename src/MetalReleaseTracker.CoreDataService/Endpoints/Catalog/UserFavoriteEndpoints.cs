@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,7 @@ public static class UserFavoriteEndpoints
     {
         endpoints.MapPost(RouteConstants.Api.Favorites.Add, async (
                 Guid albumId,
+                int? status,
                 IUserFavoriteService userFavoriteService,
                 ClaimsPrincipal user,
                 CancellationToken cancellationToken) =>
@@ -23,7 +25,8 @@ public static class UserFavoriteEndpoints
                     return Results.Unauthorized();
                 }
 
-                await userFavoriteService.AddFavoriteAsync(userId, albumId, cancellationToken);
+                var collectionStatus = status.HasValue ? (UserCollectionStatus)status.Value : UserCollectionStatus.Favorite;
+                await userFavoriteService.AddFavoriteAsync(userId, albumId, collectionStatus, cancellationToken);
                 return Results.Ok();
             })
             .RequireAuthorization()
@@ -53,9 +56,9 @@ public static class UserFavoriteEndpoints
             .Produces(200)
             .Produces(401);
 
-        endpoints.MapGet(RouteConstants.Api.Favorites.GetAll, async (
-                int page,
-                int pageSize,
+        endpoints.MapPut(RouteConstants.Api.Favorites.UpdateStatus, async (
+                Guid albumId,
+                UpdateStatusRequest request,
                 IUserFavoriteService userFavoriteService,
                 ClaimsPrincipal user,
                 CancellationToken cancellationToken) =>
@@ -66,7 +69,31 @@ public static class UserFavoriteEndpoints
                     return Results.Unauthorized();
                 }
 
-                var result = await userFavoriteService.GetFavoriteAlbumsAsync(userId, page, pageSize, cancellationToken);
+                await userFavoriteService.UpdateStatusAsync(userId, albumId, (UserCollectionStatus)request.Status, cancellationToken);
+                return Results.Ok();
+            })
+            .RequireAuthorization()
+            .WithName("UpdateFavoriteStatus")
+            .WithTags("Favorites")
+            .Produces(200)
+            .Produces(401);
+
+        endpoints.MapGet(RouteConstants.Api.Favorites.GetAll, async (
+                int page,
+                int pageSize,
+                int? status,
+                IUserFavoriteService userFavoriteService,
+                ClaimsPrincipal user,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var collectionStatus = status.HasValue ? (UserCollectionStatus?)status.Value : null;
+                var result = await userFavoriteService.GetFavoriteAlbumsAsync(userId, page, pageSize, collectionStatus, cancellationToken);
                 return Results.Ok(result);
             })
             .RequireAuthorization()
@@ -92,7 +119,7 @@ public static class UserFavoriteEndpoints
             .RequireAuthorization()
             .WithName("GetFavoriteIds")
             .WithTags("Favorites")
-            .Produces<List<Guid>>()
+            .Produces<Dictionary<Guid, int>>()
             .Produces(401);
 
         endpoints.MapGet(RouteConstants.Api.Favorites.Check, async (
@@ -116,4 +143,6 @@ public static class UserFavoriteEndpoints
             .Produces<bool>()
             .Produces(401);
     }
+
+    public record UpdateStatusRequest(int Status);
 }

@@ -22,27 +22,36 @@ import {
   Email as EmailIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
-  Favorite as FavoriteIcon
+  Favorite as FavoriteIcon,
+  Bookmark as BookmarkIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
-import { fetchFavorites, removeFavorite } from '../services/api';
+import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus } from '../services/api';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
 import { useLanguage } from '../i18n/LanguageContext';
+
+const COLLECTION_TABS = [
+  { status: null, icon: <FavoriteIcon />, translationKey: 'profile.favorites' },
+  { status: 1, icon: <BookmarkIcon />, translationKey: 'profile.wishlist' },
+  { status: 2, icon: <CheckCircleIcon />, translationKey: 'profile.collection' },
+];
 
 const ProfilePage = () => {
   const { t } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
+  const [collectionFilter, setCollectionFilter] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [favoritesTotalCount, setFavoritesTotalCount] = useState(0);
   const [favoritesPageCount, setFavoritesPageCount] = useState(0);
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [favoritesPageSize, setFavoritesPageSize] = useState(12);
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [favoriteIds, setFavoriteIds] = useState({});
   const navigate = useNavigate();
 
   const userName = localStorage.getItem('user_name') || '';
@@ -73,37 +82,55 @@ const ProfilePage = () => {
   const loadFavorites = useCallback(async () => {
     try {
       setFavoritesLoading(true);
-      const response = await fetchFavorites(favoritesPage, favoritesPageSize);
+      const response = await fetchFavorites(favoritesPage, favoritesPageSize, collectionFilter);
       const data = response.data;
       setFavorites(data.items || []);
       setFavoritesTotalCount(data.totalCount || 0);
       setFavoritesPageCount(data.pageCount || 0);
-      setFavoriteIds(new Set((data.items || []).map((album) => album.id)));
+
+      const ids = {};
+      (data.items || []).forEach((album) => {
+        ids[album.id] = collectionFilter !== null ? collectionFilter : 0;
+      });
+      setFavoriteIds(ids);
     } catch (error) {
       console.error('Error loading favorites:', error);
     } finally {
       setFavoritesLoading(false);
     }
-  }, [favoritesPage, favoritesPageSize]);
+  }, [favoritesPage, favoritesPageSize, collectionFilter]);
 
   useEffect(() => {
     if (isAuthenticated && activeTab === 0) {
       loadFavorites();
     }
-  }, [isAuthenticated, activeTab, favoritesPage, favoritesPageSize, loadFavorites]);
+  }, [isAuthenticated, activeTab, favoritesPage, favoritesPageSize, collectionFilter, loadFavorites]);
 
-  const handleToggleFavorite = async (albumId) => {
+  const handleCollectionChange = async (albumId, status) => {
+    try {
+      if (albumId in favoriteIds) {
+        await updateFavoriteStatus(albumId, status);
+      } else {
+        await addFavorite(albumId, status);
+      }
+      loadFavorites();
+    } catch (error) {
+      console.error('Error updating collection:', error);
+    }
+  };
+
+  const handleRemoveFromCollection = async (albumId) => {
     try {
       await removeFavorite(albumId);
       setFavorites((previous) => previous.filter((album) => album.id !== albumId));
       setFavoritesTotalCount((previous) => previous - 1);
       setFavoriteIds((previous) => {
-        const next = new Set(previous);
-        next.delete(albumId);
+        const next = { ...previous };
+        delete next[albumId];
         return next;
       });
     } catch (error) {
-      console.error('Error removing favorite:', error);
+      console.error('Error removing from collection:', error);
     }
   };
 
@@ -144,6 +171,12 @@ const ProfilePage = () => {
     } catch (e) {
       return 'Unknown';
     }
+  };
+
+  const getEmptyIcon = () => {
+    if (collectionFilter === 1) return <BookmarkIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />;
+    if (collectionFilter === 2) return <CheckCircleIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />;
+    return <FavoriteIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />;
   };
 
   if (loading) {
@@ -201,6 +234,26 @@ const ProfilePage = () => {
         <Box sx={{ p: 3 }}>
           {activeTab === 0 && (
             <>
+              <Tabs
+                value={COLLECTION_TABS.findIndex((tab) => tab.status === collectionFilter)}
+                onChange={(event, newValue) => {
+                  setCollectionFilter(COLLECTION_TABS[newValue].status);
+                  setFavoritesPage(1);
+                }}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{ mb: 3, minHeight: 40, '& .MuiTab-root': { minHeight: 40, py: 0.5 } }}
+              >
+                {COLLECTION_TABS.map((tab) => (
+                  <Tab
+                    key={tab.translationKey}
+                    icon={tab.icon}
+                    iconPosition="start"
+                    label={t(tab.translationKey)}
+                  />
+                ))}
+              </Tabs>
+
               {favoritesLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                   <CircularProgress />
@@ -226,8 +279,9 @@ const ProfilePage = () => {
                       <Box key={album.id} sx={{ display: 'flex', height: '100%' }}>
                         <AlbumCard
                           album={album}
-                          isFavorited={favoriteIds.has(album.id)}
-                          onToggleFavorite={handleToggleFavorite}
+                          collectionStatus={album.id in favoriteIds ? favoriteIds[album.id] : undefined}
+                          onCollectionChange={(albumId, status) => handleCollectionChange(albumId, status)}
+                          onRemoveFromCollection={(albumId) => handleRemoveFromCollection(albumId)}
                           isLoggedIn={true}
                         />
                       </Box>
@@ -252,7 +306,7 @@ const ProfilePage = () => {
                 </>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
-                  <FavoriteIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                  {getEmptyIcon()}
                   <Typography variant="h6" color="text.secondary">
                     {t('favorites.empty')}
                   </Typography>
