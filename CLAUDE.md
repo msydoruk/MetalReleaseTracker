@@ -79,6 +79,24 @@ ParserService -> Kafka (albums-processed-topic) -> CoreDataService (API + SPA)
 - **OpenTelemetry** - Logs (Loki), dashboards (Grafana). Services send OTLP telemetry; OTEL Collector forwards logs only
 - **Tests** - Embedded in each service under `Tests/` folder (not separate projects). xUnit + Moq + Testcontainers
 
+## Parser Architecture
+
+Distributor parsers scrape album data from metal music distributor websites. Each distributor has a dedicated parser.
+
+**Parsing pipeline** (4 TickerQ jobs): `BandReferenceSyncJob` -> `CatalogueIndexJob` -> `AlbumDetailParsingJob` -> `AlbumPublisherJob`
+
+**Files per distributor** (all under `src/MetalReleaseTracker.ParserService/`):
+- `Infrastructure/Parsers/{Name}Parser.cs` — parser implementation
+- `Infrastructure/Parsers/Selectors/{Name}Selectors.cs` — XPath selector constants
+- `Infrastructure/Parsers/Exceptions/{Name}ParserException.cs` — custom exception
+- Registration in `Infrastructure/Parsers/Extensions/ParserRegistrationExtension.cs` (Autofac metadata)
+- Enum value in `Domain/Models/ValueObjects/DistributorCode.cs`
+- Smoke tests in `Tests/IntegrationTests/Parsers/{Name}ParserSmokeTests.cs`
+
+**Three parser types**: Standard (extends `BaseDistributorParser` + `IHtmlDocumentLoader`), FlareSolverr (same base, `FlareSolverrHtmlDocumentLoader` for Cloudflare), Selenium (implements interfaces directly via `ISeleniumWebDriverFactory`).
+
+**Custom commands**: Use `/add-parser` to add a new distributor, `/modify-parser` to fix/update an existing one.
+
 ## Code Style
 
 - **StyleCop.Analyzers** enforced via `.editorconfig` at repo root with **error** severity
