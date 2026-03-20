@@ -271,6 +271,10 @@ const translations = {
       shipsFrom: 'Ships from',
       listenOnBandcamp: 'Listen on Bandcamp',
     },
+    priceHistory: {
+      title: 'Price History',
+      noData: 'No price history available',
+    },
     footer: {
       rights: 'All rights reserved.',
       suggestDistributor: 'Suggest a Distributor',
@@ -547,6 +551,10 @@ const translations = {
       press: 'Тираж',
       shipsFrom: 'Доставка з',
       listenOnBandcamp: 'Слухати на Bandcamp',
+    },
+    priceHistory: {
+      title: 'Історія цін',
+      noData: 'Історія цін недоступна',
     },
     footer: {
       rights: 'Всі права захищені.',

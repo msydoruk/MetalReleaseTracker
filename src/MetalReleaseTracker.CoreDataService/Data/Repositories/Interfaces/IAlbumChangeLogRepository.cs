@@ -8,4 +8,6 @@ public interface IAlbumChangeLogRepository
     Task AddAsync(AlbumChangeLogEntity entity, CancellationToken cancellationToken = default);
 
     Task<PagedResultDto<AlbumChangeLogEntity>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+
+    Task<List<AlbumChangeLogEntity>> GetByAlbumNameAsync(string albumName, string bandName, CancellationToken cancellationToken = default);
 }

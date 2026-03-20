@@ -21,6 +21,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CloseIcon from '@mui/icons-material/Close';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
 import MediaTypeIcon from '../components/MediaTypeIcon';
+import PriceHistoryChart from '../components/PriceHistoryChart';
 import { fetchAlbumDetail, fetchFavoriteIds, addFavorite, removeFavorite } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
@@ -274,6 +275,8 @@ const AlbumDetailPage = () => {
           );
         })}
       </Box>
+
+      <PriceHistoryChart albumName={album.albumName} bandName={album.bandName} />
 
       {album.relatedReleases.length > 0 && (
         <>

@@ -92,3 +92,6 @@ export const submitReview = (data) => api.post('/reviews', data);
 
 export const fetchChangelog = (page, pageSize) =>
   api.get(`/changelog?page=${page}&pageSize=${pageSize}`);
+
+export const fetchPriceHistory = (albumName, bandName) =>
+  api.get(`/changelog/price-history?albumName=${encodeURIComponent(albumName)}&bandName=${encodeURIComponent(bandName)}`);

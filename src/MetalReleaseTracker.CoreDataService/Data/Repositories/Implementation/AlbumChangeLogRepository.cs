@@ -29,4 +29,14 @@ public class AlbumChangeLogRepository : IAlbumChangeLogRepository
 
         return await query.ToPagedResultAsync(page, pageSize, cancellationToken);
     }
+
+    public async Task<List<AlbumChangeLogEntity>> GetByAlbumNameAsync(string albumName, string bandName, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.AlbumChangeLogs
+            .AsNoTracking()
+            .Where(changeLog => changeLog.AlbumName.ToLower() == albumName.ToLower()
+                && changeLog.BandName.ToLower() == bandName.ToLower())
+            .OrderBy(changeLog => changeLog.ChangedAt)
+            .ToListAsync(cancellationToken);
+    }
 }

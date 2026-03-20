@@ -29,4 +29,18 @@ public class AlbumChangeLogService : IAlbumChangeLogService
             CurrentPage = pagedResult.CurrentPage,
         };
     }
+
+    public async Task<List<PriceHistoryPointDto>> GetPriceHistoryAsync(string albumName, string bandName, CancellationToken cancellationToken = default)
+    {
+        var entities = await _albumChangeLogRepository.GetByAlbumNameAsync(albumName, bandName, cancellationToken);
+
+        return entities.Select(entity => new PriceHistoryPointDto
+        {
+            Price = entity.Price,
+            OldPrice = entity.OldPrice,
+            ChangeType = entity.ChangeType,
+            ChangedAt = entity.ChangedAt,
+            DistributorName = entity.DistributorName,
+        }).ToList();
+    }
 }

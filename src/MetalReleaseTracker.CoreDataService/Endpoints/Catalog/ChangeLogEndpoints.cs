@@ -21,5 +21,18 @@ public static class ChangeLogEndpoints
             .WithName("GetChangeLog")
             .WithTags("ChangeLog")
             .Produces<PagedResultDto<AlbumChangeLogDto>>();
+
+        endpoints.MapGet(RouteConstants.Api.ChangeLog.GetPriceHistory, async (
+                string albumName,
+                string bandName,
+                IAlbumChangeLogService changeLogService,
+                CancellationToken cancellationToken) =>
+            {
+                var history = await changeLogService.GetPriceHistoryAsync(albumName, bandName, cancellationToken);
+                return Results.Ok(history);
+            })
+            .WithName("GetPriceHistory")
+            .WithTags("ChangeLog")
+            .Produces<List<PriceHistoryPointDto>>();
     }
 }

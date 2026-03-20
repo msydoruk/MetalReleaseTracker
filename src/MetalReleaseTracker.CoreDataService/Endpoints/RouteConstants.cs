@@ -57,6 +57,7 @@ public static class RouteConstants
         {
             private const string Base = $"{ApiBase}/changelog";
             public const string GetPaged = Base;
+            public const string GetPriceHistory = $"{Base}/price-history";
         }
 
         public static class Feed
