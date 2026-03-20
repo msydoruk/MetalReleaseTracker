@@ -22,6 +22,8 @@ public record AlbumFilterDto
 
     public int? MaxYear { get; init; }
 
+    public string? Genre { get; init; }
+
     public DateTime? AddedAfter { get; init; }
 
     public DateTime? AddedBefore { get; init; }

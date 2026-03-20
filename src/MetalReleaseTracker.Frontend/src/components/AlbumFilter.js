@@ -19,7 +19,7 @@ import {
   TextField
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { fetchBands } from '../services/api';
+import { fetchBands, fetchDistributors, fetchGenres } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -29,6 +29,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   const [filters, setFilters] = useState({
     name: initialFilters.name || '',
     bandId: initialFilters.bandId || '',
+    distributorId: initialFilters.distributorId || '',
+    genre: initialFilters.genre || '',
     mediaType: initialFilters.mediaType || '',
     minPrice: initialFilters.minPrice || 0,
     maxPrice: initialFilters.maxPrice || 200,
@@ -41,6 +43,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   });
 
   const [bands, setBands] = useState([]);
+  const [distributors, setDistributors] = useState([]);
+  const [genres, setGenres] = useState([]);
   const [priceRange, setPriceRange] = useState([
     filters.minPrice || 0,
     filters.maxPrice || 200
@@ -50,8 +54,14 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
-        const bandsResponse = await fetchBands();
+        const [bandsResponse, distributorsResponse, genresResponse] = await Promise.all([
+          fetchBands(),
+          fetchDistributors(),
+          fetchGenres(),
+        ]);
         setBands(bandsResponse.data || []);
+        setDistributors(distributorsResponse.data || []);
+        setGenres(genresResponse.data || []);
       } catch (error) {
         console.error('Error fetching filter data:', error);
       }
@@ -64,6 +74,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
     setFilters({
       name: initialFilters.name || '',
       bandId: initialFilters.bandId || '',
+      distributorId: initialFilters.distributorId || '',
+      genre: initialFilters.genre || '',
       mediaType: initialFilters.mediaType || '',
       minPrice: initialFilters.minPrice || 0,
       maxPrice: initialFilters.maxPrice || 200,
@@ -116,6 +128,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
     const resetFilters = {
       name: '',
       bandId: '',
+      distributorId: '',
+      genre: '',
       mediaType: '',
       minPrice: 0,
       maxPrice: 200,
@@ -312,6 +326,145 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 {bands.map((band) => (
                   <MenuItem key={band.id} value={band.id}>
                     {band.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Distributor filter */}
+          <Box>
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
+                mb: 1,
+                fontWeight: 'medium'
+              }}
+            >
+              {t('albumFilter.distributor')}
+            </FormLabel>
+            <FormControl
+              fullWidth
+              size="small"
+              variant="outlined"
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                width: '100%'
+              }}
+            >
+              <Select
+                name="distributorId"
+                value={filters.distributorId}
+                onChange={handleInputChange}
+                displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allDistributors')}</em>;
+                  }
+                  const selectedDistributor = distributors.find(d => d.id === selected);
+                  return selectedDistributor ? selectedDistributor.name : '';
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                      backgroundColor: '#222',
+                      color: '#fff'
+                    }
+                  }
+                }}
+                sx={{
+                  '& .MuiSelect-select': {
+                    py: 1,
+                    color: 'white',
+                    fontWeight: 'medium',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.3)'
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)'
+                  },
+                  height: '40px'
+                }}
+              >
+                <MenuItem value="">{t('albumFilter.allDistributors')}</MenuItem>
+                {distributors.map((distributor) => (
+                  <MenuItem key={distributor.id} value={distributor.id}>
+                    {distributor.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Genre filter */}
+          <Box>
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'white',
+                mb: 1,
+                fontWeight: 'medium'
+              }}
+            >
+              {t('albumFilter.genre')}
+            </FormLabel>
+            <FormControl
+              fullWidth
+              size="small"
+              variant="outlined"
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                width: '100%'
+              }}
+            >
+              <Select
+                name="genre"
+                value={filters.genre}
+                onChange={handleInputChange}
+                displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allGenres')}</em>;
+                  }
+                  return selected;
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                      backgroundColor: '#222',
+                      color: '#fff'
+                    }
+                  }
+                }}
+                sx={{
+                  '& .MuiSelect-select': {
+                    py: 1,
+                    color: 'white',
+                    fontWeight: 'medium',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.3)'
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)'
+                  },
+                  height: '40px'
+                }}
+              >
+                <MenuItem value="">{t('albumFilter.allGenres')}</MenuItem>
+                {genres.map((genre) => (
+                  <MenuItem key={genre} value={genre}>
+                    {genre}
                   </MenuItem>
                 ))}
               </Select>

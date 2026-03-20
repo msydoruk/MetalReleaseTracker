@@ -56,4 +56,9 @@ public class BandService : IBandService
 
         return bands;
     }
+
+    public async Task<List<string>> GetDistinctGenresAsync(CancellationToken cancellationToken = default)
+    {
+        return await _bandRepository.GetDistinctGenresAsync(cancellationToken);
+    }
 }

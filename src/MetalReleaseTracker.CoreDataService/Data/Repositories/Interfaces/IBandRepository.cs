@@ -17,4 +17,6 @@ public interface IBandRepository
     Task<BandEntity?> GetByNameAsync(string bandName, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(BandEntity band, CancellationToken cancellationToken = default);
+
+    Task<List<string>> GetDistinctGenresAsync(CancellationToken cancellationToken = default);
 }

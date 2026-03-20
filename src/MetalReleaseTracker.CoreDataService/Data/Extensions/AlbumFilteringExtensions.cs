@@ -31,6 +31,8 @@ public static class AlbumFilteringExtensions
                 album => album.OriginalYear >= filter.MinYear.Value)
             .WhereIf(filter.MaxYear.HasValue,
                 album => album.OriginalYear <= filter.MaxYear.Value)
+            .WhereIf(!string.IsNullOrWhiteSpace(filter.Genre),
+                album => album.Band != null && EF.Functions.ILike(album.Band.Genre, $"%{filter.Genre}%"))
             .WhereIf(filter.AddedAfter.HasValue,
                 album => album.CreatedDate >= filter.AddedAfter.Value)
             .WhereIf(filter.AddedBefore.HasValue,

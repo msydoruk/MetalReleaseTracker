@@ -74,4 +74,15 @@ public class BandRepository : IBandRepository
         _dbContext.Bands.Update(band);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<List<string>> GetDistinctGenresAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Bands
+            .AsNoTracking()
+            .Where(band => band.Genre != null && band.Genre != string.Empty)
+            .Select(band => band.Genre!)
+            .Distinct()
+            .OrderBy(genre => genre)
+            .ToListAsync(cancellationToken);
+    }
 }

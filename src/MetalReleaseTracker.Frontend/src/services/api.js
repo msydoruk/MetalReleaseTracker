@@ -74,6 +74,7 @@ export const fetchBands = () => api.get('/bands/all');
 export const fetchBandById = (id) => api.get(`/bands/${id}`);
 export const fetchBandsWithAlbumCount = () => api.get('/bands/with-album-count');
 
+export const fetchGenres = () => api.get('/bands/genres');
 export const fetchDistributors = () => api.get('/distributors/all');
 export const fetchDistributorById = (id) => api.get(`/distributors/${id}`);
 export const fetchDistributorsWithAlbumCount = () => api.get('/distributors/with-album-count');

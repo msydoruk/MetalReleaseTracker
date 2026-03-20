@@ -44,5 +44,16 @@ public static class BandEndpoints
             .WithName("GetBandsWithAlbumCount")
             .WithTags("Bands")
             .Produces<List<BandWithAlbumCountDto>>();
+
+        endpoints.MapGet(RouteConstants.Api.Bands.GetGenres, async (
+                IBandService bandService,
+                CancellationToken cancellationToken) =>
+            {
+                var genres = await bandService.GetDistinctGenresAsync(cancellationToken);
+                return Results.Ok(genres);
+            })
+            .WithName("GetDistinctGenres")
+            .WithTags("Bands")
+            .Produces<List<string>>();
     }
 }

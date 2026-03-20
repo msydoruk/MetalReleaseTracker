@@ -33,6 +33,7 @@ public static class RouteConstants
             public const string GetAll = $"{Base}/all";
             public const string GetById = $"{Base}/{{id:guid}}";
             public const string GetWithAlbumCount = $"{Base}/with-album-count";
+            public const string GetGenres = $"{Base}/genres";
         }
 
         public static class Distributors
