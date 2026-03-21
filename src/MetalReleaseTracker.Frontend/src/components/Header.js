@@ -31,7 +31,6 @@ import {
   Info as InfoIcon,
   Newspaper as NewspaperIcon,
   Language as LanguageIcon,
-  RateReview as RateReviewIcon,
   History as HistoryIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -138,7 +137,6 @@ const Header = () => {
     { title: t('nav.distributors'), path: '/distributors', icon: <StoreIcon /> },
     { title: t('nav.news'), path: '/news', icon: <NewspaperIcon /> },
     { title: t('nav.about'), path: '/about', icon: <InfoIcon /> },
-    { title: t('nav.reviews'), path: '/reviews', icon: <RateReviewIcon /> },
     { title: t('nav.changelog'), path: '/changelog', icon: <HistoryIcon /> }
   ];
   

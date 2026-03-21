@@ -18,6 +18,7 @@ import AboutPage from './pages/AboutPage';
 import NewsPage from './pages/NewsPage';
 import ReviewsPage from './pages/ReviewsPage';
 import ChangelogPage from './pages/ChangelogPage';
+import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
@@ -30,7 +31,7 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#b71c1c', // Deep red
+      main: '#f44336', // Red 500 - WCAG AA accessible on dark backgrounds
     },
     secondary: {
       main: '#9e9e9e', // Silver/metallic
@@ -197,6 +198,9 @@ function App() {
                     }
                   />
                   <Route path="/signin-callback" element={<LoginCallback />} />
+
+                  {/* Catch-all 404 */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Box>
               <Footer />

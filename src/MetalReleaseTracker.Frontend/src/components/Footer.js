@@ -16,6 +16,7 @@ const Footer = () => {
             direction={{ xs: 'column', sm: 'row' }}
             spacing={{ xs: 1, sm: 3 }}
             alignItems="center"
+            sx={{ flexWrap: 'wrap', justifyContent: 'center' }}
           >
             <MuiLink
               component={RouterLink}
@@ -23,6 +24,7 @@ const Footer = () => {
               color="text.secondary"
               underline="hover"
               variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
             >
               {t('nav.albums')}
             </MuiLink>
@@ -32,6 +34,7 @@ const Footer = () => {
               color="text.secondary"
               underline="hover"
               variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
             >
               {t('nav.bands')}
             </MuiLink>
@@ -41,8 +44,19 @@ const Footer = () => {
               color="text.secondary"
               underline="hover"
               variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
             >
               {t('nav.distributors')}
+            </MuiLink>
+            <MuiLink
+              component={RouterLink}
+              to="/news"
+              color="text.secondary"
+              underline="hover"
+              variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
+            >
+              {t('nav.news')}
             </MuiLink>
             <MuiLink
               component={RouterLink}
@@ -50,14 +64,26 @@ const Footer = () => {
               color="text.secondary"
               underline="hover"
               variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
             >
               {t('nav.about')}
+            </MuiLink>
+            <MuiLink
+              component={RouterLink}
+              to="/changelog"
+              color="text.secondary"
+              underline="hover"
+              variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
+            >
+              {t('nav.changelog')}
             </MuiLink>
             <MuiLink
               href="mailto:metal.release.tracker@gmail.com?subject=Distributor Suggestion"
               color="text.secondary"
               underline="hover"
               variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
             >
               {t('footer.suggestDistributor')}
             </MuiLink>

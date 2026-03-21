@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Rating as MuiRating } from '@mui/material';
+import { Box, Typography, Rating as MuiRating, Link as MuiLink } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { fetchAlbumRating, submitAlbumRating, deleteAlbumRating } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const AlbumRating = ({ albumId, isLoggedIn }) => {
   const { t } = useLanguage();
+  const location = useLocation();
   const [averageRating, setAverageRating] = useState(null);
   const [ratingCount, setRatingCount] = useState(0);
   const [userRating, setUserRating] = useState(null);
@@ -76,9 +78,17 @@ const AlbumRating = ({ albumId, isLoggedIn }) => {
           />
         </Box>
       ) : (
-        <Typography variant="body2" color="text.secondary">
+        <MuiLink
+          component={RouterLink}
+          to="/login"
+          state={{ from: location }}
+          variant="body2"
+          color="primary"
+          underline="hover"
+          sx={{ cursor: 'pointer' }}
+        >
           {t('rating.loginToRate')}
-        </Typography>
+        </MuiLink>
       )}
     </Box>
   );
