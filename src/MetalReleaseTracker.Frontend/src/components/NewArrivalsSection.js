@@ -46,9 +46,7 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
   }, [loadNewArrivals]);
 
   const displayAlbums = useMemo(() => {
-    const withCovers = albums.filter((album) => !isPlaceholderImage(album.photoUrl));
-    const withoutCovers = albums.filter((album) => isPlaceholderImage(album.photoUrl));
-    return [...withCovers, ...withoutCovers].slice(0, MAX_DISPLAY);
+    return albums.filter((album) => !isPlaceholderImage(album.photoUrl)).slice(0, MAX_DISPLAY);
   }, [albums]);
 
   if (!loaded || albums.length === 0) {
