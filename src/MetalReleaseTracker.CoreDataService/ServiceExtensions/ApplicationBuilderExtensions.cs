@@ -10,6 +10,7 @@ public static class ApplicationBuilderExtensions
     public static WebApplication UseApplicationMiddleware(this WebApplication app, IWebHostEnvironment env)
     {
         app.UseSerilogRequestLogging();
+        app.UseSecurityHeaders();
         app.UseErrorHandling();
 
         if (env.IsDevelopment())

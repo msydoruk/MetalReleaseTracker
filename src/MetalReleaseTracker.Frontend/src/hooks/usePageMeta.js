@@ -11,6 +11,17 @@ const setMetaTag = (attribute, value, content) => {
   element.setAttribute('content', content);
 };
 
+const setHreflangLink = (hreflang, href) => {
+  let element = document.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`);
+  if (!element) {
+    element = document.createElement('link');
+    element.setAttribute('rel', 'alternate');
+    element.setAttribute('hreflang', hreflang);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('href', href);
+};
+
 const usePageMeta = (title, description, image) => {
   const location = useLocation();
 
@@ -45,6 +56,10 @@ const usePageMeta = (title, description, image) => {
     setMetaTag('name', 'twitter:card', image ? 'summary_large_image' : 'summary');
     setMetaTag('name', 'twitter:title', effectiveTitle);
     setMetaTag('name', 'twitter:description', description || '');
+
+    setHreflangLink('en', canonicalUrl);
+    setHreflangLink('uk', `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=uk`);
+    setHreflangLink('x-default', canonicalUrl);
 
     return () => {
       document.title = suffix;

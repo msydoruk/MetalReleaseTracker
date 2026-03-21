@@ -13,6 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import Chip from '@mui/material/Chip';
 import { useNavigate, Link } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -84,6 +85,26 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
               }
             }}
           />
+          {album.status != null && (
+            <Chip
+              label={
+                album.status === 2 ? t('albumCard.statusPreOrder')
+                : album.status === 0 ? t('albumCard.statusNew')
+                : album.status === 1 ? t('albumCard.statusRestock')
+                : null
+              }
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                fontWeight: 700,
+                fontSize: '0.7rem',
+                bgcolor: album.status === 2 ? '#ff6f00' : album.status === 0 ? '#2e7d32' : '#1565c0',
+                color: 'white',
+              }}
+            />
+          )}
           {onCollectionChange && (
             <IconButton
               onClick={handleFavoriteToggle}

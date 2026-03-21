@@ -45,11 +45,55 @@ const AlbumDetailPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { addRecentlyViewed } = useRecentlyViewed();
 
+  const albumMetaDescription = (() => {
+    if (!album) return '';
+    const parts = [`Buy ${album.albumName} by ${album.bandName}`];
+    if (album.originalYear > 0) parts[0] += ` (${album.originalYear})`;
+    if (album.genre) parts.push(album.genre);
+    const prices = album.variants.map((variant) => variant.price);
+    if (prices.length > 0) {
+      const min = Math.min(...prices).toFixed(2);
+      const max = Math.max(...prices).toFixed(2);
+      const priceText = min === max ? `\u20AC${min}` : `\u20AC${min} to \u20AC${max}`;
+      parts.push(`${priceText} at ${album.variants.length} store${album.variants.length > 1 ? 's' : ''}`);
+    }
+    return parts.join('. ');
+  })();
+
   usePageMeta(
     album ? `${album.albumName} - ${album.bandName}` : null,
-    album ? `Buy ${album.albumName} by ${album.bandName} from ${album.variants.length} stores` : '',
+    albumMetaDescription,
     album?.photoUrl
   );
+
+  useEffect(() => {
+    if (!album) return;
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'MusicAlbum',
+      name: album.albumName,
+      byArtist: { '@type': 'MusicGroup', name: album.bandName },
+      ...(album.originalYear > 0 && { datePublished: String(album.originalYear) }),
+      ...(album.genre && { genre: album.genre }),
+      ...(album.photoUrl && { image: album.photoUrl }),
+      offers: album.variants.map((variant) => ({
+        '@type': 'Offer',
+        price: variant.price.toFixed(2),
+        priceCurrency: 'EUR',
+        url: variant.purchaseUrl,
+        seller: { '@type': 'Organization', name: variant.distributorName },
+        availability: 'https://schema.org/InStock',
+      })),
+    };
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(jsonLd);
+    script.id = 'album-jsonld';
+    const existing = document.getElementById('album-jsonld');
+    if (existing) existing.remove();
+    document.head.appendChild(script);
+    return () => { script.remove(); };
+  }, [album]);
 
   useEffect(() => {
     const loadAlbum = async () => {

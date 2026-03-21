@@ -39,11 +39,42 @@ const BandDetailPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [similarBands, setSimilarBands] = useState([]);
 
+  const bandMetaDescription = (() => {
+    if (!band) return '';
+    const parts = [band.name];
+    if (band.genre) parts[0] += ` - ${band.genre}`;
+    parts[0] += ' from Ukraine';
+    if (albums?.totalCount > 0) {
+      parts.push(`${albums.totalCount} release${albums.totalCount > 1 ? 's' : ''} available from foreign distributors`);
+    }
+    return parts.join('. ');
+  })();
+
   usePageMeta(
-    band ? `${band.name} - Metal Release Tracker` : 'Metal Release Tracker',
-    band ? `${band.name} releases from foreign distributors` : '',
+    band ? band.name : null,
+    bandMetaDescription,
     band?.photoUrl
   );
+
+  useEffect(() => {
+    if (!band) return;
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'MusicGroup',
+      name: band.name,
+      ...(band.genre && { genre: band.genre }),
+      ...(band.photoUrl && { image: band.photoUrl }),
+      ...(band.description && { description: band.description }),
+    };
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(jsonLd);
+    script.id = 'band-jsonld';
+    const existing = document.getElementById('band-jsonld');
+    if (existing) existing.remove();
+    document.head.appendChild(script);
+    return () => { script.remove(); };
+  }, [band]);
 
   useEffect(() => {
     const loadBand = async () => {
