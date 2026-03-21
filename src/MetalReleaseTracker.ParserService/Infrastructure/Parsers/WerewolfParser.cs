@@ -83,20 +83,20 @@ public class WerewolfParser : BaseDistributorParser
         var sku = ParseSku(jsonLd, detailUrl);
         var price = ParsePrice(jsonLd, htmlDocument);
         var photoUrl = ParsePhotoUrl(jsonLd, htmlDocument);
-        var label = ParseLabel(htmlDocument);
+        var label = ParseLabel(jsonLd, htmlDocument);
         var description = ParseDescription(jsonLd, htmlDocument);
 
         return new AlbumParsedEvent
         {
             DistributorCode = DistributorCode,
-            BandName = bandName,
-            SKU = sku,
-            Name = albumName,
+            BandName = AlbumParsingHelper.TruncateName(bandName) ?? string.Empty,
+            SKU = AlbumParsingHelper.TruncateSku(sku) ?? string.Empty,
+            Name = AlbumParsingHelper.TruncateName(albumName) ?? string.Empty,
             Price = price,
             PurchaseUrl = detailUrl,
             PhotoUrl = photoUrl,
-            Label = label,
-            Press = sku,
+            Label = AlbumParsingHelper.TruncateLabel(label) ?? string.Empty,
+            Press = string.Empty,
             Description = description,
             Status = null
         };
@@ -190,45 +190,64 @@ public class WerewolfParser : BaseDistributorParser
     {
         if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("image", out var imageElement))
         {
-            var imageUrl = imageElement.ValueKind == JsonValueKind.Array
+            var imageUrl = imageElement.ValueKind == JsonValueKind.Array && imageElement.GetArrayLength() > 0
                 ? imageElement[0].GetString()
                 : imageElement.GetString();
 
-            if (!string.IsNullOrEmpty(imageUrl))
+            if (!string.IsNullOrEmpty(imageUrl) && !imageUrl.StartsWith("data:"))
             {
-                return imageUrl;
+                return StripImageSizeSuffix(imageUrl);
             }
         }
 
-        var galleryLink = htmlDocument.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'woocommerce-product-gallery')]//a[@href]");
+        var galleryLink = htmlDocument.DocumentNode.SelectSingleNode(WerewolfSelectors.DetailPhotoGalleryLink);
         if (galleryLink != null)
         {
             var href = galleryLink.GetAttributeValue("href", string.Empty).Trim();
-            if (!string.IsNullOrEmpty(href) && !href.StartsWith("#"))
+            if (!string.IsNullOrEmpty(href) && !href.StartsWith("#") && !href.StartsWith("data:"))
             {
-                return href;
+                return StripImageSizeSuffix(href);
             }
         }
 
         var imgNode = htmlDocument.DocumentNode.SelectSingleNode(WerewolfSelectors.DetailPhotoFallback);
         if (imgNode != null)
         {
-            var src = imgNode.GetAttributeValue("data-src", null)
-                ?? imgNode.GetAttributeValue("data-large_image", null)
+            var src = imgNode.GetAttributeValue("data-large_image", null)
+                ?? imgNode.GetAttributeValue("data-src", null)
                 ?? imgNode.GetAttributeValue("src", null);
 
             if (!string.IsNullOrEmpty(src) && !src.StartsWith("data:"))
             {
-                return Regex.Replace(src, @"-\d+x\d+(?=\.\w+$)", string.Empty);
+                return StripImageSizeSuffix(src);
+            }
+
+            var thumb = imgNode.GetAttributeValue("data-thumb", null);
+            if (!string.IsNullOrEmpty(thumb) && !thumb.StartsWith("data:"))
+            {
+                return StripImageSizeSuffix(thumb);
             }
         }
 
         return string.Empty;
     }
 
-    private string ParseLabel(HtmlDocument htmlDocument)
+    private static string StripImageSizeSuffix(string url)
     {
+        return Regex.Replace(url, @"-\d+x\d+(?=\.\w+$)", string.Empty);
+    }
+
+    private string ParseLabel(JsonElement? jsonLd, HtmlDocument htmlDocument)
+    {
+        if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("brand", out var brandElement))
+        {
+            var brandName = ExtractBrandName(brandElement);
+            if (!string.IsNullOrEmpty(brandName))
+            {
+                return brandName;
+            }
+        }
+
         var brandNode = htmlDocument.DocumentNode.SelectSingleNode(WerewolfSelectors.DetailBrand);
         if (brandNode != null)
         {
@@ -260,6 +279,35 @@ public class WerewolfParser : BaseDistributorParser
             if (!string.IsNullOrEmpty(text))
             {
                 return text;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ExtractBrandName(JsonElement brandElement)
+    {
+        if (brandElement.ValueKind == JsonValueKind.String)
+        {
+            return brandElement.GetString() ?? string.Empty;
+        }
+
+        if (brandElement.ValueKind == JsonValueKind.Object && brandElement.TryGetProperty("name", out var nameElement))
+        {
+            return nameElement.GetString() ?? string.Empty;
+        }
+
+        if (brandElement.ValueKind == JsonValueKind.Array && brandElement.GetArrayLength() > 0)
+        {
+            var first = brandElement[0];
+            if (first.ValueKind == JsonValueKind.String)
+            {
+                return first.GetString() ?? string.Empty;
+            }
+
+            if (first.ValueKind == JsonValueKind.Object && first.TryGetProperty("name", out var arrNameElement))
+            {
+                return arrNameElement.GetString() ?? string.Empty;
             }
         }
 
