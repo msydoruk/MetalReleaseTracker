@@ -57,8 +57,8 @@ const Pagination = ({
         size={isMobile ? 'small' : 'medium'}
         siblingCount={isMobile ? 0 : 1}
         boundaryCount={1}
-        showFirstButton
-        showLastButton
+        showFirstButton={!isMobile}
+        showLastButton={!isMobile}
         getItemAriaLabel={(type, page) => {
           if (type === 'first') return t('pagination.goToFirstPage');
           if (type === 'last') return t('pagination.goToLastPage');
@@ -68,8 +68,8 @@ const Pagination = ({
         }}
         sx={isMobile ? {
           '& .MuiPaginationItem-root': {
-            minWidth: 44,
-            height: 44,
+            minWidth: 36,
+            height: 36,
           },
         } : undefined}
       />

@@ -38,7 +38,7 @@ const AboutPage = () => {
         <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mb: 2 }}>
           {t('about.title')} {'\uD83C\uDDFA\uD83C\uDDE6'}
         </Typography>
-        <Typography variant="h5" color="text.secondary" sx={{ mb: 3, maxWidth: 700, mx: 'auto', lineHeight: 1.6 }}>
+        <Typography variant="h6" color="text.secondary" sx={{ mb: 3, maxWidth: 700, mx: 'auto', lineHeight: 1.6, fontWeight: 400 }}>
           {t('about.heroSubtitle')}
         </Typography>
         <Divider sx={{ maxWidth: 100, mx: 'auto', borderColor: 'primary.main', borderWidth: 2 }} />

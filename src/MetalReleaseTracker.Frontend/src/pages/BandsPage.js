@@ -11,15 +11,12 @@ import {
   CircularProgress,
   Alert,
   Chip,
-  Paper,
-  TextField,
-  InputAdornment
+  Paper
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { fetchBandsWithAlbumCount } from '../services/api';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumIcon from '@mui/icons-material/Album';
-import SearchIcon from '@mui/icons-material/Search';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
 import Pagination from '../components/Pagination';
@@ -31,26 +28,16 @@ const BandsPage = () => {
   const [bands, setBands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const navigate = useNavigate();
 
-  const filteredBands = useMemo(() => {
-    if (!searchQuery.trim()) return bands;
-    return bands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [bands, searchQuery]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredBands.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(bands.length / pageSize));
 
   const paginatedBands = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return filteredBands.slice(start, start + pageSize);
-  }, [filteredBands, page, pageSize]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery]);
+    return bands.slice(start, start + pageSize);
+  }, [bands, page, pageSize]);
 
   const handlePageChange = useCallback((newPage) => {
     setPage(newPage);
@@ -95,43 +82,6 @@ const BandsPage = () => {
         </Typography>
       </Box>
 
-      {!loading && bands.length > 0 && (
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('bands.searchPlaceholder')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            mb: 3,
-            maxWidth: 400,
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: 1,
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.3)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'primary.main',
-              },
-            },
-            '& .MuiInputBase-input': {
-              color: 'white',
-            },
-          }}
-        />
-      )}
-
       {error && (
         <Alert severity="error" sx={{ my: 2 }}>
           {error}
@@ -142,12 +92,12 @@ const BandsPage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
-      ) : filteredBands.length > 0 ? (
+      ) : bands.length > 0 ? (
         <>
         <Pagination
           currentPage={page}
           totalPages={totalPages}
-          totalItems={filteredBands.length}
+          totalItems={bands.length}
           pageSize={pageSize}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
@@ -274,19 +224,13 @@ const BandsPage = () => {
           <Pagination
             currentPage={page}
             totalPages={totalPages}
-            totalItems={filteredBands.length}
+            totalItems={bands.length}
             pageSize={pageSize}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
           />
         </Box>
         </>
-      ) : bands.length > 0 && searchQuery.trim() ? (
-        <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            {t('bands.noResults')}
-          </Typography>
-        </Paper>
       ) : (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
