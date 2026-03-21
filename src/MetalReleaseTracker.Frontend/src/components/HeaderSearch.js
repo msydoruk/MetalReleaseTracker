@@ -170,26 +170,27 @@ const HeaderSearch = () => {
 
   if (isMobile) {
     return (
-      <>
-        <Tooltip title={t('header.searchTooltip')}>
-          <IconButton
-            color="inherit"
-            onClick={isExpanded ? handleCollapse : handleExpand}
-            sx={{ minWidth: 44, minHeight: 44 }}
-            aria-label={isExpanded ? t('header.closeSearch') : t('header.searchTooltip')}
-          >
-            {isExpanded ? <CloseIcon /> : <SearchIcon />}
-          </IconButton>
-        </Tooltip>
-        <Collapse in={isExpanded} sx={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          zIndex: 1200,
-          backgroundColor: 'primary.main',
-        }}>
-          <ClickAwayListener onClickAway={isExpanded ? handleCollapse : () => {}}>
+      <ClickAwayListener onClickAway={isExpanded ? handleCollapse : () => {}}>
+        <Box>
+          <Tooltip title={t('header.searchTooltip')}>
+            <IconButton
+              color="inherit"
+              onClick={isExpanded ? handleCollapse : handleExpand}
+              sx={{ minWidth: 44, minHeight: 44 }}
+              aria-label={isExpanded ? t('header.closeSearch') : t('header.searchTooltip')}
+            >
+              {isExpanded ? <CloseIcon /> : <SearchIcon />}
+            </IconButton>
+          </Tooltip>
+          <Collapse in={isExpanded} sx={{
+            position: 'fixed',
+            top: 56,
+            left: 0,
+            right: 0,
+            zIndex: 1200,
+            backgroundColor: '#1a1a2e',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          }}>
             <Box sx={{ position: 'relative', px: 2, py: 1.5 }}>
               <TextField
                 fullWidth
@@ -219,9 +220,9 @@ const HeaderSearch = () => {
               />
               {suggestionsList}
             </Box>
-          </ClickAwayListener>
-        </Collapse>
-      </>
+          </Collapse>
+        </Box>
+      </ClickAwayListener>
     );
   }
 
