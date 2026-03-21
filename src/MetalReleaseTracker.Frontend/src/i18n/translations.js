@@ -26,6 +26,9 @@ const translations = {
     header: {
       flagTooltip: 'Ukrainian metal releases sold by foreign distributors',
       currencyTooltip: 'Display currency',
+      searchPlaceholder: 'Search bands & albums...',
+      searchTooltip: 'Search',
+      closeSearch: 'Close search',
     },
     albums: {
       heroTitle: 'Metal Release Tracker',
@@ -332,6 +335,9 @@ const translations = {
     header: {
       flagTooltip: 'Релізи українського металу від закордонних дистриб\'юторів',
       currencyTooltip: 'Валюта відображення',
+      searchPlaceholder: 'Пошук гуртів та альбомів...',
+      searchTooltip: 'Пошук',
+      closeSearch: 'Закрити пошук',
     },
     albums: {
       heroTitle: 'Metal Release Tracker',

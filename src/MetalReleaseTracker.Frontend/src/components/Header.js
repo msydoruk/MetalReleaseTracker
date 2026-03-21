@@ -37,6 +37,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import HeaderSearch from './HeaderSearch';
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -383,9 +384,10 @@ const Header = () => {
               ))}
             </Box>
             
-            {/* Currency + Language toggle + Auth buttons */}
+            {/* Search + Currency + Language toggle + Auth buttons */}
             {!loading && (
               <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
+                <HeaderSearch />
                 <Tooltip title={t('header.currencyTooltip')}>
                   <Button
                     color="inherit"

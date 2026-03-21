@@ -11,10 +11,9 @@ public static class AlbumFilteringExtensions
         this IQueryable<AlbumEntity> query,
         AlbumFilterDto filter)
     {
+        query = query.ApplyNameFilter(filter.Name);
+
         return query
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name),
-                album => EF.Functions.ILike(album.Name, $"%{filter.Name}%") ||
-                         EF.Functions.ILike(album.Band.Name, $"%{filter.Name}%"))
             .WhereIf(filter.MinPrice.HasValue,
                 album => album.Price >= (float)filter.MinPrice.Value)
             .WhereIf(filter.MaxPrice.HasValue,
@@ -37,6 +36,28 @@ public static class AlbumFilteringExtensions
                 album => album.CreatedDate >= filter.AddedAfter.Value)
             .WhereIf(filter.AddedBefore.HasValue,
                 album => album.CreatedDate <= filter.AddedBefore.Value);
+    }
+
+    private static IQueryable<AlbumEntity> ApplyNameFilter(
+        this IQueryable<AlbumEntity> query,
+        string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return query;
+        }
+
+        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var word in words)
+        {
+            var pattern = $"%{word}%";
+            query = query.Where(album =>
+                EF.Functions.ILike(album.Name, pattern) ||
+                EF.Functions.ILike(album.Band.Name, pattern));
+        }
+
+        return query;
     }
 
     private static IQueryable<T> WhereIf<T>(

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -15,24 +15,18 @@ import {
   Checkbox,
   Select,
   MenuItem,
-  TextField,
-  InputAdornment,
   useMediaQuery,
-  useTheme,
-  ClickAwayListener
+  useTheme
 } from '@mui/material';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import SearchIcon from '@mui/icons-material/Search';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import AlbumIcon from '@mui/icons-material/Album';
 import AlbumCard from '../components/AlbumCard';
 import NewArrivalsSection from '../components/NewArrivalsSection';
 import RecentlyViewedSection from '../components/RecentlyViewedSection';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
-import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSuggestions } from '../services/api';
+import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus } from '../services/api';
 import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
@@ -91,7 +85,6 @@ const AlbumsPage = ({ isHome = false }) => {
   const { t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const navigate = useNavigate();
 
   const { recentAlbums } = useRecentlyViewed();
 
@@ -115,25 +108,9 @@ const AlbumsPage = ({ isHome = false }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const albumListRef = useRef(null);
-  const searchTimerRef = useRef(null);
-  const suggestTimerRef = useRef(null);
 
   const filters = useMemo(() => parseFiltersFromUrl(searchParams), [searchParams]);
-
-  useEffect(() => {
-    setSearchQuery(filters.name || '');
-  }, [filters.name]);
-
-  useEffect(() => {
-    return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-      if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current);
-    };
-  }, []);
 
   const updateFilters = (newFilters) => {
     setSearchParams(filtersToSearchParams(newFilters), { replace: true });
@@ -249,51 +226,6 @@ const AlbumsPage = ({ isHome = false }) => {
     updateFilters({ ...filters, distributorId: distributorId || '', page: 1 });
   };
 
-  const handleSearchChange = (event) => {
-    const value = event.target.value;
-    setSearchQuery(value);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      updateFilters({ ...filters, name: value, page: 1 });
-    }, 400);
-
-    if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current);
-    if (value.length >= 2) {
-      suggestTimerRef.current = setTimeout(async () => {
-        try {
-          const response = await fetchSuggestions(value);
-          setSuggestions(response.data || []);
-          setShowSuggestions(true);
-        } catch (err) {
-          console.error('Error fetching suggestions:', err);
-        }
-      }, 300);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSuggestionClick = useCallback((suggestion) => {
-    setShowSuggestions(false);
-    setSuggestions([]);
-    if (suggestion.type === 'band') {
-      navigate(`/bands/${suggestion.id}`);
-    } else {
-      navigate(`/albums/${suggestion.id}`);
-    }
-  }, [navigate]);
-
-  const handleSearchFocus = () => {
-    if (suggestions.length > 0) {
-      setShowSuggestions(true);
-    }
-  };
-
-  const handleSuggestionsClose = () => {
-    setShowSuggestions(false);
-  };
-
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {isHome && (
@@ -370,107 +302,6 @@ const AlbumsPage = ({ isHome = false }) => {
           </Button>
         </Box>
       </Box>
-
-      <ClickAwayListener onClickAway={handleSuggestionsClose}>
-        <Box sx={{ position: 'relative', maxWidth: 400, mb: 3 }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder={t('albums.searchPlaceholder')}
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onFocus={handleSearchFocus}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 1,
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'primary.main',
-                },
-              },
-              '& .MuiInputBase-input': {
-                color: 'white',
-              },
-            }}
-          />
-          {showSuggestions && suggestions.length > 0 && (
-            <Paper
-              sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1300,
-                mt: 0.5,
-                maxHeight: 300,
-                overflow: 'auto',
-                backgroundColor: '#1e1e1e',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-              }}
-            >
-              {suggestions.map((suggestion, index) => (
-                <Box
-                  key={`${suggestion.type}-${suggestion.id}-${index}`}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    handleSuggestionClick(suggestion);
-                  }}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: 2,
-                    py: 1,
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    },
-                    borderBottom: index < suggestions.length - 1 ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
-                  }}
-                >
-                  {suggestion.type === 'band' ? (
-                    <MusicNoteIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                  ) : (
-                    <AlbumIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
-                  )}
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: 'white',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {suggestion.text}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: 'text.secondary', flexShrink: 0 }}
-                  >
-                    {suggestion.type === 'band' ? t('albums.suggestionBand') : t('albums.suggestionAlbum')}
-                  </Typography>
-                </Box>
-              ))}
-            </Paper>
-          )}
-        </Box>
-      </ClickAwayListener>
 
       {distributors.length > 0 && !isGrouped && (
         isMobile ? (
