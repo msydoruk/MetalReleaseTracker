@@ -243,7 +243,7 @@ const BandDetailPage = () => {
         </Box>
       </Box>
 
-      <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 3 }}>
+      <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
         {t('bandDetail.albumsBy').replace('{bandName}', band.name)}
       </Typography>
 
@@ -295,7 +295,7 @@ const BandDetailPage = () => {
           />
         </>
       ) : (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             {t('bandDetail.noAlbums')}
           </Typography>

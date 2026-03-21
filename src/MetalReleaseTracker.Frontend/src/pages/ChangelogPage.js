@@ -108,7 +108,7 @@ const ChangelogPage = () => {
       )}
 
       {!loading && !error && data && data.items.length === 0 && (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             {t('changelog.empty')}
           </Typography>

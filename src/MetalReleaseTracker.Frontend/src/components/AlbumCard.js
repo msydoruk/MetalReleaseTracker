@@ -231,7 +231,7 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
               sx={{
                 borderRadius: 5,
                 px: 2,
-                fontWeight: 'bold',
+                fontWeight: 600,
                 textTransform: 'none',
                 whiteSpace: 'nowrap'
               }}

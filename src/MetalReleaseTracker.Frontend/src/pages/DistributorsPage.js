@@ -211,9 +211,12 @@ const DistributorsPage = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                transition: 'transform 0.3s, box-shadow 0.3s',
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
                 borderRadius: 2,
                 overflow: 'hidden',
+                transition: 'all 0.25s ease-in-out',
+                bgcolor: 'background.paper',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 cursor: 'pointer',
                 '&:hover': {
                   transform: 'translateY(-8px)',
@@ -314,7 +317,7 @@ const DistributorsPage = () => {
                   sx={{
                     borderRadius: 5,
                     px: 2,
-                    fontWeight: 'bold',
+                    fontWeight: 600,
                     textTransform: 'none'
                   }}
                 >
