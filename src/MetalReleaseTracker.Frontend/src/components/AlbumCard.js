@@ -11,12 +11,15 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useNavigate, Link } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
-import CollectionStatusMenu from './CollectionStatusMenu';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
+
+const COLLECTION_STATUS_FAVORITE = 0;
 
 const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCollection, isLoggedIn = false }) => {
   const { t } = useLanguage();
@@ -26,19 +29,23 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
 
   const imageUrl = album.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
 
-  const handleCollectionSelect = (status) => {
+  const isFavorited = collectionStatus !== undefined && collectionStatus !== null;
+
+  const handleFavoriteToggle = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
-    if (onCollectionChange) {
-      onCollectionChange(album.id, status);
-    }
-  };
-
-  const handleCollectionRemove = () => {
-    if (onRemoveFromCollection) {
-      onRemoveFromCollection(album.id);
+    if (isFavorited) {
+      if (onRemoveFromCollection) {
+        onRemoveFromCollection(album.id);
+      }
+    } else {
+      if (onCollectionChange) {
+        onCollectionChange(album.id, COLLECTION_STATUS_FAVORITE);
+      }
     }
   };
 
@@ -78,18 +85,25 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
             }}
           />
           {onCollectionChange && (
-            <CollectionStatusMenu
-              currentStatus={collectionStatus}
-              onSelect={handleCollectionSelect}
-              onRemove={handleCollectionRemove}
+            <IconButton
+              onClick={handleFavoriteToggle}
+              size="small"
               sx={{
                 position: 'absolute',
                 top: 8,
                 right: 8,
                 bgcolor: 'rgba(0,0,0,0.5)',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                width: 44,
+                height: 44,
               }}
-            />
+            >
+              {isFavorited ? (
+                <FavoriteIcon sx={{ color: '#f44336', fontSize: 22 }} />
+              ) : (
+                <FavoriteBorderIcon sx={{ color: 'white', fontSize: 22 }} />
+              )}
+            </IconButton>
           )}
         </Box>
         <CardContent sx={{

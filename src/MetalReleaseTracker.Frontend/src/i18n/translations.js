@@ -259,6 +259,9 @@ const translations = {
       subtitle: 'Added in the last 14 days',
       viewAll: 'View all new arrivals',
     },
+    recentlyViewed: {
+      title: 'Recently Viewed',
+    },
     bandDetail: {
       albumsBy: 'Releases by {bandName}',
       noAlbums: 'No releases found for this band.',
@@ -561,6 +564,9 @@ const translations = {
       title: 'Нові надходження',
       subtitle: 'Додано за останні 14 днів',
       viewAll: 'Переглянути всі нові надходження',
+    },
+    recentlyViewed: {
+      title: 'Нещодавно переглянуті',
     },
     bandDetail: {
       albumsBy: 'Релізи гурту {bandName}',

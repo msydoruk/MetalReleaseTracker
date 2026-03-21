@@ -28,6 +28,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry, getDistributorCountryName } from '../utils/distributorCountries';
+import useRecentlyViewed from '../hooks/useRecentlyViewed';
 
 const AlbumDetailPage = () => {
   const { id } = useParams();
@@ -42,9 +43,10 @@ const AlbumDetailPage = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { addRecentlyViewed } = useRecentlyViewed();
 
   usePageMeta(
-    album ? `${album.albumName} - ${album.bandName} | Metal Release Tracker` : 'Metal Release Tracker',
+    album ? `${album.albumName} - ${album.bandName}` : null,
     album ? `Buy ${album.albumName} by ${album.bandName} from ${album.variants.length} stores` : '',
     album?.photoUrl
   );
@@ -56,6 +58,9 @@ const AlbumDetailPage = () => {
         setError(null);
         const response = await fetchAlbumDetail(id);
         setAlbum(response.data);
+        if (response.data) {
+          addRecentlyViewed(response.data);
+        }
       } catch {
         setError(t('albumDetail.notFound'));
       } finally {
@@ -64,7 +69,7 @@ const AlbumDetailPage = () => {
     };
 
     loadAlbum();
-  }, [id, t]);
+  }, [id, t, addRecentlyViewed]);
 
   useEffect(() => {
     const loadAuth = async () => {
@@ -114,6 +119,14 @@ const AlbumDetailPage = () => {
   }, [isLoggedIn, album]);
 
   const placeholderImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
+
+  const isMeaningfulText = (text) => {
+    if (!text || text.trim().length === 0) return false;
+    if (/^\d+$/.test(text.trim())) return false;
+    if (/^[a-z0-9-]+$/.test(text.trim()) && text.includes('-') && text.length > 20) return false;
+    if (text.startsWith('http://') || text.startsWith('https://')) return false;
+    return true;
+  };
 
   if (loading) {
     return (
@@ -205,12 +218,12 @@ const AlbumDetailPage = () => {
 
           <AlbumRating albumId={album.primaryAlbumId} isLoggedIn={isLoggedIn} />
 
-          {album.label && (
+          {isMeaningfulText(album.label) && (
             <Typography variant="body2" color="text.secondary">
               {t('albumDetail.label')}: {album.label}
             </Typography>
           )}
-          {album.press && (
+          {isMeaningfulText(album.press) && (
             <Typography variant="body2" color="text.secondary">
               {t('albumDetail.press')}: {album.press}
             </Typography>

@@ -28,6 +28,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumIcon from '@mui/icons-material/Album';
 import AlbumCard from '../components/AlbumCard';
 import NewArrivalsSection from '../components/NewArrivalsSection';
+import RecentlyViewedSection from '../components/RecentlyViewedSection';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
 import Pagination from '../components/Pagination';
@@ -35,6 +36,7 @@ import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, a
 import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import usePageMeta from '../hooks/usePageMeta';
+import useRecentlyViewed from '../hooks/useRecentlyViewed';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const DEFAULTS = {
@@ -90,6 +92,8 @@ const AlbumsPage = ({ isHome = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+
+  const { recentAlbums } = useRecentlyViewed();
 
   usePageMeta(
     isHome
@@ -326,6 +330,7 @@ const AlbumsPage = ({ isHome = false }) => {
           isLoggedIn={isLoggedIn}
         />
       )}
+      {isHome && <RecentlyViewedSection albums={recentAlbums} />}
       <Box sx={{
         display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },

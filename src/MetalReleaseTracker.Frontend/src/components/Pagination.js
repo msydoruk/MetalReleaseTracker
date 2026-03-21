@@ -66,6 +66,12 @@ const Pagination = ({
           if (type === 'previous') return t('pagination.goToPreviousPage');
           return `${t('pagination.goToPage')} ${page}`;
         }}
+        sx={isMobile ? {
+          '& .MuiPaginationItem-root': {
+            minWidth: 44,
+            height: 44,
+          },
+        } : undefined}
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
