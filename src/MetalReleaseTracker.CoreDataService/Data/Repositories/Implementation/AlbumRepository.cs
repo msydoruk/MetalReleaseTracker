@@ -3,6 +3,7 @@ using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Extensions;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
+using MetalReleaseTracker.CoreDataService.Services.Dtos.Seo;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
@@ -130,6 +131,28 @@ public class AlbumRepository : IAlbumRepository
             .Include(album => album.Band)
             .Include(album => album.Distributor)
             .Where(album => album.BandId == bandId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<AlbumEntity?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .AsNoTracking()
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .FirstOrDefaultAsync(album => album.Slug == slug, cancellationToken);
+    }
+
+    public async Task<List<AlbumSitemapDto>> GetAllAlbumSlugsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .AsNoTracking()
+            .Where(album => album.Slug != string.Empty)
+            .Select(album => new AlbumSitemapDto
+            {
+                Slug = album.Slug,
+                LastModified = album.LastUpdateDate ?? album.CreatedDate
+            })
             .ToListAsync(cancellationToken);
     }
 }

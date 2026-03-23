@@ -32,5 +32,6 @@ public static class EndpointExtensions
         AlbumRatingEndpoints.MapEndpoints(routeBuilder);
         ChangeLogEndpoints.MapEndpoints(routeBuilder);
         FeedEndpoints.MapEndpoints(routeBuilder);
+        SitemapEndpoints.MapEndpoints(routeBuilder);
     }
 }

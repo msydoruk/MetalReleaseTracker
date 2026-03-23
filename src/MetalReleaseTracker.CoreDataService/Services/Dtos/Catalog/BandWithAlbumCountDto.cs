@@ -13,4 +13,6 @@ public class BandWithAlbumCountDto
     public string? Genre { get; set; }
 
     public int AlbumCount { get; set; }
+
+    public string Slug { get; set; } = string.Empty;
 }

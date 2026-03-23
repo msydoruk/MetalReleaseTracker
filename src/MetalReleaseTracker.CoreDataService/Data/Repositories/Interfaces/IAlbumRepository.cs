@@ -1,6 +1,7 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
+using MetalReleaseTracker.CoreDataService.Services.Dtos.Seo;
 
 namespace MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 
@@ -27,4 +28,8 @@ public interface IAlbumRepository
     Task<List<AlbumEntity>> GetMatchingAlbumsAsync(string canonicalTitle, AlbumMediaType? media, Guid bandId, CancellationToken cancellationToken = default);
 
     Task<List<AlbumEntity>> GetAlbumsByBandIdAsync(Guid bandId, CancellationToken cancellationToken = default);
+
+    Task<AlbumEntity?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+
+    Task<List<AlbumSitemapDto>> GetAllAlbumSlugsAsync(CancellationToken cancellationToken = default);
 }

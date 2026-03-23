@@ -14,4 +14,9 @@ public static class MiddlewareExtensions
     {
         return app.UseMiddleware<SecurityHeadersMiddleware>();
     }
+
+    public static IApplicationBuilder UseSlugRedirect(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<SlugRedirectMiddleware>();
+    }
 }

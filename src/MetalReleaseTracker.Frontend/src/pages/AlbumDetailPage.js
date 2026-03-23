@@ -22,7 +22,7 @@ import MediaTypeIcon from '../components/MediaTypeIcon';
 import AlbumRating from '../components/AlbumRating';
 import CollectionStatusMenu from '../components/CollectionStatusMenu';
 import PriceHistoryChart from '../components/PriceHistoryChart';
-import { fetchAlbumDetail, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus } from '../services/api';
+import { fetchAlbumDetailBySlug, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -31,7 +31,7 @@ import { getDistributorCountry, getDistributorCountryName } from '../utils/distr
 import useRecentlyViewed from '../hooks/useRecentlyViewed';
 
 const AlbumDetailPage = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const { t } = useLanguage();
   const { format: formatPrice } = useCurrency();
   const theme = useTheme();
@@ -100,7 +100,7 @@ const AlbumDetailPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetchAlbumDetail(id);
+        const response = await fetchAlbumDetailBySlug(slug);
         setAlbum(response.data);
         if (response.data) {
           addRecentlyViewed(response.data);
@@ -113,7 +113,7 @@ const AlbumDetailPage = () => {
     };
 
     loadAlbum();
-  }, [id, t, addRecentlyViewed]);
+  }, [slug, t, addRecentlyViewed]);
 
   useEffect(() => {
     const loadAuth = async () => {
@@ -236,7 +236,7 @@ const AlbumDetailPage = () => {
 
           <Typography
             component={Link}
-            to={`/bands/${album.bandId}`}
+            to={`/bands/${album.bandSlug}`}
             variant="h6"
             color="text.secondary"
             sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' }, display: 'inline-block', mb: 1 }}
@@ -365,7 +365,7 @@ const AlbumDetailPage = () => {
               <Paper
                 key={related.albumId}
                 component={Link}
-                to={`/albums/${related.albumId}`}
+                to={`/albums/${related.albumSlug}`}
                 sx={{
                   minWidth: 180,
                   maxWidth: 180,

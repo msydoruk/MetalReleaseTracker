@@ -71,5 +71,31 @@ public static class AlbumEndpoints
             .WithTags("Albums")
             .Produces<AlbumDetailDto>(200)
             .Produces(404);
+
+        endpoints.MapGet(RouteConstants.Api.Albums.GetBySlug, async (
+                string slug,
+                IAlbumService albumService,
+                CancellationToken cancellationToken) =>
+            {
+                var album = await albumService.GetAlbumBySlug(slug, cancellationToken);
+                return album is null ? Results.NotFound() : Results.Ok(album);
+            })
+            .WithName("GetAlbumBySlug")
+            .WithTags("Albums")
+            .Produces<AlbumDto>(200)
+            .Produces(404);
+
+        endpoints.MapGet(RouteConstants.Api.Albums.GetDetailBySlug, async (
+                string slug,
+                IAlbumService albumService,
+                CancellationToken cancellationToken) =>
+            {
+                var detail = await albumService.GetAlbumDetailBySlug(slug, cancellationToken);
+                return detail is null ? Results.NotFound() : Results.Ok(detail);
+            })
+            .WithName("GetAlbumDetailBySlug")
+            .WithTags("Albums")
+            .Produces<AlbumDetailDto>(200)
+            .Produces(404);
     }
 }

@@ -26,6 +26,8 @@ public static class RouteConstants
             public const string GetSuggestions = $"{Base}/suggest";
             public const string GetById = $"{Base}/{{id:guid}}";
             public const string GetDetail = $"{Base}/{{id:guid}}/detail";
+            public const string GetBySlug = $"{Base}/by-slug/{{slug}}";
+            public const string GetDetailBySlug = $"{Base}/by-slug/{{slug}}/detail";
         }
 
         public static class Bands
@@ -36,6 +38,7 @@ public static class RouteConstants
             public const string GetWithAlbumCount = $"{Base}/with-album-count";
             public const string GetGenres = $"{Base}/genres";
             public const string GetSimilar = $"{Base}/{{id:guid}}/similar";
+            public const string GetBySlug = $"{Base}/by-slug/{{slug}}";
         }
 
         public static class Distributors
@@ -84,5 +87,10 @@ public static class RouteConstants
             public const string Check = $"{Base}/{{albumId:guid}}/check";
             public const string UpdateStatus = $"{Base}/{{albumId:guid}}/status";
         }
+    }
+
+    public static class Seo
+    {
+        public const string Sitemap = "/sitemap.xml";
     }
 }

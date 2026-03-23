@@ -87,9 +87,9 @@ const HeaderSearch = () => {
     setShowSuggestions(false);
     setSuggestions([]);
     if (suggestion.type === 'band') {
-      navigate(`/bands/${suggestion.id}`);
+      navigate(`/bands/${suggestion.slug}`);
     } else {
-      navigate(`/albums/${suggestion.id}`);
+      navigate(`/albums/${suggestion.slug}`);
     }
   }, [navigate]);
 

@@ -88,7 +88,7 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
             <Paper
               key={album.id}
               component={Link}
-              to={`/albums/${album.id}`}
+              to={`/albums/${album.slug}`}
               sx={{
                 textDecoration: 'none',
                 color: 'inherit',

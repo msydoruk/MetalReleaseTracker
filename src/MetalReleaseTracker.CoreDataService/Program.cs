@@ -1,5 +1,7 @@
 using MetalReleaseTracker.CoreDataService.ServiceExtensions;
+using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -47,6 +49,11 @@ app.UseApplicationMiddleware(builder.Environment)
     .MapMinioForwarder()
     .ApplyMigrations();
 
-app.MapFallbackToFile("index.html");
+app.MapFallback(async (HttpContext context, ISeoMetaTagService seoService) =>
+{
+    var html = await seoService.GetHtmlWithMetaTags(context.Request.Path, context.RequestAborted);
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.WriteAsync(html, context.RequestAborted);
+});
 
 app.Run();

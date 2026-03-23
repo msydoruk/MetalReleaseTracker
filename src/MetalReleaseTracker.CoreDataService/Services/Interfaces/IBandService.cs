@@ -14,4 +14,6 @@ public interface IBandService
     Task<List<string>> GetDistinctGenresAsync(CancellationToken cancellationToken = default);
 
     Task<List<BandDto>> GetSimilarBandsAsync(Guid bandId, int limit = 8, CancellationToken cancellationToken = default);
+
+    Task<BandDto?> GetBandBySlugAsync(string slug, CancellationToken cancellationToken = default);
 }

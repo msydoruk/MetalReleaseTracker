@@ -113,7 +113,9 @@ public class AlbumService : IAlbumService
             {
                 BandId = primary.BandId,
                 BandName = primary.Band?.Name ?? string.Empty,
+                BandSlug = primary.Band?.Slug ?? string.Empty,
                 AlbumName = primary.CanonicalTitle ?? primary.Name,
+                AlbumSlug = primary.Slug,
                 PhotoUrl = photoUrl,
                 Genre = primary.Genre,
                 Media = primary.Media,
@@ -231,6 +233,7 @@ public class AlbumService : IAlbumService
             {
                 AlbumId = primary.Id,
                 AlbumName = primary.CanonicalTitle ?? primary.Name,
+                AlbumSlug = primary.Slug,
                 PhotoUrl = relatedPhotoUrl,
                 Media = primary.Media,
                 OriginalYear = primary.OriginalYear,
@@ -253,6 +256,7 @@ public class AlbumService : IAlbumService
         {
             PrimaryAlbumId = album.Id,
             AlbumName = album.CanonicalTitle ?? album.Name,
+            Slug = album.Slug,
             PhotoUrl = photoUrl,
             Genre = album.Genre,
             Media = album.Media,
@@ -264,6 +268,7 @@ public class AlbumService : IAlbumService
             Press = album.Press,
             BandId = album.BandId,
             BandName = album.Band?.Name ?? string.Empty,
+            BandSlug = album.Band?.Slug ?? string.Empty,
             BandPhotoUrl = bandPhotoUrl,
             BandGenre = album.Band?.Genre,
             Variants = variants,
@@ -292,7 +297,8 @@ public class AlbumService : IAlbumService
                 {
                     Text = album.Band.Name,
                     Type = "band",
-                    Id = album.BandId
+                    Id = album.BandId,
+                    Slug = album.Band.Slug
                 });
             }
 
@@ -303,7 +309,8 @@ public class AlbumService : IAlbumService
                 {
                     Text = albumName,
                     Type = "album",
-                    Id = album.Id
+                    Id = album.Id,
+                    Slug = album.Slug
                 });
             }
 
@@ -314,6 +321,30 @@ public class AlbumService : IAlbumService
         }
 
         return suggestions;
+    }
+
+    public async Task<AlbumDto?> GetAlbumBySlug(string slug, CancellationToken cancellationToken = default)
+    {
+        var album = await _albumRepository.GetBySlugAsync(slug, cancellationToken);
+        if (album == null)
+        {
+            return null;
+        }
+
+        var dto = _mapper.Map<AlbumDto>(album);
+        dto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+        return dto;
+    }
+
+    public async Task<AlbumDetailDto?> GetAlbumDetailBySlug(string slug, CancellationToken cancellationToken = default)
+    {
+        var album = await _albumRepository.GetBySlugAsync(slug, cancellationToken);
+        if (album == null)
+        {
+            return null;
+        }
+
+        return await GetAlbumDetail(album.Id, cancellationToken);
     }
 
     private static bool AreAlbumsMatching(Data.Entities.AlbumEntity albumA, Data.Entities.AlbumEntity albumB)

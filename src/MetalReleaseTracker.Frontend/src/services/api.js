@@ -59,6 +59,8 @@ export const fetchAlbums = (filters) => {
 export const fetchSuggestions = (query) => api.get(`/albums/suggest?q=${encodeURIComponent(query)}`);
 export const fetchAlbumById = (id) => api.get(`/albums/${id}`);
 export const fetchAlbumDetail = (id) => api.get(`/albums/${id}/detail`);
+export const fetchAlbumBySlug = (slug) => api.get(`/albums/by-slug/${slug}`);
+export const fetchAlbumDetailBySlug = (slug) => api.get(`/albums/by-slug/${slug}/detail`);
 export const fetchGroupedAlbums = (filters) => {
   const queryParams = new URLSearchParams();
   if (filters) {
@@ -73,6 +75,7 @@ export const fetchGroupedAlbums = (filters) => {
 
 export const fetchBands = () => api.get('/bands/all');
 export const fetchBandById = (id) => api.get(`/bands/${id}`);
+export const fetchBandBySlug = (slug) => api.get(`/bands/by-slug/${slug}`);
 export const fetchBandsWithAlbumCount = () => api.get('/bands/with-album-count');
 export const fetchSimilarBands = (bandId) => api.get(`/bands/${bandId}/similar`);
 

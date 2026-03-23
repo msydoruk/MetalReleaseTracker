@@ -179,9 +179,9 @@ function App() {
                   {/* Public catalog routes */}
                   <Route path="/" element={<AlbumsPage isHome />} />
                   <Route path="/albums" element={<AlbumsPage />} />
-                  <Route path="/albums/:id" element={<AlbumDetailPage />} />
+                  <Route path="/albums/:slug" element={<AlbumDetailPage />} />
                   <Route path="/bands" element={<BandsPage />} />
-                  <Route path="/bands/:id" element={<BandDetailPage />} />
+                  <Route path="/bands/:slug" element={<BandDetailPage />} />
                   <Route path="/distributors" element={<DistributorsPage />} />
                   <Route path="/news" element={<NewsPage />} />
                   <Route path="/about" element={<AboutPage />} />

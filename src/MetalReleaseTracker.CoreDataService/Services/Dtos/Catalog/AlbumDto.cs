@@ -41,4 +41,8 @@ public class AlbumDto
     public int? OriginalYear { get; set; }
 
     public DateTime CreatedDate { get; set; }
+
+    public string Slug { get; set; } = string.Empty;
+
+    public string BandSlug { get; set; } = string.Empty;
 }

@@ -7,4 +7,6 @@ public class AlbumSuggestionDto
     public string Type { get; set; } = string.Empty;
 
     public Guid? Id { get; set; }
+
+    public string? Slug { get; set; }
 }

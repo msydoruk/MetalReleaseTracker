@@ -16,14 +16,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
-import { fetchBandById, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands } from '../services/api';
+import { fetchBandBySlug, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 
 const BandDetailPage = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const { t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -81,7 +81,7 @@ const BandDetailPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetchBandById(id);
+        const response = await fetchBandBySlug(slug);
         setBand(response.data);
       } catch {
         setError(t('bandDetail.notFound'));
@@ -91,12 +91,13 @@ const BandDetailPage = () => {
     };
 
     loadBand();
-  }, [id, t]);
+  }, [slug, t]);
 
   useEffect(() => {
+    if (!band) return;
     const loadSimilarBands = async () => {
       try {
-        const response = await fetchSimilarBands(id);
+        const response = await fetchSimilarBands(band.id);
         setSimilarBands(response.data);
       } catch {
         setSimilarBands([]);
@@ -104,13 +105,14 @@ const BandDetailPage = () => {
     };
 
     loadSimilarBands();
-  }, [id]);
+  }, [band]);
 
   const loadAlbums = useCallback(async () => {
+    if (!band) return;
     try {
       setAlbumsLoading(true);
       const response = await fetchAlbums({
-        bandId: id,
+        bandId: band.id,
         page,
         pageSize,
         sortBy: ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
@@ -122,7 +124,7 @@ const BandDetailPage = () => {
     } finally {
       setAlbumsLoading(false);
     }
-  }, [id, page, pageSize]);
+  }, [band, page, pageSize]);
 
   useEffect(() => {
     loadAlbums();
@@ -323,7 +325,7 @@ const BandDetailPage = () => {
               <Paper
                 key={similarBand.id}
                 component={Link}
-                to={`/bands/${similarBand.id}`}
+                to={`/bands/${similarBand.slug}`}
                 sx={{
                   minWidth: 180,
                   maxWidth: 180,

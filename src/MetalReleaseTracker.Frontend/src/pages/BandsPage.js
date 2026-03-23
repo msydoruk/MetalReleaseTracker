@@ -67,8 +67,8 @@ const BandsPage = () => {
     fetchData();
   }, [t]);
 
-  const handleBandClick = (bandId) => {
-    navigate(`/bands/${bandId}`);
+  const handleBandClick = (bandSlug) => {
+    navigate(`/bands/${bandSlug}`);
   };
 
   return (
@@ -136,7 +136,7 @@ const BandsPage = () => {
                   boxShadow: '0 12px 20px rgba(0, 0, 0, 0.15)',
                 }
               }}
-              onClick={() => handleBandClick(band.id)}
+              onClick={() => handleBandClick(band.slug)}
             >
               <CardMedia
                 component="img"
@@ -204,7 +204,7 @@ const BandsPage = () => {
                     color="primary"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleBandClick(band.id);
+                      handleBandClick(band.slug);
                     }}
                     sx={{
                       borderRadius: 5,

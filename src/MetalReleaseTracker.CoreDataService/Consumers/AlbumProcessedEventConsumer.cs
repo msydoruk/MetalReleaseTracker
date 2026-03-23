@@ -5,6 +5,7 @@ using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Events;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Extensions;
+using MetalReleaseTracker.CoreDataService.Services.Utilities;
 
 namespace MetalReleaseTracker.CoreDataService.Consumers;
 
@@ -86,12 +87,15 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             if (existingAlbum != null)
             {
                 albumEntity.Id = existingAlbum.Id;
+                albumEntity.Slug = existingAlbum.Slug;
                 await _albumRepository.UpdateAsync(albumEntity);
                 _logger.LogInformation("Album '{Name}' (SKU={SKU}) was updated.", albumEvent.Name, albumEvent.SKU);
             }
             else
             {
                 albumEntity.Id = Guid.NewGuid();
+                albumEntity.Slug = await GenerateUniqueAlbumSlugAsync(
+                    albumEvent.BandName, albumEvent.CanonicalTitle ?? albumEvent.Name);
                 await _albumRepository.AddAsync(albumEntity);
                 _logger.LogInformation("Album '{Name}' (SKU={SKU}) was added.", albumEvent.Name, albumEvent.SKU);
             }
@@ -103,6 +107,30 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             _logger.LogError(exception, $"Error occurred while consuming processed albums.");
             throw;
         }
+    }
+
+    private async Task<string> GenerateUniqueAlbumSlugAsync(string bandName, string albumName)
+    {
+        var slug = SlugGenerator.GenerateSlug(bandName, albumName);
+
+        if (string.IsNullOrEmpty(slug))
+        {
+            slug = "unnamed";
+        }
+
+        var existing = await _albumRepository.GetBySlugAsync(slug);
+        if (existing == null)
+        {
+            return slug;
+        }
+
+        var suffix = 2;
+        while (await _albumRepository.GetBySlugAsync($"{slug}-{suffix}") != null)
+        {
+            suffix++;
+        }
+
+        return $"{slug}-{suffix}";
     }
 
     private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName, float? oldPrice = null)

@@ -67,5 +67,18 @@ public static class BandEndpoints
             .WithName("GetSimilarBands")
             .WithTags("Bands")
             .Produces<List<BandDto>>();
+
+        endpoints.MapGet(RouteConstants.Api.Bands.GetBySlug, async (
+                string slug,
+                IBandService bandService,
+                CancellationToken cancellationToken) =>
+            {
+                var band = await bandService.GetBandBySlugAsync(slug, cancellationToken);
+                return band is null ? Results.NotFound() : Results.Ok(band);
+            })
+            .WithName("GetBandBySlug")
+            .WithTags("Bands")
+            .Produces<BandDto>(200)
+            .Produces(404);
     }
 }

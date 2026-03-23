@@ -57,4 +57,8 @@ public class AlbumEntity
     public string? CanonicalTitle { get; set; }
 
     public int? OriginalYear { get; set; }
+
+    [Required]
+    [MaxLength(250)]
+    public string Slug { get; set; } = string.Empty;
 }

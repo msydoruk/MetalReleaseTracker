@@ -103,7 +103,7 @@ const GroupedAlbumCard = ({ group }) => {
             </Box>
             <Typography
               component={Link}
-              to={`/albums/${group.variants[0]?.albumId || ''}`}
+              to={`/albums/${group.albumSlug || ''}`}
               gutterBottom
               variant="h6"
               onClick={(event) => event.stopPropagation()}
@@ -128,7 +128,7 @@ const GroupedAlbumCard = ({ group }) => {
             </Typography>
             <Typography
               component={Link}
-              to={`/bands/${group.bandId}`}
+              to={`/bands/${group.bandSlug}`}
               variant="body2"
               color="text.secondary"
               gutterBottom

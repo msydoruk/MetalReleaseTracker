@@ -1,7 +1,8 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
-using MetalReleaseTracker.CoreDataService.Services.Dtos;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
+using MetalReleaseTracker.CoreDataService.Services.Dtos.Seo;
+using MetalReleaseTracker.CoreDataService.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
@@ -27,9 +28,24 @@ public class BandRepository : IBandRepository
             return existingBandEntity.Id;
         }
 
-        var newBandEntity = new BandEntity { Name = bandName };
-        await _dbContext.Bands.AddAsync(newBandEntity);
-        await _dbContext.SaveChangesAsync();
+        var slug = SlugGenerator.GenerateSlug(bandName);
+        var slugExists = await _dbContext.Bands.AnyAsync(
+            band => band.Slug == slug, cancellationToken: cancellationToken);
+        if (slugExists)
+        {
+            var suffix = 2;
+            while (await _dbContext.Bands.AnyAsync(
+                band => band.Slug == $"{slug}-{suffix}", cancellationToken: cancellationToken))
+            {
+                suffix++;
+            }
+
+            slug = $"{slug}-{suffix}";
+        }
+
+        var newBandEntity = new BandEntity { Name = bandName, Slug = slug };
+        await _dbContext.Bands.AddAsync(newBandEntity, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return newBandEntity.Id;
     }
@@ -57,6 +73,7 @@ public class BandRepository : IBandRepository
                 Description = band.Description,
                 PhotoUrl = band.PhotoUrl,
                 Genre = band.Genre,
+                Slug = band.Slug,
                 AlbumCount = _dbContext.Albums.Count(album => album.BandId == band.Id)
             })
             .OrderBy(bandDto => bandDto.Name)
@@ -94,6 +111,22 @@ public class BandRepository : IBandRepository
                 && band.Genre != null
                 && EF.Functions.ILike(band.Genre, $"%{genre}%"))
             .Take(limit)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<BandEntity?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Bands
+            .AsNoTracking()
+            .FirstOrDefaultAsync(band => band.Slug == slug, cancellationToken);
+    }
+
+    public async Task<List<BandSitemapDto>> GetAllBandSlugsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Bands
+            .AsNoTracking()
+            .Where(band => band.Slug != string.Empty)
+            .Select(band => new BandSitemapDto { Slug = band.Slug })
             .ToListAsync(cancellationToken);
     }
 }

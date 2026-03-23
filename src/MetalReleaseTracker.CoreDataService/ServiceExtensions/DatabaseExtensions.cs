@@ -1,4 +1,5 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Data.Seeders;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -31,6 +32,10 @@ public static class DatabaseExtensions
 
             var identityDbContext = scope.ServiceProvider.GetRequiredService<IdentityServerDbContext>();
             identityDbContext.Database.Migrate();
+
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<SlugDataSeeder>>();
+            var seeder = new SlugDataSeeder(dbContext, logger);
+            seeder.SeedSlugsAsync().GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {

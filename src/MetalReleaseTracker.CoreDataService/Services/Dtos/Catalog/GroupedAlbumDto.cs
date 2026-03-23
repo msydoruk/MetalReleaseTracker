@@ -8,7 +8,11 @@ public class GroupedAlbumDto
 
     public string BandName { get; set; } = string.Empty;
 
+    public string BandSlug { get; set; } = string.Empty;
+
     public string AlbumName { get; set; } = string.Empty;
+
+    public string AlbumSlug { get; set; } = string.Empty;
 
     public string PhotoUrl { get; set; } = string.Empty;
 

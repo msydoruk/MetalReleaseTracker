@@ -36,6 +36,7 @@ public static class ApplicationBuilderExtensions
         app.UseStaticFiles();
         app.UseCors("AllowSPA");
         app.UseRouting();
+        app.UseSlugRedirect();
         app.UseAuthentication();
         app.UseAuthorization();
 

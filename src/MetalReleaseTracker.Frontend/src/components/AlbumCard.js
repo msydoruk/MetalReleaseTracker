@@ -142,7 +142,7 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
             </Box>
             <Typography
               component={Link}
-              to={`/albums/${album.id}`}
+              to={`/albums/${album.slug}`}
               gutterBottom
               variant="h6"
               onClick={(event) => event.stopPropagation()}
@@ -167,7 +167,7 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
             </Typography>
             <Typography
               component={Link}
-              to={`/bands/${album.bandId}`}
+              to={`/bands/${album.bandSlug}`}
               variant="body2"
               color="text.secondary"
               gutterBottom

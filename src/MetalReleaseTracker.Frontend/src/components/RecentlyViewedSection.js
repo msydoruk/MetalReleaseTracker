@@ -36,7 +36,7 @@ const RecentlyViewedSection = ({ albums }) => {
           <Paper
             key={album.id}
             component={Link}
-            to={`/albums/${album.id}`}
+            to={`/albums/${album.slug || album.primaryAlbumId}`}
             sx={{
               minWidth: 160,
               maxWidth: 160,

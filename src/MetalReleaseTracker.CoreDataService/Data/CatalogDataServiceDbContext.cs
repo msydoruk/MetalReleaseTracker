@@ -42,6 +42,14 @@ public class CoreDataServiceDbContext : DbContext
             .HasIndex(album => album.SKU)
             .IsUnique();
 
+        modelBuilder.Entity<AlbumEntity>()
+            .HasIndex(album => album.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<BandEntity>()
+            .HasIndex(band => band.Slug)
+            .IsUnique();
+
         modelBuilder.Entity<UserFavoriteEntity>()
             .HasIndex(favorite => new { favorite.UserId, favorite.AlbumId })
             .IsUnique();

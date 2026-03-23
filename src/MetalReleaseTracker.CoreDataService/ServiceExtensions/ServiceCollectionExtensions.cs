@@ -15,6 +15,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddAutoMapper(typeof(MappingProfile));
             services.AddControllers();
             services.AddEndpointsApiExplorer();
+            services.AddMemoryCache();
             services.AddMinio();
             services.AddKafka(configuration);
 
@@ -49,6 +50,8 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IAlbumChangeLogService, AlbumChangeLogService>();
             services.AddScoped<IAlbumRatingService, AlbumRatingService>();
+            services.AddScoped<ISeoMetaTagService, SeoMetaTagService>();
+            services.AddScoped<ISitemapService, SitemapService>();
 
             return services;
         }

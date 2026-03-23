@@ -15,4 +15,6 @@ public class RelatedAlbumDto
     public int? OriginalYear { get; set; }
 
     public float MinPrice { get; set; }
+
+    public string AlbumSlug { get; set; } = string.Empty;
 }
