@@ -81,6 +81,7 @@ public class SeasonOfMistParser : BaseDistributorParser
         var genre = ParseGenre(htmlDocument);
         var label = ParseLabel(htmlDocument);
         var status = ParseStatus(htmlDocument);
+        var stockStatus = ParseStockStatusFromPage(htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -95,7 +96,8 @@ public class SeasonOfMistParser : BaseDistributorParser
             Label = label,
             Press = sku,
             Description = string.Empty,
-            Status = status
+            Status = status,
+            StockStatus = stockStatus
         };
     }
 
@@ -202,6 +204,47 @@ public class SeasonOfMistParser : BaseDistributorParser
         }
 
         return null;
+    }
+
+    private StockStatus ParseStockStatusFromPage(HtmlDocument htmlDocument)
+    {
+        var buttonNode = htmlDocument.DocumentNode.SelectSingleNode(SeasonOfMistSelectors.DetailCartButton)
+            ?? htmlDocument.DocumentNode.SelectSingleNode(SeasonOfMistSelectors.DetailCartButtonFallback);
+
+        if (buttonNode != null)
+        {
+            var buttonText = HtmlEntity.DeEntitize(buttonNode.InnerText?.Trim() ?? string.Empty);
+            if (buttonText.Contains("Sold Out", StringComparison.OrdinalIgnoreCase) ||
+                buttonText.Contains("Out of stock", StringComparison.OrdinalIgnoreCase))
+            {
+                return StockStatus.OutOfStock;
+            }
+
+            if (buttonText.Contains("Pre-Order", StringComparison.OrdinalIgnoreCase) ||
+                buttonText.Contains("Preorder", StringComparison.OrdinalIgnoreCase))
+            {
+                return StockStatus.PreOrder;
+            }
+
+            if (buttonText.Contains("Add to Cart", StringComparison.OrdinalIgnoreCase))
+            {
+                return StockStatus.InStock;
+            }
+        }
+
+        var stockNode = htmlDocument.DocumentNode.SelectSingleNode(
+            "//*[contains(@class,'availability')]");
+        if (stockNode != null)
+        {
+            var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);
+            var status = AlbumParsingHelper.ParseStockStatus(stockText);
+            if (status != StockStatus.Unknown)
+            {
+                return status;
+            }
+        }
+
+        return StockStatus.Unknown;
     }
 
     private static (string BandName, string AlbumTitle) ParseProductName(string rawTitle)

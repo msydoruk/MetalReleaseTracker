@@ -3,17 +3,20 @@ using System;
 using MetalReleaseTracker.CoreDataService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MetalReleaseTracker.CoreDataService.Migrations
+namespace MetalReleaseTracker.CoreDataService.Data.Migrations
 {
     [DbContext(typeof(CoreDataServiceDbContext))]
-    partial class CoreDataServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323144147_AddStockStatusColumn")]
+    partial class AddStockStatusColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,11 +132,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
                     b.Property<string>("Status")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -149,9 +147,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.HasIndex("DistributorId");
 
                     b.HasIndex("SKU")
-                        .IsUnique();
-
-                    b.HasIndex("Slug")
                         .IsUnique();
 
                     b.ToTable("Albums");
@@ -206,15 +201,7 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("text");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
 
                     b.ToTable("Bands");
                 });

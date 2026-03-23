@@ -30,6 +30,8 @@ public class AlbumBase
 
     public AlbumStatus? Status { get; set; }
 
+    public StockStatus? StockStatus { get; set; }
+
     public string? CanonicalTitle { get; set; }
 
     public int? OriginalYear { get; set; }

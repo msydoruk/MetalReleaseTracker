@@ -26,6 +26,8 @@ public static class AlbumFilteringExtensions
                 album => album.Media == filter.MediaType.Value)
             .WhereIf(filter.Status.HasValue,
                 album => album.Status == filter.Status.Value)
+            .WhereIf(filter.StockStatus.HasValue,
+                album => album.StockStatus == filter.StockStatus.Value)
             .WhereIf(filter.MinYear.HasValue,
                 album => album.OriginalYear >= filter.MinYear.Value)
             .WhereIf(filter.MaxYear.HasValue,

@@ -299,16 +299,23 @@ const AlbumDetailPage = () => {
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
-        {album.variants.map((variant) => {
+        {[...album.variants]
+        .sort((variantA, variantB) => {
+          const order = { InStock: 0, PreOrder: 1, Unknown: 2, OutOfStock: 3 };
+          return (order[variantA.stockStatus] ?? 2) - (order[variantB.stockStatus] ?? 2);
+        })
+        .map((variant) => {
           const flag = getDistributorCountry(variant.distributorName);
           const countryName = getDistributorCountryName(variant.distributorName);
+          const isOutOfStock = variant.stockStatus === 'OutOfStock';
+          const isPreOrder = variant.stockStatus === 'PreOrder';
           return (
             <Paper
               key={variant.albumId}
-              component="a"
-              href={variant.purchaseUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              component={isOutOfStock ? 'div' : 'a'}
+              href={isOutOfStock ? undefined : variant.purchaseUrl}
+              target={isOutOfStock ? undefined : '_blank'}
+              rel={isOutOfStock ? undefined : 'noopener noreferrer'}
               sx={{
                 p: 2,
                 display: 'flex',
@@ -316,8 +323,9 @@ const AlbumDetailPage = () => {
                 justifyContent: 'space-between',
                 textDecoration: 'none',
                 color: 'inherit',
+                opacity: isOutOfStock ? 0.5 : 1,
                 transition: 'background-color 0.2s',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
+                '&:hover': isOutOfStock ? {} : { backgroundColor: 'rgba(255,255,255,0.05)' },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -327,15 +335,22 @@ const AlbumDetailPage = () => {
                 <Typography variant="body1">
                   {flag}{countryName ? ` ${t('albumDetail.shipsFrom')} ${countryName} \u00B7 ` : ' '}{variant.distributorName}
                 </Typography>
+                {isOutOfStock && (
+                  <Chip label="Out of Stock" size="small" color="error" variant="outlined" />
+                )}
+                {isPreOrder && (
+                  <Chip label="Pre-Order" size="small" color="warning" variant="outlined" />
+                )}
               </Box>
               <Button
                 variant="contained"
-                color="primary"
+                color={isPreOrder ? 'warning' : 'primary'}
                 size="small"
-                endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                disabled={isOutOfStock}
+                endIcon={!isOutOfStock ? <OpenInNewIcon sx={{ fontSize: 14 }} /> : null}
                 sx={{ textTransform: 'none', borderRadius: 5, fontWeight: 600, flexShrink: 0 }}
               >
-                {t('albumDetail.buy')}
+                {isOutOfStock ? 'Out of Stock' : isPreOrder ? 'Pre-Order' : t('albumDetail.buy')}
               </Button>
             </Paper>
           );

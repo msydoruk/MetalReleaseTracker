@@ -131,6 +131,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
       distributorId: '',
       genre: '',
       mediaType: '',
+      stockStatus: '',
       minPrice: 0,
       maxPrice: 200,
       minYear: null,
@@ -260,6 +261,53 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               <ToggleButton value="Tape" aria-label="cassette">
                 {t('albumFilter.cassette')}
               </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          {/* Availability filter */}
+          <Box>
+            <FormLabel
+              component="legend"
+              sx={{
+                color: 'text.secondary',
+                fontSize: '0.875rem',
+                mb: 1,
+                fontWeight: 'medium'
+              }}
+            >
+              Availability
+            </FormLabel>
+            <ToggleButtonGroup
+              value={filters.stockStatus || ''}
+              exclusive
+              onChange={(e, newValue) => {
+                handleInputChange({
+                  target: { name: 'stockStatus', value: newValue ?? '' }
+                });
+              }}
+              aria-label="availability"
+              fullWidth
+              sx={{
+                display: 'flex',
+                '& .MuiToggleButton-root': {
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  height: '40px',
+                  fontSize: '0.85rem',
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.5)',
+                    color: 'white',
+                    fontWeight: 'bold'
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="" aria-label="all">All</ToggleButton>
+              <ToggleButton value="InStock" aria-label="in stock">In Stock</ToggleButton>
+              <ToggleButton value="PreOrder" aria-label="pre-order">Pre-Order</ToggleButton>
             </ToggleButtonGroup>
           </Box>
 

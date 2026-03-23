@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
@@ -83,6 +84,90 @@ public static class AlbumParsingHelper
         }
 
         return 0.0f;
+    }
+
+    public static StockStatus ParseStockStatus(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return StockStatus.Unknown;
+        }
+
+        var lower = text.ToLowerInvariant();
+
+        if (lower.Contains("out of stock") || lower.Contains("sold out") ||
+            lower.Contains("unavailable") || lower.Contains("not available") ||
+            lower.Contains("niedostępny") || lower.Contains("wyprzedane"))
+        {
+            return StockStatus.OutOfStock;
+        }
+
+        if (lower.Contains("pre-order") || lower.Contains("preorder") ||
+            lower.Contains("pre order") || lower.Contains("przedsprzedaż"))
+        {
+            return StockStatus.PreOrder;
+        }
+
+        if (lower.Contains("in stock") || lower.Contains("available") ||
+            lower.Contains("dostępny") || lower.Contains("w magazynie"))
+        {
+            return StockStatus.InStock;
+        }
+
+        return StockStatus.Unknown;
+    }
+
+    public static StockStatus ParseStockStatusFromJsonLd(JsonElement? offers)
+    {
+        if (!offers.HasValue)
+        {
+            return StockStatus.Unknown;
+        }
+
+        var offersElement = offers.Value;
+        var availability = ExtractAvailabilityFromOffers(offersElement);
+
+        if (string.IsNullOrWhiteSpace(availability))
+        {
+            return StockStatus.Unknown;
+        }
+
+        if (availability.Contains("OutOfStock", StringComparison.OrdinalIgnoreCase))
+        {
+            return StockStatus.OutOfStock;
+        }
+
+        if (availability.Contains("PreOrder", StringComparison.OrdinalIgnoreCase))
+        {
+            return StockStatus.PreOrder;
+        }
+
+        if (availability.Contains("InStock", StringComparison.OrdinalIgnoreCase))
+        {
+            return StockStatus.InStock;
+        }
+
+        return StockStatus.Unknown;
+    }
+
+    private static string? ExtractAvailabilityFromOffers(JsonElement offersElement)
+    {
+        if (offersElement.ValueKind == JsonValueKind.Object &&
+            offersElement.TryGetProperty("availability", out var availElement))
+        {
+            return availElement.GetString();
+        }
+
+        if (offersElement.ValueKind == JsonValueKind.Array && offersElement.GetArrayLength() > 0)
+        {
+            var firstOffer = offersElement[0];
+            if (firstOffer.TryGetProperty("availability", out var arrAvailElement))
+            {
+                return arrAvailElement.GetString();
+            }
+        }
+
+        return null;
     }
 
     private static string? Truncate(string? input, int maxLength)

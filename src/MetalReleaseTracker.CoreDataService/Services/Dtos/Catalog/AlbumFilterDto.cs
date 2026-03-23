@@ -18,6 +18,8 @@ public record AlbumFilterDto
 
     public AlbumStatus? Status { get; init; }
 
+    public AlbumStockStatus? StockStatus { get; init; }
+
     public int? MinYear { get; init; }
 
     public int? MaxYear { get; init; }

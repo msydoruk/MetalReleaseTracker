@@ -39,6 +39,11 @@ public class CoreDataServiceDbContext : DbContext
             .HasMaxLength(50);
 
         modelBuilder.Entity<AlbumEntity>()
+            .Property(album => album.StockStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<AlbumEntity>()
             .HasIndex(album => album.SKU)
             .IsUnique();
 

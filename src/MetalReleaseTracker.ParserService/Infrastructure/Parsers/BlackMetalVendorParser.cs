@@ -240,6 +240,7 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
         var photoUrl = ParsePhotoUrlFromPage(htmlDocument);
         var label = ParseLabelFromPage(htmlDocument);
         var description = ParseDescriptionFromPage(htmlDocument);
+        var stockStatus = ParseStockStatusFromPage(htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -254,7 +255,8 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
             Label = label,
             Press = sku,
             Description = description,
-            Status = null
+            Status = null,
+            StockStatus = stockStatus
         };
     }
 
@@ -302,6 +304,30 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
                 _logger.LogWarning(exception, "Error disposing Selenium WebDriver.");
             }
         }
+    }
+
+    private static StockStatus ParseStockStatusFromPage(HtmlDocument htmlDocument)
+    {
+        var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
+            "//input[@type='submit' and contains(@value,'Add to Cart')]");
+        if (addToCartButton != null)
+        {
+            return StockStatus.InStock;
+        }
+
+        var stockNode = htmlDocument.DocumentNode.SelectSingleNode(
+            "//div[contains(@class,'pd_price')]");
+        if (stockNode != null)
+        {
+            var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);
+            var status = AlbumParsingHelper.ParseStockStatus(stockText);
+            if (status != StockStatus.Unknown)
+            {
+                return status;
+            }
+        }
+
+        return StockStatus.Unknown;
     }
 
     private static (string BandName, string AlbumName, string MediaTypeRaw) SplitTitle(string title)

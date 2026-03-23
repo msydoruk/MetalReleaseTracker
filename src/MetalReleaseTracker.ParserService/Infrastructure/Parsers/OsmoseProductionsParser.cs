@@ -80,6 +80,7 @@ public class OsmoseProductionsParser : BaseDistributorParser
         var status = string.IsNullOrEmpty(statusText)
             ? null
             : AlbumParsingHelper.ParseAlbumStatus(statusText);
+        var stockStatus = ParseStockStatus(htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -93,7 +94,8 @@ public class OsmoseProductionsParser : BaseDistributorParser
             Label = label,
             Press = press,
             Description = description,
-            Status = status
+            Status = status,
+            StockStatus = stockStatus
         };
     }
 
@@ -120,6 +122,25 @@ public class OsmoseProductionsParser : BaseDistributorParser
     protected override bool IsOwnException(Exception exception)
     {
         return exception is OsmoseProductionsParserException;
+    }
+
+    private StockStatus ParseStockStatus(HtmlDocument htmlDocument)
+    {
+        var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
+            "//input[@type='submit' and contains(@value,'cart')]");
+        if (addToCartButton != null)
+        {
+            return StockStatus.InStock;
+        }
+
+        var soldOutNode = htmlDocument.DocumentNode.SelectSingleNode(
+            "//*[contains(@class,'sold') or contains(@class,'out-of-stock')]");
+        if (soldOutNode != null)
+        {
+            return StockStatus.OutOfStock;
+        }
+
+        return StockStatus.Unknown;
     }
 
     private string GetNodeValue(HtmlDocument document, string xPath)

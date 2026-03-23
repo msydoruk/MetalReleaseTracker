@@ -87,6 +87,7 @@ public class BlackMetalStoreParser : BaseDistributorParser
         var label = ParseLabel(htmlDocument);
         var genre = ParseGenre(jsonLd, htmlDocument);
         var description = ParseDescription(jsonLd, htmlDocument);
+        var stockStatus = ParseStockStatus(jsonLd, htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -101,7 +102,8 @@ public class BlackMetalStoreParser : BaseDistributorParser
             Label = label,
             Press = sku,
             Description = description,
-            Status = null
+            Status = null,
+            StockStatus = stockStatus
         };
     }
 
@@ -279,6 +281,38 @@ public class BlackMetalStoreParser : BaseDistributorParser
         }
 
         return string.Empty;
+    }
+
+    private StockStatus ParseStockStatus(JsonElement? jsonLd, HtmlDocument htmlDocument)
+    {
+        var stockNode = htmlDocument.DocumentNode.SelectSingleNode("//p[contains(@class,'stock')]");
+        if (stockNode != null)
+        {
+            var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);
+            var htmlStatus = AlbumParsingHelper.ParseStockStatus(stockText);
+            if (htmlStatus != StockStatus.Unknown)
+            {
+                return htmlStatus;
+            }
+        }
+
+        if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("offers", out var offersElement))
+        {
+            var jsonLdStatus = AlbumParsingHelper.ParseStockStatusFromJsonLd(offersElement);
+            if (jsonLdStatus != StockStatus.Unknown)
+            {
+                return jsonLdStatus;
+            }
+        }
+
+        var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
+            "//button[@type='submit'][contains(@class,'single_add_to_cart_button')]");
+        if (addToCartButton == null)
+        {
+            return StockStatus.OutOfStock;
+        }
+
+        return StockStatus.Unknown;
     }
 
     private static HtmlNode? FindTitleForProduct(HtmlNode linkNode)

@@ -114,6 +114,7 @@ public class AlbumPublisherJob
             Press = detail.Press,
             Description = detail.Description,
             Status = detail.Status,
+            StockStatus = detail.StockStatus,
             CanonicalTitle = detail.CanonicalTitle,
             OriginalYear = detail.OriginalYear,
         };

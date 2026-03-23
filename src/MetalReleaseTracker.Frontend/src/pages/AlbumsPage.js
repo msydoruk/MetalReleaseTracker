@@ -56,6 +56,7 @@ const parseFiltersFromUrl = (searchParams) => ({
   distributorId: searchParams.get('distributorId') || '',
   name: searchParams.get('name') || '',
   mediaType: searchParams.get('mediaType') || '',
+  stockStatus: searchParams.get('stockStatus') || '',
   genre: searchParams.get('genre') || '',
   minPrice: parseIntParam(searchParams.get('minPrice'), DEFAULTS.minPrice),
   maxPrice: parseIntParam(searchParams.get('maxPrice'), DEFAULTS.maxPrice),
@@ -73,6 +74,7 @@ const filtersToSearchParams = (filters) => {
   if (filters.distributorId) params.set('distributorId', filters.distributorId);
   if (filters.name) params.set('name', filters.name);
   if (filters.mediaType) params.set('mediaType', filters.mediaType);
+  if (filters.stockStatus) params.set('stockStatus', filters.stockStatus);
   if (filters.genre) params.set('genre', filters.genre);
   if (filters.minPrice > DEFAULTS.minPrice) params.set('minPrice', filters.minPrice);
   if (filters.maxPrice < DEFAULTS.maxPrice) params.set('maxPrice', filters.maxPrice);

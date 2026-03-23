@@ -106,6 +106,7 @@ public class ParagonRecordsParser : BaseDistributorParser
         var genre = ParseGenre(htmlDocument);
         var label = ParseLabel(pageSource);
         var status = ParseStatus(htmlDocument);
+        var stockStatus = ParseStockStatus(htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -120,7 +121,8 @@ public class ParagonRecordsParser : BaseDistributorParser
             Label = label,
             Press = string.Empty,
             Description = string.Empty,
-            Status = status
+            Status = status,
+            StockStatus = stockStatus
         };
     }
 
@@ -238,6 +240,36 @@ public class ParagonRecordsParser : BaseDistributorParser
         }
 
         return null;
+    }
+
+    private StockStatus ParseStockStatus(HtmlDocument htmlDocument)
+    {
+        var buttonSpan = htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailCartButton)
+            ?? htmlDocument.DocumentNode.SelectSingleNode(ParagonRecordsSelectors.DetailCartButtonFallback);
+
+        if (buttonSpan != null)
+        {
+            var buttonText = HtmlEntity.DeEntitize(buttonSpan.InnerText?.Trim() ?? string.Empty);
+            if (buttonText.Contains("Sold Out", StringComparison.OrdinalIgnoreCase) ||
+                buttonText.Contains("Sold out", StringComparison.OrdinalIgnoreCase))
+            {
+                return StockStatus.OutOfStock;
+            }
+
+            if (buttonText.Contains("Pre-Order", StringComparison.OrdinalIgnoreCase) ||
+                buttonText.Contains("Preorder", StringComparison.OrdinalIgnoreCase))
+            {
+                return StockStatus.PreOrder;
+            }
+
+            if (buttonText.Contains("Add to Cart", StringComparison.OrdinalIgnoreCase) ||
+                buttonText.Contains("Add to cart", StringComparison.OrdinalIgnoreCase))
+            {
+                return StockStatus.InStock;
+            }
+        }
+
+        return StockStatus.Unknown;
     }
 
     private static string ToAbsoluteUrl(string href)

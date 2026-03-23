@@ -87,6 +87,7 @@ public class NapalmRecordsParser : BaseDistributorParser
         var photoUrl = ParsePhotoUrl(htmlDocument);
         var genre = ParseAttribute(htmlDocument, "Genre");
         var description = ParseDescription(htmlDocument);
+        var stockStatus = ParseStockStatus(htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -101,7 +102,8 @@ public class NapalmRecordsParser : BaseDistributorParser
             Label = "Napalm Records",
             Press = sku,
             Description = description,
-            Status = null
+            Status = null,
+            StockStatus = stockStatus
         };
     }
 
@@ -227,6 +229,30 @@ public class NapalmRecordsParser : BaseDistributorParser
         }
 
         return string.Empty;
+    }
+
+    private StockStatus ParseStockStatus(HtmlDocument htmlDocument)
+    {
+        var availabilityNode = htmlDocument.DocumentNode.SelectSingleNode(
+            "//div[contains(@class,'product-info-stock-sku')]//span[contains(@class,'stock')]");
+        if (availabilityNode != null)
+        {
+            var stockText = HtmlEntity.DeEntitize(availabilityNode.InnerText?.Trim() ?? string.Empty);
+            var status = AlbumParsingHelper.ParseStockStatus(stockText);
+            if (status != StockStatus.Unknown)
+            {
+                return status;
+            }
+        }
+
+        var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
+            "//button[@id='product-addtocart-button']");
+        if (addToCartButton == null)
+        {
+            return StockStatus.OutOfStock;
+        }
+
+        return StockStatus.Unknown;
     }
 
     private string ParseDescription(HtmlDocument htmlDocument)

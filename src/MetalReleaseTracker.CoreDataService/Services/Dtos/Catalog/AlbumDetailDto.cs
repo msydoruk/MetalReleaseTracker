@@ -16,6 +16,8 @@ public class AlbumDetailDto
 
     public AlbumStatus? Status { get; set; }
 
+    public AlbumStockStatus? StockStatus { get; set; }
+
     public string? CanonicalTitle { get; set; }
 
     public int? OriginalYear { get; set; }

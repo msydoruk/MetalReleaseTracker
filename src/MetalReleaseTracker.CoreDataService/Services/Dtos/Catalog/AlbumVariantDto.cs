@@ -1,3 +1,5 @@
+using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
+
 namespace MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
 
 public class AlbumVariantDto
@@ -11,4 +13,6 @@ public class AlbumVariantDto
     public float Price { get; set; }
 
     public string PurchaseUrl { get; set; } = string.Empty;
+
+    public AlbumStockStatus? StockStatus { get; set; }
 }

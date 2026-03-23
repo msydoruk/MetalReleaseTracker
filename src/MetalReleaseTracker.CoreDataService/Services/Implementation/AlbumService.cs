@@ -106,7 +106,8 @@ public class AlbumService : IAlbumService
                 DistributorId = album.DistributorId,
                 DistributorName = album.Distributor?.Name ?? string.Empty,
                 Price = album.Price,
-                PurchaseUrl = album.PurchaseUrl
+                PurchaseUrl = album.PurchaseUrl,
+                StockStatus = album.StockStatus
             }).ToList();
 
             groupedDtos.Add(new GroupedAlbumDto
@@ -120,6 +121,7 @@ public class AlbumService : IAlbumService
                 Genre = primary.Genre,
                 Media = primary.Media,
                 Status = primary.Status,
+                StockStatus = primary.StockStatus,
                 CanonicalTitle = primary.CanonicalTitle,
                 OriginalYear = primary.OriginalYear,
                 Variants = variants
@@ -171,7 +173,8 @@ public class AlbumService : IAlbumService
                 DistributorId = matchingAlbum.DistributorId,
                 DistributorName = matchingAlbum.Distributor?.Name ?? string.Empty,
                 Price = matchingAlbum.Price,
-                PurchaseUrl = matchingAlbum.PurchaseUrl
+                PurchaseUrl = matchingAlbum.PurchaseUrl,
+                StockStatus = matchingAlbum.StockStatus
             }).ToList();
         }
         else
@@ -184,7 +187,8 @@ public class AlbumService : IAlbumService
                     DistributorId = album.DistributorId,
                     DistributorName = album.Distributor?.Name ?? string.Empty,
                     Price = album.Price,
-                    PurchaseUrl = album.PurchaseUrl
+                    PurchaseUrl = album.PurchaseUrl,
+                    StockStatus = album.StockStatus
                 }
             ];
         }
@@ -261,6 +265,7 @@ public class AlbumService : IAlbumService
             Genre = album.Genre,
             Media = album.Media,
             Status = album.Status,
+            StockStatus = album.StockStatus,
             CanonicalTitle = album.CanonicalTitle,
             OriginalYear = album.OriginalYear,
             Description = album.Description,

@@ -85,6 +85,7 @@ public class WerewolfParser : BaseDistributorParser
         var photoUrl = ParsePhotoUrl(jsonLd, htmlDocument);
         var label = ParseLabel(jsonLd, htmlDocument);
         var description = ParseDescription(jsonLd, htmlDocument);
+        var stockStatus = ParseStockStatus(jsonLd, htmlDocument);
 
         return new AlbumParsedEvent
         {
@@ -98,7 +99,8 @@ public class WerewolfParser : BaseDistributorParser
             Label = AlbumParsingHelper.TruncateLabel(label) ?? string.Empty,
             Press = string.Empty,
             Description = description,
-            Status = null
+            Status = null,
+            StockStatus = stockStatus
         };
     }
 
@@ -230,6 +232,38 @@ public class WerewolfParser : BaseDistributorParser
         }
 
         return string.Empty;
+    }
+
+    private StockStatus ParseStockStatus(JsonElement? jsonLd, HtmlDocument htmlDocument)
+    {
+        var stockNode = htmlDocument.DocumentNode.SelectSingleNode("//p[contains(@class,'stock')]");
+        if (stockNode != null)
+        {
+            var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);
+            var htmlStatus = AlbumParsingHelper.ParseStockStatus(stockText);
+            if (htmlStatus != StockStatus.Unknown)
+            {
+                return htmlStatus;
+            }
+        }
+
+        if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("offers", out var offersElement))
+        {
+            var jsonLdStatus = AlbumParsingHelper.ParseStockStatusFromJsonLd(offersElement);
+            if (jsonLdStatus != StockStatus.Unknown)
+            {
+                return jsonLdStatus;
+            }
+        }
+
+        var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
+            "//button[@type='submit'][contains(@class,'single_add_to_cart_button')]");
+        if (addToCartButton == null)
+        {
+            return StockStatus.OutOfStock;
+        }
+
+        return StockStatus.Unknown;
     }
 
     private static string StripImageSizeSuffix(string url)

@@ -86,6 +86,7 @@ public class AvantgardeMusicParser : BaseDistributorParser
         var label = ParseLabel(htmlDocument);
         var description = ParseDescription(jsonLd);
         var status = ParseStatus(jsonLd);
+        var stockStatus = ParseStockStatus(jsonLd);
 
         return new AlbumParsedEvent
         {
@@ -99,7 +100,8 @@ public class AvantgardeMusicParser : BaseDistributorParser
             Label = label,
             Press = sku,
             Description = description,
-            Status = status
+            Status = status,
+            StockStatus = stockStatus
         };
     }
 
@@ -378,5 +380,15 @@ public class AvantgardeMusicParser : BaseDistributorParser
         }
 
         return null;
+    }
+
+    private static StockStatus ParseStockStatus(JsonElement? jsonLd)
+    {
+        if (jsonLd.HasValue && jsonLd.Value.TryGetProperty("offers", out var offersElement))
+        {
+            return AlbumParsingHelper.ParseStockStatusFromJsonLd(offersElement);
+        }
+
+        return StockStatus.Unknown;
     }
 }
