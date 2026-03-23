@@ -23,6 +23,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<AlbumRatingEntity> AlbumRatings { get; set; }
 
+    public DbSet<UserFollowedBandEntity> UserFollowedBands { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -68,6 +70,10 @@ public class CoreDataServiceDbContext : DbContext
 
         modelBuilder.Entity<AlbumRatingEntity>()
             .HasIndex(rating => new { rating.UserId, rating.AlbumId })
+            .IsUnique();
+
+        modelBuilder.Entity<UserFollowedBandEntity>()
+            .HasIndex(follow => new { follow.UserId, follow.BandId })
             .IsUnique();
     }
 }

@@ -107,3 +107,11 @@ export const fetchChangelog = (page, pageSize) =>
 
 export const fetchPriceHistory = (albumName, bandName) =>
   api.get(`/changelog/price-history?albumName=${encodeURIComponent(albumName)}&bandName=${encodeURIComponent(bandName)}`);
+
+export const followBand = (bandId) => api.post(`/followed-bands/${bandId}`);
+export const unfollowBand = (bandId) => api.delete(`/followed-bands/${bandId}`);
+export const fetchFollowedBandIds = () => api.get('/followed-bands/ids');
+export const checkFollowingBand = (bandId) => api.get(`/followed-bands/${bandId}/check`);
+export const fetchFollowedBands = () => api.get('/followed-bands');
+export const fetchBandFollowerCount = (bandId) => api.get(`/followed-bands/${bandId}/count`);
+export const fetchFeed = (page = 1, pageSize = 20) => api.get(`/followed-bands/feed?page=${page}&pageSize=${pageSize}`);

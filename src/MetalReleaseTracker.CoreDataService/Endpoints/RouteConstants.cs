@@ -87,6 +87,18 @@ public static class RouteConstants
             public const string Check = $"{Base}/{{albumId:guid}}/check";
             public const string UpdateStatus = $"{Base}/{{albumId:guid}}/status";
         }
+
+        public static class FollowedBands
+        {
+            private const string Base = $"{ApiBase}/followed-bands";
+            public const string Follow = $"{Base}/{{bandId:guid}}";
+            public const string Unfollow = $"{Base}/{{bandId:guid}}";
+            public const string GetAll = Base;
+            public const string GetIds = $"{Base}/ids";
+            public const string Check = $"{Base}/{{bandId:guid}}/check";
+            public const string Feed = $"{Base}/feed";
+            public const string FollowerCount = $"{Base}/{{bandId:guid}}/count";
+        }
     }
 
     public static class Seo

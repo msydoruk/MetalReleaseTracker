@@ -16,7 +16,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
-import { fetchBandBySlug, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands } from '../services/api';
+import { fetchBandBySlug, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -38,6 +38,9 @@ const BandDetailPage = () => {
   const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [similarBands, setSimilarBands] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const bandMetaDescription = (() => {
     if (!band) return '';
@@ -107,6 +110,31 @@ const BandDetailPage = () => {
     loadSimilarBands();
   }, [band]);
 
+  useEffect(() => {
+    if (!band) return;
+
+    const loadFollowData = async () => {
+      try {
+        const countResponse = await fetchBandFollowerCount(band.id);
+        setFollowerCount(countResponse.data);
+      } catch {
+        // ignore
+      }
+
+      const loggedIn = await authService.isLoggedIn();
+      if (loggedIn) {
+        try {
+          const followResponse = await checkFollowingBand(band.id);
+          setIsFollowing(followResponse.data);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    loadFollowData();
+  }, [band]);
+
   const loadAlbums = useCallback(async () => {
     if (!band) return;
     try {
@@ -173,6 +201,25 @@ const BandDetailPage = () => {
     }
   };
 
+  const handleFollowToggle = async () => {
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowBand(band.id);
+        setIsFollowing(false);
+        setFollowerCount((prev) => Math.max(0, prev - 1));
+      } else {
+        await followBand(band.id);
+        setIsFollowing(true);
+        setFollowerCount((prev) => prev + 1);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
   const placeholderImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
 
   if (loading) {
@@ -228,11 +275,28 @@ const BandDetailPage = () => {
           }}
         />
         <Box sx={{ textAlign: isMobile ? 'center' : 'left' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: isMobile ? 'center' : 'flex-start', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: isMobile ? 'center' : 'flex-start', mb: 1, flexWrap: 'wrap' }}>
             <MusicNoteIcon sx={{ color: 'primary.main' }} />
             <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
               {band.name}
             </Typography>
+            {isLoggedIn && (
+              <Button
+                variant={isFollowing ? "outlined" : "contained"}
+                color={isFollowing ? "inherit" : "primary"}
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                size="small"
+                sx={{ borderRadius: 5, ml: 1 }}
+              >
+                {isFollowing ? t('bandDetail.following') : t('bandDetail.follow')}
+              </Button>
+            )}
+            {followerCount > 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                {followerCount} {followerCount === 1 ? t('bandDetail.follower') : t('bandDetail.followers')}
+              </Typography>
+            )}
           </Box>
           {band.genre && (
             <Chip label={band.genre} size="small" color="secondary" sx={{ mb: 2 }} />

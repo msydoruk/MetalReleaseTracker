@@ -28,6 +28,7 @@ public static class EndpointExtensions
         BandEndpoints.MapEndpoints(routeBuilder);
         DistributorEndpoints.MapEndpoints(routeBuilder);
         UserFavoriteEndpoints.MapEndpoints(routeBuilder);
+        UserFollowedBandEndpoints.MapEndpoints(routeBuilder);
         ReviewEndpoints.MapEndpoints(routeBuilder);
         AlbumRatingEndpoints.MapEndpoints(routeBuilder);
         ChangeLogEndpoints.MapEndpoints(routeBuilder);

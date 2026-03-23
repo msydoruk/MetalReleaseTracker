@@ -34,6 +34,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IDistributorsRepository, DistributorRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserFavoriteRepository, UserFavoriteRepository>();
+            services.AddScoped<IUserFollowedBandRepository, UserFollowedBandRepository>();
             services.AddScoped<IReviewRepository, ReviewRepository>();
             services.AddScoped<IAlbumChangeLogRepository, AlbumChangeLogRepository>();
             services.AddScoped<IAlbumRatingRepository, AlbumRatingRepository>();
@@ -47,6 +48,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IBandService, BandService>();
             services.AddScoped<IDistributorService, DistributorService>();
             services.AddScoped<IUserFavoriteService, UserFavoriteService>();
+            services.AddScoped<IUserFollowedBandService, UserFollowedBandService>();
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IAlbumChangeLogService, AlbumChangeLogService>();
             services.AddScoped<IAlbumRatingService, AlbumRatingService>();

@@ -272,6 +272,10 @@ const translations = {
       error: 'Failed to load band details. Please try again later.',
       notFound: 'Band not found.',
       similarBands: 'Similar Bands',
+      follow: 'Follow',
+      following: 'Following',
+      follower: 'follower',
+      followers: 'followers',
     },
     albumDetail: {
       backToAlbums: 'Back to Albums',
@@ -581,6 +585,10 @@ const translations = {
       error: 'Не вдалося завантажити інформацію про гурт. Спробуйте пізніше.',
       notFound: 'Гурт не знайдено.',
       similarBands: 'Схожі гурти',
+      follow: 'Стежити',
+      following: 'Стежу',
+      follower: 'підписник',
+      followers: 'підписників',
     },
     albumDetail: {
       backToAlbums: 'Назад до альбомів',
