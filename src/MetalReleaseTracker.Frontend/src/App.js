@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
 
@@ -6,25 +6,27 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import AlbumsPage from './pages/AlbumsPage';
-import LoginCallback from './pages/LoginCallback';
-import GoogleCallback from './pages/GoogleCallback';
-import ProfilePage from './pages/ProfilePage';
-import BandsPage from './pages/BandsPage';
-import BandDetailPage from './pages/BandDetailPage';
-import AlbumDetailPage from './pages/AlbumDetailPage';
-import DistributorsPage from './pages/DistributorsPage';
-import AboutPage from './pages/AboutPage';
-import NewsPage from './pages/NewsPage';
-import ReviewsPage from './pages/ReviewsPage';
-import ChangelogPage from './pages/ChangelogPage';
-import NotFoundPage from './pages/NotFoundPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import BackToTop from './components/BackToTop';
+
+// Lazy-loaded route components
+const AlbumsPage = lazy(() => import('./pages/AlbumsPage'));
+const AlbumDetailPage = lazy(() => import('./pages/AlbumDetailPage'));
+const BandsPage = lazy(() => import('./pages/BandsPage'));
+const BandDetailPage = lazy(() => import('./pages/BandDetailPage'));
+const DistributorsPage = lazy(() => import('./pages/DistributorsPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
+const ChangelogPage = lazy(() => import('./pages/ChangelogPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const GoogleCallback = lazy(() => import('./pages/GoogleCallback'));
+const LoginCallback = lazy(() => import('./pages/LoginCallback'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Create a dark theme for the metal music theme
 const theme = createTheme({
@@ -170,6 +172,11 @@ function App() {
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
               <Box component="main" sx={{ flexGrow: 1 }}>
+                <Suspense fallback={
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                    <CircularProgress />
+                  </Box>
+                }>
                 <Routes>
                   {/* Public routes */}
                   <Route path="/login" element={<LoginPage />} />
@@ -202,6 +209,7 @@ function App() {
                   {/* Catch-all 404 */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+                </Suspense>
               </Box>
               <Footer />
               <BackToTop />

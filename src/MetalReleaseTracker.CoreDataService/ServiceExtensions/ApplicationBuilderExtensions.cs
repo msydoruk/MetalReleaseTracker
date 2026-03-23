@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Net.Http.Headers;
 using Serilog;
 
 namespace MetalReleaseTracker.CoreDataService.ServiceExtensions;
@@ -33,7 +35,18 @@ public static class ApplicationBuilderExtensions
         app.UseForwardedHeaders(forwardedHeadersOptions);
 
         app.UseHttpsRedirection();
-        app.UseStaticFiles();
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            OnPrepareResponse = context =>
+            {
+                var path = context.File.Name;
+                if (path.EndsWith(".js", StringComparison.OrdinalIgnoreCase)
+                    || path.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Context.Response.Headers[HeaderNames.CacheControl] = "public, max-age=31536000, immutable";
+                }
+            },
+        });
         app.UseCors("AllowSPA");
         app.UseRouting();
         app.UseSlugRedirect();
