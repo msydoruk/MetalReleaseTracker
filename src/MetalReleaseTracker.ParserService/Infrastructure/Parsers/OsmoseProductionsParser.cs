@@ -127,14 +127,14 @@ public class OsmoseProductionsParser : BaseDistributorParser
     private StockStatus ParseStockStatus(HtmlDocument htmlDocument)
     {
         var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
-            "//input[@type='submit' and contains(@value,'cart')]");
+            OsmoseProductionsSelectors.DetailAddToCartButton);
         if (addToCartButton != null)
         {
             return StockStatus.InStock;
         }
 
         var soldOutNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//*[contains(@class,'sold') or contains(@class,'out-of-stock')]");
+            OsmoseProductionsSelectors.DetailSoldOutElement);
         if (soldOutNode != null)
         {
             return StockStatus.OutOfStock;

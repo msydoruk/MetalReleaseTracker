@@ -233,7 +233,7 @@ public class SeasonOfMistParser : BaseDistributorParser
         }
 
         var stockNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//*[contains(@class,'availability')]");
+            SeasonOfMistSelectors.DetailAvailability);
         if (stockNode != null)
         {
             var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);

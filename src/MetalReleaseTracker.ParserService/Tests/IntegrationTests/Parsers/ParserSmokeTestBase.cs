@@ -57,6 +57,12 @@ public abstract class ParserSmokeTestBase
         Assert.True(album.Price > 0, "Price should be greater than zero.");
     }
 
+    protected static void AssertAlbumDetailStockStatusPopulated(AlbumParsedEvent album)
+    {
+        Assert.NotNull(album);
+        Assert.NotNull(album.StockStatus);
+    }
+
     protected static void AssertNextPageIsWithinSameCategory(string startUrl, string? nextPageUrl)
     {
         Assert.NotNull(nextPageUrl);

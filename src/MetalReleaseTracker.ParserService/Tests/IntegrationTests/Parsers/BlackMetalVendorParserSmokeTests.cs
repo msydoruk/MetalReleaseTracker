@@ -58,4 +58,18 @@ public class BlackMetalVendorParserSmokeTests : ParserSmokeTestBase
 
         AssertAlbumDetailValid(album, DistributorCode.BlackMetalVendor);
     }
+
+    [Fact]
+    public async Task ParseAlbumDetail_SingleProduct_StockStatusIsPopulated()
+    {
+        var parser = CreateParser();
+
+        var firstPage = await parser.ParseListingsAsync(StartUrl, CancellationToken.None);
+        Assert.True(firstPage.Listings.Count > 0);
+
+        var detailUrl = firstPage.Listings[0].DetailUrl;
+        var album = await parser.ParseAlbumDetailAsync(detailUrl, CancellationToken.None);
+
+        AssertAlbumDetailStockStatusPopulated(album);
+    }
 }

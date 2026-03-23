@@ -309,14 +309,14 @@ public class BlackMetalVendorParser : IListingParser, IAlbumDetailParser
     private static StockStatus ParseStockStatusFromPage(HtmlDocument htmlDocument)
     {
         var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
-            "//input[@type='submit' and contains(@value,'Add to Cart')]");
+            BlackMetalVendorSelectors.DetailAddToCartButton);
         if (addToCartButton != null)
         {
             return StockStatus.InStock;
         }
 
         var stockNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'pd_price')]");
+            BlackMetalVendorSelectors.DetailStockElement);
         if (stockNode != null)
         {
             var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);

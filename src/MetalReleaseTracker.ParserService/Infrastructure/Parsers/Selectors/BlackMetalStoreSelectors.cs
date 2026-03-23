@@ -16,4 +16,6 @@ public static class BlackMetalStoreSelectors
     public const string DetailLabel = "//span[@class='posted_in']//a";
     public const string DetailBrand = "//div[contains(@class,'product-brand')]//a";
     public const string DetailDescription = "//div[contains(@class,'woocommerce-product-details__short-description')]";
+    public const string DetailStockElement = "//p[contains(@class,'stock')]";
+    public const string DetailAddToCartButton = "//button[@type='submit'][contains(@class,'single_add_to_cart_button')]";
 }

@@ -285,7 +285,7 @@ public class BlackMetalStoreParser : BaseDistributorParser
 
     private StockStatus ParseStockStatus(JsonElement? jsonLd, HtmlDocument htmlDocument)
     {
-        var stockNode = htmlDocument.DocumentNode.SelectSingleNode("//p[contains(@class,'stock')]");
+        var stockNode = htmlDocument.DocumentNode.SelectSingleNode(BlackMetalStoreSelectors.DetailStockElement);
         if (stockNode != null)
         {
             var stockText = HtmlEntity.DeEntitize(stockNode.InnerText?.Trim() ?? string.Empty);
@@ -306,7 +306,7 @@ public class BlackMetalStoreParser : BaseDistributorParser
         }
 
         var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
-            "//button[@type='submit'][contains(@class,'single_add_to_cart_button')]");
+            BlackMetalStoreSelectors.DetailAddToCartButton);
         if (addToCartButton == null)
         {
             return StockStatus.OutOfStock;

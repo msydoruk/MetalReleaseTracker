@@ -14,4 +14,6 @@ public static class WerewolfSelectors
     public const string DetailShortDescription = "//div[contains(@class,'woocommerce-product-details__short-description')]";
     public const string DetailDescription = "//div[@id='tab-description']";
     public const string DetailBrand = "//span[contains(text(),'Brand:')]/following-sibling::a | //span[contains(text(),'Brand:')]/..//a";
+    public const string DetailStockElement = "//p[contains(@class,'stock')]";
+    public const string DetailAddToCartButton = "//button[@type='submit'][contains(@class,'single_add_to_cart_button')]";
 }

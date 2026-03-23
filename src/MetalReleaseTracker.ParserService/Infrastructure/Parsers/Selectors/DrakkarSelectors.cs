@@ -16,4 +16,6 @@ public static class DrakkarSelectors
     public const string DetailShortDescription = "//div[contains(@class,'woocommerce-product-details__short-description')]";
     public const string DetailAttributes = "//table[contains(@class,'woocommerce-product-attributes')]";
     public const string DetailCategoryLinks = "//span[@class='posted_in']//a";
+    public const string DetailStockElement = "//p[contains(@class,'stock')]";
+    public const string DetailAddToCartButton = "//button[@type='submit'][contains(@class,'single_add_to_cart_button')]";
 }

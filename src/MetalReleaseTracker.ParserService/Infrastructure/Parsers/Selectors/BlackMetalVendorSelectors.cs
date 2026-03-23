@@ -14,4 +14,6 @@ public static class BlackMetalVendorSelectors
     public const string DetailPhotoFallback = "//div[contains(@class,'pd_image_big')]//img";
     public const string DetailLabel = "//div[@itemprop='brand']//span[@itemprop='name']";
     public const string DetailDescription = "//div[@itemprop='description']";
+    public const string DetailAddToCartButton = "//input[@type='submit' and contains(@value,'Add to Cart')]";
+    public const string DetailStockElement = "//div[contains(@class,'pd_price')]";
 }

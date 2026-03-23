@@ -18,4 +18,6 @@ public static class OsmoseProductionsSelectors
     public const string DetailPress = "//span[@class='cufonEb' and contains(text(), 'Press :')]";
     public const string DetailDescription = "//span[@class='cufonEb' and contains(text(), 'Info :')]";
     public const string DetailStatus = ".//*[contains(@class, 'info')]";
+    public const string DetailAddToCartButton = "//input[@type='submit' and contains(@value,'cart')]";
+    public const string DetailSoldOutElement = "//*[contains(@class,'sold') or contains(@class,'out-of-stock')]";
 }

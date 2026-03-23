@@ -77,6 +77,21 @@ public class WerewolfParserSmokeTests : ParserSmokeTestBase
         AssertAlbumDetailValid(album, DistributorCode.Werewolf);
     }
 
+    [Fact]
+    public async Task ParseAlbumDetail_SingleProduct_StockStatusIsPopulated()
+    {
+        await EnsureFlareSolverrAvailableAsync();
+        var parser = CreateParser();
+
+        var firstPage = await parser.ParseListingsAsync(StartUrl, CancellationToken.None);
+        Assert.True(firstPage.Listings.Count > 0);
+
+        var detailUrl = firstPage.Listings[0].DetailUrl;
+        var album = await parser.ParseAlbumDetailAsync(detailUrl, CancellationToken.None);
+
+        AssertAlbumDetailStockStatusPopulated(album);
+    }
+
     private static async Task EnsureFlareSolverrAvailableAsync()
     {
         using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };

@@ -16,4 +16,6 @@ public static class NapalmRecordsSelectors
     public const string DetailOgImage = "//meta[@property='og:image']";
     public const string DetailGalleryImage = "//img[contains(@class,'product-image-photo') and contains(@src,'/media/catalog/product/')]";
     public const string DetailDescription = "//div[contains(@class,'description')]//div[@class='value']";
+    public const string DetailStockElement = "//div[contains(@class,'product-info-stock-sku')]//span[contains(@class,'stock')]";
+    public const string DetailAddToCartButton = "//button[@id='product-addtocart-button']";
 }

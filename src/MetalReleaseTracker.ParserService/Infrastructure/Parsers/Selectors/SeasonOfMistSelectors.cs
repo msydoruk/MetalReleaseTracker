@@ -12,4 +12,5 @@ public static class SeasonOfMistSelectors
     public const string DetailPhotoFallback = "//a[contains(@class,'product-image')]//img";
     public const string DetailCartButton = "//button[contains(@class,'btn-cart')]";
     public const string DetailCartButtonFallback = "//button[@type='submit' and contains(@class,'add')]";
+    public const string DetailAvailability = "//*[contains(@class,'availability')]";
 }

@@ -234,7 +234,7 @@ public class NapalmRecordsParser : BaseDistributorParser
     private StockStatus ParseStockStatus(HtmlDocument htmlDocument)
     {
         var availabilityNode = htmlDocument.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'product-info-stock-sku')]//span[contains(@class,'stock')]");
+            NapalmRecordsSelectors.DetailStockElement);
         if (availabilityNode != null)
         {
             var stockText = HtmlEntity.DeEntitize(availabilityNode.InnerText?.Trim() ?? string.Empty);
@@ -246,7 +246,7 @@ public class NapalmRecordsParser : BaseDistributorParser
         }
 
         var addToCartButton = htmlDocument.DocumentNode.SelectSingleNode(
-            "//button[@id='product-addtocart-button']");
+            NapalmRecordsSelectors.DetailAddToCartButton);
         if (addToCartButton == null)
         {
             return StockStatus.OutOfStock;
