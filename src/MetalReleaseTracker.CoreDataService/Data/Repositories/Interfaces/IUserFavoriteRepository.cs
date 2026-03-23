@@ -17,4 +17,6 @@ public interface IUserFavoriteRepository
     Task<PagedResultDto<AlbumEntity>> GetFavoriteAlbumsAsync(string userId, int page, int pageSize, UserCollectionStatus? status = null, CancellationToken cancellationToken = default);
 
     Task UpdateStatusAsync(string userId, Guid albumId, UserCollectionStatus status, CancellationToken cancellationToken = default);
+
+    Task<List<(UserFavoriteEntity Favorite, AlbumEntity Album)>> GetAllFavoriteAlbumsAsync(string userId, CancellationToken cancellationToken = default);
 }

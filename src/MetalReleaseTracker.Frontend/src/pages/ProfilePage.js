@@ -24,11 +24,12 @@ import {
   Logout as LogoutIcon,
   Favorite as FavoriteIcon,
   Bookmark as BookmarkIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  FileDownload as FileDownloadIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
-import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus } from '../services/api';
+import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus, exportCollection } from '../services/api';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -134,6 +135,22 @@ const ProfilePage = () => {
     }
   };
 
+  const handleExportCollection = async () => {
+    try {
+      const response = await exportCollection('csv');
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `collection-${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting collection:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -234,25 +251,37 @@ const ProfilePage = () => {
         <Box sx={{ p: 3 }}>
           {activeTab === 0 && (
             <>
-              <Tabs
-                value={COLLECTION_TABS.findIndex((tab) => tab.status === collectionFilter)}
-                onChange={(event, newValue) => {
-                  setCollectionFilter(COLLECTION_TABS[newValue].status);
-                  setFavoritesPage(1);
-                }}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{ mb: 3, minHeight: 40, '& .MuiTab-root': { minHeight: 40, py: 0.5 } }}
-              >
-                {COLLECTION_TABS.map((tab) => (
-                  <Tab
-                    key={tab.translationKey}
-                    icon={tab.icon}
-                    iconPosition="start"
-                    label={t(tab.translationKey)}
-                  />
-                ))}
-              </Tabs>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Tabs
+                  value={COLLECTION_TABS.findIndex((tab) => tab.status === collectionFilter)}
+                  onChange={(event, newValue) => {
+                    setCollectionFilter(COLLECTION_TABS[newValue].status);
+                    setFavoritesPage(1);
+                  }}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  sx={{ minHeight: 40, '& .MuiTab-root': { minHeight: 40, py: 0.5 } }}
+                >
+                  {COLLECTION_TABS.map((tab) => (
+                    <Tab
+                      key={tab.translationKey}
+                      icon={tab.icon}
+                      iconPosition="start"
+                      label={t(tab.translationKey)}
+                    />
+                  ))}
+                </Tabs>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<FileDownloadIcon />}
+                  onClick={handleExportCollection}
+                  disabled={favoritesLoading}
+                  sx={{ ml: 2, whiteSpace: 'nowrap' }}
+                >
+                  {t('profile.exportCsv')}
+                </Button>
+              </Box>
 
               {favoritesLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

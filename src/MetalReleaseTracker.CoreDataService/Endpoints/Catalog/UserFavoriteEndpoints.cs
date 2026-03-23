@@ -142,6 +142,28 @@ public static class UserFavoriteEndpoints
             .WithTags("Favorites")
             .Produces<bool>()
             .Produces(401);
+
+        endpoints.MapGet(RouteConstants.Api.Favorites.Export, async (
+                string format,
+                IUserFavoriteService userFavoriteService,
+                ClaimsPrincipal user,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var bytes = await userFavoriteService.ExportCollectionAsync(userId, format, cancellationToken);
+                var fileName = $"collection-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+                return Results.File(bytes, "text/csv", fileName);
+            })
+            .RequireAuthorization()
+            .WithName("ExportFavorites")
+            .WithTags("Favorites")
+            .Produces(200)
+            .Produces(401);
     }
 
     public record UpdateStatusRequest(int Status);

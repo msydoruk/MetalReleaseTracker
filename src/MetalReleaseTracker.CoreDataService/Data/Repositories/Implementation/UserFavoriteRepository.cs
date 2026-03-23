@@ -84,4 +84,23 @@ public class UserFavoriteRepository : IUserFavoriteRepository
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
+
+    public async Task<List<(UserFavoriteEntity Favorite, AlbumEntity Album)>> GetAllFavoriteAlbumsAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var results = await _dbContext.UserFavorites
+            .AsNoTracking()
+            .Where(favorite => favorite.UserId == userId)
+            .OrderByDescending(favorite => favorite.CreatedDate)
+            .Join(
+                _dbContext.Albums
+                    .AsNoTracking()
+                    .Include(album => album.Band)
+                    .Include(album => album.Distributor),
+                favorite => favorite.AlbumId,
+                album => album.Id,
+                (favorite, album) => new { Favorite = favorite, Album = album })
+            .ToListAsync(cancellationToken);
+
+        return results.Select(result => (result.Favorite, result.Album)).ToList();
+    }
 }

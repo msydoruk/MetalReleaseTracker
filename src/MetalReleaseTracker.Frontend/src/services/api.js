@@ -94,6 +94,8 @@ export const fetchFavorites = (page, pageSize, status) => {
 export const fetchFavoriteIds = () => api.get('/favorites/ids');
 export const checkFavorite = (albumId) => api.get(`/favorites/${albumId}/check`);
 export const updateFavoriteStatus = (albumId, status) => api.put(`/favorites/${albumId}/status`, { status });
+export const exportCollection = (format = 'csv') =>
+  api.get(`/favorites/export?format=${format}`, { responseType: 'blob' });
 
 export const fetchAlbumRating = (albumId) => api.get(`/ratings/${albumId}`);
 export const submitAlbumRating = (albumId, rating) => api.post(`/ratings/${albumId}`, { rating });

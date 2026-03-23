@@ -16,4 +16,6 @@ public interface IUserFavoriteService
     Task<PagedResultDto<AlbumDto>> GetFavoriteAlbumsAsync(string userId, int page, int pageSize, UserCollectionStatus? status = null, CancellationToken cancellationToken = default);
 
     Task UpdateStatusAsync(string userId, Guid albumId, UserCollectionStatus status, CancellationToken cancellationToken = default);
+
+    Task<byte[]> ExportCollectionAsync(string userId, string format, CancellationToken cancellationToken = default);
 }

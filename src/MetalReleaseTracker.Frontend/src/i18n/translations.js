@@ -156,6 +156,7 @@ const translations = {
       wishlist: 'Wishlist',
       collection: 'Collection',
       profileTab: 'Profile',
+      exportCsv: 'Export CSV',
     },
     reviews: {
       title: 'Reviews',
@@ -469,6 +470,7 @@ const translations = {
       wishlist: 'Список бажань',
       collection: 'Колекція',
       profileTab: 'Профіль',
+      exportCsv: 'Експорт CSV',
     },
     reviews: {
       title: 'Відгуки',

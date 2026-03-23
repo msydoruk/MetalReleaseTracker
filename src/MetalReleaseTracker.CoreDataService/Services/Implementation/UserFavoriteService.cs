@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using AutoMapper;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
@@ -86,5 +88,62 @@ public class UserFavoriteService : IUserFavoriteService
     public async Task UpdateStatusAsync(string userId, Guid albumId, UserCollectionStatus status, CancellationToken cancellationToken = default)
     {
         await _userFavoriteRepository.UpdateStatusAsync(userId, albumId, status, cancellationToken);
+    }
+
+    public async Task<byte[]> ExportCollectionAsync(string userId, string format, CancellationToken cancellationToken = default)
+    {
+        var favoriteAlbums = await _userFavoriteRepository.GetAllFavoriteAlbumsAsync(userId, cancellationToken);
+
+        var csvBuilder = new StringBuilder();
+        csvBuilder.AppendLine("Band,Album,Year,Genre,Format,Status,Price,Distributor,Purchase URL");
+
+        foreach (var (favorite, album) in favoriteAlbums)
+        {
+            var bandName = EscapeCsvField(album.Band?.Name ?? string.Empty);
+            var albumName = EscapeCsvField(album.Name);
+            var year = album.OriginalYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            var genre = EscapeCsvField(album.Genre ?? string.Empty);
+            var mediaFormat = FormatMediaType(album.Media);
+            var collectionStatus = FormatCollectionStatus(favorite.Status);
+            var price = album.Price.ToString("F2", CultureInfo.InvariantCulture);
+            var distributor = EscapeCsvField(album.Distributor?.Name ?? string.Empty);
+            var purchaseUrl = EscapeCsvField(album.PurchaseUrl);
+
+            csvBuilder.AppendLine($"{bandName},{albumName},{year},{genre},{mediaFormat},{collectionStatus},{price},{distributor},{purchaseUrl}");
+        }
+
+        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csvBuilder.ToString())).ToArray();
+    }
+
+    private static string EscapeCsvField(string field)
+    {
+        if (field.Contains('"') || field.Contains(',') || field.Contains('\n') || field.Contains('\r'))
+        {
+            return $"\"{field.Replace("\"", "\"\"")}\"";
+        }
+
+        return field;
+    }
+
+    private static string FormatMediaType(AlbumMediaType? mediaType)
+    {
+        return mediaType switch
+        {
+            AlbumMediaType.CD => "CD",
+            AlbumMediaType.LP => "Vinyl",
+            AlbumMediaType.Tape => "Tape",
+            _ => string.Empty
+        };
+    }
+
+    private static string FormatCollectionStatus(UserCollectionStatus status)
+    {
+        return status switch
+        {
+            UserCollectionStatus.Favorite => "Favorite",
+            UserCollectionStatus.Want => "Wishlist",
+            UserCollectionStatus.Owned => "Owned",
+            _ => string.Empty
+        };
     }
 }
