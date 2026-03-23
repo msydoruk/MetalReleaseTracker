@@ -27,6 +27,8 @@ public interface IAlbumRepository
 
     Task<List<AlbumEntity>> GetMatchingAlbumsAsync(string canonicalTitle, AlbumMediaType? media, Guid bandId, CancellationToken cancellationToken = default);
 
+    Task<List<AlbumEntity>> GetAllFormatsAsync(string canonicalTitle, Guid bandId, CancellationToken cancellationToken = default);
+
     Task<List<AlbumEntity>> GetAlbumsByBandIdAsync(Guid bandId, CancellationToken cancellationToken = default);
 
     Task<AlbumEntity?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);

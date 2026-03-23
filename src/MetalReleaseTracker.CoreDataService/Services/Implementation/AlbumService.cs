@@ -193,6 +193,8 @@ public class AlbumService : IAlbumService
             ];
         }
 
+        var formatGroups = await BuildFormatGroupsAsync(album, cancellationToken);
+
         var bandAlbums = await _albumRepository.GetAlbumsByBandIdAsync(album.BandId, cancellationToken);
 
         var relatedGroups = new List<List<Data.Entities.AlbumEntity>>();
@@ -227,7 +229,7 @@ public class AlbumService : IAlbumService
             var primary = group[0];
             var groupCanonical = primary.CanonicalTitle?.Trim().ToLower();
 
-            if (currentCanonical != null && groupCanonical == currentCanonical && primary.Media == album.Media)
+            if (currentCanonical != null && groupCanonical == currentCanonical)
             {
                 continue;
             }
@@ -278,6 +280,7 @@ public class AlbumService : IAlbumService
             BandGenre = album.Band?.Genre,
             BandMetalArchivesUrl = album.Band?.MetalArchivesUrl,
             Variants = variants,
+            FormatGroups = formatGroups,
             RelatedReleases = relatedReleases
         };
     }
@@ -351,6 +354,36 @@ public class AlbumService : IAlbumService
         }
 
         return await GetAlbumDetail(album.Id, cancellationToken);
+    }
+
+    private async Task<List<AlbumFormatGroupDto>> BuildFormatGroupsAsync(Data.Entities.AlbumEntity album, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(album.CanonicalTitle))
+        {
+            return [];
+        }
+
+        var allFormats = await _albumRepository.GetAllFormatsAsync(album.CanonicalTitle, album.BandId, cancellationToken);
+
+        var groups = allFormats
+            .GroupBy(formatAlbum => formatAlbum.Media)
+            .Where(mediaGroup => mediaGroup.Key != album.Media)
+            .Select(mediaGroup => new AlbumFormatGroupDto
+            {
+                Media = mediaGroup.Key,
+                Variants = mediaGroup.Select(formatAlbum => new AlbumVariantDto
+                {
+                    AlbumId = formatAlbum.Id,
+                    DistributorId = formatAlbum.DistributorId,
+                    DistributorName = formatAlbum.Distributor?.Name ?? string.Empty,
+                    Price = formatAlbum.Price,
+                    PurchaseUrl = formatAlbum.PurchaseUrl,
+                    StockStatus = formatAlbum.StockStatus
+                }).ToList()
+            })
+            .ToList();
+
+        return groups;
     }
 
     private static bool AreAlbumsMatching(Data.Entities.AlbumEntity albumA, Data.Entities.AlbumEntity albumB)

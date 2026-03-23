@@ -372,6 +372,87 @@ const AlbumDetailPage = () => {
         })}
       </Box>
 
+      {album.formatGroups && album.formatGroups.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
+            {t('albumDetail.alsoAvailableAs')}
+          </Typography>
+          {album.formatGroups.map((group) => {
+            const groupMediaLabel = group.media != null
+              ? { 0: 'CD', 1: 'Vinyl', 2: 'Tape' }[group.media] || ''
+              : '';
+            return (
+              <Box key={group.media} sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <MediaTypeIcon mediaType={group.media} size={22} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {groupMediaLabel}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {[...group.variants]
+                    .sort((variantA, variantB) => {
+                      const order = { InStock: 0, PreOrder: 1, Unknown: 2, OutOfStock: 3 };
+                      return (order[variantA.stockStatus] ?? 2) - (order[variantB.stockStatus] ?? 2);
+                    })
+                    .map((variant) => {
+                      const flag = getDistributorCountry(variant.distributorName);
+                      const countryName = getDistributorCountryName(variant.distributorName);
+                      const isOutOfStock = variant.stockStatus === 'OutOfStock';
+                      const isPreOrder = variant.stockStatus === 'PreOrder';
+                      return (
+                        <Paper
+                          key={variant.albumId}
+                          component={isOutOfStock ? 'div' : 'a'}
+                          href={isOutOfStock ? undefined : variant.purchaseUrl}
+                          target={isOutOfStock ? undefined : '_blank'}
+                          rel={isOutOfStock ? undefined : 'noopener noreferrer'}
+                          sx={{
+                            p: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            opacity: isOutOfStock ? 0.5 : 1,
+                            transition: 'background-color 0.2s',
+                            '&:hover': isOutOfStock ? {} : { backgroundColor: 'rgba(255,255,255,0.05)' },
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, minWidth: 80 }}>
+                              {formatPrice(variant.price)}
+                            </Typography>
+                            <Typography variant="body1">
+                              {flag}{countryName ? ` ${t('albumDetail.shipsFrom')} ${countryName} \u00B7 ` : ' '}{variant.distributorName}
+                            </Typography>
+                            {isOutOfStock && (
+                              <Chip label="Out of Stock" size="small" color="error" variant="outlined" />
+                            )}
+                            {isPreOrder && (
+                              <Chip label="Pre-Order" size="small" color="warning" variant="outlined" />
+                            )}
+                          </Box>
+                          <Button
+                            variant="contained"
+                            color={isPreOrder ? 'warning' : 'primary'}
+                            size="small"
+                            disabled={isOutOfStock}
+                            endIcon={!isOutOfStock ? <OpenInNewIcon sx={{ fontSize: 14 }} /> : null}
+                            sx={{ textTransform: 'none', borderRadius: 5, fontWeight: 600, flexShrink: 0 }}
+                          >
+                            {isOutOfStock ? 'Out of Stock' : isPreOrder ? 'Pre-Order' : t('albumDetail.buy')}
+                          </Button>
+                        </Paper>
+                      );
+                    })}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
       <PriceHistoryChart albumName={album.albumName} bandName={album.bandName} />
 
       {album.relatedReleases.length > 0 && (

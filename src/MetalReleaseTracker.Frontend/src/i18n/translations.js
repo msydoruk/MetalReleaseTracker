@@ -291,6 +291,7 @@ const translations = {
       press: 'Press',
       shipsFrom: 'Ships from',
       listenOnBandcamp: 'Listen on Bandcamp',
+      alsoAvailableAs: 'Also available as',
     },
     priceHistory: {
       title: 'Price History',
@@ -606,6 +607,7 @@ const translations = {
       press: 'Тираж',
       shipsFrom: 'Доставка з',
       listenOnBandcamp: 'Слухати на Bandcamp',
+      alsoAvailableAs: 'Також доступно як',
     },
     priceHistory: {
       title: 'Історія цін',

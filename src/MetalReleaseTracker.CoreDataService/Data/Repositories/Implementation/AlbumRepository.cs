@@ -124,6 +124,20 @@ public class AlbumRepository : IAlbumRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<AlbumEntity>> GetAllFormatsAsync(string canonicalTitle, Guid bandId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Albums
+            .AsNoTracking()
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .Where(album => album.BandId == bandId
+                && album.CanonicalTitle != null
+                && album.CanonicalTitle.ToLower().Trim() == canonicalTitle.ToLower().Trim())
+            .OrderBy(album => album.Media)
+            .ThenBy(album => album.Price)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<AlbumEntity>> GetAlbumsByBandIdAsync(Guid bandId, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Albums

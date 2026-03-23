@@ -44,5 +44,7 @@ public class AlbumDetailDto
 
     public List<AlbumVariantDto> Variants { get; set; } = [];
 
+    public List<AlbumFormatGroupDto> FormatGroups { get; set; } = [];
+
     public List<RelatedAlbumDto> RelatedReleases { get; set; } = [];
 }
