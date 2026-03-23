@@ -276,6 +276,7 @@ public class AlbumService : IAlbumService
             BandSlug = album.Band?.Slug ?? string.Empty,
             BandPhotoUrl = bandPhotoUrl,
             BandGenre = album.Band?.Genre,
+            BandMetalArchivesUrl = album.Band?.MetalArchivesUrl,
             Variants = variants,
             RelatedReleases = relatedReleases
         };

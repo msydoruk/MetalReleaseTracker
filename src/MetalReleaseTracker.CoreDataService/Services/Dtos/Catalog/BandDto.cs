@@ -12,5 +12,7 @@ public class BandDto
 
     public string? Genre { get; set; }
 
+    public string? MetalArchivesUrl { get; set; }
+
     public string Slug { get; set; } = string.Empty;
 }

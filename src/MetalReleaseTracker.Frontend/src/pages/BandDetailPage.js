@@ -14,6 +14,7 @@ import {
 import { useParams, Link } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
 import { fetchBandBySlug, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
@@ -68,6 +69,7 @@ const BandDetailPage = () => {
       ...(band.genre && { genre: band.genre }),
       ...(band.photoUrl && { image: band.photoUrl }),
       ...(band.description && { description: band.description }),
+      ...(band.metalArchivesUrl && { sameAs: [band.metalArchivesUrl] }),
     };
     const script = document.createElement('script');
     script.type = 'application/ld+json';
@@ -305,6 +307,19 @@ const BandDetailPage = () => {
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600 }}>
               {band.description}
             </Typography>
+          )}
+          {band.metalArchivesUrl && (
+            <Button
+              component="a"
+              href={band.metalArchivesUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              startIcon={<OpenInNewIcon />}
+              sx={{ textTransform: 'none', mt: 1 }}
+            >
+              {t('bandDetail.viewOnMetalArchives')}
+            </Button>
           )}
         </Box>
       </Box>

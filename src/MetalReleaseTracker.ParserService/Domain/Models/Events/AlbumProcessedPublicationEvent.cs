@@ -47,4 +47,6 @@ public class AlbumProcessedPublicationEvent
     public string? CanonicalTitle { get; set; }
 
     public int? OriginalYear { get; set; }
+
+    public string? MetalArchivesUrl { get; set; }
 }

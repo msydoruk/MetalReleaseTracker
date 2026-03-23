@@ -3,17 +3,20 @@ using System;
 using MetalReleaseTracker.CoreDataService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MetalReleaseTracker.CoreDataService.Migrations
+namespace MetalReleaseTracker.CoreDataService.Data.Migrations
 {
     [DbContext(typeof(CoreDataServiceDbContext))]
-    partial class CoreDataServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323155914_AddMetalArchivesUrlToBands")]
+    partial class AddMetalArchivesUrlToBands
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -291,32 +294,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.ToTable("UserFavorites");
                 });
 
-            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.UserFollowedBandEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BandId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BandId");
-
-                    b.HasIndex("UserId", "BandId")
-                        .IsUnique();
-
-                    b.ToTable("UserFollowedBands");
-                });
-
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.AlbumEntity", b =>
                 {
                     b.HasOne("MetalReleaseTracker.CoreDataService.Data.Entities.BandEntity", "Band")
@@ -345,17 +322,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .IsRequired();
 
                     b.Navigation("Album");
-                });
-
-            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.UserFollowedBandEntity", b =>
-                {
-                    b.HasOne("MetalReleaseTracker.CoreDataService.Data.Entities.BandEntity", "Band")
-                        .WithMany()
-                        .HasForeignKey("BandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Band");
                 });
 #pragma warning restore 612, 618
         }

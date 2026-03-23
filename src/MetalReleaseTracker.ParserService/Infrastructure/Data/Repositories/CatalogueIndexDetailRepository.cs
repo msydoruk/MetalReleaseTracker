@@ -28,6 +28,7 @@ public class CatalogueIndexDetailRepository : ICatalogueIndexDetailRepository
     {
         return await _context.CatalogueIndexDetails
             .Include(e => e.CatalogueIndex)
+                .ThenInclude(e => e.BandReference)
             .Where(e => e.ChangeType != ChangeType.Active && e.PublicationStatus == PublicationStatus.Unpublished)
             .OrderBy(e => e.UpdatedAt)
             .Take(batchSize)

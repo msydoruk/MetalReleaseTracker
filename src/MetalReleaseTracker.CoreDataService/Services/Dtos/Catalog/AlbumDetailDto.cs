@@ -36,6 +36,8 @@ public class AlbumDetailDto
 
     public string? BandGenre { get; set; }
 
+    public string? BandMetalArchivesUrl { get; set; }
+
     public string Slug { get; set; } = string.Empty;
 
     public string BandSlug { get; set; } = string.Empty;

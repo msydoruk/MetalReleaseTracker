@@ -18,6 +18,8 @@ public class BandEntity
 
     public string? Genre { get; set; }
 
+    public string? MetalArchivesUrl { get; set; }
+
     [Required]
     [MaxLength(250)]
     public string Slug { get; set; } = string.Empty;

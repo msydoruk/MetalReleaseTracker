@@ -288,6 +288,7 @@ public class AlbumDetailParsingJob
         detail.Status = source.Status;
         detail.CanonicalTitle = source.CanonicalTitle;
         detail.OriginalYear = source.OriginalYear;
+        detail.MetalArchivesUrl = BuildMetalArchivesUrl(entry.BandReference);
     }
 
     private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
@@ -343,5 +344,16 @@ public class AlbumDetailParsingJob
         }
 
         return PublicationStatus.Unpublished;
+    }
+
+    private static string? BuildMetalArchivesUrl(BandReferenceEntity? bandReference)
+    {
+        if (bandReference == null)
+        {
+            return null;
+        }
+
+        var encodedName = Uri.EscapeDataString(bandReference.BandName);
+        return $"https://www.metal-archives.com/bands/{encodedName}/{bandReference.MetalArchivesId}";
     }
 }

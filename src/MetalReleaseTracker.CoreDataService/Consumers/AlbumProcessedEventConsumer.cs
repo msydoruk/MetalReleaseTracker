@@ -78,6 +78,17 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             }
 
             var bandId = await _bandRepository.GetOrAddAsync(albumEvent.BandName);
+
+            if (!string.IsNullOrWhiteSpace(albumEvent.MetalArchivesUrl))
+            {
+                var bandEntity = await _bandRepository.GetByIdAsync(bandId);
+                if (bandEntity != null && string.IsNullOrWhiteSpace(bandEntity.MetalArchivesUrl))
+                {
+                    bandEntity.MetalArchivesUrl = albumEvent.MetalArchivesUrl;
+                    await _bandRepository.UpdateAsync(bandEntity);
+                }
+            }
+
             var distributorId = await _distributorsRepository.GetOrAddAsync(distributorName);
             var albumEntity = _mapper.Map<AlbumProcessedPublicationEvent, AlbumEntity>(albumEvent);
 

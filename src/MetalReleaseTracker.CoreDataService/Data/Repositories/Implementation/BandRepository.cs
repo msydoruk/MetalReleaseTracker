@@ -73,6 +73,7 @@ public class BandRepository : IBandRepository
                 Description = band.Description,
                 PhotoUrl = band.PhotoUrl,
                 Genre = band.Genre,
+                MetalArchivesUrl = band.MetalArchivesUrl,
                 Slug = band.Slug,
                 AlbumCount = _dbContext.Albums.Count(album => album.BandId == band.Id)
             })

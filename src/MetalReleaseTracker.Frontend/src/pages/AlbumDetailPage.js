@@ -234,15 +234,30 @@ const AlbumDetailPage = () => {
             </Typography>
           </Box>
 
-          <Typography
-            component={Link}
-            to={`/bands/${album.bandSlug}`}
-            variant="h6"
-            color="text.secondary"
-            sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' }, display: 'inline-block', mb: 1 }}
-          >
-            {album.bandName}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: isMobile ? 'center' : 'flex-start', mb: 1 }}>
+            <Typography
+              component={Link}
+              to={`/bands/${album.bandSlug}`}
+              variant="h6"
+              color="text.secondary"
+              sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' }, display: 'inline-block' }}
+            >
+              {album.bandName}
+            </Typography>
+            {album.bandMetalArchivesUrl && (
+              <IconButton
+                component="a"
+                href={album.bandMetalArchivesUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small"
+                title={t('bandDetail.viewOnMetalArchives')}
+                sx={{ color: 'text.secondary' }}
+              >
+                <OpenInNewIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start', mb: 2 }}>
             {album.originalYear > 0 && (

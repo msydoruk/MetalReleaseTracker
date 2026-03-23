@@ -277,6 +277,7 @@ const translations = {
       following: 'Following',
       follower: 'follower',
       followers: 'followers',
+      viewOnMetalArchives: 'View on Metal Archives',
     },
     albumDetail: {
       backToAlbums: 'Back to Albums',
@@ -591,6 +592,7 @@ const translations = {
       following: 'Стежу',
       follower: 'підписник',
       followers: 'підписників',
+      viewOnMetalArchives: 'Переглянути на Metal Archives',
     },
     albumDetail: {
       backToAlbums: 'Назад до альбомів',

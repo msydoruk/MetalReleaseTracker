@@ -50,6 +50,7 @@ public class CatalogueIndexRepository : ICatalogueIndexRepository
         var statusList = statuses.ToList();
         return await _context.CatalogueIndex
             .Include(entry => entry.BandDiscography)
+            .Include(entry => entry.BandReference)
             .Where(entry => entry.DistributorCode == code && statusList.Contains(entry.Status))
             .ToListAsync(cancellationToken);
     }

@@ -117,6 +117,7 @@ public class AlbumPublisherJob
             StockStatus = detail.StockStatus,
             CanonicalTitle = detail.CanonicalTitle,
             OriginalYear = detail.OriginalYear,
+            MetalArchivesUrl = detail.MetalArchivesUrl,
         };
     }
 
