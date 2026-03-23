@@ -49,4 +49,6 @@ public class AlbumProcessedPublicationEvent
     public int? OriginalYear { get; set; }
 
     public string? MetalArchivesUrl { get; set; }
+
+    public string? BandcampUrl { get; set; }
 }

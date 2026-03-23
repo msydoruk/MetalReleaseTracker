@@ -279,6 +279,7 @@ public class AlbumService : IAlbumService
             BandPhotoUrl = bandPhotoUrl,
             BandGenre = album.Band?.Genre,
             BandMetalArchivesUrl = album.Band?.MetalArchivesUrl,
+            BandcampUrl = album.BandcampUrl,
             Variants = variants,
             FormatGroups = formatGroups,
             RelatedReleases = relatedReleases

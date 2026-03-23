@@ -118,6 +118,7 @@ public class AlbumPublisherJob
             CanonicalTitle = detail.CanonicalTitle,
             OriginalYear = detail.OriginalYear,
             MetalArchivesUrl = detail.MetalArchivesUrl,
+            BandcampUrl = detail.BandcampUrl,
         };
     }
 

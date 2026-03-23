@@ -61,6 +61,9 @@ public class AlbumEntity
 
     public int? OriginalYear { get; set; }
 
+    [Url]
+    public string? BandcampUrl { get; set; }
+
     [Required]
     [MaxLength(250)]
     public string Slug { get; set; } = string.Empty;

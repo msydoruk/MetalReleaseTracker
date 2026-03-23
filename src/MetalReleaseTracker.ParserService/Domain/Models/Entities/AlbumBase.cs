@@ -37,4 +37,6 @@ public class AlbumBase
     public int? OriginalYear { get; set; }
 
     public string? MetalArchivesUrl { get; set; }
+
+    public string? BandcampUrl { get; set; }
 }

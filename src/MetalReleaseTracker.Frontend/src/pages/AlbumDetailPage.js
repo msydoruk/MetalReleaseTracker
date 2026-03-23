@@ -309,6 +309,18 @@ const AlbumDetailPage = () => {
         </Box>
       </Box>
 
+      {album.bandcampUrl && (
+        <Box sx={{ mb: 4 }}>
+          <iframe
+            title="Bandcamp Player"
+            style={{ border: 0, width: '100%', height: 120 }}
+            src={`${album.bandcampUrl}?size=large&bgcol=333333&linkcol=e32c14`}
+            seamless
+            loading="lazy"
+          />
+        </Box>
+      )}
+
       <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
         {storesText}
       </Typography>

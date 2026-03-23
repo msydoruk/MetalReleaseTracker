@@ -38,6 +38,8 @@ public class AlbumDetailDto
 
     public string? BandMetalArchivesUrl { get; set; }
 
+    public string? BandcampUrl { get; set; }
+
     public string Slug { get; set; } = string.Empty;
 
     public string BandSlug { get; set; } = string.Empty;
