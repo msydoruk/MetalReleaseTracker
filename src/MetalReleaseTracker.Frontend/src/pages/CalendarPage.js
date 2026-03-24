@@ -8,13 +8,11 @@ import {
   ToggleButtonGroup,
   Chip,
   Paper,
-  Grid,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
 } from '@mui/material';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Link } from 'react-router-dom';
@@ -91,11 +89,10 @@ const CalendarPage = () => {
   }, [loadData]);
 
   const renderAlbumGrid = (albums) => (
-    <Grid
-      container
-      spacing={2}
+    <Box
       sx={{
         display: 'grid',
+        gap: 3,
         gridTemplateColumns: {
           xs: 'repeat(2, 1fr)',
           sm: 'repeat(3, 1fr)',
@@ -109,13 +106,20 @@ const CalendarPage = () => {
           key={`${album.albumSlug}-${index}`}
           component={Link}
           to={`/albums/${album.albumSlug}`}
+          elevation={0}
           sx={{
             textDecoration: 'none',
             color: 'inherit',
             overflow: 'hidden',
             borderRadius: 2,
-            transition: 'transform 0.2s',
-            '&:hover': { transform: 'translateY(-4px)' },
+            boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            transition: 'all 0.25s ease-in-out',
+            bgcolor: 'background.paper',
+            '&:hover': {
+              transform: 'translateY(-8px)',
+              boxShadow: '0 12px 20px rgba(0, 0, 0, 0.15)',
+            },
           }}
         >
           <Box
@@ -125,7 +129,7 @@ const CalendarPage = () => {
             loading="lazy"
             sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
           />
-          <Box sx={{ p: 1.5 }}>
+          <Box sx={{ p: 2, pt: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
               <MediaTypeIcon mediaType={album.media} size={14} />
               {album.status === 2 && (
@@ -152,17 +156,14 @@ const CalendarPage = () => {
           </Box>
         </Paper>
       ))}
-    </Grid>
+    </Box>
   );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-        <CalendarMonthIcon sx={{ fontSize: 32 }} />
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          {t('calendar.title')}
-        </Typography>
-      </Box>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
+        {t('calendar.title')}
+      </Typography>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
         <ToggleButtonGroup
@@ -202,7 +203,7 @@ const CalendarPage = () => {
             <Box sx={{ mb: 5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <ShoppingCartIcon color="warning" />
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   {t('calendar.preOrders')}
                 </Typography>
                 <Chip label={preOrders.length} size="small" color="warning" />
@@ -214,7 +215,7 @@ const CalendarPage = () => {
           <Box sx={{ mb: 5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <NewReleasesIcon color="info" />
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {t('calendar.recentReleases')}
               </Typography>
               <Chip label={recentReleases.length} size="small" color="info" />
@@ -222,7 +223,7 @@ const CalendarPage = () => {
             {recentReleases.length > 0 ? (
               renderAlbumGrid(recentReleases)
             ) : (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="h6" color="text.secondary">
                 {t('calendar.noReleases')}
               </Typography>
             )}
