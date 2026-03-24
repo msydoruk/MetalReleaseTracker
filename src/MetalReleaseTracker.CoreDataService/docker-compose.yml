@@ -48,6 +48,9 @@ services:
       - Authentication__Google__ClientId=${GOOGLE_CLIENT_ID}
       - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
       - Authentication__Jwt__Key=${JWT_KEY}
+      - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
+      - TelegramBot__WebhookBaseUrl=${TELEGRAM_WEBHOOK_BASE_URL:-https://metal-release.com}
+      - TelegramBot__BotUsername=${TELEGRAM_BOT_USERNAME:-MetalReleaseTrackerBot}
     ports:
       - '5002:8080'
     depends_on:
