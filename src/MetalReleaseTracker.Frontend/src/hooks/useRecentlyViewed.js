@@ -18,6 +18,7 @@ const useRecentlyViewed = () => {
   const addRecentlyViewed = useCallback((album) => {
     const entry = {
       id: album.primaryAlbumId || album.id,
+      slug: album.slug,
       albumName: album.albumName || album.name,
       bandName: album.bandName,
       bandId: album.bandId,

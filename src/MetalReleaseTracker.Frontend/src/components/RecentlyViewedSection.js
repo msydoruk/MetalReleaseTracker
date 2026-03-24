@@ -10,7 +10,9 @@ const RecentlyViewedSection = ({ albums }) => {
   const { t } = useLanguage();
   const { format: formatPrice } = useCurrency();
 
-  if (!albums || albums.length === 0) {
+  const validAlbums = albums?.filter((album) => album.slug) || [];
+
+  if (validAlbums.length === 0) {
     return null;
   }
 
@@ -32,11 +34,11 @@ const RecentlyViewedSection = ({ albums }) => {
           '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
         }}
       >
-        {albums.map((album) => (
+        {validAlbums.map((album) => (
           <Paper
             key={album.id}
             component={Link}
-            to={`/albums/${album.slug || album.primaryAlbumId}`}
+            to={`/albums/${album.slug}`}
             sx={{
               minWidth: 160,
               maxWidth: 160,
