@@ -264,9 +264,6 @@ const AlbumDetailPage = () => {
             {album.originalYear > 0 && (
               <Chip label={album.originalYear} size="small" variant="outlined" />
             )}
-            {album.genre && (
-              <Chip label={album.genre} size="small" color="secondary" />
-            )}
           </Box>
 
           <AlbumRating albumId={album.primaryAlbumId} isLoggedIn={isLoggedIn} />

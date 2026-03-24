@@ -18,7 +18,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Link } from 'react-router-dom';
-import { fetchGroupedAlbums, fetchGenres, fetchDistributorsWithAlbumCount } from '../services/api';
+import { fetchGroupedAlbums, fetchDistributorsWithAlbumCount } from '../services/api';
 import MediaTypeIcon from '../components/MediaTypeIcon';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -33,8 +33,6 @@ const CalendarPage = () => {
   const [recentReleases, setRecentReleases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mediaFilter, setMediaFilter] = useState('');
-  const [genreFilter, setGenreFilter] = useState('');
-  const [genres, setGenres] = useState([]);
   const [distributors, setDistributors] = useState([]);
   const [distributorFilter, setDistributorFilter] = useState('');
 
@@ -46,11 +44,9 @@ const CalendarPage = () => {
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const [genreResponse, distributorResponse] = await Promise.all([
-          fetchGenres(),
+        const [distributorResponse] = await Promise.all([
           fetchDistributorsWithAlbumCount(),
         ]);
-        setGenres(genreResponse.data || []);
         setDistributors(distributorResponse.data || []);
       } catch {
         // ignore
@@ -74,7 +70,6 @@ const CalendarPage = () => {
       };
 
       if (mediaFilter) baseFilters.mediaType = mediaFilter;
-      if (genreFilter) baseFilters.genre = genreFilter;
       if (distributorFilter) baseFilters.distributorId = distributorFilter;
 
       const [preOrderResponse, recentResponse] = await Promise.all([
@@ -89,7 +84,7 @@ const CalendarPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [mediaFilter, genreFilter, distributorFilter]);
+  }, [mediaFilter, distributorFilter]);
 
   useEffect(() => {
     loadData();
@@ -181,20 +176,6 @@ const CalendarPage = () => {
           <ToggleButton value="LP">Vinyl</ToggleButton>
           <ToggleButton value="Tape">Tape</ToggleButton>
         </ToggleButtonGroup>
-
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>{t('albumFilter.genre')}</InputLabel>
-          <Select
-            value={genreFilter}
-            onChange={(event) => setGenreFilter(event.target.value)}
-            label={t('albumFilter.genre')}
-          >
-            <MenuItem value="">{t('albumFilter.all')}</MenuItem>
-            {genres.map((genre) => (
-              <MenuItem key={genre} value={genre}>{genre}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
 
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>{t('albumFilter.distributor')}</InputLabel>
