@@ -17,4 +17,6 @@ public class RelatedAlbumDto
     public float MinPrice { get; set; }
 
     public string AlbumSlug { get; set; } = string.Empty;
+
+    public ImageUrlSetDto? ImageSet { get; set; }
 }

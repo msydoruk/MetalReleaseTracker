@@ -47,4 +47,6 @@ public class AlbumDto
     public string Slug { get; set; } = string.Empty;
 
     public string BandSlug { get; set; } = string.Empty;
+
+    public ImageUrlSetDto? ImageSet { get; set; }
 }

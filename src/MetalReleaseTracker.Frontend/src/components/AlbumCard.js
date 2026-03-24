@@ -13,6 +13,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import OptimizedImage from './OptimizedImage';
+import { IMAGE_SIZES } from '../constants/imageSizes';
 import Chip from '@mui/material/Chip';
 import { useNavigate, Link } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
@@ -69,17 +71,16 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
         }
       }}>
         <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-          <CardMedia
-            component="img"
-            image={imageUrl}
+          <OptimizedImage
+            imageSet={album.imageSet}
+            photoUrl={imageUrl}
             alt={album.name}
+            sizes={IMAGE_SIZES.card}
             loading="lazy"
             onClick={() => setLightboxOpen(true)}
             sx={{
               aspectRatio: '1 / 1',
-              objectFit: 'contain',
               backgroundColor: '#111',
-              cursor: 'pointer',
               transition: 'transform 0.3s ease',
               '&:hover': {
                 transform: 'scale(1.05)'

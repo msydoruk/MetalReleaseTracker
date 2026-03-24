@@ -49,4 +49,6 @@ public class AlbumDetailDto
     public List<AlbumFormatGroupDto> FormatGroups { get; set; } = [];
 
     public List<RelatedAlbumDto> RelatedReleases { get; set; } = [];
+
+    public ImageUrlSetDto? ImageSet { get; set; }
 }

@@ -29,4 +29,6 @@ public class GroupedAlbumDto
     public int? OriginalYear { get; set; }
 
     public List<AlbumVariantDto> Variants { get; set; } = [];
+
+    public ImageUrlSetDto? ImageSet { get; set; }
 }

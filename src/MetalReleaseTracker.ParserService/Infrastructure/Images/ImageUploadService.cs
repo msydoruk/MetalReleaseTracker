@@ -14,17 +14,20 @@ public class ImageUploadService : IImageUploadService
 {
     private readonly IUserAgentProvider _userAgentProvider;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IImageProcessingService _imageProcessingService;
     private readonly ILogger<ImageUploadService> _logger;
     private readonly ImageUploadSettings _settings;
 
     public ImageUploadService(
         IUserAgentProvider userAgentProvider,
         IFileStorageService fileStorageService,
+        IImageProcessingService imageProcessingService,
         ILogger<ImageUploadService> logger,
         IOptions<ImageUploadSettings> options)
     {
         _userAgentProvider = userAgentProvider;
         _fileStorageService = fileStorageService;
+        _imageProcessingService = imageProcessingService;
         _logger = logger;
         _settings = options.Value;
     }
@@ -55,6 +58,15 @@ public class ImageUploadService : IImageUploadService
 
             using var imageStream = new MemoryStream(imageBytes);
             await _fileStorageService.UploadFileAsync(blobPath, imageStream, cancellationToken);
+
+            try
+            {
+                await _imageProcessingService.GenerateThumbnailsAsync(imageBytes, blobPath, cancellationToken);
+            }
+            catch (Exception thumbnailException)
+            {
+                _logger.LogWarning(thumbnailException, "Thumbnail generation failed for album {AlbumSku}, original image uploaded successfully", request.AlbumSku);
+            }
 
             _logger.LogInformation("Uploaded image for album {AlbumSku} to {BlobPath}", request.AlbumSku, blobPath);
             return ImageUploadResult.Success(blobPath, request.ImageUrl);

@@ -87,6 +87,7 @@ builder.Services.AddSingleton<IParsingProgressTracker, ParsingProgressTracker>()
 
 builder.Services.AddHttpClient<IFlareSolverrClient, FlareSolverrClient>();
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
+builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 builder.Services.AddScoped<IBandReferenceService, BandReferenceService>();
 builder.Services.AddScoped<IBandPhotoSyncService, BandPhotoSyncService>();

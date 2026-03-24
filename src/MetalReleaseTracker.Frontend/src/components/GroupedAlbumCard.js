@@ -13,6 +13,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import OptimizedImage from './OptimizedImage';
+import { IMAGE_SIZES } from '../constants/imageSizes';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MediaTypeIcon from './MediaTypeIcon';
 import { Link } from 'react-router-dom';
@@ -55,17 +57,16 @@ const GroupedAlbumCard = ({ group }) => {
         }
       }}>
         <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-          <CardMedia
-            component="img"
-            image={group.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E"}
+          <OptimizedImage
+            imageSet={group.imageSet}
+            photoUrl={group.photoUrl}
             alt={`${group.bandName} - ${group.albumName}`}
+            sizes={IMAGE_SIZES.card}
             loading="lazy"
             onClick={() => setLightboxOpen(true)}
             sx={{
               aspectRatio: '1 / 1',
-              objectFit: 'contain',
               backgroundColor: '#111',
-              cursor: 'pointer',
               transition: 'transform 0.3s ease',
               '&:hover': {
                 transform: 'scale(1.05)'

@@ -58,6 +58,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<ISitemapService, SitemapService>();
             services.AddScoped<IUserAlbumWatchService, UserAlbumWatchService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IImageUrlResolverService, ImageUrlResolverService>();
 
             return services;
         }

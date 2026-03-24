@@ -10,12 +10,14 @@ public class AlbumService : IAlbumService
 {
     private readonly IAlbumRepository _albumRepository;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IImageUrlResolverService _imageUrlResolverService;
     private readonly IMapper _mapper;
 
-    public AlbumService(IAlbumRepository albumRepository, IFileStorageService fileStorageService, IMapper mapper)
+    public AlbumService(IAlbumRepository albumRepository, IFileStorageService fileStorageService, IImageUrlResolverService imageUrlResolverService, IMapper mapper)
     {
         _albumRepository = albumRepository;
         _fileStorageService = fileStorageService;
+        _imageUrlResolverService = imageUrlResolverService;
         _mapper = mapper;
     }
 
@@ -28,6 +30,7 @@ public class AlbumService : IAlbumService
         {
             var albumDto = _mapper.Map<AlbumDto>(album);
             albumDto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+            albumDto.ImageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(album.PhotoUrl, cancellationToken);
             albumDtos.Add(albumDto);
         }
 
@@ -99,6 +102,7 @@ public class AlbumService : IAlbumService
         {
             var primary = group[0];
             var photoUrl = await _fileStorageService.GetFileUrlAsync(primary.PhotoUrl, cancellationToken);
+            var imageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(primary.PhotoUrl, cancellationToken);
 
             var variants = group.Select(album => new AlbumVariantDto
             {
@@ -118,6 +122,7 @@ public class AlbumService : IAlbumService
                 AlbumName = primary.CanonicalTitle ?? primary.Name,
                 AlbumSlug = primary.Slug,
                 PhotoUrl = photoUrl,
+                ImageSet = imageSet,
                 Genre = primary.Genre,
                 Media = primary.Media,
                 Status = primary.Status,
@@ -148,6 +153,7 @@ public class AlbumService : IAlbumService
 
         var dto = _mapper.Map<AlbumDto>(album);
         dto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+        dto.ImageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(album.PhotoUrl, cancellationToken);
         return dto;
     }
 
@@ -160,6 +166,7 @@ public class AlbumService : IAlbumService
         }
 
         var photoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+        var imageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(album.PhotoUrl, cancellationToken);
 
         List<AlbumVariantDto> variants;
         if (!string.IsNullOrWhiteSpace(album.CanonicalTitle))
@@ -235,12 +242,14 @@ public class AlbumService : IAlbumService
             }
 
             var relatedPhotoUrl = await _fileStorageService.GetFileUrlAsync(primary.PhotoUrl, cancellationToken);
+            var relatedImageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(primary.PhotoUrl, cancellationToken);
             relatedReleases.Add(new RelatedAlbumDto
             {
                 AlbumId = primary.Id,
                 AlbumName = primary.CanonicalTitle ?? primary.Name,
                 AlbumSlug = primary.Slug,
                 PhotoUrl = relatedPhotoUrl,
+                ImageSet = relatedImageSet,
                 Media = primary.Media,
                 OriginalYear = primary.OriginalYear,
                 MinPrice = group.Min(albumEntity => albumEntity.Price)
@@ -264,6 +273,7 @@ public class AlbumService : IAlbumService
             AlbumName = album.CanonicalTitle ?? album.Name,
             Slug = album.Slug,
             PhotoUrl = photoUrl,
+            ImageSet = imageSet,
             Genre = album.Genre,
             Media = album.Media,
             Status = album.Status,
@@ -343,6 +353,7 @@ public class AlbumService : IAlbumService
 
         var dto = _mapper.Map<AlbumDto>(album);
         dto.PhotoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
+        dto.ImageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(album.PhotoUrl, cancellationToken);
         return dto;
     }
 

@@ -10,6 +10,7 @@ public static class AppSettingsRegistrationExtension
     {
         services.Configure<HttpRequestSettings>(configuration.GetSection("HttpRequestSettings"));
         services.Configure<ImageUploadSettings>(configuration.GetSection("ImageUploadSettings"));
+        services.Configure<ImageProcessingSettings>(configuration.GetSection("ImageProcessingSettings"));
         services.Configure<MinioFileStorageConfig>(configuration.GetSection("Minio"));
 
         return services;
