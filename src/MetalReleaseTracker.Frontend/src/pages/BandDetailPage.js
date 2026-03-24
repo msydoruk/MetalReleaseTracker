@@ -300,9 +300,14 @@ const BandDetailPage = () => {
               </Typography>
             )}
           </Box>
-          {band.genre && (
-            <Chip label={band.genre} size="small" color="secondary" sx={{ mb: 2 }} />
-          )}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            {band.genre && (
+              <Chip label={band.genre} size="small" color="secondary" />
+            )}
+            {band.formationYear > 0 && (
+              <Chip label={`${t('bandDetail.formedIn')} ${band.formationYear}`} size="small" variant="outlined" />
+            )}
+          </Box>
           {band.description && (
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600 }}>
               {band.description}

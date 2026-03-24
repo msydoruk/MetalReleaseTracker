@@ -14,5 +14,7 @@ public class BandDto
 
     public string? MetalArchivesUrl { get; set; }
 
+    public int? FormationYear { get; set; }
+
     public string Slug { get; set; } = string.Empty;
 }

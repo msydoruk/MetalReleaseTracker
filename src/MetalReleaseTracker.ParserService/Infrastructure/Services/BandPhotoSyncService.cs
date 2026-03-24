@@ -84,7 +84,7 @@ public class BandPhotoSyncService : IBandPhotoSyncService
                         _logger.LogInformation("Photo already exists for band '{BandName}' (MA ID: {MaId}).", band.BandName, band.MetalArchivesId);
                         _progressTracker.ItemProcessed(runId, band.BandName, "photoSkipped");
 
-                        await PublishEventAsync(band, blobPath, cancellationToken);
+                        await PublishEventAsync(band, blobPath, cancellationToken: cancellationToken);
                         await DelayBetweenRequests(settings, cancellationToken);
                         continue;
                     }
@@ -117,7 +117,9 @@ public class BandPhotoSyncService : IBandPhotoSyncService
                     _logger.LogInformation("Uploaded photo for band '{BandName}' (MA ID: {MaId}) to {BlobPath}.", band.BandName, band.MetalArchivesId, blobPath);
                     _progressTracker.ItemProcessed(runId, band.BandName, "photoUploaded");
 
-                    await PublishEventAsync(band, blobPath, cancellationToken);
+                    var formationYear = ExtractFormationYear(bandPageHtml);
+                    var description = ExtractDescription(bandPageHtml);
+                    await PublishEventAsync(band, blobPath, formationYear, description, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -154,13 +156,17 @@ public class BandPhotoSyncService : IBandPhotoSyncService
     private async Task PublishEventAsync(
         Admin.Dtos.BandPhotoMetadataDto band,
         string blobPath,
-        CancellationToken cancellationToken)
+        int? formationYear = null,
+        string? description = null,
+        CancellationToken cancellationToken = default)
     {
         var syncedEvent = new BandPhotoSyncedEvent
         {
             BandName = band.BandName,
             PhotoBlobPath = blobPath,
             Genre = band.Genre,
+            FormationYear = formationYear,
+            Description = description,
         };
 
         await _topicProducer.Produce(syncedEvent, cancellationToken);
@@ -247,5 +253,43 @@ public class BandPhotoSyncService : IBandPhotoSyncService
         {
             return false;
         }
+    }
+
+    private static int? ExtractFormationYear(string bandPageHtml)
+    {
+        var document = new HtmlDocument();
+        document.LoadHtml(bandPageHtml);
+
+        var yearNode = document.DocumentNode.SelectSingleNode("//dt[contains(text(), 'Formed in')]/following-sibling::dd[1]");
+        if (yearNode != null)
+        {
+            var yearText = HtmlEntity.DeEntitize(yearNode.InnerText).Trim();
+            if (int.TryParse(yearText, out var year) && year > 1950 && year <= DateTime.UtcNow.Year)
+            {
+                return year;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractDescription(string bandPageHtml)
+    {
+        var document = new HtmlDocument();
+        document.LoadHtml(bandPageHtml);
+
+        var commentNode = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'band_comment')]");
+        if (commentNode == null)
+        {
+            return null;
+        }
+
+        var text = HtmlEntity.DeEntitize(commentNode.InnerText).Trim();
+        if (string.IsNullOrWhiteSpace(text) || text.Length < 20)
+        {
+            return null;
+        }
+
+        return text.Length > 2000 ? text[..2000] : text;
     }
 }

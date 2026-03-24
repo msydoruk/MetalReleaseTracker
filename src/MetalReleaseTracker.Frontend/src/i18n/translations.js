@@ -279,6 +279,7 @@ const translations = {
       follower: 'follower',
       followers: 'followers',
       viewOnMetalArchives: 'View on Metal Archives',
+      formedIn: 'Formed in',
     },
     albumDetail: {
       backToAlbums: 'Back to Albums',
@@ -623,6 +624,7 @@ const translations = {
       follower: 'підписник',
       followers: 'підписників',
       viewOnMetalArchives: 'Переглянути на Metal Archives',
+      formedIn: 'Засновано у',
     },
     albumDetail: {
       backToAlbums: 'Назад до альбомів',

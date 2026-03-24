@@ -38,6 +38,16 @@ public class BandPhotoSyncedEventConsumer : IConsumer<BandPhotoSyncedEvent>
                 band.Genre = photoEvent.Genre;
             }
 
+            if (!band.FormationYear.HasValue && photoEvent.FormationYear.HasValue)
+            {
+                band.FormationYear = photoEvent.FormationYear;
+            }
+
+            if (string.IsNullOrEmpty(band.Description) && !string.IsNullOrEmpty(photoEvent.Description))
+            {
+                band.Description = photoEvent.Description;
+            }
+
             await _bandRepository.UpdateAsync(band, context.CancellationToken);
             _logger.LogInformation("Updated photo for band '{BandName}' to '{PhotoUrl}'.", photoEvent.BandName, photoEvent.PhotoBlobPath);
         }

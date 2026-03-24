@@ -20,6 +20,8 @@ public class BandEntity
 
     public string? MetalArchivesUrl { get; set; }
 
+    public int? FormationYear { get; set; }
+
     [Required]
     [MaxLength(250)]
     public string Slug { get; set; } = string.Empty;
