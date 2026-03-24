@@ -11,4 +11,8 @@ public interface IFileStorageService
     Task<string> GetFileUrlAsync(string filePath, CancellationToken cancellationToken = default);
     
     Task<bool> FileExistsAsync(string filePath, CancellationToken cancellationToken = default);
+
+    Task<Stream> DownloadFileAsync(string filePath, CancellationToken cancellationToken = default);
+
+    Task<List<string>> ListObjectsAsync(string prefix, CancellationToken cancellationToken = default);
 }

@@ -32,7 +32,7 @@ public class MinioFileStorageService : IFileStorageService
 
     public async Task<string> DownloadFileAsStringAsync(string filePath, CancellationToken cancellationToken = default)
     {
-        await using var memoryStream = await DownloadFileAsStreamAsync(filePath, cancellationToken);
+        await using var memoryStream = await DownloadFileAsync(filePath, cancellationToken);
         using var streamReader = new StreamReader(memoryStream);
         var content = await streamReader.ReadToEndAsync(cancellationToken);
 
@@ -41,7 +41,7 @@ public class MinioFileStorageService : IFileStorageService
 
     public async Task<List<string>> DownloadFileAsListAsync(string filePath, CancellationToken cancellationToken = default)
     {
-        await using var memoryStream = await DownloadFileAsStreamAsync(filePath, cancellationToken);
+        await using var memoryStream = await DownloadFileAsync(filePath, cancellationToken);
         using var streamReader = new StreamReader(memoryStream);
         
         var lines = new List<string>();
@@ -101,7 +101,7 @@ public class MinioFileStorageService : IFileStorageService
         }
     }
     
-    private async Task<Stream> DownloadFileAsStreamAsync(string filePath, CancellationToken cancellationToken = default)
+    public async Task<Stream> DownloadFileAsync(string filePath, CancellationToken cancellationToken = default)
     {
         var memoryStream = new MemoryStream();
 
@@ -112,6 +112,25 @@ public class MinioFileStorageService : IFileStorageService
 
         memoryStream.Position = 0;
         return memoryStream;
+    }
+
+    public async Task<List<string>> ListObjectsAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        var objects = new List<string>();
+        var listArgs = new ListObjectsArgs()
+            .WithBucket(_config.BucketName)
+            .WithPrefix(prefix)
+            .WithRecursive(true);
+
+        await foreach (var item in _minioClient.ListObjectsEnumAsync(listArgs, cancellationToken))
+        {
+            if (!item.IsDir)
+            {
+                objects.Add(item.Key);
+            }
+        }
+
+        return objects;
     }
 
     private async Task EnsureBucketExistsAsync(CancellationToken cancellationToken)
