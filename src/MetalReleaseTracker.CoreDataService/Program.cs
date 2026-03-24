@@ -1,3 +1,4 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Extensions;
 using MetalReleaseTracker.CoreDataService.ServiceExtensions;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -38,6 +39,8 @@ builder.Services
     .AddApplicationServices(builder.Configuration)
     .AddApplicationDatabases(builder.Configuration)
     .AddApplicationAuthentication(builder.Configuration)
+    .AddAdminAuthentication(builder.Configuration)
+    .AddAdminServices()
     .AddApplicationCors()
     .AddApplicationSwagger()
     .AddHttpForwarder();
@@ -46,11 +49,42 @@ var app = builder.Build();
 
 app.UseApplicationMiddleware(builder.Environment)
     .MapApplicationEndpoints()
+    .MapAdminEndpoints()
     .MapMinioForwarder()
     .ApplyMigrations();
 
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode == 404
+        && !context.Response.HasStarted
+        && context.Request.Path.StartsWithSegments("/admin")
+        && !context.Request.Path.StartsWithSegments("/api"))
+    {
+        var indexFilePath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "admin", "index.html");
+        if (File.Exists(indexFilePath))
+        {
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync(indexFilePath);
+        }
+    }
+});
+
 app.MapFallback(async (HttpContext context, ISeoMetaTagService seoService) =>
 {
+    if (context.Request.Path.StartsWithSegments("/admin"))
+    {
+        var indexFilePath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "admin", "index.html");
+        if (File.Exists(indexFilePath))
+        {
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync(indexFilePath);
+            return;
+        }
+    }
+
     var html = await seoService.GetHtmlWithMetaTags(context.Request.Path, context.RequestAborted);
     context.Response.ContentType = "text/html; charset=utf-8";
     await context.Response.WriteAsync(html, context.RequestAborted);

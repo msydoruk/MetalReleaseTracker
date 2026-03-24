@@ -1,6 +1,8 @@
 ﻿namespace MetalReleaseTracker.CoreDataService.Data;
 
 using MetalReleaseTracker.CoreDataService.Data.Entities;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Configurations;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities;
 using Microsoft.EntityFrameworkCore;
 
 public class CoreDataServiceDbContext : DbContext
@@ -33,9 +35,25 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<TelegramLinkTokenEntity> TelegramLinkTokens { get; set; }
 
+    public DbSet<SettingEntity> Settings { get; set; }
+
+    public DbSet<NewsArticleEntity> NewsArticles { get; set; }
+
+    public DbSet<NavigationItemEntity> NavigationItems { get; set; }
+
+    public DbSet<TranslationEntity> Translations { get; set; }
+
+    public DbSet<CurrencyRateEntity> CurrencyRates { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfiguration(new SettingEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsArticleEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NavigationItemEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new TranslationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new CurrencyRateEntityConfiguration());
 
         modelBuilder.Entity<AlbumEntity>()
             .Property(album => album.Media)

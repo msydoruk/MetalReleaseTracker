@@ -127,6 +127,15 @@ public static class RouteConstants
             public const string MarkRead = $"{Base}/{{notificationId:guid}}/read";
             public const string MarkAllRead = $"{Base}/read-all";
         }
+
+        public static class PublicConfig
+        {
+            private const string ConfigBase = $"{ApiBase}/config";
+            public const string Currencies = $"{ConfigBase}/currencies";
+            public const string Navigation = $"{ConfigBase}/navigation";
+            public const string Translations = $"{ConfigBase}/translations/{{language}}";
+            public const string News = $"{ConfigBase}/news";
+        }
     }
 
     public static class Seo

@@ -2,6 +2,8 @@ using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Events;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Constants;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using MetalReleaseTracker.SharedLibraries.Minio;
@@ -14,6 +16,7 @@ public class NotificationService : INotificationService
     private readonly IUserAlbumWatchRepository _userAlbumWatchRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly ITelegramBotService _telegramBotService;
+    private readonly IAdminSettingsService _adminSettingsService;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
@@ -21,12 +24,14 @@ public class NotificationService : INotificationService
         IUserAlbumWatchRepository userAlbumWatchRepository,
         IFileStorageService fileStorageService,
         ITelegramBotService telegramBotService,
+        IAdminSettingsService adminSettingsService,
         ILogger<NotificationService> logger)
     {
         _userNotificationRepository = userNotificationRepository;
         _userAlbumWatchRepository = userAlbumWatchRepository;
         _fileStorageService = fileStorageService;
         _telegramBotService = telegramBotService;
+        _adminSettingsService = adminSettingsService;
         _logger = logger;
     }
 
@@ -36,6 +41,17 @@ public class NotificationService : INotificationService
         Guid bandId,
         CancellationToken cancellationToken = default)
     {
+        var notificationsEnabled = await _adminSettingsService.GetBoolSettingAsync(
+            SettingCategories.FeatureToggles,
+            SettingKeys.FeatureToggles.NotificationsEnabled,
+            true,
+            cancellationToken);
+
+        if (!notificationsEnabled)
+        {
+            return;
+        }
+
         var canonicalTitle = existingAlbum?.CanonicalTitle ?? albumEvent.CanonicalTitle ?? albumEvent.Name;
         var watcherUserIds = await _userAlbumWatchRepository.GetWatcherUserIdsAsync(bandId, canonicalTitle, cancellationToken);
 

@@ -5,6 +5,8 @@ using System.Text;
 using MetalReleaseTracker.CoreDataService.Configuration;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Constants;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Authentication;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -17,15 +19,26 @@ public class JwtService : IJwtService
 {
     private readonly JwtSettings _jwtSettings;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAdminSettingsService _adminSettingsService;
 
-    public JwtService(IOptions<JwtSettings> jwtSettings, IRefreshTokenRepository refreshTokenRepository)
+    public JwtService(
+        IOptions<JwtSettings> jwtSettings,
+        IRefreshTokenRepository refreshTokenRepository,
+        IAdminSettingsService adminSettingsService)
     {
         _jwtSettings = jwtSettings.Value;
         _refreshTokenRepository = refreshTokenRepository;
+        _adminSettingsService = adminSettingsService;
     }
 
-    public JwtTokenDto GenerateJwtToken(IdentityUser user, IList<string> userRoles, string displayName = null)
+    public async Task<JwtTokenDto> GenerateJwtTokenAsync(IdentityUser user, IList<string> userRoles, string displayName = null, CancellationToken cancellationToken = default)
     {
+        var expiresMinutes = await _adminSettingsService.GetIntSettingAsync(
+            SettingCategories.Authentication,
+            SettingKeys.Authentication.JwtExpiresMinutes,
+            _jwtSettings.ExpiresMinutes,
+            cancellationToken);
+
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
@@ -41,7 +54,7 @@ public class JwtService : IJwtService
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresMinutes);
+        var expires = DateTime.UtcNow.AddMinutes(expiresMinutes);
 
         var token = new JwtSecurityToken(
             issuer: _jwtSettings.Issuer,

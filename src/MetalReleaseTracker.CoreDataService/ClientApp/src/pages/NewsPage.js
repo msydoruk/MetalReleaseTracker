@@ -1,0 +1,390 @@
+import { useState, useEffect, useCallback } from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import Switch from '@mui/material/Switch';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import Tooltip from '@mui/material/Tooltip';
+import Chip from '@mui/material/Chip';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import { DataGrid } from '@mui/x-data-grid';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PageHeader from '../components/PageHeader';
+import {
+  fetchNewsArticles,
+  createNewsArticle,
+  updateNewsArticle,
+  deleteNewsArticle,
+} from '../api/news';
+
+const CHIP_COLOR_OPTIONS = [
+  { value: 'success', label: 'Success (green)' },
+  { value: 'info', label: 'Info (blue)' },
+  { value: 'warning', label: 'Warning (orange)' },
+  { value: 'error', label: 'Error (red)' },
+  { value: 'default', label: 'Default (grey)' },
+];
+
+const EMPTY_FORM = {
+  titleEn: '',
+  titleUa: '',
+  contentEn: '',
+  contentUa: '',
+  chipLabel: '',
+  chipColor: 'info',
+  iconName: '',
+  date: '',
+  sortOrder: 0,
+  isPublished: false,
+};
+
+export default function NewsPage() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [deletingRow, setDeletingRow] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const showSnackbar = useCallback((message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await fetchNewsArticles();
+      setRows(data);
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Failed to load news articles', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showSnackbar]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleOpenCreate = useCallback(() => {
+    setEditingId(null);
+    setForm({
+      ...EMPTY_FORM,
+      date: new Date().toISOString().split('T')[0],
+    });
+    setDialogOpen(true);
+  }, []);
+
+  const handleOpenEdit = useCallback((row) => {
+    setEditingId(row.id);
+    setForm({
+      titleEn: row.titleEn || '',
+      titleUa: row.titleUa || '',
+      contentEn: row.contentEn || '',
+      contentUa: row.contentUa || '',
+      chipLabel: row.chipLabel || '',
+      chipColor: row.chipColor || 'info',
+      iconName: row.iconName || '',
+      date: row.date ? row.date.split('T')[0] : '',
+      sortOrder: row.sortOrder || 0,
+      isPublished: row.isPublished || false,
+    });
+    setDialogOpen(true);
+  }, []);
+
+  const handleOpenDelete = useCallback((row) => {
+    setDeletingRow(row);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    try {
+      setSaving(true);
+      const payload = {
+        ...form,
+        sortOrder: parseInt(form.sortOrder, 10) || 0,
+      };
+      if (editingId) {
+        await updateNewsArticle(editingId, payload);
+        showSnackbar('Article updated');
+      } else {
+        await createNewsArticle(payload);
+        showSnackbar('Article created');
+      }
+      setDialogOpen(false);
+      loadData();
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Failed to save article', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [editingId, form, loadData, showSnackbar]);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      setSaving(true);
+      await deleteNewsArticle(deletingRow.id);
+      showSnackbar('Article deleted');
+      setDeleteDialogOpen(false);
+      setDeletingRow(null);
+      loadData();
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Failed to delete article', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [deletingRow, loadData, showSnackbar]);
+
+  const columns = [
+    { field: 'titleEn', headerName: 'Title (En)', flex: 1, minWidth: 250 },
+    {
+      field: 'date',
+      headerName: 'Date',
+      width: 120,
+      valueFormatter: (value) =>
+        value ? new Date(value).toLocaleDateString() : '--',
+    },
+    {
+      field: 'chipLabel',
+      headerName: 'Chip',
+      width: 130,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) =>
+        params.value ? (
+          <Chip
+            label={params.value}
+            size="small"
+            color={params.row.chipColor || 'default'}
+            variant="outlined"
+          />
+        ) : (
+          '--'
+        ),
+    },
+    {
+      field: 'isPublished',
+      headerName: 'Published',
+      width: 110,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value ? 'Yes' : 'No'}
+          size="small"
+          color={params.value ? 'success' : 'default'}
+          variant={params.value ? 'filled' : 'outlined'}
+        />
+      ),
+    },
+    {
+      field: 'sortOrder',
+      headerName: 'Order',
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 120,
+      sortable: false,
+      filterable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Box>
+          <Tooltip title="Edit">
+            <IconButton size="small" onClick={() => handleOpenEdit(params.row)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton size="small" color="error" onClick={() => handleOpenDelete(params.row)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      ),
+    },
+  ];
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <PageHeader
+        title="News"
+        subtitle="Manage news articles"
+        action={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
+            New Article
+          </Button>
+        }
+      />
+
+      <Box sx={{ flexGrow: 1, minHeight: 0 }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+          disableRowSelectionOnClick
+          autoHeight={false}
+          sx={{ height: '100%' }}
+        />
+      </Box>
+
+      {/* Create / Edit Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>{editingId ? 'Edit Article' : 'New Article'}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+            <TextField
+              label="Title (EN)"
+              fullWidth
+              value={form.titleEn}
+              onChange={(e) => setForm((prev) => ({ ...prev, titleEn: e.target.value }))}
+            />
+            <TextField
+              label="Title (UA)"
+              fullWidth
+              value={form.titleUa}
+              onChange={(e) => setForm((prev) => ({ ...prev, titleUa: e.target.value }))}
+            />
+          </Box>
+
+          <TextField
+            label="Content (EN)"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={4}
+            value={form.contentEn}
+            onChange={(e) => setForm((prev) => ({ ...prev, contentEn: e.target.value }))}
+          />
+
+          <TextField
+            label="Content (UA)"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={4}
+            value={form.contentUa}
+            onChange={(e) => setForm((prev) => ({ ...prev, contentUa: e.target.value }))}
+          />
+
+          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+            <TextField
+              label="Chip Label"
+              value={form.chipLabel}
+              onChange={(e) => setForm((prev) => ({ ...prev, chipLabel: e.target.value }))}
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              label="Chip Color"
+              select
+              value={form.chipColor}
+              onChange={(e) => setForm((prev) => ({ ...prev, chipColor: e.target.value }))}
+              sx={{ flex: 1 }}
+            >
+              {CHIP_COLOR_OPTIONS.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <TextField
+              label="Icon Name"
+              value={form.iconName}
+              onChange={(e) => setForm((prev) => ({ ...prev, iconName: e.target.value }))}
+              placeholder="MUI icon name"
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              label="Date"
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+              sx={{ flex: 1 }}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              label="Sort Order"
+              type="number"
+              value={form.sortOrder}
+              onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))}
+              sx={{ width: 120 }}
+            />
+          </Box>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.isPublished}
+                onChange={(e) => setForm((prev) => ({ ...prev, isPublished: e.target.checked }))}
+              />
+            }
+            label="Published"
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSave} disabled={saving || !form.titleEn}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Article</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete <strong>{deletingRow?.titleEn}</strong>? This action cannot be undone.
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={saving}>
+            {saving ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}

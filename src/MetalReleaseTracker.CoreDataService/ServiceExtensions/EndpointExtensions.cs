@@ -37,5 +37,6 @@ public static class EndpointExtensions
         UserAlbumWatchEndpoints.MapEndpoints(routeBuilder);
         NotificationEndpoints.MapEndpoints(routeBuilder);
         TelegramEndpoints.MapEndpoints(routeBuilder);
+        ConfigEndpoints.MapEndpoints(routeBuilder);
     }
 }

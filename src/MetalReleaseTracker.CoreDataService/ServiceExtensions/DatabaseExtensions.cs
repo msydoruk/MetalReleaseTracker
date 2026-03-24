@@ -1,6 +1,8 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data;
 using MetalReleaseTracker.CoreDataService.Data.Seeders;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -36,6 +38,15 @@ public static class DatabaseExtensions
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<SlugDataSeeder>>();
             var seeder = new SlugDataSeeder(dbContext, logger);
             seeder.SeedSlugsAsync().GetAwaiter().GetResult();
+
+            var settingsSeedService = scope.ServiceProvider.GetRequiredService<IAdminSettingsSeedService>();
+            settingsSeedService.SeedAsync().GetAwaiter().GetResult();
+
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            if (!roleManager.RoleExistsAsync("Admin").GetAwaiter().GetResult())
+            {
+                roleManager.CreateAsync(new IdentityRole("Admin")).GetAwaiter().GetResult();
+            }
         }
         catch (Exception ex)
         {

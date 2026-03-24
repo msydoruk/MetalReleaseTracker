@@ -207,7 +207,7 @@ public class AuthService : IAuthService
     private async Task<AuthResultDto> CreateSuccessResult(IdentityUser user, string message, CancellationToken cancellationToken = default, string displayName = null)
     {
         var roles = await _userManager.GetRolesAsync(user);
-        var jwtToken = _jwtService.GenerateJwtToken(user, roles, displayName);
+        var jwtToken = await _jwtService.GenerateJwtTokenAsync(user, roles, displayName, cancellationToken);
         var refreshToken = _jwtService.GenerateRefreshToken();
         await _jwtService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
 

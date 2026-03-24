@@ -132,3 +132,8 @@ export const markAllNotificationsRead = () => api.put('/notifications/read-all')
 export const generateTelegramToken = () => api.post('/telegram/link-token');
 export const getTelegramStatus = () => api.get('/telegram/status');
 export const unlinkTelegram = () => api.delete('/telegram/unlink');
+
+// Config
+export const fetchPublicCurrencies = () => api.get('/config/currencies');
+export const fetchPublicNavigation = () => api.get('/config/navigation');
+export const fetchPublicNews = () => api.get('/config/news');

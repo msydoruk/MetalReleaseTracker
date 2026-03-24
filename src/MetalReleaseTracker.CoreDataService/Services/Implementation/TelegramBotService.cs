@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Constants;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -13,23 +15,37 @@ public class TelegramBotService : ITelegramBotService
     private readonly ITelegramBotClient? _botClient;
     private readonly ITelegramLinkRepository _telegramLinkRepository;
     private readonly IUserAlbumWatchRepository _userAlbumWatchRepository;
+    private readonly IAdminSettingsService _adminSettingsService;
     private readonly ILogger<TelegramBotService> _logger;
 
     public TelegramBotService(
         ITelegramLinkRepository telegramLinkRepository,
         IUserAlbumWatchRepository userAlbumWatchRepository,
+        IAdminSettingsService adminSettingsService,
         ILogger<TelegramBotService> logger,
         ITelegramBotClient? botClient = null)
     {
         _botClient = botClient;
         _telegramLinkRepository = telegramLinkRepository;
         _userAlbumWatchRepository = userAlbumWatchRepository;
+        _adminSettingsService = adminSettingsService;
         _logger = logger;
     }
 
     public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken = default)
     {
         if (_botClient == null || update.Message?.Text == null)
+        {
+            return;
+        }
+
+        var telegramBotEnabled = await _adminSettingsService.GetBoolSettingAsync(
+            SettingCategories.FeatureToggles,
+            SettingKeys.FeatureToggles.TelegramBotEnabled,
+            true,
+            cancellationToken);
+
+        if (!telegramBotEnabled)
         {
             return;
         }

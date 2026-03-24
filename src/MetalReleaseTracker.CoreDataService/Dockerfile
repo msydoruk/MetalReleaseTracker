@@ -22,6 +22,21 @@ RUN if [ "$SKIP_FRONTEND_BUILD" = "false" ]; then \
       npm run build; \
     fi
 
+# Admin SPA build stage
+FROM node:18-alpine AS admin-build
+WORKDIR /app
+
+COPY MetalReleaseTracker.CoreDataService/ClientApp/package.json MetalReleaseTracker.CoreDataService/ClientApp/package-lock.json* ./
+
+RUN npm install --legacy-peer-deps
+
+COPY MetalReleaseTracker.CoreDataService/ClientApp/ .
+
+ENV NODE_OPTIONS=--max-old-space-size=2048
+ENV GENERATE_SOURCEMAP=false
+
+RUN npm run build
+
 # .NET build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -44,5 +59,6 @@ EXPOSE 8081
 
 COPY --from=build /app/publish .
 COPY --from=frontend-build /app/build ./wwwroot
+COPY --from=admin-build /app/build ./wwwroot/admin
 
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.CoreDataService.dll"]

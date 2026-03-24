@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -33,19 +33,45 @@ import {
   Newspaper as NewspaperIcon,
   Language as LanguageIcon,
   History as HistoryIcon,
-  CalendarMonth as CalendarMonthIcon
+  CalendarMonth as CalendarMonthIcon,
+  RateReview as RateReviewIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
+import { fetchPublicNavigation } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import HeaderSearch from './HeaderSearch';
+
+const ICON_MAP = {
+  HomeIcon: HomeIcon,
+  AlbumIcon: AlbumIcon,
+  MusicNoteIcon: MusicNoteIcon,
+  StoreIcon: StoreIcon,
+  CalendarMonthIcon: CalendarMonthIcon,
+  NewspaperIcon: NewspaperIcon,
+  InfoIcon: InfoIcon,
+  HistoryIcon: HistoryIcon,
+  RateReviewIcon: RateReviewIcon,
+};
+
+const FALLBACK_NAV_ITEMS = [
+  { titleEn: 'Home', titleUa: 'Home', path: '/', iconName: 'HomeIcon', isProtected: false },
+  { titleEn: 'Albums', titleUa: 'Albums', path: '/albums', iconName: 'AlbumIcon', isProtected: false },
+  { titleEn: 'Bands', titleUa: 'Bands', path: '/bands', iconName: 'MusicNoteIcon', isProtected: false },
+  { titleEn: 'Distributors', titleUa: 'Distributors', path: '/distributors', iconName: 'StoreIcon', isProtected: false },
+  { titleEn: 'Calendar', titleUa: 'Calendar', path: '/calendar', iconName: 'CalendarMonthIcon', isProtected: false },
+  { titleEn: 'News', titleUa: 'News', path: '/news', iconName: 'NewspaperIcon', isProtected: false },
+  { titleEn: 'About', titleUa: 'About', path: '/about', iconName: 'InfoIcon', isProtected: false },
+  { titleEn: 'Changelog', titleUa: 'Changelog', path: '/changelog', iconName: 'HistoryIcon', isProtected: false },
+];
 
 const Header = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [apiNavItems, setApiNavItems] = useState(null);
 
   const [currencyAnchorEl, setCurrencyAnchorEl] = useState(null);
 
@@ -55,14 +81,14 @@ const Header = () => {
   const { currency, changeCurrency } = useCurrency();
 
   const CURRENCY_OPTIONS = ['EUR', 'UAH', 'USD'];
-  
+
   const checkUserStatus = async () => {
     try {
       const currentUser = await authService.getUser();
-      
+
       setUser(currentUser);
       setLoading(false);
-      
+
       return !!currentUser;
     } catch (error) {
       console.error('Error checking user status:', error);
@@ -70,52 +96,82 @@ const Header = () => {
       return false;
     }
   };
-  
+
   useEffect(() => {
     checkUserStatus();
-    
+
     const intervalId = setInterval(() => {
       checkUserStatus();
     }, 60000);
-    
+
     const handleAuthStateChange = () => {
       console.log('Auth state changed event received');
       checkUserStatus();
     };
-    
+
     const handleStorageChange = (event) => {
       if (event.key === 'auth_token' || event.key === 'user_data') {
         console.log('Auth storage changed, checking authentication status');
         checkUserStatus();
       }
     };
-    
+
     window.addEventListener('auth_state_changed', handleAuthStateChange);
     window.addEventListener('storage', handleStorageChange);
-    
+
     return () => {
       clearInterval(intervalId);
       window.removeEventListener('auth_state_changed', handleAuthStateChange);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
-  
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicNavigation()
+      .then((response) => {
+        if (cancelled) return;
+        const data = response.data;
+        if (Array.isArray(data) && data.length > 0) {
+          setApiNavItems(data);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to fetch navigation, using fallback defaults:', error);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const navItems = useMemo(() => {
+    const source = apiNavItems || FALLBACK_NAV_ITEMS;
+    return source
+      .filter((item) => !item.isProtected)
+      .map((item) => {
+        const IconComponent = ICON_MAP[item.iconName];
+        return {
+          title: language === 'ua' ? item.titleUa : item.titleEn,
+          path: item.path,
+          icon: IconComponent ? <IconComponent /> : <HomeIcon />,
+        };
+      });
+  }, [apiNavItems, language]);
+
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleLogin = () => {
     navigate('/login');
   };
-  
+
   const handleRegister = () => {
     navigate('/register');
   };
-  
+
   const handleLogout = async () => {
     try {
       handleMenuClose();
@@ -125,37 +181,26 @@ const Header = () => {
       console.error('Logout error:', error);
     }
   };
-  
+
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
     setDrawerOpen(open);
   };
-  
-  const navItems = [
-    { title: t('nav.home'), path: '/', icon: <HomeIcon /> },
-    { title: t('nav.albums'), path: '/albums', icon: <AlbumIcon /> },
-    { title: t('nav.bands'), path: '/bands', icon: <MusicNoteIcon /> },
-    { title: t('nav.distributors'), path: '/distributors', icon: <StoreIcon /> },
-    { title: t('nav.calendar'), path: '/calendar', icon: <CalendarMonthIcon /> },
-    { title: t('nav.news'), path: '/news', icon: <NewspaperIcon /> },
-    { title: t('nav.about'), path: '/about', icon: <InfoIcon /> },
-    { title: t('nav.changelog'), path: '/changelog', icon: <HistoryIcon /> }
-  ];
-  
+
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(part => part[0]).join('').toUpperCase();
   };
-  
+
   const getUserName = () => {
     if (!user) return 'User';
     return user.claims?.username ||
            user.claims?.email?.split('@')[0] ||
            'User';
   };
-  
+
   const drawerList = (
     <Box
       sx={{ width: 250 }}
@@ -166,7 +211,7 @@ const Header = () => {
       {user && (
         <>
           <Box sx={{ px: 2, py: 3, bgcolor: 'primary.dark', color: 'white', textAlign: 'center' }}>
-            <Avatar 
+            <Avatar
               sx={{ width: 60, height: 60, mx: 'auto', mb: 1, bgcolor: 'secondary.main' }}
               alt={getUserName()}
             >
@@ -179,7 +224,7 @@ const Header = () => {
           <Divider />
         </>
       )}
-      
+
       <List>
         {navItems.map((item) => {
           const isActive = item.path === '/'
@@ -216,7 +261,7 @@ const Header = () => {
           );
         })}
       </List>
-      
+
       <Divider />
       <List>
         {user ? (
@@ -245,7 +290,7 @@ const Header = () => {
       </List>
     </Box>
   );
-  
+
   const renderAuthButtons = () => {
     if (user) {
       return (
@@ -256,7 +301,7 @@ const Header = () => {
               onClick={handleProfileMenuOpen}
               color="inherit"
               startIcon={
-                <Avatar 
+                <Avatar
                   sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}
                   alt={getUserName()}
                 >
@@ -297,11 +342,11 @@ const Header = () => {
         </Box>
       );
     }
-    
+
     return (
       <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-        <Button 
-          color="inherit" 
+        <Button
+          color="inherit"
           startIcon={<LoginIcon />}
           onClick={handleLogin}
           sx={{ mr: 1 }}
@@ -319,7 +364,7 @@ const Header = () => {
       </Box>
     );
   };
-  
+
   return (
     <>
       <AppBar position="sticky">
@@ -336,7 +381,7 @@ const Header = () => {
             >
               <MenuIcon />
             </IconButton>
-            
+
             {/* Logo and title */}
             <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, flexGrow: { xs: 1, md: 0 } }}>
               <Typography
@@ -373,7 +418,7 @@ const Header = () => {
                 </Box>
               </Tooltip>
             </Box>
-            
+
             {/* Desktop navigation */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {navItems.map((item) => (
@@ -387,7 +432,7 @@ const Header = () => {
                 </Button>
               ))}
             </Box>
-            
+
             {/* Search + Currency + Language toggle + Auth buttons */}
             {!loading && (
               <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
@@ -438,7 +483,7 @@ const Header = () => {
           </Toolbar>
         </Container>
       </AppBar>
-      
+
       {/* Drawer for mobile navigation */}
       <Drawer
         anchor="left"
@@ -451,4 +496,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;
