@@ -293,7 +293,8 @@ public class AlbumDetailParsingJob
 
     private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
     {
-        return existing.Price != parsed.Price;
+        return existing.Price != parsed.Price
+            || existing.StockStatus != parsed.StockStatus;
     }
 
     private async Task ProcessAlbumImageAsync(AlbumParsedEvent albumParsedEvent, IAlbumDetailParser parser, CancellationToken cancellationToken)
