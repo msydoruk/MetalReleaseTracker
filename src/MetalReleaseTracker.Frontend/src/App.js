@@ -21,6 +21,7 @@ const NewsPage = lazy(() => import('./pages/NewsPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const ChangelogPage = lazy(() => import('./pages/ChangelogPage'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
@@ -193,6 +194,7 @@ function App() {
                   <Route path="/news" element={<NewsPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/reviews" element={<ReviewsPage />} />
+                  <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/changelog" element={<ChangelogPage />} />
 
                   {/* Protected routes */}

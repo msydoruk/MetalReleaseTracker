@@ -32,7 +32,8 @@ import {
   Info as InfoIcon,
   Newspaper as NewspaperIcon,
   Language as LanguageIcon,
-  History as HistoryIcon
+  History as HistoryIcon,
+  CalendarMonth as CalendarMonthIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
@@ -137,6 +138,7 @@ const Header = () => {
     { title: t('nav.albums'), path: '/albums', icon: <AlbumIcon /> },
     { title: t('nav.bands'), path: '/bands', icon: <MusicNoteIcon /> },
     { title: t('nav.distributors'), path: '/distributors', icon: <StoreIcon /> },
+    { title: t('nav.calendar'), path: '/calendar', icon: <CalendarMonthIcon /> },
     { title: t('nav.news'), path: '/news', icon: <NewspaperIcon /> },
     { title: t('nav.about'), path: '/about', icon: <InfoIcon /> },
     { title: t('nav.changelog'), path: '/changelog', icon: <HistoryIcon /> }

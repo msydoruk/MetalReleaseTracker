@@ -5,6 +5,7 @@ const translations = {
       albums: 'Albums',
       bands: 'Bands',
       distributors: 'Distributors',
+      calendar: 'Calendar',
       news: 'News',
       about: 'About',
       reviews: 'Reviews',
@@ -323,6 +324,14 @@ const translations = {
       watchTooltip: 'Get notified about price drops and restocks',
       unwatchTooltip: 'Stop watching this album',
     },
+    calendar: {
+      title: 'Release Calendar',
+      description: 'Upcoming pre-orders and recent releases from Ukrainian metal bands.',
+      preOrders: 'Pre-Orders',
+      recentReleases: 'Recent Releases (Last 30 Days)',
+      noReleases: 'No releases found matching your filters.',
+      preOrder: 'Pre-Order',
+    },
     telegram: {
       title: 'Telegram Notifications',
       description: 'Link your Telegram account to receive instant notifications about price drops, restocks, and new releases.',
@@ -340,6 +349,7 @@ const translations = {
       albums: 'Альбоми',
       bands: 'Гурти',
       distributors: 'Дистриб\'ютори',
+      calendar: 'Календар',
       news: 'Новини',
       about: 'Про проєкт',
       reviews: 'Відгуки',
@@ -657,6 +667,14 @@ const translations = {
     watch: {
       watchTooltip: 'Отримувати сповіщення про зниження ціни та повернення в продаж',
       unwatchTooltip: 'Припинити стежити за цим альбомом',
+    },
+    calendar: {
+      title: 'Календар релізів',
+      description: 'Майбутні передзамовлення та нещодавні релізи українських метал-гуртів.',
+      preOrders: 'Передзамовлення',
+      recentReleases: 'Нещодавні релізи (останні 30 днів)',
+      noReleases: 'Релізів за обраними фільтрами не знайдено.',
+      preOrder: 'Передзамовлення',
     },
     telegram: {
       title: 'Сповіщення в Telegram',

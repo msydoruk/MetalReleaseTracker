@@ -50,6 +50,16 @@ const Footer = () => {
             </MuiLink>
             <MuiLink
               component={RouterLink}
+              to="/calendar"
+              color="text.secondary"
+              underline="hover"
+              variant="body2"
+              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
+            >
+              {t('nav.calendar')}
+            </MuiLink>
+            <MuiLink
+              component={RouterLink}
               to="/news"
               color="text.secondary"
               underline="hover"
