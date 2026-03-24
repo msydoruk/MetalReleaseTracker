@@ -117,3 +117,14 @@ export const checkFollowingBand = (bandId) => api.get(`/followed-bands/${bandId}
 export const fetchFollowedBands = () => api.get('/followed-bands');
 export const fetchBandFollowerCount = (bandId) => api.get(`/followed-bands/${bandId}/count`);
 export const fetchFeed = (page = 1, pageSize = 20) => api.get(`/followed-bands/feed?page=${page}&pageSize=${pageSize}`);
+
+export const watchAlbum = (albumId) => api.post(`/watches/${albumId}`);
+export const unwatchAlbum = (albumId) => api.delete(`/watches/${albumId}`);
+export const checkWatchingAlbum = (albumId) => api.get(`/watches/${albumId}/check`);
+export const fetchWatchedKeys = () => api.get('/watches/keys');
+
+export const fetchNotifications = (page = 1, pageSize = 20) =>
+  api.get(`/notifications?page=${page}&pageSize=${pageSize}`);
+export const fetchUnreadNotificationCount = () => api.get('/notifications/unread-count');
+export const markNotificationRead = (notificationId) => api.put(`/notifications/${notificationId}/read`);
+export const markAllNotificationsRead = () => api.put('/notifications/read-all');

@@ -18,6 +18,7 @@ import {
   Divider,
   Tooltip
 } from '@mui/material';
+import NotificationBell from './NotificationBell';
 import {
   Menu as MenuIcon,
   Home as HomeIcon,
@@ -247,6 +248,7 @@ const Header = () => {
     if (user) {
       return (
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+          <NotificationBell />
           <Tooltip title={t('nav.profile')}>
             <Button
               onClick={handleProfileMenuOpen}

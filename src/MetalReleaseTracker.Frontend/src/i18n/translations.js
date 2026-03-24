@@ -314,6 +314,15 @@ const translations = {
       rights: 'All rights reserved.',
       suggestDistributor: 'Suggest a Distributor',
     },
+    notifications: {
+      title: 'Notifications',
+      noNotifications: 'No notifications yet',
+      markAllRead: 'Mark all as read',
+    },
+    watch: {
+      watchTooltip: 'Get notified about price drops and restocks',
+      unwatchTooltip: 'Stop watching this album',
+    },
   },
   ua: {
     nav: {
@@ -629,6 +638,15 @@ const translations = {
     footer: {
       rights: 'Всі права захищені.',
       suggestDistributor: 'Запропонувати дистриб\'ютора',
+    },
+    notifications: {
+      title: 'Сповіщення',
+      noNotifications: 'Сповіщень поки немає',
+      markAllRead: 'Позначити всі як прочитані',
+    },
+    watch: {
+      watchTooltip: 'Отримувати сповіщення про зниження ціни та повернення в продаж',
+      unwatchTooltip: 'Припинити стежити за цим альбомом',
     },
   },
 };

@@ -29,6 +29,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry, getDistributorCountryName } from '../utils/distributorCountries';
 import useRecentlyViewed from '../hooks/useRecentlyViewed';
+import WatchButton from '../components/WatchButton';
 
 const AlbumDetailPage = () => {
   const { slug } = useParams();
@@ -288,12 +289,15 @@ const AlbumDetailPage = () => {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, justifyContent: isMobile ? 'center' : 'flex-start' }}>
             {isLoggedIn && (
-              <CollectionStatusMenu
-                currentStatus={currentStatus}
-                onSelect={(status) => handleCollectionChange(status)}
-                onRemove={handleCollectionRemove}
-                sx={{ color: 'text.secondary' }}
-              />
+              <>
+                <CollectionStatusMenu
+                  currentStatus={currentStatus}
+                  onSelect={(status) => handleCollectionChange(status)}
+                  onRemove={handleCollectionRemove}
+                  sx={{ color: 'text.secondary' }}
+                />
+                <WatchButton albumId={album.primaryAlbumId} isLoggedIn={isLoggedIn} />
+              </>
             )}
             <Button
               variant="outlined"
