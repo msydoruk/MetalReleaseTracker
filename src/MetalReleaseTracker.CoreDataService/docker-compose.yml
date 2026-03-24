@@ -25,7 +25,6 @@ services:
       dockerfile: MetalReleaseTracker.CoreDataService/Dockerfile
       args:
         SKIP_FRONTEND_BUILD: ${SKIP_FRONTEND_BUILD:-false}
-        SKIP_ADMIN_BUILD: ${SKIP_ADMIN_BUILD:-false}
     container_name: metalrelease_coredata_service
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

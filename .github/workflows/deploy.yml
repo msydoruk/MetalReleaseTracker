@@ -68,6 +68,9 @@ jobs:
             --include='src/MetalReleaseTracker.SharedLibraries/***' \
             --include='src/MetalReleaseTracker.sln' \
             --include='src/' \
+            --exclude='**/node_modules/***' \
+            --exclude='src/MetalReleaseTracker.CoreDataService/ClientApp/src/***' \
+            --exclude='src/MetalReleaseTracker.CoreDataService/ClientApp/public/***' \
             --exclude='*' \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.DEPLOY_DIR }}/
 
@@ -123,7 +126,7 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           set -e
           cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService
-          SKIP_FRONTEND_BUILD=true SKIP_ADMIN_BUILD=true docker compose up -d --build
+          SKIP_FRONTEND_BUILD=true docker compose up -d --build
           echo "Waiting for services to start..."
           sleep 10
           docker compose ps

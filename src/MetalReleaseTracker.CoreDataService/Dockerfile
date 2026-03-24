@@ -22,27 +22,6 @@ RUN if [ "$SKIP_FRONTEND_BUILD" = "false" ]; then \
       npm run build; \
     fi
 
-# Admin SPA build stage (skipped when SKIP_ADMIN_BUILD=true and pre-built build/ exists)
-FROM node:18-alpine AS admin-build
-WORKDIR /app
-
-ARG SKIP_ADMIN_BUILD=false
-
-COPY MetalReleaseTracker.CoreDataService/ClientApp/package.json MetalReleaseTracker.CoreDataService/ClientApp/package-lock.json* ./
-
-RUN if [ "$SKIP_ADMIN_BUILD" = "false" ]; then \
-      npm ci --legacy-peer-deps; \
-    fi
-
-COPY MetalReleaseTracker.CoreDataService/ClientApp/ .
-
-ENV NODE_OPTIONS=--max-old-space-size=2048
-ENV GENERATE_SOURCEMAP=false
-
-RUN if [ "$SKIP_ADMIN_BUILD" = "false" ]; then \
-      npm run build; \
-    fi
-
 # .NET build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -65,6 +44,6 @@ EXPOSE 8081
 
 COPY --from=build /app/publish .
 COPY --from=frontend-build /app/build ./wwwroot
-COPY --from=admin-build /app/build ./wwwroot/admin
+COPY MetalReleaseTracker.CoreDataService/ClientApp/build/ ./wwwroot/admin/
 
 ENTRYPOINT ["dotnet", "MetalReleaseTracker.CoreDataService.dll"]
