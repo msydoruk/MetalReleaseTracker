@@ -100,6 +100,24 @@ public static class RouteConstants
             public const string Feed = $"{Base}/feed";
             public const string FollowerCount = $"{Base}/{{bandId:guid}}/count";
         }
+
+        public static class Watches
+        {
+            private const string Base = $"{ApiBase}/watches";
+            public const string Watch = $"{Base}/{{albumId:guid}}";
+            public const string Unwatch = $"{Base}/{{albumId:guid}}";
+            public const string Check = $"{Base}/{{albumId:guid}}/check";
+            public const string GetKeys = $"{Base}/keys";
+        }
+
+        public static class Notifications
+        {
+            private const string Base = $"{ApiBase}/notifications";
+            public const string GetAll = Base;
+            public const string UnreadCount = $"{Base}/unread-count";
+            public const string MarkRead = $"{Base}/{{notificationId:guid}}/read";
+            public const string MarkAllRead = $"{Base}/read-all";
+        }
     }
 
     public static class Seo

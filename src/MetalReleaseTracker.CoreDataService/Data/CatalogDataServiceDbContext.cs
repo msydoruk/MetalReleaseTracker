@@ -25,6 +25,10 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<UserFollowedBandEntity> UserFollowedBands { get; set; }
 
+    public DbSet<UserAlbumWatchEntity> UserAlbumWatches { get; set; }
+
+    public DbSet<UserNotificationEntity> UserNotifications { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -75,5 +79,20 @@ public class CoreDataServiceDbContext : DbContext
         modelBuilder.Entity<UserFollowedBandEntity>()
             .HasIndex(follow => new { follow.UserId, follow.BandId })
             .IsUnique();
+
+        modelBuilder.Entity<UserAlbumWatchEntity>()
+            .HasIndex(watch => new { watch.UserId, watch.BandId, watch.CanonicalTitle })
+            .IsUnique();
+
+        modelBuilder.Entity<UserNotificationEntity>()
+            .Property(notification => notification.NotificationType)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<UserNotificationEntity>()
+            .HasIndex(notification => new { notification.UserId, notification.IsRead, notification.CreatedDate });
+
+        modelBuilder.Entity<UserNotificationEntity>()
+            .HasIndex(notification => new { notification.UserId, notification.CreatedDate });
     }
 }

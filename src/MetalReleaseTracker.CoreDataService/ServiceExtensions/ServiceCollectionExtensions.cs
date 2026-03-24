@@ -38,6 +38,8 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IReviewRepository, ReviewRepository>();
             services.AddScoped<IAlbumChangeLogRepository, AlbumChangeLogRepository>();
             services.AddScoped<IAlbumRatingRepository, AlbumRatingRepository>();
+            services.AddScoped<IUserAlbumWatchRepository, UserAlbumWatchRepository>();
+            services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
 
             return services;
         }
@@ -54,6 +56,8 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IAlbumRatingService, AlbumRatingService>();
             services.AddScoped<ISeoMetaTagService, SeoMetaTagService>();
             services.AddScoped<ISitemapService, SitemapService>();
+            services.AddScoped<IUserAlbumWatchService, UserAlbumWatchService>();
+            services.AddScoped<INotificationService, NotificationService>();
 
             return services;
         }

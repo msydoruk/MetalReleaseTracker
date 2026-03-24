@@ -5,6 +5,7 @@ using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Events;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Extensions;
+using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Utilities;
 
 namespace MetalReleaseTracker.CoreDataService.Consumers;
@@ -15,6 +16,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
     private readonly IBandRepository _bandRepository;
     private readonly IDistributorsRepository _distributorsRepository;
     private readonly IAlbumChangeLogRepository _albumChangeLogRepository;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<AlbumProcessedEventConsumer> _logger;
     private readonly IMapper _mapper;
 
@@ -23,6 +25,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
         IBandRepository bandRepository,
         IDistributorsRepository distributorsRepository,
         IAlbumChangeLogRepository albumChangeLogRepository,
+        INotificationService notificationService,
         ILogger<AlbumProcessedEventConsumer> logger,
         IMapper mapper)
     {
@@ -30,6 +33,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
         _bandRepository = bandRepository;
         _distributorsRepository = distributorsRepository;
         _albumChangeLogRepository = albumChangeLogRepository;
+        _notificationService = notificationService;
         _logger = logger;
         _mapper = mapper;
     }
@@ -111,6 +115,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
                 _logger.LogInformation("Album '{Name}' (SKU={SKU}) was added.", albumEvent.Name, albumEvent.SKU);
             }
 
+            await _notificationService.GenerateNotificationsAsync(albumEvent, existingAlbum, bandId, context.CancellationToken);
             await LogChangeAsync(albumEvent, distributorName, oldPrice);
         }
         catch (Exception exception)

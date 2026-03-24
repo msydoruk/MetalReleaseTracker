@@ -7,6 +7,7 @@ using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Data.Events;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
 using MetalReleaseTracker.CoreDataService.Extensions;
+using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using MetalReleaseTracker.CoreDataService.Tests.Factories;
 using MetalReleaseTracker.CoreDataService.Tests.Fixtures;
 using Moq;
@@ -33,11 +34,13 @@ public class AlbumParsedEventConsumerTests : IClassFixture<TestPostgresDatabaseF
         _albumProcessedEventConsumerLoggerMock = new();
         _mapper = new MapperConfiguration(cfg => cfg.CreateMap<AlbumProcessedPublicationEvent, AlbumEntity>()).CreateMapper();
 
+        var notificationServiceMock = new Mock<INotificationService>();
         _albumProcessedEventConsumer = new AlbumProcessedEventConsumer(
             _albumRepository,
             _bandRepository,
             _distributorRepository,
             _albumChangeLogRepository,
+            notificationServiceMock.Object,
             _albumProcessedEventConsumerLoggerMock.Object,
             _mapper);
     }

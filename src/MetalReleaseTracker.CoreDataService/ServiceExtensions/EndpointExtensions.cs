@@ -34,5 +34,7 @@ public static class EndpointExtensions
         ChangeLogEndpoints.MapEndpoints(routeBuilder);
         FeedEndpoints.MapEndpoints(routeBuilder);
         SitemapEndpoints.MapEndpoints(routeBuilder);
+        UserAlbumWatchEndpoints.MapEndpoints(routeBuilder);
+        NotificationEndpoints.MapEndpoints(routeBuilder);
     }
 }
