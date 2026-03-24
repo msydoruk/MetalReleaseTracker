@@ -19,7 +19,7 @@ import {
   TextField
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { fetchBands, fetchDistributors, fetchGenres } from '../services/api';
+import { fetchBands, fetchDistributors } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -44,7 +44,6 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
 
   const [bands, setBands] = useState([]);
   const [distributors, setDistributors] = useState([]);
-  const [genres, setGenres] = useState([]);
   const [priceRange, setPriceRange] = useState([
     filters.minPrice || 0,
     filters.maxPrice || 200
@@ -54,14 +53,12 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
-        const [bandsResponse, distributorsResponse, genresResponse] = await Promise.all([
+        const [bandsResponse, distributorsResponse] = await Promise.all([
           fetchBands(),
           fetchDistributors(),
-          fetchGenres(),
         ]);
         setBands(bandsResponse.data || []);
         setDistributors(distributorsResponse.data || []);
-        setGenres(genresResponse.data || []);
       } catch (error) {
         console.error('Error fetching filter data:', error);
       }

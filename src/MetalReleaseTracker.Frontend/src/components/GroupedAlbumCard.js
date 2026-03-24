@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Card,
   CardContent,
-  CardMedia,
   Typography,
   Box,
   Chip,
