@@ -102,6 +102,7 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
                 component="img"
                 src={album.photoUrl || placeholderImg}
                 alt={album.name}
+                loading="lazy"
                 sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
               />
               <Box sx={{ p: 1 }}>

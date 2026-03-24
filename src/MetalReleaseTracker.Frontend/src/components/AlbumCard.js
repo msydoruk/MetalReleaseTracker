@@ -73,6 +73,7 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
             component="img"
             image={imageUrl}
             alt={album.name}
+            loading="lazy"
             onClick={() => setLightboxOpen(true)}
             sx={{
               aspectRatio: '1 / 1',

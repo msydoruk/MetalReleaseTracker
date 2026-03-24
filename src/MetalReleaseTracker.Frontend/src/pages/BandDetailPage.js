@@ -421,6 +421,7 @@ const BandDetailPage = () => {
                   component="img"
                   src={similarBand.photoUrl || placeholderImg}
                   alt={similarBand.name}
+                  loading="lazy"
                   sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
                 />
                 <Box sx={{ p: 1.5 }}>

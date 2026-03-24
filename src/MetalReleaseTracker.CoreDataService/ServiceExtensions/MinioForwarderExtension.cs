@@ -42,6 +42,10 @@ public static class MinioForwarderExtension
                 var exception = errorFeature?.Exception;
                 app.Logger.LogError(exception, "MinIO proxy error: {Error}", error);
             }
+            else
+            {
+                httpContext.Response.Headers["Cache-Control"] = "public, max-age=86400";
+            }
         });
 
         return app;

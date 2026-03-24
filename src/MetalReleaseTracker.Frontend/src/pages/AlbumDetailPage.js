@@ -509,6 +509,7 @@ const AlbumDetailPage = () => {
                   component="img"
                   src={related.photoUrl || placeholderImg}
                   alt={related.albumName}
+                  loading="lazy"
                   sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
                 />
                 <Box sx={{ p: 1.5 }}>
