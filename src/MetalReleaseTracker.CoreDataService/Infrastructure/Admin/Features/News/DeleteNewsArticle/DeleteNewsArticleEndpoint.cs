@@ -19,7 +19,7 @@ public static class DeleteNewsArticleEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("DeleteNewsArticle")
+            .WithName("AdminDeleteNewsArticle")
             .WithTags("Admin News")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

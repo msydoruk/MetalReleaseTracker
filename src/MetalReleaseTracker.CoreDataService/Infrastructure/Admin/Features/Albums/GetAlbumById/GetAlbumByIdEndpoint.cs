@@ -19,7 +19,7 @@ public static class GetAlbumByIdEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("GetAlbumById")
+            .WithName("AdminGetAlbumById")
             .WithTags("Admin Albums")
             .Produces<AdminAlbumDetailDto>()
             .Produces(StatusCodes.Status404NotFound);

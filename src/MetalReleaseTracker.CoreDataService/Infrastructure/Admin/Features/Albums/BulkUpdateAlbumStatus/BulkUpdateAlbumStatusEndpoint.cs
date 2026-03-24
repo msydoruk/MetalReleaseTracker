@@ -19,7 +19,7 @@ public static class BulkUpdateAlbumStatusEndpoint
                     ? Results.BadRequest("Invalid stock status value.")
                     : Results.Ok(new { result.UpdatedCount });
             })
-            .WithName("BulkUpdateAlbumStatus")
+            .WithName("AdminBulkUpdateAlbumStatus")
             .WithTags("Admin Albums")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);

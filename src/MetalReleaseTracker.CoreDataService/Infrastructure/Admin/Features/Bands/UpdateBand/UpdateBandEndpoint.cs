@@ -21,7 +21,7 @@ public static class UpdateBandEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateBand")
+            .WithName("AdminUpdateBand")
             .WithTags("Admin Bands")
             .Produces<AdminBandDto>()
             .Produces(StatusCodes.Status404NotFound);

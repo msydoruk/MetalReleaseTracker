@@ -19,7 +19,7 @@ public static class GetSettingsEndpoint
                 var result = await settingsService.GetSettingsByCategoryAsync(category, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetSettingsByCategory")
+            .WithName("AdminGetSettingsByCategory")
             .WithTags("Admin Settings")
             .Produces<CategorySettingsDto>();
     }

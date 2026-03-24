@@ -20,7 +20,7 @@ public static class CreateDistributorEndpoint
                     ? Results.Created($"{AdminRouteConstants.Distributors.GetAll}/{result.Id}", result)
                     : Results.BadRequest("Invalid distributor code.");
             })
-            .WithName("CreateDistributor")
+            .WithName("AdminCreateDistributor")
             .WithTags("Admin Distributors")
             .Produces<AdminDistributorDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);

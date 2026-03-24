@@ -20,7 +20,7 @@ public static class GetNewsArticleByIdEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("GetNewsArticleById")
+            .WithName("AdminGetNewsArticleById")
             .WithTags("Admin News")
             .Produces<NewsArticleDto>()
             .Produces(StatusCodes.Status404NotFound);

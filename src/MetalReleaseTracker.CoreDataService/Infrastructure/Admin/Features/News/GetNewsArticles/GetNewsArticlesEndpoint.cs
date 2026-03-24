@@ -16,7 +16,7 @@ public static class GetNewsArticlesEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetNewsArticles")
+            .WithName("AdminGetNewsArticles")
             .WithTags("Admin News")
             .Produces<List<NewsArticleDto>>();
     }

@@ -19,7 +19,7 @@ public static class DeleteDistributorEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("DeleteDistributor")
+            .WithName("AdminDeleteDistributor")
             .WithTags("Admin Distributors")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

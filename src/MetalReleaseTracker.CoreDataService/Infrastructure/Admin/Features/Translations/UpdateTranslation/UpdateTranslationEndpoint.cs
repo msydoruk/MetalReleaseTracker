@@ -21,7 +21,7 @@ public static class UpdateTranslationEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateTranslation")
+            .WithName("AdminUpdateTranslation")
             .WithTags("Admin Translations")
             .Produces<TranslationDto>()
             .Produces(StatusCodes.Status404NotFound);

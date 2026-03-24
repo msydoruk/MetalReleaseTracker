@@ -17,7 +17,7 @@ public static class GetUsersEndpoint
                 var result = await handler.HandleAsync(filter, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetUsers")
+            .WithName("AdminGetUsers")
             .WithTags("Admin Users")
             .Produces<AdminUserPagedResult>();
     }

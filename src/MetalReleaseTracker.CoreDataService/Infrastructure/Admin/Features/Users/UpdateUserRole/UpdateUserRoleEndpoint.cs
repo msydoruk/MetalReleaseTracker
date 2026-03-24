@@ -20,7 +20,7 @@ public static class UpdateUserRoleEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("UpdateUserRole")
+            .WithName("AdminUpdateUserRole")
             .WithTags("Admin Users")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

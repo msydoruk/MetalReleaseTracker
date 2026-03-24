@@ -18,7 +18,7 @@ public static class CreateCurrencyEndpoint
                 var result = await handler.HandleAsync(request, cancellationToken);
                 return Results.Created($"{AdminRouteConstants.Currencies.GetAll}/{result.Id}", result);
             })
-            .WithName("CreateCurrency")
+            .WithName("AdminCreateCurrency")
             .WithTags("Admin Currencies")
             .Produces<CurrencyDto>(StatusCodes.Status201Created);
     }

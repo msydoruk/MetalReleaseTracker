@@ -21,7 +21,7 @@ public static class UpdateCurrencyEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateCurrency")
+            .WithName("AdminUpdateCurrency")
             .WithTags("Admin Currencies")
             .Produces<CurrencyDto>()
             .Produces(StatusCodes.Status404NotFound);

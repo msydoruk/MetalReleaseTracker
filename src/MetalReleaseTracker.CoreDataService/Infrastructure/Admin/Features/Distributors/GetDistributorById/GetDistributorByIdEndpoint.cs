@@ -20,7 +20,7 @@ public static class GetDistributorByIdEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("GetDistributorById")
+            .WithName("AdminGetDistributorById")
             .WithTags("Admin Distributors")
             .Produces<AdminDistributorDto>()
             .Produces(StatusCodes.Status404NotFound);

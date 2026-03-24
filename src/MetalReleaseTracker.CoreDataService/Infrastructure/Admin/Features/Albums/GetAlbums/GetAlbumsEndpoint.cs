@@ -17,7 +17,7 @@ public static class GetAlbumsEndpoint
                 var result = await handler.HandleAsync(filter, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetAlbums")
+            .WithName("AdminGetAlbums")
             .WithTags("Admin Albums")
             .Produces<AdminAlbumPagedResult>();
     }

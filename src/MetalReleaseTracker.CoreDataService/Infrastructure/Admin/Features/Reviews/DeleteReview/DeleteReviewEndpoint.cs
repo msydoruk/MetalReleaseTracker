@@ -19,7 +19,7 @@ public static class DeleteReviewEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("DeleteReview")
+            .WithName("AdminDeleteReview")
             .WithTags("Admin Reviews")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

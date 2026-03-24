@@ -21,7 +21,7 @@ public static class UpdateDistributorEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateDistributor")
+            .WithName("AdminUpdateDistributor")
             .WithTags("Admin Distributors")
             .Produces<AdminDistributorDto>()
             .Produces(StatusCodes.Status404NotFound);

@@ -17,7 +17,7 @@ public static class SendBroadcastEndpoint
                 var result = await handler.HandleAsync(request, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("SendBroadcast")
+            .WithName("AdminSendBroadcast")
             .WithTags("Admin Notifications")
             .Produces<SendBroadcastResponse>();
     }

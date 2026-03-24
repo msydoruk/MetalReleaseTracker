@@ -19,7 +19,7 @@ public static class DeleteAlbumEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("DeleteAlbum")
+            .WithName("AdminDeleteAlbum")
             .WithTags("Admin Albums")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

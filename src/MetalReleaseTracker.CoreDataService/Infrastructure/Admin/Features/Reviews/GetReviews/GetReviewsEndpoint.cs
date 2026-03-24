@@ -17,7 +17,7 @@ public static class GetReviewsEndpoint
                 var result = await handler.HandleAsync(filter, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetReviews")
+            .WithName("AdminGetReviews")
             .WithTags("Admin Reviews")
             .Produces<AdminReviewPagedResult>();
     }

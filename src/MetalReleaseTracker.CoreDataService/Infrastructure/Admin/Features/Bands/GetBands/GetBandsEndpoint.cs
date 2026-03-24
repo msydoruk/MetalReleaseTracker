@@ -17,7 +17,7 @@ public static class GetBandsEndpoint
                 var result = await handler.HandleAsync(filter, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetBands")
+            .WithName("AdminGetBands")
             .WithTags("Admin Bands")
             .Produces<AdminBandPagedResult>();
     }

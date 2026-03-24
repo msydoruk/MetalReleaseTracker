@@ -16,7 +16,7 @@ public static class GetLinkedUsersEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetLinkedUsers")
+            .WithName("AdminGetLinkedUsers")
             .WithTags("Admin Telegram")
             .Produces<List<TelegramLinkedUserDto>>();
     }

@@ -19,7 +19,7 @@ public static class UnlockUserEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("UnlockUser")
+            .WithName("AdminUnlockUser")
             .WithTags("Admin Users")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

@@ -20,7 +20,7 @@ public static class UpdateSettingsEndpoint
                 var result = await settingsService.UpdateSettingsByCategoryAsync(category, request, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("UpdateSettingsByCategory")
+            .WithName("AdminUpdateSettingsByCategory")
             .WithTags("Admin Settings")
             .Produces<CategorySettingsDto>();
     }

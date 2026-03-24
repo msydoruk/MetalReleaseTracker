@@ -19,7 +19,7 @@ public static class GetUserByIdEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("GetUserById")
+            .WithName("AdminGetUserById")
             .WithTags("Admin Users")
             .Produces<AdminUserDetailDto>()
             .Produces(StatusCodes.Status404NotFound);

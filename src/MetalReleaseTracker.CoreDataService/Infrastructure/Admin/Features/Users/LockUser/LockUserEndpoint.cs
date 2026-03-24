@@ -20,7 +20,7 @@ public static class LockUserEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("LockUser")
+            .WithName("AdminLockUser")
             .WithTags("Admin Users")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

@@ -16,7 +16,7 @@ public static class GetDistributorsEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetDistributors")
+            .WithName("AdminGetDistributors")
             .WithTags("Admin Distributors")
             .Produces<List<AdminDistributorDto>>();
     }

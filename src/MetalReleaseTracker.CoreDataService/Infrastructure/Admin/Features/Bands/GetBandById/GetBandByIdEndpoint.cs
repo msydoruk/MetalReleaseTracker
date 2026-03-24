@@ -19,7 +19,7 @@ public static class GetBandByIdEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("GetBandById")
+            .WithName("AdminGetBandById")
             .WithTags("Admin Bands")
             .Produces<AdminBandDetailDto>()
             .Produces(StatusCodes.Status404NotFound);

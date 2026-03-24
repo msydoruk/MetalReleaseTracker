@@ -16,7 +16,7 @@ public static class GetDashboardStatsEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetDashboardStats")
+            .WithName("AdminGetDashboardStats")
             .WithTags("Admin Dashboard")
             .Produces<DashboardStatsResponse>();
     }

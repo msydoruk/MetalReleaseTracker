@@ -19,7 +19,7 @@ public static class DeleteBandEndpoint
                     ? Results.NoContent()
                     : Results.NotFound();
             })
-            .WithName("DeleteBand")
+            .WithName("AdminDeleteBand")
             .WithTags("Admin Bands")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);

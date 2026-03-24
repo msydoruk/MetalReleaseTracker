@@ -17,7 +17,7 @@ public static class GetTranslationsEndpoint
                 var result = await handler.HandleAsync(filter, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetTranslations")
+            .WithName("AdminGetTranslations")
             .WithTags("Admin Translations")
             .Produces<TranslationPagedResult>();
     }

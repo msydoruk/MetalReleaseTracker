@@ -21,7 +21,7 @@ public static class UpdateNavigationItemEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateNavigationItem")
+            .WithName("AdminUpdateNavigationItem")
             .WithTags("Admin Navigation")
             .Produces<NavigationItemDto>()
             .Produces(StatusCodes.Status404NotFound);

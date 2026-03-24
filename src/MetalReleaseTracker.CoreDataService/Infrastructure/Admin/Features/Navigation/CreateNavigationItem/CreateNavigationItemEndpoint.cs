@@ -18,7 +18,7 @@ public static class CreateNavigationItemEndpoint
                 var result = await handler.HandleAsync(request, cancellationToken);
                 return Results.Created($"{AdminRouteConstants.Navigation.GetAll}/{result.Id}", result);
             })
-            .WithName("CreateNavigationItem")
+            .WithName("AdminCreateNavigationItem")
             .WithTags("Admin Navigation")
             .Produces<NavigationItemDto>(StatusCodes.Status201Created);
     }

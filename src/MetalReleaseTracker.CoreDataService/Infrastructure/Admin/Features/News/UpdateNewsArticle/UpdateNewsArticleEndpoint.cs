@@ -21,7 +21,7 @@ public static class UpdateNewsArticleEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateNewsArticle")
+            .WithName("AdminUpdateNewsArticle")
             .WithTags("Admin News")
             .Produces<NewsArticleDto>()
             .Produces(StatusCodes.Status404NotFound);

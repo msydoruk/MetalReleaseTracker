@@ -18,7 +18,7 @@ public static class CreateNewsArticleEndpoint
                 var result = await handler.HandleAsync(request, cancellationToken);
                 return Results.Created($"{AdminRouteConstants.News.GetAll}/{result.Id}", result);
             })
-            .WithName("CreateNewsArticle")
+            .WithName("AdminCreateNewsArticle")
             .WithTags("Admin News")
             .Produces<NewsArticleDto>(StatusCodes.Status201Created);
     }

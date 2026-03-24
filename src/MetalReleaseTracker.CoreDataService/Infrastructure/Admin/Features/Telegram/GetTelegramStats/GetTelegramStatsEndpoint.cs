@@ -16,7 +16,7 @@ public static class GetTelegramStatsEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetTelegramStats")
+            .WithName("AdminGetTelegramStats")
             .WithTags("Admin Telegram")
             .Produces<TelegramStatsResponse>();
     }

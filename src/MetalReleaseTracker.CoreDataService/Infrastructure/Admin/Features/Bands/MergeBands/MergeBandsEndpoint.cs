@@ -20,7 +20,7 @@ public static class MergeBandsEndpoint
                     ? Results.NotFound()
                     : Results.Ok(result.Detail);
             })
-            .WithName("MergeBands")
+            .WithName("AdminMergeBands")
             .WithTags("Admin Bands")
             .Produces<AdminBandDetailDto>()
             .Produces(StatusCodes.Status404NotFound);

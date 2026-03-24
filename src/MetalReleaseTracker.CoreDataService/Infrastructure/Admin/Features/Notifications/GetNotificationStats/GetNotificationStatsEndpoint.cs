@@ -16,7 +16,7 @@ public static class GetNotificationStatsEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetNotificationStats")
+            .WithName("AdminGetNotificationStats")
             .WithTags("Admin Notifications")
             .Produces<NotificationStatsResponse>();
     }

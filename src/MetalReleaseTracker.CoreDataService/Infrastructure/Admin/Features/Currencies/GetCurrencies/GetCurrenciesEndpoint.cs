@@ -16,7 +16,7 @@ public static class GetCurrenciesEndpoint
                 var result = await handler.HandleAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithName("GetCurrencies")
+            .WithName("AdminGetCurrencies")
             .WithTags("Admin Currencies")
             .Produces<List<CurrencyDto>>();
     }

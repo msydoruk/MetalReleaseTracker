@@ -17,7 +17,7 @@ public static class BulkUpdateTranslationsEndpoint
                 var updatedCount = await handler.HandleAsync(request, cancellationToken);
                 return Results.Ok(new { UpdatedCount = updatedCount });
             })
-            .WithName("BulkUpdateTranslations")
+            .WithName("AdminBulkUpdateTranslations")
             .WithTags("Admin Translations")
             .Produces(StatusCodes.Status200OK);
     }

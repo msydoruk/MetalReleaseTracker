@@ -21,7 +21,7 @@ public static class UpdateAlbumEndpoint
                     ? Results.Ok(result)
                     : Results.NotFound();
             })
-            .WithName("UpdateAlbum")
+            .WithName("AdminUpdateAlbum")
             .WithTags("Admin Albums")
             .Produces<AdminAlbumDetailDto>()
             .Produces(StatusCodes.Status404NotFound);
