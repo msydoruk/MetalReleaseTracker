@@ -43,6 +43,14 @@ jobs:
           REACT_APP_API_URL=/api GENERATE_SOURCEMAP=false npm run build
           rm -rf node_modules
 
+      - name: Build admin SPA in CI
+        if: inputs.service == 'core-data-service' || inputs.service == 'all'
+        working-directory: src/MetalReleaseTracker.CoreDataService/ClientApp
+        run: |
+          npm ci --legacy-peer-deps
+          GENERATE_SOURCEMAP=false npm run build
+          rm -rf node_modules
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -115,7 +123,7 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           set -e
           cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService
-          SKIP_FRONTEND_BUILD=true docker compose up -d --build
+          SKIP_FRONTEND_BUILD=true SKIP_ADMIN_BUILD=true docker compose up -d --build
           echo "Waiting for services to start..."
           sleep 10
           docker compose ps
