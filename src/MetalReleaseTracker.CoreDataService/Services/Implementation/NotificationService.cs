@@ -13,17 +13,20 @@ public class NotificationService : INotificationService
     private readonly IUserNotificationRepository _userNotificationRepository;
     private readonly IUserAlbumWatchRepository _userAlbumWatchRepository;
     private readonly IFileStorageService _fileStorageService;
+    private readonly ITelegramBotService _telegramBotService;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         IUserNotificationRepository userNotificationRepository,
         IUserAlbumWatchRepository userAlbumWatchRepository,
         IFileStorageService fileStorageService,
+        ITelegramBotService telegramBotService,
         ILogger<NotificationService> logger)
     {
         _userNotificationRepository = userNotificationRepository;
         _userAlbumWatchRepository = userAlbumWatchRepository;
         _fileStorageService = fileStorageService;
+        _telegramBotService = telegramBotService;
         _logger = logger;
     }
 
@@ -77,6 +80,16 @@ public class NotificationService : INotificationService
         if (notifications.Count > 0)
         {
             await _userNotificationRepository.AddBatchAsync(notifications, cancellationToken);
+
+            try
+            {
+                await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
+            }
+            catch (Exception telegramException)
+            {
+                _logger.LogWarning(telegramException, "Failed to send Telegram notifications for album {AlbumName}", albumName);
+            }
+
             _logger.LogInformation(
                 "Generated {NotificationCount} notifications for album {AlbumName} by {BandName}",
                 notifications.Count,

@@ -29,7 +29,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
-import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus, exportCollection } from '../services/api';
+import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus, exportCollection, generateTelegramToken, getTelegramStatus, unlinkTelegram } from '../services/api';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import LinkOffIcon from '@mui/icons-material/LinkOff';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AlbumCard from '../components/AlbumCard';
 import Pagination from '../components/Pagination';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -53,6 +56,9 @@ const ProfilePage = () => {
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [favoritesPageSize, setFavoritesPageSize] = useState(12);
   const [favoriteIds, setFavoriteIds] = useState({});
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [telegramToken, setTelegramToken] = useState(null);
+  const [telegramBotUsername, setTelegramBotUsername] = useState(null);
   const navigate = useNavigate();
 
   const userName = localStorage.getItem('user_name') || '';
@@ -78,7 +84,38 @@ const ProfilePage = () => {
     };
 
     checkAuthentication();
+
+    const checkTelegramStatus = async () => {
+      try {
+        const response = await getTelegramStatus();
+        setTelegramLinked(response.data.isLinked);
+      } catch {
+        // ignore
+      }
+    };
+
+    checkTelegramStatus();
   }, [navigate]);
+
+  const handleGenerateTelegramToken = async () => {
+    try {
+      const response = await generateTelegramToken();
+      setTelegramToken(response.data.token);
+      setTelegramBotUsername(response.data.botUsername);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleUnlinkTelegram = async () => {
+    try {
+      await unlinkTelegram();
+      setTelegramLinked(false);
+      setTelegramToken(null);
+    } catch {
+      // ignore
+    }
+  };
 
   const loadFavorites = useCallback(async () => {
     try {
@@ -429,6 +466,70 @@ const ProfilePage = () => {
             </Grid>
           )}
         </Box>
+      </Paper>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, mt: 3, p: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <TelegramIcon color="info" />
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {t('telegram.title')}
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t('telegram.description')}
+        </Typography>
+
+        {telegramLinked ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+              {t('telegram.linked')}
+            </Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<LinkOffIcon />}
+              onClick={handleUnlinkTelegram}
+            >
+              {t('telegram.unlink')}
+            </Button>
+          </Box>
+        ) : telegramToken ? (
+          <Box>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              {t('telegram.sendCommand')}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Paper variant="outlined" sx={{ px: 2, py: 1, fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                /start {telegramToken}
+              </Paper>
+              <Button
+                size="small"
+                startIcon={<ContentCopyIcon />}
+                onClick={() => navigator.clipboard.writeText(`/start ${telegramToken}`)}
+              >
+                {t('telegram.copy')}
+              </Button>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<TelegramIcon />}
+              href={`https://t.me/${telegramBotUsername}?start=${telegramToken}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('telegram.openBot')}
+            </Button>
+          </Box>
+        ) : (
+          <Button
+            variant="contained"
+            startIcon={<TelegramIcon />}
+            onClick={handleGenerateTelegramToken}
+          >
+            {t('telegram.linkButton')}
+          </Button>
+        )}
       </Paper>
     </Container>
   );

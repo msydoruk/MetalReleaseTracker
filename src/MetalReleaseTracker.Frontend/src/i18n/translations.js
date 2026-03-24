@@ -323,6 +323,16 @@ const translations = {
       watchTooltip: 'Get notified about price drops and restocks',
       unwatchTooltip: 'Stop watching this album',
     },
+    telegram: {
+      title: 'Telegram Notifications',
+      description: 'Link your Telegram account to receive instant notifications about price drops, restocks, and new releases.',
+      linked: 'Telegram account linked',
+      unlink: 'Unlink',
+      linkButton: 'Link Telegram',
+      sendCommand: 'Send this command to the bot:',
+      copy: 'Copy',
+      openBot: 'Open Bot',
+    },
   },
   ua: {
     nav: {
@@ -647,6 +657,16 @@ const translations = {
     watch: {
       watchTooltip: 'Отримувати сповіщення про зниження ціни та повернення в продаж',
       unwatchTooltip: 'Припинити стежити за цим альбомом',
+    },
+    telegram: {
+      title: 'Сповіщення в Telegram',
+      description: 'Підключіть Telegram щоб отримувати миттєві сповіщення про зниження цін, повернення в продаж та нові релізи.',
+      linked: 'Telegram акаунт підключено',
+      unlink: 'Відключити',
+      linkButton: 'Підключити Telegram',
+      sendCommand: 'Надішліть цю команду боту:',
+      copy: 'Копіювати',
+      openBot: 'Відкрити бота',
     },
   },
 };

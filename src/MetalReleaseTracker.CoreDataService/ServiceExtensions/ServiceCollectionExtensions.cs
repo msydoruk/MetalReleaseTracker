@@ -1,9 +1,11 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data.MappingProfiles;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
+using MetalReleaseTracker.CoreDataService.Services.Configuration;
 using MetalReleaseTracker.CoreDataService.Services.Implementation;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using MetalReleaseTracker.SharedLibraries.Minio;
+using Telegram.Bot;
 
 namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
 {
@@ -18,6 +20,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddMemoryCache();
             services.AddMinio();
             services.AddKafka(configuration);
+            services.AddTelegramBot(configuration);
 
             services.AddCommonServices()
                 .AddRepositories()
@@ -40,6 +43,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IAlbumRatingRepository, AlbumRatingRepository>();
             services.AddScoped<IUserAlbumWatchRepository, UserAlbumWatchRepository>();
             services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+            services.AddScoped<ITelegramLinkRepository, TelegramLinkRepository>();
 
             return services;
         }
@@ -59,6 +63,19 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IUserAlbumWatchService, UserAlbumWatchService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IImageUrlResolverService, ImageUrlResolverService>();
+            services.AddScoped<ITelegramBotService, TelegramBotService>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddTelegramBot(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<TelegramBotSettings>(configuration.GetSection("TelegramBot"));
+            var botToken = configuration["TelegramBot:BotToken"];
+            if (!string.IsNullOrEmpty(botToken))
+            {
+                services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
+            }
 
             return services;
         }

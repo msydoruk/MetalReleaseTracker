@@ -29,6 +29,10 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<UserNotificationEntity> UserNotifications { get; set; }
 
+    public DbSet<TelegramLinkEntity> TelegramLinks { get; set; }
+
+    public DbSet<TelegramLinkTokenEntity> TelegramLinkTokens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -94,5 +98,17 @@ public class CoreDataServiceDbContext : DbContext
 
         modelBuilder.Entity<UserNotificationEntity>()
             .HasIndex(notification => new { notification.UserId, notification.CreatedDate });
+
+        modelBuilder.Entity<TelegramLinkEntity>()
+            .HasIndex(link => link.UserId)
+            .IsUnique();
+
+        modelBuilder.Entity<TelegramLinkEntity>()
+            .HasIndex(link => link.ChatId)
+            .IsUnique();
+
+        modelBuilder.Entity<TelegramLinkTokenEntity>()
+            .HasIndex(token => token.Token)
+            .IsUnique();
     }
 }

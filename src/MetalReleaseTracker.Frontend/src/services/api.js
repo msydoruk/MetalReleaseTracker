@@ -128,3 +128,7 @@ export const fetchNotifications = (page = 1, pageSize = 20) =>
 export const fetchUnreadNotificationCount = () => api.get('/notifications/unread-count');
 export const markNotificationRead = (notificationId) => api.put(`/notifications/${notificationId}/read`);
 export const markAllNotificationsRead = () => api.put('/notifications/read-all');
+
+export const generateTelegramToken = () => api.post('/telegram/link-token');
+export const getTelegramStatus = () => api.get('/telegram/status');
+export const unlinkTelegram = () => api.delete('/telegram/unlink');

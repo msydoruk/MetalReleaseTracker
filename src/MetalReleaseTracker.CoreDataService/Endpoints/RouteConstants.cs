@@ -110,6 +110,15 @@ public static class RouteConstants
             public const string GetKeys = $"{Base}/keys";
         }
 
+        public static class Telegram
+        {
+            private const string Base = $"{ApiBase}/telegram";
+            public const string Webhook = $"{Base}/webhook";
+            public const string GenerateToken = $"{Base}/link-token";
+            public const string Status = $"{Base}/status";
+            public const string Unlink = $"{Base}/unlink";
+        }
+
         public static class Notifications
         {
             private const string Base = $"{ApiBase}/notifications";
