@@ -29,7 +29,7 @@ public static class TelegramExtensions
 
         try
         {
-            botClient.SetWebhook(webhookUrl);
+            botClient.SetWebhook(webhookUrl).GetAwaiter().GetResult();
             Log.Information("Telegram webhook registered: {WebhookUrl}", webhookUrl);
         }
         catch (Exception exception)
