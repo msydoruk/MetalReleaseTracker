@@ -55,7 +55,8 @@ app.UseApplicationMiddleware(builder.Environment)
     .MapApplicationEndpoints()
     .MapAdminEndpoints()
     .MapMinioForwarder()
-    .ApplyMigrations();
+    .ApplyMigrations()
+    .RegisterTelegramWebhook();
 
 app.Use(async (context, next) =>
 {
