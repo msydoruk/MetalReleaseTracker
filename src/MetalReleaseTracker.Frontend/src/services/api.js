@@ -137,3 +137,4 @@ export const unlinkTelegram = () => api.delete('/telegram/unlink');
 export const fetchPublicCurrencies = () => api.get('/config/currencies');
 export const fetchPublicNavigation = () => api.get('/config/navigation');
 export const fetchPublicNews = () => api.get('/config/news');
+export const fetchPublicTranslations = (language) => api.get(`/config/translations/${language}`);

@@ -1,26 +1,15 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { fetchPublicCurrencies } from '../services/api';
 
-const FALLBACK_RATES = {
-  EUR: 1,
-  UAH: 44.5,
-  USD: 1.08,
-};
-
-const FALLBACK_SYMBOLS = {
-  EUR: '\u20AC',
-  UAH: '\u20B4',
-  USD: '$',
-};
-
 const CurrencyContext = createContext();
 
 export const CurrencyProvider = ({ children }) => {
   const [currency, setCurrency] = useState(() => {
     return localStorage.getItem('currency') || 'EUR';
   });
-  const [rates, setRates] = useState(FALLBACK_RATES);
-  const [symbols, setSymbols] = useState(FALLBACK_SYMBOLS);
+  const [rates, setRates] = useState({});
+  const [symbols, setSymbols] = useState({});
+  const [availableCurrencies, setAvailableCurrencies] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,10 +26,11 @@ export const CurrencyProvider = ({ children }) => {
           });
           setRates(newRates);
           setSymbols(newSymbols);
+          setAvailableCurrencies(data.map((item) => item.code));
         }
       })
       .catch((error) => {
-        console.error('Failed to fetch currencies, using fallback defaults:', error);
+        console.error('Failed to fetch currencies:', error);
       });
     return () => { cancelled = true; };
   }, []);
@@ -68,7 +58,7 @@ export const CurrencyProvider = ({ children }) => {
   );
 
   return (
-    <CurrencyContext.Provider value={{ currency, changeCurrency, convert, format }}>
+    <CurrencyContext.Provider value={{ currency, changeCurrency, convert, format, availableCurrencies }}>
       {children}
     </CurrencyContext.Provider>
   );

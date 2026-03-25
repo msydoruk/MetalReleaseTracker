@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import translations from './translations';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { fetchPublicTranslations } from '../services/api';
 
 const LanguageContext = createContext();
 
@@ -7,6 +7,34 @@ export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('language') || 'en';
   });
+  const [translations, setTranslations] = useState({});
+  const [translationsLoaded, setTranslationsLoaded] = useState(false);
+  const fetchedLanguageRef = useRef(null);
+
+  useEffect(() => {
+    if (fetchedLanguageRef.current === language) {
+      return;
+    }
+
+    let cancelled = false;
+    setTranslationsLoaded(false);
+    fetchPublicTranslations(language)
+      .then((response) => {
+        if (cancelled) return;
+        const data = response.data;
+        if (data && typeof data === 'object') {
+          setTranslations(data);
+          fetchedLanguageRef.current = language;
+        }
+        setTranslationsLoaded(true);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Failed to fetch translations:', error);
+        setTranslationsLoaded(true);
+      });
+    return () => { cancelled = true; };
+  }, [language]);
 
   const toggleLanguage = useCallback(() => {
     setLanguage((prev) => {
@@ -18,18 +46,13 @@ export const LanguageProvider = ({ children }) => {
 
   const t = useCallback(
     (key) => {
-      const keys = key.split('.');
-      let value = translations[language];
-      for (const k of keys) {
-        value = value?.[k];
-      }
-      return value || key;
+      return translations[key] || key;
     },
-    [language]
+    [translations]
   );
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, t, translationsLoaded }}>
       {children}
     </LanguageContext.Provider>
   );

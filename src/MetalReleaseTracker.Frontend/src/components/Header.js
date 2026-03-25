@@ -38,9 +38,9 @@ import {
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
-import { fetchPublicNavigation } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import HeaderSearch from './HeaderSearch';
 
 const ICON_MAP = {
@@ -55,32 +55,19 @@ const ICON_MAP = {
   RateReviewIcon: RateReviewIcon,
 };
 
-const FALLBACK_NAV_ITEMS = [
-  { titleEn: 'Home', titleUa: 'Home', path: '/', iconName: 'HomeIcon', isProtected: false },
-  { titleEn: 'Albums', titleUa: 'Albums', path: '/albums', iconName: 'AlbumIcon', isProtected: false },
-  { titleEn: 'Bands', titleUa: 'Bands', path: '/bands', iconName: 'MusicNoteIcon', isProtected: false },
-  { titleEn: 'Distributors', titleUa: 'Distributors', path: '/distributors', iconName: 'StoreIcon', isProtected: false },
-  { titleEn: 'Calendar', titleUa: 'Calendar', path: '/calendar', iconName: 'CalendarMonthIcon', isProtected: false },
-  { titleEn: 'News', titleUa: 'News', path: '/news', iconName: 'NewspaperIcon', isProtected: false },
-  { titleEn: 'About', titleUa: 'About', path: '/about', iconName: 'InfoIcon', isProtected: false },
-  { titleEn: 'Changelog', titleUa: 'Changelog', path: '/changelog', iconName: 'HistoryIcon', isProtected: false },
-];
-
 const Header = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [apiNavItems, setApiNavItems] = useState(null);
 
   const [currencyAnchorEl, setCurrencyAnchorEl] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
   const { language, toggleLanguage, t } = useLanguage();
-  const { currency, changeCurrency } = useCurrency();
-
-  const CURRENCY_OPTIONS = ['EUR', 'UAH', 'USD'];
+  const { currency, changeCurrency, availableCurrencies } = useCurrency();
+  const { navItems: apiNavItems } = useNavigation();
 
   const checkUserStatus = async () => {
     try {
@@ -126,25 +113,8 @@ const Header = () => {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchPublicNavigation()
-      .then((response) => {
-        if (cancelled) return;
-        const data = response.data;
-        if (Array.isArray(data) && data.length > 0) {
-          setApiNavItems(data);
-        }
-      })
-      .catch((error) => {
-        console.error('Failed to fetch navigation, using fallback defaults:', error);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
   const navItems = useMemo(() => {
-    const source = apiNavItems || FALLBACK_NAV_ITEMS;
-    return source
+    return apiNavItems
       .filter((item) => !item.isProtected)
       .map((item) => {
         const IconComponent = ICON_MAP[item.iconName];
@@ -454,7 +424,7 @@ const Header = () => {
                   transformOrigin={{ horizontal: 'center', vertical: 'top' }}
                   anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
                 >
-                  {CURRENCY_OPTIONS.map((option) => (
+                  {availableCurrencies.map((option) => (
                     <MenuItem
                       key={option}
                       selected={option === currency}

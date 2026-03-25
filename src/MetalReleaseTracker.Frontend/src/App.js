@@ -9,6 +9,7 @@ import Footer from './components/Footer';
 import authService from './services/auth';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { NavigationProvider } from './contexts/NavigationContext';
 import BackToTop from './components/BackToTop';
 
 // Lazy-loaded route components
@@ -169,6 +170,7 @@ function App() {
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <LanguageProvider>
           <CurrencyProvider>
+            <NavigationProvider>
             <Router>
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
@@ -217,6 +219,7 @@ function App() {
               <BackToTop />
             </Box>
             </Router>
+            </NavigationProvider>
           </CurrencyProvider>
         </LanguageProvider>
       </LocalizationProvider>

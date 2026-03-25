@@ -2,10 +2,19 @@ import React from 'react';
 import { Box, Container, Typography, Divider, Link as MuiLink, Stack } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useNavigation } from '../contexts/NavigationContext';
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const { navItems } = useNavigation();
   const currentYear = new Date().getFullYear();
+
+  const footerLinks = navItems
+    .filter((item) => !item.isProtected && item.path !== '/')
+    .map((item) => ({
+      title: language === 'ua' ? item.titleUa : item.titleEn,
+      path: item.path,
+    }));
 
   return (
     <Box component="footer" sx={{ mt: 'auto' }}>
@@ -18,76 +27,19 @@ const Footer = () => {
             alignItems="center"
             sx={{ flexWrap: 'wrap', justifyContent: 'center' }}
           >
-            <MuiLink
-              component={RouterLink}
-              to="/albums"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.albums')}
-            </MuiLink>
-            <MuiLink
-              component={RouterLink}
-              to="/bands"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.bands')}
-            </MuiLink>
-            <MuiLink
-              component={RouterLink}
-              to="/distributors"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.distributors')}
-            </MuiLink>
-            <MuiLink
-              component={RouterLink}
-              to="/calendar"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.calendar')}
-            </MuiLink>
-            <MuiLink
-              component={RouterLink}
-              to="/news"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.news')}
-            </MuiLink>
-            <MuiLink
-              component={RouterLink}
-              to="/about"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.about')}
-            </MuiLink>
-            <MuiLink
-              component={RouterLink}
-              to="/changelog"
-              color="text.secondary"
-              underline="hover"
-              variant="body2"
-              sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              {t('nav.changelog')}
-            </MuiLink>
+            {footerLinks.map((link) => (
+              <MuiLink
+                key={link.path}
+                component={RouterLink}
+                to={link.path}
+                color="text.secondary"
+                underline="hover"
+                variant="body2"
+                sx={{ minHeight: 44, display: 'flex', alignItems: 'center' }}
+              >
+                {link.title}
+              </MuiLink>
+            ))}
             <MuiLink
               href="mailto:metal.release.tracker@gmail.com?subject=Distributor Suggestion"
               color="text.secondary"
