@@ -80,8 +80,9 @@ export default function NotificationsPage() {
         content: content.trim(),
         notificationType,
       });
+      const createdCount = data?.createdCount ?? 0;
       const sentCount = data?.sentCount ?? 0;
-      showSnackbar(`Broadcast sent to ${sentCount} user${sentCount !== 1 ? 's' : ''}`);
+      showSnackbar(`Notifications created: ${createdCount}, sent via Telegram: ${sentCount}`);
       setConfirmDialogOpen(false);
       setContent('');
       loadStats();

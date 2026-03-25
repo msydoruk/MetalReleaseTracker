@@ -60,9 +60,10 @@ public class SendBroadcastHandler
         _context.UserNotifications.AddRange(notifications);
         await _context.SaveChangesAsync(cancellationToken);
 
+        var sentCount = 0;
         try
         {
-            await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
+            sentCount = await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
         }
         catch (Exception exception)
         {
@@ -72,6 +73,7 @@ public class SendBroadcastHandler
         return new SendBroadcastResponse
         {
             CreatedCount = notifications.Count,
+            SentCount = sentCount,
         };
     }
 }

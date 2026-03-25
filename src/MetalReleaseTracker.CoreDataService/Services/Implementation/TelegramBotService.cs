@@ -78,11 +78,11 @@ public class TelegramBotService : ITelegramBotService
         }
     }
 
-    public async Task SendNotificationsAsync(List<UserNotificationEntity> notifications, CancellationToken cancellationToken = default)
+    public async Task<int> SendNotificationsAsync(List<UserNotificationEntity> notifications, CancellationToken cancellationToken = default)
     {
         if (_botClient == null || notifications.Count == 0)
         {
-            return;
+            return 0;
         }
 
         var userIds = notifications.Select(notification => notification.UserId).Distinct().ToList();
@@ -90,9 +90,10 @@ public class TelegramBotService : ITelegramBotService
 
         if (chatIds.Count == 0)
         {
-            return;
+            return 0;
         }
 
+        var sentCount = 0;
         foreach (var notification in notifications)
         {
             if (!chatIds.TryGetValue(notification.UserId, out var chatId))
@@ -104,12 +105,15 @@ public class TelegramBotService : ITelegramBotService
             {
                 var message = FormatNotificationMessage(notification);
                 await _botClient.SendMessage(chatId, message, parseMode: ParseMode.Markdown, cancellationToken: cancellationToken);
+                sentCount++;
             }
             catch (Exception exception)
             {
                 _logger.LogWarning(exception, "Failed to send Telegram notification to chat {ChatId}", chatId);
             }
         }
+
+        return sentCount;
     }
 
     public async Task<string> GenerateLinkTokenAsync(string userId, CancellationToken cancellationToken = default)

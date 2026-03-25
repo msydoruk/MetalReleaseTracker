@@ -7,7 +7,7 @@ public interface ITelegramBotService
 {
     Task HandleUpdateAsync(Update update, CancellationToken cancellationToken = default);
 
-    Task SendNotificationsAsync(List<UserNotificationEntity> notifications, CancellationToken cancellationToken = default);
+    Task<int> SendNotificationsAsync(List<UserNotificationEntity> notifications, CancellationToken cancellationToken = default);
 
     Task<string> GenerateLinkTokenAsync(string userId, CancellationToken cancellationToken = default);
 

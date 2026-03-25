@@ -3,4 +3,6 @@ namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Noti
 public class SendBroadcastResponse
 {
     public int CreatedCount { get; set; }
+
+    public int SentCount { get; set; }
 }
