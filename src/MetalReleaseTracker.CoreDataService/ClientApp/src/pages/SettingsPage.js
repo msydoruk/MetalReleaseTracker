@@ -166,7 +166,7 @@ const TABS = [
       { key: 'OrganizationName', label: 'Organization Name', type: 'text', description: 'Used in JSON-LD Organization schema' },
       { key: 'OrganizationLogoUrl', label: 'Organization Logo URL', type: 'text', description: 'Used in JSON-LD Organization schema' },
       { key: 'RobotsTxt', label: 'Robots.txt Content', type: 'text', description: 'Content for /robots.txt (Sitemap line added automatically)' },
-      { key: 'GoogleSiteVerification', label: 'Google Site Verification', type: 'text', description: 'Google Search Console verification code' },
+      { key: 'GoogleSiteVerification', label: 'Google Site Verification', type: 'text', description: 'Verification code only (e.g. cwZlE3h...), NOT the full meta tag content' },
     ],
   },
   {

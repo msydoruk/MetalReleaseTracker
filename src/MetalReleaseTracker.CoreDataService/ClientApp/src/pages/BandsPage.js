@@ -10,6 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
+import Chip from '@mui/material/Chip';
 import InputAdornment from '@mui/material/InputAdornment';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
@@ -20,7 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
-import { fetchBands, updateBand, deleteBand, generateBandSeo, bulkGenerateBandSeo } from '../api/bands';
+import { fetchBands, fetchBandById, updateBand, deleteBand, generateBandSeo, bulkGenerateBandSeo } from '../api/bands';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 const EMPTY_FORM = {
@@ -89,21 +90,29 @@ export default function BandsPage() {
     }, 400);
   }, []);
 
-  const handleOpenEdit = useCallback((row) => {
-    setEditingId(row.id);
-    setForm({
-      name: row.name || '',
-      description: row.description || '',
-      genre: row.genre || '',
-      metalArchivesUrl: row.metalArchivesUrl || '',
-      formationYear: row.formationYear || '',
-      isVisible: row.isVisible !== undefined ? row.isVisible : true,
-      seoTitle: row.seoTitle || '',
-      seoDescription: row.seoDescription || '',
-      seoKeywords: row.seoKeywords || '',
-    });
-    setDialogOpen(true);
-  }, []);
+  const handleOpenEdit = useCallback(async (row) => {
+    try {
+      setSaving(true);
+      const { data } = await fetchBandById(row.id);
+      setEditingId(row.id);
+      setForm({
+        name: data.name || '',
+        description: data.description || '',
+        genre: data.genre || '',
+        metalArchivesUrl: data.metalArchivesUrl || '',
+        formationYear: data.formationYear || '',
+        isVisible: data.isVisible !== undefined ? data.isVisible : true,
+        seoTitle: data.seoTitle || '',
+        seoDescription: data.seoDescription || '',
+        seoKeywords: data.seoKeywords || '',
+      });
+      setDialogOpen(true);
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Failed to load band details', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [showSnackbar]);
 
   const handleOpenDelete = useCallback((row) => {
     setDeletingRow(row);
@@ -160,6 +169,21 @@ export default function BandsPage() {
       width: 130,
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'isVisible',
+      headerName: 'Visible',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value ? 'Yes' : 'No'}
+          size="small"
+          color={params.value ? 'success' : 'default'}
+          variant="outlined"
+        />
+      ),
     },
     {
       field: 'actions',

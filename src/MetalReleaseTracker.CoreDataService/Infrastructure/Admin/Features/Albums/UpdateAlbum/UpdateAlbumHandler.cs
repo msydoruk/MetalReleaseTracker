@@ -73,9 +73,20 @@ public class UpdateAlbumHandler
             entity.Press = request.Press;
         }
 
-        entity.SeoTitle = request.SeoTitle;
-        entity.SeoDescription = request.SeoDescription;
-        entity.SeoKeywords = request.SeoKeywords;
+        if (request.SeoTitle is not null)
+        {
+            entity.SeoTitle = request.SeoTitle;
+        }
+
+        if (request.SeoDescription is not null)
+        {
+            entity.SeoDescription = request.SeoDescription;
+        }
+
+        if (request.SeoKeywords is not null)
+        {
+            entity.SeoKeywords = request.SeoKeywords;
+        }
 
         entity.LastUpdateDate = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);

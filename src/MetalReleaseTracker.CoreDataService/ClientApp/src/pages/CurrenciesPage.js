@@ -25,7 +25,7 @@ const EMPTY_FORM = {
   code: '',
   symbol: '',
   rateToEur: '',
-  enabled: true,
+  isEnabled: true,
   sortOrder: 0,
 };
 
@@ -86,7 +86,7 @@ export default function CurrenciesPage() {
           code: currency.code,
           symbol: currency.symbol,
           rateToEur: edited.rateToEur !== undefined ? parseFloat(edited.rateToEur) : currency.rateToEur,
-          enabled: edited.enabled !== undefined ? edited.enabled : currency.enabled,
+          isEnabled: edited.isEnabled !== undefined ? edited.isEnabled : currency.isEnabled,
           sortOrder: edited.sortOrder !== undefined ? parseInt(edited.sortOrder, 10) : currency.sortOrder,
         };
         await updateCurrency(currency.id, payload);
@@ -173,8 +173,8 @@ export default function CurrenciesPage() {
                     <FormControlLabel
                       control={
                         <Switch
-                          checked={getFieldValue(currency, 'enabled')}
-                          onChange={(e) => handleFieldChange(currency.id, 'enabled', e.target.checked)}
+                          checked={getFieldValue(currency, 'isEnabled')}
+                          onChange={(e) => handleFieldChange(currency.id, 'isEnabled', e.target.checked)}
                           size="small"
                         />
                       }
@@ -270,8 +270,8 @@ export default function CurrenciesPage() {
           <FormControlLabel
             control={
               <Switch
-                checked={form.enabled}
-                onChange={(e) => setForm((prev) => ({ ...prev, enabled: e.target.checked }))}
+                checked={form.isEnabled}
+                onChange={(e) => setForm((prev) => ({ ...prev, isEnabled: e.target.checked }))}
               />
             }
             label="Enabled"

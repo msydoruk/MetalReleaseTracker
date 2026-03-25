@@ -61,6 +61,9 @@ public class GetAlbumsHandler
                 Media = album.Media != null ? album.Media.ToString() : null,
                 CreatedDate = album.CreatedDate,
                 Slug = album.Slug,
+                SeoTitle = album.SeoTitle,
+                SeoDescription = album.SeoDescription,
+                SeoKeywords = album.SeoKeywords,
             })
             .ToListAsync(cancellationToken);
 

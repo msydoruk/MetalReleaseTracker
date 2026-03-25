@@ -16,6 +16,8 @@ public class AdminBandDto
 
     public int AlbumCount { get; set; }
 
+    public string? Description { get; set; }
+
     public string Slug { get; set; } = string.Empty;
 
     public bool IsVisible { get; set; }

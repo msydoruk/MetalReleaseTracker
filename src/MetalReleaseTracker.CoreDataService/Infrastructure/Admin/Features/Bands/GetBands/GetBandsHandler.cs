@@ -38,7 +38,12 @@ public class GetBandsHandler
                 MetalArchivesUrl = band.MetalArchivesUrl,
                 FormationYear = band.FormationYear,
                 AlbumCount = _context.Albums.Count(album => album.BandId == band.Id),
+                Description = band.Description,
                 Slug = band.Slug,
+                IsVisible = band.IsVisible,
+                SeoTitle = band.SeoTitle,
+                SeoDescription = band.SeoDescription,
+                SeoKeywords = band.SeoKeywords,
             })
             .ToListAsync(cancellationToken);
 

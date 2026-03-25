@@ -260,7 +260,7 @@ export default function DistributorsPage() {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving || !form.name}>
+          <Button variant="contained" onClick={handleSave} disabled={saving || !form.name || (!editingId && !form.code)}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>

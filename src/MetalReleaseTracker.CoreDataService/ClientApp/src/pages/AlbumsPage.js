@@ -20,7 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
-import { fetchAlbums, updateAlbum, deleteAlbum, generateAlbumSeo, bulkGenerateAlbumSeo } from '../api/albums';
+import { fetchAlbums, fetchAlbumById, updateAlbum, deleteAlbum, generateAlbumSeo, bulkGenerateAlbumSeo } from '../api/albums';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 const STATUS_OPTIONS = [
@@ -37,6 +37,14 @@ const STATUS_COLORS = {
   Restock: 'warning',
   SoldOut: 'error',
 };
+
+const STOCK_STATUS_OPTIONS = [
+  { value: '', label: 'None' },
+  { value: 'InStock', label: 'In Stock' },
+  { value: 'OutOfStock', label: 'Out of Stock' },
+  { value: 'PreOrder', label: 'Pre-Order' },
+  { value: 'Unknown', label: 'Unknown' },
+];
 
 const EMPTY_FORM = {
   name: '',
@@ -115,23 +123,31 @@ export default function AlbumsPage() {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, []);
 
-  const handleOpenEdit = useCallback((row) => {
-    setEditingId(row.id);
-    setForm({
-      name: row.name || '',
-      genre: row.genre || '',
-      price: row.price != null ? String(row.price) : '',
-      status: row.status || '',
-      stockStatus: row.stockStatus || '',
-      description: row.description || '',
-      label: row.label || '',
-      press: row.press || '',
-      seoTitle: row.seoTitle || '',
-      seoDescription: row.seoDescription || '',
-      seoKeywords: row.seoKeywords || '',
-    });
-    setDialogOpen(true);
-  }, []);
+  const handleOpenEdit = useCallback(async (row) => {
+    try {
+      setSaving(true);
+      const { data } = await fetchAlbumById(row.id);
+      setEditingId(row.id);
+      setForm({
+        name: data.name || '',
+        genre: data.genre || '',
+        price: data.price != null ? String(data.price) : '',
+        status: data.status || '',
+        stockStatus: data.stockStatus || '',
+        description: data.description || '',
+        label: data.label || '',
+        press: data.press || '',
+        seoTitle: data.seoTitle || '',
+        seoDescription: data.seoDescription || '',
+        seoKeywords: data.seoKeywords || '',
+      });
+      setDialogOpen(true);
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Failed to load album details', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [showSnackbar]);
 
   const handleOpenDelete = useCallback((row) => {
     setDeletingRow(row);
@@ -204,7 +220,7 @@ export default function AlbumsPage() {
     },
     { field: 'media', headerName: 'Media', width: 80, align: 'center', headerAlign: 'center' },
     {
-      field: 'createdAt',
+      field: 'createdDate',
       headerName: 'Created',
       width: 120,
       valueFormatter: (value) =>
@@ -353,9 +369,16 @@ export default function AlbumsPage() {
             label="Stock Status"
             fullWidth
             margin="normal"
+            select
             value={form.stockStatus}
             onChange={(e) => setForm((prev) => ({ ...prev, stockStatus: e.target.value }))}
-          />
+          >
+            {STOCK_STATUS_OPTIONS.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             label="Label"
             fullWidth
