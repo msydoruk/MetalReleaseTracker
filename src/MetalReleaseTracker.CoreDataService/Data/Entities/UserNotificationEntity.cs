@@ -13,11 +13,10 @@ public class UserNotificationEntity
     [Required]
     public string UserId { get; set; } = string.Empty;
 
-    [Required]
-    public Guid AlbumId { get; set; }
+    public Guid? AlbumId { get; set; }
 
     [ForeignKey("AlbumId")]
-    public AlbumEntity Album { get; set; } = null!;
+    public AlbumEntity? Album { get; set; }
 
     public NotificationType NotificationType { get; set; }
 

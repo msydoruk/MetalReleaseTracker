@@ -49,7 +49,7 @@ public class SendBroadcastHandler
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            AlbumId = Guid.Empty,
+            AlbumId = null,
             NotificationType = notificationType,
             Title = "Broadcast",
             Message = request.Content,

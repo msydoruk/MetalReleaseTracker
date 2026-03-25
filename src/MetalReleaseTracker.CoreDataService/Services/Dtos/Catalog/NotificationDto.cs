@@ -4,7 +4,7 @@ public class NotificationDto
 {
     public Guid Id { get; set; }
 
-    public Guid AlbumId { get; set; }
+    public Guid? AlbumId { get; set; }
 
     public string AlbumName { get; set; } = string.Empty;
 
