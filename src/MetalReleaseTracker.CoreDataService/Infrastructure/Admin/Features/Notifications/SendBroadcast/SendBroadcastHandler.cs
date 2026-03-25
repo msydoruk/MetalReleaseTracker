@@ -1,8 +1,10 @@
 using MetalReleaseTracker.CoreDataService.Data;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
+using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Notifications.SendBroadcast;
 
@@ -10,13 +12,19 @@ public class SendBroadcastHandler
 {
     private readonly CoreDataServiceDbContext _context;
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly ITelegramBotService _telegramBotService;
+    private readonly ILogger<SendBroadcastHandler> _logger;
 
     public SendBroadcastHandler(
         CoreDataServiceDbContext context,
-        UserManager<IdentityUser> userManager)
+        UserManager<IdentityUser> userManager,
+        ITelegramBotService telegramBotService,
+        ILogger<SendBroadcastHandler> logger)
     {
         _context = context;
         _userManager = userManager;
+        _telegramBotService = telegramBotService;
+        _logger = logger;
     }
 
     public async Task<SendBroadcastResponse> HandleAsync(
@@ -51,6 +59,15 @@ public class SendBroadcastHandler
 
         _context.UserNotifications.AddRange(notifications);
         await _context.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to send broadcast Telegram notifications");
+        }
 
         return new SendBroadcastResponse
         {
