@@ -20,6 +20,7 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distribu
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributors;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.UpdateDistributor;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.CreateNavigationItem;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.DeleteNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.GetNavigationItems;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.UpdateNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.CreateNewsArticle;
@@ -95,6 +96,7 @@ public static class AdminEndpointExtension
         GetNavigationItemsEndpoint.MapEndpoint(adminGroup);
         CreateNavigationItemEndpoint.MapEndpoint(adminGroup);
         UpdateNavigationItemEndpoint.MapEndpoint(adminGroup);
+        DeleteNavigationItemEndpoint.MapEndpoint(adminGroup);
 
         // Translations
         GetTranslationsEndpoint.MapEndpoint(adminGroup);

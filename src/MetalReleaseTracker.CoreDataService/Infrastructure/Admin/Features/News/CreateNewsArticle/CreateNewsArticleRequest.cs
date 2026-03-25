@@ -21,4 +21,10 @@ public class CreateNewsArticleRequest
     public int SortOrder { get; set; }
 
     public bool IsPublished { get; set; }
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

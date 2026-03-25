@@ -29,6 +29,9 @@ public class CreateNavigationItemHandler
             IsProtected = request.IsProtected,
             CreatedDate = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            SeoTitle = request.SeoTitle,
+            SeoDescription = request.SeoDescription,
+            SeoKeywords = request.SeoKeywords,
         };
 
         _context.NavigationItems.Add(entity);
@@ -46,6 +49,9 @@ public class CreateNavigationItemHandler
             IsProtected = entity.IsProtected,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
+            SeoTitle = entity.SeoTitle,
+            SeoDescription = entity.SeoDescription,
+            SeoKeywords = entity.SeoKeywords,
         };
     }
 }

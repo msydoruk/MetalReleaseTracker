@@ -23,6 +23,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
 import { fetchBands, fetchBandById, updateBand, deleteBand, generateBandSeo, bulkGenerateBandSeo } from '../api/bands';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const EMPTY_FORM = {
   name: '',
@@ -184,6 +186,25 @@ export default function BandsPage() {
           variant="outlined"
         />
       ),
+    },
+    {
+      field: 'seoTitle',
+      headerName: 'SEO',
+      width: 70,
+      sortable: false,
+      filterable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) =>
+        params.row.seoTitle ? (
+          <Tooltip title="SEO configured">
+            <CheckCircleIcon fontSize="small" color="success" />
+          </Tooltip>
+        ) : (
+          <Tooltip title="No SEO data">
+            <CancelIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.2)' }} />
+          </Tooltip>
+        ),
     },
     {
       field: 'actions',

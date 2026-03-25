@@ -21,4 +21,10 @@ public class NavigationItemDto
     public DateTime CreatedDate { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

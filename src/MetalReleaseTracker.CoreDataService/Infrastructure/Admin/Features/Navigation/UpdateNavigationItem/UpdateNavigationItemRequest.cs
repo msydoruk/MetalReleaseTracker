@@ -15,4 +15,10 @@ public class UpdateNavigationItemRequest
     public bool? IsVisible { get; set; }
 
     public bool? IsProtected { get; set; }
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

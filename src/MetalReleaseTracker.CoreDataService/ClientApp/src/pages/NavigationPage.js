@@ -1,25 +1,35 @@
 import { useState, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
-import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import Switch from '@mui/material/Switch';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import { DataGrid } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
-import SaveIcon from '@mui/icons-material/Save';
-import NavigationIcon from '@mui/icons-material/Navigation';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import PageHeader from '../components/PageHeader';
-import { fetchNavigationItems, createNavigationItem, updateNavigationItem } from '../api/navigation';
+import {
+  fetchNavigationItems,
+  createNavigationItem,
+  updateNavigationItem,
+  deleteNavigationItem,
+} from '../api/navigation';
 
 const EMPTY_FORM = {
   titleEn: '',
@@ -28,17 +38,23 @@ const EMPTY_FORM = {
   iconName: '',
   sortOrder: 0,
   isVisible: true,
+  isProtected: false,
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
 };
 
 export default function NavigationPage() {
-  const [items, setItems] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editedFields, setEditedFields] = useState({});
-  const [savingId, setSavingId] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [deletingRow, setDeletingRow] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [dialogLang, setDialogLang] = useState('en');
 
   const showSnackbar = useCallback((message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -48,8 +64,7 @@ export default function NavigationPage() {
     try {
       setLoading(true);
       const { data } = await fetchNavigationItems();
-      setItems(data);
-      setEditedFields({});
+      setRows(data);
     } catch (err) {
       showSnackbar(err.response?.data?.message || 'Failed to load navigation items', 'error');
     } finally {
@@ -61,213 +76,198 @@ export default function NavigationPage() {
     loadData();
   }, [loadData]);
 
-  const handleFieldChange = useCallback((id, field, value) => {
-    setEditedFields((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
+  const handleOpenCreate = useCallback(() => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setDialogLang('en');
+    setDialogOpen(true);
   }, []);
 
-  const getFieldValue = useCallback(
-    (item, field) => {
-      if (editedFields[item.id] && editedFields[item.id][field] !== undefined) {
-        return editedFields[item.id][field];
-      }
-      return item[field];
-    },
-    [editedFields]
-  );
+  const handleOpenEdit = useCallback((row) => {
+    setEditingId(row.id);
+    setForm({
+      titleEn: row.titleEn || '',
+      titleUa: row.titleUa || '',
+      path: row.path || '',
+      iconName: row.iconName || '',
+      sortOrder: row.sortOrder || 0,
+      isVisible: row.isVisible !== undefined ? row.isVisible : true,
+      isProtected: row.isProtected || false,
+      seoTitle: row.seoTitle || '',
+      seoDescription: row.seoDescription || '',
+      seoKeywords: row.seoKeywords || '',
+    });
+    setDialogLang('en');
+    setDialogOpen(true);
+  }, []);
 
-  const hasChanges = useCallback(
-    (id) => {
-      return editedFields[id] && Object.keys(editedFields[id]).length > 0;
-    },
-    [editedFields]
-  );
+  const handleOpenDelete = useCallback((row) => {
+    setDeletingRow(row);
+    setDeleteDialogOpen(true);
+  }, []);
 
-  const handleSaveRow = useCallback(
-    async (item) => {
-      try {
-        setSavingId(item.id);
-        const edited = editedFields[item.id] || {};
-        const payload = {
-          titleEn: edited.titleEn !== undefined ? edited.titleEn : item.titleEn,
-          titleUa: edited.titleUa !== undefined ? edited.titleUa : item.titleUa,
-          path: edited.path !== undefined ? edited.path : item.path,
-          iconName: edited.iconName !== undefined ? edited.iconName : item.iconName,
-          sortOrder:
-            edited.sortOrder !== undefined ? parseInt(edited.sortOrder, 10) : item.sortOrder,
-          isVisible: edited.isVisible !== undefined ? edited.isVisible : item.isVisible,
-        };
-        await updateNavigationItem(item.id, payload);
-        showSnackbar(`"${payload.titleEn}" updated`);
-        loadData();
-      } catch (err) {
-        showSnackbar(err.response?.data?.message || 'Failed to update navigation item', 'error');
-      } finally {
-        setSavingId(null);
-      }
-    },
-    [editedFields, loadData, showSnackbar]
-  );
-
-  const handleCreate = useCallback(async () => {
+  const handleSave = useCallback(async () => {
     try {
-      setCreating(true);
+      setSaving(true);
       const payload = {
         ...form,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
       };
-      await createNavigationItem(payload);
-      showSnackbar('Navigation item created');
+      if (editingId) {
+        await updateNavigationItem(editingId, payload);
+        showSnackbar('Navigation item updated');
+      } else {
+        await createNavigationItem(payload);
+        showSnackbar('Navigation item created');
+      }
       setDialogOpen(false);
-      setForm(EMPTY_FORM);
       loadData();
     } catch (err) {
-      showSnackbar(err.response?.data?.message || 'Failed to create navigation item', 'error');
+      showSnackbar(err.response?.data?.message || 'Failed to save navigation item', 'error');
     } finally {
-      setCreating(false);
+      setSaving(false);
     }
-  }, [form, loadData, showSnackbar]);
+  }, [editingId, form, loadData, showSnackbar]);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      setSaving(true);
+      await deleteNavigationItem(deletingRow.id);
+      showSnackbar('Navigation item deleted');
+      setDeleteDialogOpen(false);
+      setDeletingRow(null);
+      loadData();
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Failed to delete navigation item', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [deletingRow, loadData, showSnackbar]);
+
+  const titleField = dialogLang === 'ua' ? 'titleUa' : 'titleEn';
+
+  const columns = [
+    { field: 'titleEn', headerName: 'Title (EN)', flex: 1, minWidth: 160 },
+    { field: 'path', headerName: 'Path', flex: 0.8, minWidth: 140 },
+    { field: 'iconName', headerName: 'Icon', width: 140 },
+    {
+      field: 'sortOrder',
+      headerName: 'Order',
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'isVisible',
+      headerName: 'Visible',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value ? 'Yes' : 'No'}
+          size="small"
+          color={params.value ? 'success' : 'default'}
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      field: 'seoTitle',
+      headerName: 'SEO',
+      width: 70,
+      sortable: false,
+      filterable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) =>
+        params.row.seoTitle ? (
+          <Tooltip title="SEO configured">
+            <CheckCircleIcon fontSize="small" color="success" />
+          </Tooltip>
+        ) : (
+          <Tooltip title="No SEO data">
+            <CancelIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.2)' }} />
+          </Tooltip>
+        ),
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 120,
+      sortable: false,
+      filterable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Box>
+          <Tooltip title="Edit">
+            <IconButton size="small" onClick={() => handleOpenEdit(params.row)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          {!params.row.isProtected && (
+            <Tooltip title="Delete">
+              <IconButton size="small" color="error" onClick={() => handleOpenDelete(params.row)}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      ),
+    },
+  ];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader
         title="Navigation"
         subtitle="Manage navigation menu items"
         action={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
             Add Item
           </Button>
         }
       />
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress />
-        </Box>
-      ) : items.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <NavigationIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.2)', mb: 1 }} />
-          <Typography color="text.secondary">No navigation items configured yet.</Typography>
-        </Box>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {items.map((item) => (
-            <Card
-              key={item.id}
-              sx={{
-                borderLeft: hasChanges(item.id) ? '3px solid #ff9800' : '3px solid transparent',
-                transition: 'border-color 0.2s',
-              }}
-            >
-              <CardContent sx={{ p: 2.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      {item.titleEn}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      ({item.path})
-                    </Typography>
-                  </Box>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={getFieldValue(item, 'isVisible')}
-                        onChange={(e) => handleFieldChange(item.id, 'isVisible', e.target.checked)}
-                        size="small"
-                      />
-                    }
-                    label={
-                      <Typography variant="caption" color="text.secondary">
-                        Visible
-                      </Typography>
-                    }
-                    labelPlacement="start"
-                    sx={{ mr: 0 }}
-                  />
-                </Box>
+      <Box sx={{ flexGrow: 1, minHeight: 0 }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          pageSizeOptions={[10, 25]}
+          initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+          disableRowSelectionOnClick
+          autoHeight={false}
+          sx={{ height: '100%' }}
+        />
+      </Box>
 
-                <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
-
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-                  <TextField
-                    label="Title (EN)"
-                    size="small"
-                    value={getFieldValue(item, 'titleEn')}
-                    onChange={(e) => handleFieldChange(item.id, 'titleEn', e.target.value)}
-                    sx={{ flex: 1, minWidth: 160 }}
-                  />
-                  <TextField
-                    label="Title (UA)"
-                    size="small"
-                    value={getFieldValue(item, 'titleUa')}
-                    onChange={(e) => handleFieldChange(item.id, 'titleUa', e.target.value)}
-                    sx={{ flex: 1, minWidth: 160 }}
-                  />
-                  <TextField
-                    label="Path"
-                    size="small"
-                    value={getFieldValue(item, 'path')}
-                    onChange={(e) => handleFieldChange(item.id, 'path', e.target.value)}
-                    sx={{ flex: 1, minWidth: 140 }}
-                  />
-                  <TextField
-                    label="Icon"
-                    size="small"
-                    value={getFieldValue(item, 'iconName')}
-                    onChange={(e) => handleFieldChange(item.id, 'iconName', e.target.value)}
-                    sx={{ flex: 0.6, minWidth: 120 }}
-                  />
-                  <TextField
-                    label="Sort Order"
-                    size="small"
-                    type="number"
-                    value={getFieldValue(item, 'sortOrder')}
-                    onChange={(e) => handleFieldChange(item.id, 'sortOrder', e.target.value)}
-                    sx={{ width: 110 }}
-                  />
-                </Box>
-
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={
-                    savingId === item.id ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <SaveIcon />
-                    )
-                  }
-                  onClick={() => handleSaveRow(item)}
-                  disabled={savingId === item.id || !hasChanges(item.id)}
-                >
-                  {savingId === item.id ? 'Saving...' : 'Save'}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      )}
-
-      {/* Create Dialog */}
+      {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Navigation Item</DialogTitle>
+        <DialogTitle>{editingId ? 'Edit Navigation Item' : 'New Navigation Item'}</DialogTitle>
         <DialogContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 2 }}>
+            <ToggleButtonGroup
+              value={dialogLang}
+              exclusive
+              onChange={(e, value) => { if (value) setDialogLang(value); }}
+              size="small"
+            >
+              <ToggleButton value="en" sx={{ px: 2 }}>EN</ToggleButton>
+              <ToggleButton value="ua" sx={{ px: 2 }}>UA</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" color="text.secondary">
+              Editing {dialogLang === 'ua' ? 'Ukrainian' : 'English'} title
+            </Typography>
+          </Box>
+
           <TextField
-            label="Title (EN)"
+            label="Title"
             fullWidth
             margin="normal"
-            value={form.titleEn}
-            onChange={(e) => setForm((prev) => ({ ...prev, titleEn: e.target.value }))}
-          />
-          <TextField
-            label="Title (UA)"
-            fullWidth
-            margin="normal"
-            value={form.titleUa}
-            onChange={(e) => setForm((prev) => ({ ...prev, titleUa: e.target.value }))}
+            value={form[titleField]}
+            onChange={(e) => setForm((prev) => ({ ...prev, [titleField]: e.target.value }))}
           />
           <TextField
             label="Path"
@@ -293,25 +293,77 @@ export default function NavigationPage() {
             value={form.sortOrder}
             onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))}
           />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.isVisible}
-                onChange={(e) => setForm((prev) => ({ ...prev, isVisible: e.target.checked }))}
-              />
-            }
-            label="Visible"
-            sx={{ mt: 1 }}
+          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.isVisible}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isVisible: e.target.checked }))}
+                />
+              }
+              label="Visible"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.isProtected}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isProtected: e.target.checked }))}
+                />
+              }
+              label="Protected"
+            />
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>SEO (optional)</Typography>
+          <TextField
+            label="SEO Title"
+            fullWidth
+            margin="normal"
+            value={form.seoTitle}
+            onChange={(e) => setForm((prev) => ({ ...prev, seoTitle: e.target.value }))}
+            helperText={`${(form.seoTitle || '').length}/160`}
+            inputProps={{ maxLength: 160 }}
+          />
+          <TextField
+            label="SEO Description"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={2}
+            value={form.seoDescription}
+            onChange={(e) => setForm((prev) => ({ ...prev, seoDescription: e.target.value }))}
+            helperText={`${(form.seoDescription || '').length}/320`}
+            inputProps={{ maxLength: 320 }}
+          />
+          <TextField
+            label="SEO Keywords"
+            fullWidth
+            margin="normal"
+            value={form.seoKeywords}
+            onChange={(e) => setForm((prev) => ({ ...prev, seoKeywords: e.target.value }))}
+            helperText="Comma-separated keywords"
+            inputProps={{ maxLength: 500 }}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleCreate}
-            disabled={creating || !form.titleEn || !form.path}
-          >
-            {creating ? 'Creating...' : 'Create'}
+          <Button variant="contained" onClick={handleSave} disabled={saving || !form.titleEn || !form.path}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Navigation Item</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete <strong>{deletingRow?.titleEn}</strong>? This action cannot be undone.
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={saving}>
+            {saving ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

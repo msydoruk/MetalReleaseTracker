@@ -32,6 +32,9 @@ public class CreateNewsArticleHandler
             IsPublished = request.IsPublished,
             CreatedDate = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            SeoTitle = request.SeoTitle,
+            SeoDescription = request.SeoDescription,
+            SeoKeywords = request.SeoKeywords,
         };
 
         _context.NewsArticles.Add(entity);
@@ -52,6 +55,9 @@ public class CreateNewsArticleHandler
             IsPublished = entity.IsPublished,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
+            SeoTitle = entity.SeoTitle,
+            SeoDescription = entity.SeoDescription,
+            SeoKeywords = entity.SeoKeywords,
         };
     }
 }

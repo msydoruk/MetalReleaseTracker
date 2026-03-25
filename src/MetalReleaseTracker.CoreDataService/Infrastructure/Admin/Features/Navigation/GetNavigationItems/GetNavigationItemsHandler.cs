@@ -29,6 +29,9 @@ public class GetNavigationItemsHandler
                 IsProtected = item.IsProtected,
                 CreatedDate = item.CreatedDate,
                 UpdatedAt = item.UpdatedAt,
+                SeoTitle = item.SeoTitle,
+                SeoDescription = item.SeoDescription,
+                SeoKeywords = item.SeoKeywords,
             })
             .ToListAsync(cancellationToken);
 

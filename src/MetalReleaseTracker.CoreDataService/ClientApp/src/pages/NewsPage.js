@@ -14,10 +14,16 @@ import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 import { DataGrid } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import PageHeader from '../components/PageHeader';
 import {
   fetchNewsArticles,
@@ -45,6 +51,9 @@ const EMPTY_FORM = {
   date: '',
   sortOrder: 0,
   isPublished: false,
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
 };
 
 export default function NewsPage() {
@@ -57,6 +66,7 @@ export default function NewsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [dialogLang, setDialogLang] = useState('en');
 
   const showSnackbar = useCallback((message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -84,6 +94,7 @@ export default function NewsPage() {
       ...EMPTY_FORM,
       date: new Date().toISOString().split('T')[0],
     });
+    setDialogLang('en');
     setDialogOpen(true);
   }, []);
 
@@ -100,7 +111,11 @@ export default function NewsPage() {
       date: row.date ? row.date.split('T')[0] : '',
       sortOrder: row.sortOrder || 0,
       isPublished: row.isPublished || false,
+      seoTitle: row.seoTitle || '',
+      seoDescription: row.seoDescription || '',
+      seoKeywords: row.seoKeywords || '',
     });
+    setDialogLang('en');
     setDialogOpen(true);
   }, []);
 
@@ -146,6 +161,9 @@ export default function NewsPage() {
       setSaving(false);
     }
   }, [deletingRow, loadData, showSnackbar]);
+
+  const titleField = dialogLang === 'ua' ? 'titleUa' : 'titleEn';
+  const contentField = dialogLang === 'ua' ? 'contentUa' : 'contentEn';
 
   const columns = [
     { field: 'titleEn', headerName: 'Title (En)', flex: 1, minWidth: 250 },
@@ -195,6 +213,25 @@ export default function NewsPage() {
       width: 80,
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'seoTitle',
+      headerName: 'SEO',
+      width: 70,
+      sortable: false,
+      filterable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) =>
+        params.row.seoTitle ? (
+          <Tooltip title="SEO configured">
+            <CheckCircleIcon fontSize="small" color="success" />
+          </Tooltip>
+        ) : (
+          <Tooltip title="No SEO data">
+            <CancelIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.2)' }} />
+          </Tooltip>
+        ),
     },
     {
       field: 'actions',
@@ -247,48 +284,43 @@ export default function NewsPage() {
       </Box>
 
       {/* Create / Edit Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingId ? 'Edit Article' : 'New Article'}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-            <TextField
-              label="Title (EN)"
-              fullWidth
-              value={form.titleEn}
-              onChange={(e) => setForm((prev) => ({ ...prev, titleEn: e.target.value }))}
-            />
-            <TextField
-              label="Title (UA)"
-              fullWidth
-              value={form.titleUa}
-              onChange={(e) => setForm((prev) => ({ ...prev, titleUa: e.target.value }))}
-            />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 2 }}>
+            <ToggleButtonGroup
+              value={dialogLang}
+              exclusive
+              onChange={(e, value) => { if (value) setDialogLang(value); }}
+              size="small"
+            >
+              <ToggleButton value="en" sx={{ px: 2 }}>EN</ToggleButton>
+              <ToggleButton value="ua" sx={{ px: 2 }}>UA</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" color="text.secondary">
+              Editing {dialogLang === 'ua' ? 'Ukrainian' : 'English'} content
+            </Typography>
           </Box>
 
           <TextField
-            label="Content (EN)"
+            label="Title"
+            fullWidth
+            margin="normal"
+            value={form[titleField]}
+            onChange={(e) => setForm((prev) => ({ ...prev, [titleField]: e.target.value }))}
+          />
+          <TextField
+            label="Content"
             fullWidth
             margin="normal"
             multiline
             rows={4}
-            value={form.contentEn}
-            onChange={(e) => setForm((prev) => ({ ...prev, contentEn: e.target.value }))}
+            value={form[contentField]}
+            onChange={(e) => setForm((prev) => ({ ...prev, [contentField]: e.target.value }))}
           />
 
-          <TextField
-            label="Content (UA)"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={4}
-            value={form.contentUa}
-            onChange={(e) => setForm((prev) => ({ ...prev, contentUa: e.target.value }))}
-          />
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Display Settings</Typography>
 
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <TextField
@@ -305,9 +337,7 @@ export default function NewsPage() {
               sx={{ flex: 1 }}
             >
               {CHIP_COLOR_OPTIONS.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
+                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
               ))}
             </TextField>
           </Box>
@@ -346,6 +376,38 @@ export default function NewsPage() {
             }
             label="Published"
             sx={{ mt: 2 }}
+          />
+
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>SEO (optional)</Typography>
+          <TextField
+            label="SEO Title"
+            fullWidth
+            margin="normal"
+            value={form.seoTitle}
+            onChange={(e) => setForm((prev) => ({ ...prev, seoTitle: e.target.value }))}
+            helperText={`${(form.seoTitle || '').length}/160`}
+            inputProps={{ maxLength: 160 }}
+          />
+          <TextField
+            label="SEO Description"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={2}
+            value={form.seoDescription}
+            onChange={(e) => setForm((prev) => ({ ...prev, seoDescription: e.target.value }))}
+            helperText={`${(form.seoDescription || '').length}/320`}
+            inputProps={{ maxLength: 320 }}
+          />
+          <TextField
+            label="SEO Keywords"
+            fullWidth
+            margin="normal"
+            value={form.seoKeywords}
+            onChange={(e) => setForm((prev) => ({ ...prev, seoKeywords: e.target.value }))}
+            helperText="Comma-separated keywords"
+            inputProps={{ maxLength: 500 }}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

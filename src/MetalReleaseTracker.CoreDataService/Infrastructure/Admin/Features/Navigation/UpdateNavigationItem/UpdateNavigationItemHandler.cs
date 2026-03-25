@@ -63,6 +63,21 @@ public class UpdateNavigationItemHandler
             entity.IsProtected = request.IsProtected.Value;
         }
 
+        if (request.SeoTitle is not null)
+        {
+            entity.SeoTitle = request.SeoTitle;
+        }
+
+        if (request.SeoDescription is not null)
+        {
+            entity.SeoDescription = request.SeoDescription;
+        }
+
+        if (request.SeoKeywords is not null)
+        {
+            entity.SeoKeywords = request.SeoKeywords;
+        }
+
         entity.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -78,6 +93,9 @@ public class UpdateNavigationItemHandler
             IsProtected = entity.IsProtected,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
+            SeoTitle = entity.SeoTitle,
+            SeoDescription = entity.SeoDescription,
+            SeoKeywords = entity.SeoKeywords,
         };
     }
 }

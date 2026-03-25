@@ -32,6 +32,9 @@ public class GetNewsArticlesHandler
                 IsPublished = article.IsPublished,
                 CreatedDate = article.CreatedDate,
                 UpdatedAt = article.UpdatedAt,
+                SeoTitle = article.SeoTitle,
+                SeoDescription = article.SeoDescription,
+                SeoKeywords = article.SeoKeywords,
             })
             .ToListAsync(cancellationToken);
 

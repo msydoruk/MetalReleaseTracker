@@ -18,6 +18,7 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distribu
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributors;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.UpdateDistributor;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.CreateNavigationItem;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.DeleteNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.GetNavigationItems;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.UpdateNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.CreateNewsArticle;
@@ -84,6 +85,7 @@ public static class AdminServiceExtension
         services.AddScoped<GetNavigationItemsHandler>();
         services.AddScoped<CreateNavigationItemHandler>();
         services.AddScoped<UpdateNavigationItemHandler>();
+        services.AddScoped<DeleteNavigationItemHandler>();
 
         // Translations
         services.AddScoped<GetTranslationsHandler>();

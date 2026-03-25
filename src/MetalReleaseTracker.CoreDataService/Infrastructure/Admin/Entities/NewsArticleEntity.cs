@@ -45,4 +45,13 @@ public class NewsArticleEntity
     public DateTime CreatedDate { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    [MaxLength(160)]
+    public string? SeoTitle { get; set; }
+
+    [MaxLength(320)]
+    public string? SeoDescription { get; set; }
+
+    [MaxLength(500)]
+    public string? SeoKeywords { get; set; }
 }

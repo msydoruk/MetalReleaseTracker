@@ -22,20 +22,22 @@ import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
 import { fetchAlbums, fetchAlbumById, updateAlbum, deleteAlbum, generateAlbumSeo, bulkGenerateAlbumSeo } from '../api/albums';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
   { value: 'New', label: 'New' },
   { value: 'PreOrder', label: 'Pre-Order' },
   { value: 'Restock', label: 'Restock' },
-  { value: 'SoldOut', label: 'Sold Out' },
+  { value: 'Unavailable', label: 'Unavailable' },
 ];
 
 const STATUS_COLORS = {
   New: 'success',
   PreOrder: 'info',
   Restock: 'warning',
-  SoldOut: 'error',
+  Unavailable: 'error',
 };
 
 const STOCK_STATUS_OPTIONS = [
@@ -225,6 +227,25 @@ export default function AlbumsPage() {
       width: 120,
       valueFormatter: (value) =>
         value ? new Date(value).toLocaleDateString() : '--',
+    },
+    {
+      field: 'seoTitle',
+      headerName: 'SEO',
+      width: 70,
+      sortable: false,
+      filterable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) =>
+        params.row.seoTitle ? (
+          <Tooltip title="SEO configured">
+            <CheckCircleIcon fontSize="small" color="success" />
+          </Tooltip>
+        ) : (
+          <Tooltip title="No SEO data">
+            <CancelIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.2)' }} />
+          </Tooltip>
+        ),
     },
     {
       field: 'actions',
