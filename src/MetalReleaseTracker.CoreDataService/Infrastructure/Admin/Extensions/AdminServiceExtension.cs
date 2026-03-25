@@ -50,7 +50,6 @@ public static class AdminServiceExtension
     {
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<IAdminSettingsService, AdminSettingsService>();
-        services.AddScoped<IAdminSettingsSeedService, AdminSettingsSeedService>();
 
         // Dashboard
         services.AddScoped<GetDashboardStatsHandler>();
