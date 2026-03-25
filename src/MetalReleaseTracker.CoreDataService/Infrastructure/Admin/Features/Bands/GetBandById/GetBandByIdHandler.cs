@@ -29,6 +29,9 @@ public class GetBandByIdHandler
                 MetalArchivesUrl = band.MetalArchivesUrl,
                 FormationYear = band.FormationYear,
                 Slug = band.Slug,
+                SeoTitle = band.SeoTitle,
+                SeoDescription = band.SeoDescription,
+                SeoKeywords = band.SeoKeywords,
                 AlbumCount = _context.Albums.Count(album => album.BandId == band.Id),
                 Albums = _context.Albums
                     .Where(album => album.BandId == band.Id)

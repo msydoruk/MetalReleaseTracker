@@ -44,6 +44,9 @@ public class GetAlbumByIdHandler
                 BandName = album.Band.Name,
                 DistributorId = album.DistributorId,
                 DistributorName = album.Distributor.Name,
+                SeoTitle = album.SeoTitle,
+                SeoDescription = album.SeoDescription,
+                SeoKeywords = album.SeoKeywords,
             })
             .FirstOrDefaultAsync(cancellationToken);
 

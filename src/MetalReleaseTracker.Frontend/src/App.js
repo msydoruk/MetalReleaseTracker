@@ -10,6 +10,7 @@ import authService from './services/auth';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { NavigationProvider } from './contexts/NavigationContext';
+import { SeoProvider } from './contexts/SeoContext';
 import BackToTop from './components/BackToTop';
 
 // Lazy-loaded route components
@@ -171,6 +172,7 @@ function App() {
         <LanguageProvider>
           <CurrencyProvider>
             <NavigationProvider>
+            <SeoProvider>
             <Router>
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
@@ -219,6 +221,7 @@ function App() {
               <BackToTop />
             </Box>
             </Router>
+            </SeoProvider>
             </NavigationProvider>
           </CurrencyProvider>
         </LanguageProvider>

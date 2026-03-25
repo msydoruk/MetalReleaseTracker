@@ -1,4 +1,6 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Constants;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -97,6 +99,19 @@ public static class ConfigEndpoints
                 return Results.Ok(articles);
             })
             .WithName("GetPublicNews")
+            .WithTags("Config");
+
+        endpoints.MapGet(RouteConstants.Api.PublicConfig.SeoConfig, async (
+                IAdminSettingsService settingsService,
+                CancellationToken cancellationToken) =>
+            {
+                var settings = await settingsService.GetSettingsByCategoryAsync(
+                    SettingCategories.Seo,
+                    cancellationToken);
+
+                return Results.Ok(settings.Settings);
+            })
+            .WithName("GetPublicSeoConfig")
             .WithTags("Config");
     }
 }

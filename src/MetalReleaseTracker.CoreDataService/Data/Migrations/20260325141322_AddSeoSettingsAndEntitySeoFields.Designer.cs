@@ -3,17 +3,20 @@ using System;
 using MetalReleaseTracker.CoreDataService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MetalReleaseTracker.CoreDataService.Migrations
+namespace MetalReleaseTracker.CoreDataService.Data.Migrations
 {
     [DbContext(typeof(CoreDataServiceDbContext))]
-    partial class CoreDataServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325141322_AddSeoSettingsAndEntitySeoFields")]
+    partial class AddSeoSettingsAndEntitySeoFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -261,33 +264,9 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.Property<int>("Code")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Country")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("CountryFlag")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<string>("DescriptionEn")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("DescriptionUa")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("WebsiteUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
 

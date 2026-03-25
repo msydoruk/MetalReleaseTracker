@@ -47,4 +47,26 @@ public static class SettingKeys
         public const string RestockEnabled = "RestockEnabled";
         public const string NewVariantEnabled = "NewVariantEnabled";
     }
+
+    public static class Seo
+    {
+        public const string SiteName = "SiteName";
+        public const string SiteUrl = "SiteUrl";
+        public const string DefaultOgImage = "DefaultOgImage";
+        public const string DefaultMetaDescription = "DefaultMetaDescription";
+        public const string ContactEmail = "ContactEmail";
+        public const string OrganizationName = "OrganizationName";
+        public const string OrganizationLogoUrl = "OrganizationLogoUrl";
+        public const string RobotsTxt = "RobotsTxt";
+    }
+
+    public static class AiSeo
+    {
+        public const string ApiKey = "ApiKey";
+        public const string Model = "Model";
+        public const string MaxTokens = "MaxTokens";
+        public const string BandPrompt = "BandPrompt";
+        public const string AlbumPrompt = "AlbumPrompt";
+        public const string IsEnabled = "IsEnabled";
+    }
 }

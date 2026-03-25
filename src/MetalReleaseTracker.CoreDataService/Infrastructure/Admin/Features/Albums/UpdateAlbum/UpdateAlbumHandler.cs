@@ -73,6 +73,10 @@ public class UpdateAlbumHandler
             entity.Press = request.Press;
         }
 
+        entity.SeoTitle = request.SeoTitle;
+        entity.SeoDescription = request.SeoDescription;
+        entity.SeoKeywords = request.SeoKeywords;
+
         entity.LastUpdateDate = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -101,6 +105,9 @@ public class UpdateAlbumHandler
             BandName = entity.Band.Name,
             DistributorId = entity.DistributorId,
             DistributorName = entity.Distributor.Name,
+            SeoTitle = entity.SeoTitle,
+            SeoDescription = entity.SeoDescription,
+            SeoKeywords = entity.SeoKeywords,
         };
     }
 }

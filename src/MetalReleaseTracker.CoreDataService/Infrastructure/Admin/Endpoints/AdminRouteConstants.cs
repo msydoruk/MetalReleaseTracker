@@ -115,4 +115,13 @@ public static class AdminRouteConstants
         public const string Stats = $"{Prefix}/stats";
         public const string LinkedUsers = $"{Prefix}/linked-users";
     }
+
+    public static class AiSeo
+    {
+        private const string Prefix = $"{Base}/ai-seo";
+        public const string GenerateBand = $"{Prefix}/band/{{id:guid}}";
+        public const string GenerateAlbum = $"{Prefix}/album/{{id:guid}}";
+        public const string BulkBands = $"{Prefix}/bulk/bands";
+        public const string BulkAlbums = $"{Prefix}/bulk/albums";
+    }
 }

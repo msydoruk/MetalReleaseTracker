@@ -41,6 +41,7 @@ import authService from '../services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useSeoConfig } from '../contexts/SeoContext';
 import HeaderSearch from './HeaderSearch';
 
 const ICON_MAP = {
@@ -68,6 +69,7 @@ const Header = () => {
   const { language, toggleLanguage, t } = useLanguage();
   const { currency, changeCurrency, availableCurrencies } = useCurrency();
   const { navItems: apiNavItems } = useNavigation();
+  const seoConfig = useSeoConfig();
 
   const checkUserStatus = async () => {
     try {
@@ -369,7 +371,7 @@ const Header = () => {
                   textDecoration: 'none',
                 }}
               >
-                METAL RELEASE TRACKER
+                {(seoConfig.SiteName || 'METAL RELEASE TRACKER').toUpperCase()}
               </Typography>
               <Tooltip title={t('header.flagTooltip')}>
                 <Box

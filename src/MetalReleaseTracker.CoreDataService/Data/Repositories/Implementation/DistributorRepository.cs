@@ -51,7 +51,13 @@ public class DistributorRepository : IDistributorsRepository
             {
                 Id = distributor.Id,
                 Name = distributor.Name,
-                AlbumCount = _dbContext.Albums.Count(album => album.DistributorId == distributor.Id)
+                AlbumCount = _dbContext.Albums.Count(album => album.DistributorId == distributor.Id),
+                DescriptionEn = distributor.DescriptionEn,
+                DescriptionUa = distributor.DescriptionUa,
+                Country = distributor.Country,
+                CountryFlag = distributor.CountryFlag,
+                LogoUrl = distributor.LogoUrl,
+                WebsiteUrl = distributor.WebsiteUrl,
             })
             .OrderBy(distributorDto => distributorDto.Name)
             .ToListAsync(cancellationToken: cancellationToken);

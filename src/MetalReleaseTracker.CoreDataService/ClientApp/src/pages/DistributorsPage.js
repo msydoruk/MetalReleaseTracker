@@ -10,6 +10,8 @@ import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 import { DataGrid } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -22,7 +24,7 @@ import {
   deleteDistributor,
 } from '../api/distributors';
 
-const EMPTY_FORM = { name: '', code: '' };
+const EMPTY_FORM = { name: '', code: '', descriptionEn: '', descriptionUa: '', country: '', countryFlag: '', logoUrl: '', websiteUrl: '' };
 
 export default function DistributorsPage() {
   const [rows, setRows] = useState([]);
@@ -63,7 +65,12 @@ export default function DistributorsPage() {
 
   const handleOpenEdit = useCallback((row) => {
     setEditingId(row.id);
-    setForm({ name: row.name || '', code: row.code || '' });
+    setForm({
+      name: row.name || '', code: row.code || '',
+      descriptionEn: row.descriptionEn || '', descriptionUa: row.descriptionUa || '',
+      country: row.country || '', countryFlag: row.countryFlag || '',
+      logoUrl: row.logoUrl || '', websiteUrl: row.websiteUrl || '',
+    });
     setDialogOpen(true);
   }, []);
 
@@ -168,7 +175,7 @@ export default function DistributorsPage() {
       </Box>
 
       {/* Create / Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingId ? 'Edit Distributor' : 'New Distributor'}</DialogTitle>
         <DialogContent>
           <TextField
@@ -186,6 +193,56 @@ export default function DistributorsPage() {
             onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value }))}
             disabled={!!editingId}
             helperText={editingId ? 'Code cannot be changed after creation' : ''}
+          />
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Details</Typography>
+          <TextField
+            label="Description (EN)"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={3}
+            value={form.descriptionEn}
+            onChange={(e) => setForm((prev) => ({ ...prev, descriptionEn: e.target.value }))}
+          />
+          <TextField
+            label="Description (UA)"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={3}
+            value={form.descriptionUa}
+            onChange={(e) => setForm((prev) => ({ ...prev, descriptionUa: e.target.value }))}
+          />
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label="Country"
+              fullWidth
+              margin="normal"
+              value={form.country}
+              onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))}
+            />
+            <TextField
+              label="Flag"
+              margin="normal"
+              sx={{ width: 100 }}
+              value={form.countryFlag}
+              onChange={(e) => setForm((prev) => ({ ...prev, countryFlag: e.target.value }))}
+            />
+          </Box>
+          <TextField
+            label="Logo URL"
+            fullWidth
+            margin="normal"
+            value={form.logoUrl}
+            onChange={(e) => setForm((prev) => ({ ...prev, logoUrl: e.target.value }))}
+          />
+          <TextField
+            label="Website URL"
+            fullWidth
+            margin="normal"
+            value={form.websiteUrl}
+            onChange={(e) => setForm((prev) => ({ ...prev, websiteUrl: e.target.value }))}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

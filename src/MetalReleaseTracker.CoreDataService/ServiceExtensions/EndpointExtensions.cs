@@ -34,6 +34,7 @@ public static class EndpointExtensions
         ChangeLogEndpoints.MapEndpoints(routeBuilder);
         FeedEndpoints.MapEndpoints(routeBuilder);
         SitemapEndpoints.MapEndpoints(routeBuilder);
+        RobotsEndpoints.MapEndpoints(routeBuilder);
         UserAlbumWatchEndpoints.MapEndpoints(routeBuilder);
         NotificationEndpoints.MapEndpoints(routeBuilder);
         TelegramEndpoints.MapEndpoints(routeBuilder);

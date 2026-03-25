@@ -1,5 +1,7 @@
 using System.Text;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Constants;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -7,7 +9,7 @@ namespace MetalReleaseTracker.CoreDataService.Services.Implementation;
 
 public class SitemapService : ISitemapService
 {
-    private const string BaseUrl = "https://metal-release.com";
+    private const string FallbackBaseUrl = "https://metal-release.com";
     private const string CacheKey = "sitemap_xml";
 
     private static readonly (string Path, string Priority, string ChangeFreq)[] StaticPages =
@@ -24,17 +26,20 @@ public class SitemapService : ISitemapService
 
     private readonly IAlbumRepository _albumRepository;
     private readonly IBandRepository _bandRepository;
+    private readonly IAdminSettingsService _settingsService;
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<SitemapService> _logger;
 
     public SitemapService(
         IAlbumRepository albumRepository,
         IBandRepository bandRepository,
+        IAdminSettingsService settingsService,
         IMemoryCache memoryCache,
         ILogger<SitemapService> logger)
     {
         _albumRepository = albumRepository;
         _bandRepository = bandRepository;
+        _settingsService = settingsService;
         _memoryCache = memoryCache;
         _logger = logger;
     }
@@ -54,6 +59,12 @@ public class SitemapService : ISitemapService
 
     private async Task<string> BuildSitemapXmlAsync(CancellationToken cancellationToken)
     {
+        var baseUrl = await _settingsService.GetStringSettingAsync(
+            SettingCategories.Seo,
+            SettingKeys.Seo.SiteUrl,
+            FallbackBaseUrl,
+            cancellationToken);
+
         var albumSlugs = await _albumRepository.GetAllAlbumSlugsAsync(cancellationToken);
         var bandSlugs = await _bandRepository.GetAllBandSlugsAsync(cancellationToken);
 
@@ -69,7 +80,7 @@ public class SitemapService : ISitemapService
         foreach (var (path, priority, changeFreq) in StaticPages)
         {
             builder.AppendLine("  <url>");
-            builder.Append("    <loc>").Append(BaseUrl).Append(path).AppendLine("</loc>");
+            builder.Append("    <loc>").Append(baseUrl).Append(path).AppendLine("</loc>");
             builder.Append("    <changefreq>").Append(changeFreq).AppendLine("</changefreq>");
             builder.Append("    <priority>").Append(priority).AppendLine("</priority>");
             builder.AppendLine("  </url>");
@@ -78,7 +89,7 @@ public class SitemapService : ISitemapService
         foreach (var band in bandSlugs)
         {
             builder.AppendLine("  <url>");
-            builder.Append("    <loc>").Append(BaseUrl).Append("/bands/").Append(band.Slug).AppendLine("</loc>");
+            builder.Append("    <loc>").Append(baseUrl).Append("/bands/").Append(band.Slug).AppendLine("</loc>");
             builder.AppendLine("    <changefreq>weekly</changefreq>");
             builder.AppendLine("    <priority>0.7</priority>");
             builder.AppendLine("  </url>");
@@ -87,7 +98,7 @@ public class SitemapService : ISitemapService
         foreach (var album in albumSlugs)
         {
             builder.AppendLine("  <url>");
-            builder.Append("    <loc>").Append(BaseUrl).Append("/albums/").Append(album.Slug).AppendLine("</loc>");
+            builder.Append("    <loc>").Append(baseUrl).Append("/albums/").Append(album.Slug).AppendLine("</loc>");
             builder.Append("    <lastmod>").Append(album.LastModified.ToString("yyyy-MM-dd")).AppendLine("</lastmod>");
             builder.AppendLine("    <changefreq>weekly</changefreq>");
             builder.AppendLine("    <priority>0.6</priority>");

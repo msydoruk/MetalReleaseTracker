@@ -7,4 +7,16 @@ public class DistributorWithAlbumCountDto
     public string Name { get; set; } = string.Empty;
 
     public int AlbumCount { get; set; }
+
+    public string? DescriptionEn { get; set; }
+
+    public string? DescriptionUa { get; set; }
+
+    public string? Country { get; set; }
+
+    public string? CountryFlag { get; set; }
+
+    public string? LogoUrl { get; set; }
+
+    public string? WebsiteUrl { get; set; }
 }

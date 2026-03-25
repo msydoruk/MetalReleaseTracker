@@ -21,4 +21,10 @@ public class AdminBandDetailDto
     public string Slug { get; set; } = string.Empty;
 
     public List<AdminBandAlbumDto> Albums { get; set; } = [];
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

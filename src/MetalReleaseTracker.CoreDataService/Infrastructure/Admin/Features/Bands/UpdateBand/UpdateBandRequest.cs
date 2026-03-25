@@ -13,4 +13,10 @@ public class UpdateBandRequest
     public string? MetalArchivesUrl { get; set; }
 
     public int? FormationYear { get; set; }
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

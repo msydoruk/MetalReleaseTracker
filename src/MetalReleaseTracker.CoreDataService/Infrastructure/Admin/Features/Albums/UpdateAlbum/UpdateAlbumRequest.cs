@@ -17,4 +17,10 @@ public class UpdateAlbumRequest
     public string? Label { get; set; }
 
     public string? Press { get; set; }
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

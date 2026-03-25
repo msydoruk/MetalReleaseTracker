@@ -17,4 +17,10 @@ public class AdminBandDto
     public int AlbumCount { get; set; }
 
     public string Slug { get; set; } = string.Empty;
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

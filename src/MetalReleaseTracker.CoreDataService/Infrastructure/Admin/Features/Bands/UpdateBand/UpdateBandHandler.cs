@@ -58,6 +58,10 @@ public class UpdateBandHandler
             entity.FormationYear = request.FormationYear;
         }
 
+        entity.SeoTitle = request.SeoTitle;
+        entity.SeoDescription = request.SeoDescription;
+        entity.SeoKeywords = request.SeoKeywords;
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var albumCount = await _context.Albums
@@ -75,6 +79,9 @@ public class UpdateBandHandler
             FormationYear = entity.FormationYear,
             AlbumCount = albumCount,
             Slug = entity.Slug,
+            SeoTitle = entity.SeoTitle,
+            SeoDescription = entity.SeoDescription,
+            SeoKeywords = entity.SeoKeywords,
         };
     }
 }

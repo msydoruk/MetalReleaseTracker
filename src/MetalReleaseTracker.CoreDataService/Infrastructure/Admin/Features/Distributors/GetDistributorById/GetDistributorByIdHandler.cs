@@ -26,6 +26,12 @@ public class GetDistributorByIdHandler
                 Name = distributor.Name,
                 Code = distributor.Code.ToString(),
                 AlbumCount = _context.Albums.Count(album => album.DistributorId == distributor.Id),
+                DescriptionEn = distributor.DescriptionEn,
+                DescriptionUa = distributor.DescriptionUa,
+                Country = distributor.Country,
+                CountryFlag = distributor.CountryFlag,
+                LogoUrl = distributor.LogoUrl,
+                WebsiteUrl = distributor.WebsiteUrl,
             })
             .FirstOrDefaultAsync(cancellationToken);
 

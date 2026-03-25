@@ -29,6 +29,12 @@ public class UpdateDistributorHandler
         }
 
         entity.Name = request.Name;
+        entity.DescriptionEn = request.DescriptionEn;
+        entity.DescriptionUa = request.DescriptionUa;
+        entity.Country = request.Country;
+        entity.CountryFlag = request.CountryFlag;
+        entity.LogoUrl = request.LogoUrl;
+        entity.WebsiteUrl = request.WebsiteUrl;
         await _context.SaveChangesAsync(cancellationToken);
 
         var albumCount = await _context.Albums
@@ -42,6 +48,12 @@ public class UpdateDistributorHandler
             Name = entity.Name,
             Code = entity.Code.ToString(),
             AlbumCount = albumCount,
+            DescriptionEn = entity.DescriptionEn,
+            DescriptionUa = entity.DescriptionUa,
+            Country = entity.Country,
+            CountryFlag = entity.CountryFlag,
+            LogoUrl = entity.LogoUrl,
+            WebsiteUrl = entity.WebsiteUrl,
         };
     }
 }

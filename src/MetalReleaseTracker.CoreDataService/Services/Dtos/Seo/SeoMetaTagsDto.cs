@@ -11,4 +11,6 @@ public class SeoMetaTagsDto
     public string? ImageUrl { get; set; }
 
     public string OgType { get; set; } = "website";
+
+    public string? Keywords { get; set; }
 }

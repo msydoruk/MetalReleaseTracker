@@ -28,6 +28,12 @@ public class CreateDistributorHandler
             Id = Guid.NewGuid(),
             Name = request.Name,
             Code = distributorCode,
+            DescriptionEn = request.DescriptionEn,
+            DescriptionUa = request.DescriptionUa,
+            Country = request.Country,
+            CountryFlag = request.CountryFlag,
+            LogoUrl = request.LogoUrl,
+            WebsiteUrl = request.WebsiteUrl,
         };
 
         _context.Distributors.Add(entity);
@@ -39,6 +45,12 @@ public class CreateDistributorHandler
             Name = entity.Name,
             Code = entity.Code.ToString(),
             AlbumCount = 0,
+            DescriptionEn = entity.DescriptionEn,
+            DescriptionUa = entity.DescriptionUa,
+            Country = entity.Country,
+            CountryFlag = entity.CountryFlag,
+            LogoUrl = entity.LogoUrl,
+            WebsiteUrl = entity.WebsiteUrl,
         };
     }
 }

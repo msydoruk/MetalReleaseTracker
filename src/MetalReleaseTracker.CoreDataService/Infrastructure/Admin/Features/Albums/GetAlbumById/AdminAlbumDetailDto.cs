@@ -47,4 +47,10 @@ public class AdminAlbumDetailDto
     public Guid DistributorId { get; set; }
 
     public string DistributorName { get; set; } = string.Empty;
+
+    public string? SeoTitle { get; set; }
+
+    public string? SeoDescription { get; set; }
+
+    public string? SeoKeywords { get; set; }
 }

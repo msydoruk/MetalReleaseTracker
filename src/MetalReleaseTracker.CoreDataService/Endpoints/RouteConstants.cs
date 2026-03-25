@@ -135,11 +135,13 @@ public static class RouteConstants
             public const string Navigation = $"{ConfigBase}/navigation";
             public const string Translations = $"{ConfigBase}/translations/{{language}}";
             public const string News = $"{ConfigBase}/news";
+            public const string SeoConfig = $"{ConfigBase}/seo";
         }
     }
 
     public static class Seo
     {
         public const string Sitemap = "/sitemap.xml";
+        public const string Robots = "/robots.txt";
     }
 }

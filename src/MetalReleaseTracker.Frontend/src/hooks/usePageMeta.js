@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useSeoConfig } from '../contexts/SeoContext';
 
 const setMetaTag = (attribute, value, content) => {
   let element = document.querySelector(`meta[${attribute}="${value}"]`);
@@ -24,11 +25,13 @@ const setHreflangLink = (hreflang, href) => {
 
 const usePageMeta = (title, description, image) => {
   const location = useLocation();
+  const seoConfig = useSeoConfig();
+  const siteName = seoConfig.SiteName || 'Metal Release Tracker';
+  const siteUrl = seoConfig.SiteUrl || 'https://metal-release.com';
 
   useEffect(() => {
-    const suffix = 'Metal Release Tracker';
-    const effectiveTitle = title || suffix;
-    document.title = title ? `${title} | ${suffix}` : suffix;
+    const effectiveTitle = title || siteName;
+    document.title = title ? `${title} | ${siteName}` : siteName;
 
     if (description) {
       const meta = document.querySelector('meta[name="description"]');
@@ -37,7 +40,7 @@ const usePageMeta = (title, description, image) => {
       }
     }
 
-    const canonicalUrl = `https://metal-release.com${location.pathname}`;
+    const canonicalUrl = `${siteUrl}${location.pathname}`;
 
     let canonical = document.querySelector('link[rel="canonical"]');
     if (canonical) {
@@ -62,9 +65,9 @@ const usePageMeta = (title, description, image) => {
     setHreflangLink('x-default', canonicalUrl);
 
     return () => {
-      document.title = suffix;
+      document.title = siteName;
     };
-  }, [title, description, image, location.pathname]);
+  }, [title, description, image, location.pathname, siteName, siteUrl]);
 };
 
 export default usePageMeta;

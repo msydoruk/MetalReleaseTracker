@@ -3,10 +3,12 @@ import { Box, Container, Typography, Divider, Link as MuiLink, Stack } from '@mu
 import { Link as RouterLink } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useSeoConfig } from '../contexts/SeoContext';
 
 const Footer = () => {
   const { language, t } = useLanguage();
   const { navItems } = useNavigation();
+  const seoConfig = useSeoConfig();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = navItems
@@ -41,7 +43,7 @@ const Footer = () => {
               </MuiLink>
             ))}
             <MuiLink
-              href="mailto:metal.release.tracker@gmail.com?subject=Distributor Suggestion"
+              href={`mailto:${seoConfig.ContactEmail || 'metal.release.tracker@gmail.com'}?subject=Distributor Suggestion`}
               color="text.secondary"
               underline="hover"
               variant="body2"
@@ -51,7 +53,7 @@ const Footer = () => {
             </MuiLink>
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            {currentYear} Metal Release Tracker. {t('footer.rights')}
+            {currentYear} {seoConfig.SiteName || 'Metal Release Tracker'}. {t('footer.rights')}
           </Typography>
         </Box>
       </Container>

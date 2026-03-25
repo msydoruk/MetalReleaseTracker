@@ -154,6 +154,32 @@ const TABS = [
       { key: 'NewVariantEnabled', label: 'New Variant Notifications', type: 'boolean' },
     ],
   },
+  {
+    label: 'SEO',
+    category: 'Seo',
+    fields: [
+      { key: 'SiteName', label: 'Site Name', type: 'text', description: 'Displayed in page titles, header, footer' },
+      { key: 'SiteUrl', label: 'Site URL', type: 'text', description: 'Base URL for canonical links, sitemap, JSON-LD' },
+      { key: 'DefaultMetaDescription', label: 'Default Meta Description', type: 'text', description: 'Fallback description for pages without custom meta' },
+      { key: 'DefaultOgImage', label: 'Default OG Image URL', type: 'text', description: 'Default social sharing image' },
+      { key: 'ContactEmail', label: 'Contact Email', type: 'text', description: 'Displayed in footer for suggestions' },
+      { key: 'OrganizationName', label: 'Organization Name', type: 'text', description: 'Used in JSON-LD Organization schema' },
+      { key: 'OrganizationLogoUrl', label: 'Organization Logo URL', type: 'text', description: 'Used in JSON-LD Organization schema' },
+      { key: 'RobotsTxt', label: 'Robots.txt Content', type: 'text', description: 'Content for /robots.txt (Sitemap line added automatically)' },
+    ],
+  },
+  {
+    label: 'AI SEO',
+    category: 'AiSeo',
+    fields: [
+      { key: 'IsEnabled', label: 'AI SEO Enabled', type: 'boolean', description: 'Enable AI-powered SEO generation' },
+      { key: 'ApiKey', label: 'Anthropic API Key', type: 'text', description: 'Claude API key for SEO generation' },
+      { key: 'Model', label: 'Model', type: 'text', description: 'Claude model (e.g., claude-sonnet-4-20250514)' },
+      { key: 'MaxTokens', label: 'Max Tokens', type: 'number', description: 'Maximum tokens per response' },
+      { key: 'BandPrompt', label: 'Band SEO Prompt', type: 'text', description: 'Prompt template for band SEO. Variables: {{bandName}}, {{genre}}, {{formationYear}}, {{description}}, {{albumCount}}' },
+      { key: 'AlbumPrompt', label: 'Album SEO Prompt', type: 'text', description: 'Prompt template for album SEO. Variables: {{bandName}}, {{albumTitle}}, {{genre}}, {{year}}, {{media}}, {{price}}, {{label}}, {{description}}' },
+    ],
+  },
 ];
 
 export default function SettingsPage() {

@@ -67,4 +67,13 @@ public class AlbumEntity
     [Required]
     [MaxLength(250)]
     public string Slug { get; set; } = string.Empty;
+
+    [MaxLength(160)]
+    public string? SeoTitle { get; set; }
+
+    [MaxLength(320)]
+    public string? SeoDescription { get; set; }
+
+    [MaxLength(500)]
+    public string? SeoKeywords { get; set; }
 }

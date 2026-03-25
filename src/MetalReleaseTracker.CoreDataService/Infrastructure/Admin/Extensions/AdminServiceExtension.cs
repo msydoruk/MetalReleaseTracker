@@ -116,6 +116,9 @@ public static class AdminServiceExtension
         services.AddScoped<GetTelegramStatsHandler>();
         services.AddScoped<GetLinkedUsersHandler>();
 
+        // AI SEO
+        services.AddScoped<IAiSeoService, AiSeoService>();
+
         return services;
     }
 }

@@ -1,4 +1,5 @@
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Endpoints;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.AiSeo;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.BulkUpdateAlbumStatus;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.DeleteAlbum;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbumById;
@@ -125,6 +126,9 @@ public static class AdminEndpointExtension
         // Telegram
         GetTelegramStatsEndpoint.MapEndpoint(adminGroup);
         GetLinkedUsersEndpoint.MapEndpoint(adminGroup);
+
+        // AI SEO
+        AiSeoEndpoints.MapEndpoints(adminGroup);
 
         return app;
     }

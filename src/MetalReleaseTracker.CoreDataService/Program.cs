@@ -40,7 +40,11 @@ builder.Services
     .AddApplicationDatabases(builder.Configuration)
     .AddApplicationAuthentication(builder.Configuration)
     .AddAdminAuthentication(builder.Configuration)
-    .AddAdminServices()
+    .AddAdminServices();
+
+builder.Services.AddHttpClient();
+
+builder.Services
     .AddApplicationCors()
     .AddApplicationSwagger()
     .AddHttpForwarder();

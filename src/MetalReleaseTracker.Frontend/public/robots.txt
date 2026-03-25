@@ -1,9 +1,0 @@
-# https://www.robotstxt.org/robotstxt.html
-User-agent: *
-Disallow: /login
-Disallow: /register
-Disallow: /profile
-Disallow: /auth/
-Disallow: /signin-callback
-
-Sitemap: https://metal-release.com/sitemap.xml
