@@ -44,9 +44,11 @@ Service database ports: ParserService=5434, CoreDataService=5436. PostgreSQL col
 
 **ParserServiceDb** (PostgreSQL, port 5434): BandReferences, BandDiscography, CatalogueIndex, CatalogueIndexDetails, AiVerifications, AiAgents, ParsingSources, Settings.
 
-**CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, Feedbacks, RefreshTokens, UserFavorites + ASP.NET Identity tables.
+**CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, Feedbacks, RefreshTokens, UserFavorites, UserAlbumWatches, UserNotifications, TelegramLinks, TelegramLinkTokens, Settings + ASP.NET Identity tables.
 
 Full schema with columns, types, and FK relationships: [`docs/database-schema.md`](docs/database-schema.md).
+
+Notification system architecture, Telegram bot flows, and webhook setup: [`docs/notification-system.md`](docs/notification-system.md).
 
 ## Architecture
 
