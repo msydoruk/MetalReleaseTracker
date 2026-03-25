@@ -10,6 +10,8 @@ public class AdminDistributorDto
 
     public int AlbumCount { get; set; }
 
+    public bool IsVisible { get; set; }
+
     public string? DescriptionEn { get; set; }
 
     public string? DescriptionUa { get; set; }

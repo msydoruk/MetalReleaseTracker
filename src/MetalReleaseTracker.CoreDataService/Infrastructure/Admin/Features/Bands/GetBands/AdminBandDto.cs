@@ -18,6 +18,8 @@ public class AdminBandDto
 
     public string Slug { get; set; } = string.Empty;
 
+    public bool IsVisible { get; set; }
+
     public string? SeoTitle { get; set; }
 
     public string? SeoDescription { get; set; }

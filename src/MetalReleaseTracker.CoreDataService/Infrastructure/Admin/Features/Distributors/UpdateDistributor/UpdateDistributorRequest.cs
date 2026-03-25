@@ -4,6 +4,8 @@ public class UpdateDistributorRequest
 {
     public string Name { get; set; } = string.Empty;
 
+    public bool? IsVisible { get; set; }
+
     public string? DescriptionEn { get; set; }
 
     public string? DescriptionUa { get; set; }

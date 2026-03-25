@@ -14,23 +14,32 @@ public class GetDistributorsHandler
 
     public async Task<List<AdminDistributorDto>> HandleAsync(CancellationToken cancellationToken = default)
     {
-        var distributors = await _context.Distributors
+        var entities = await _context.Distributors
             .AsNoTracking()
-            .Select(distributor => new AdminDistributorDto
-            {
-                Id = distributor.Id,
-                Name = distributor.Name,
-                Code = distributor.Code.ToString(),
-                AlbumCount = _context.Albums.Count(album => album.DistributorId == distributor.Id),
-                DescriptionEn = distributor.DescriptionEn,
-                DescriptionUa = distributor.DescriptionUa,
-                Country = distributor.Country,
-                CountryFlag = distributor.CountryFlag,
-                LogoUrl = distributor.LogoUrl,
-                WebsiteUrl = distributor.WebsiteUrl,
-            })
             .OrderBy(distributor => distributor.Name)
             .ToListAsync(cancellationToken);
+
+        var distributors = new List<AdminDistributorDto>();
+        foreach (var entity in entities)
+        {
+            var albumCount = await _context.Albums
+                .CountAsync(album => album.DistributorId == entity.Id, cancellationToken);
+
+            distributors.Add(new AdminDistributorDto
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Code = entity.Code.ToString(),
+                AlbumCount = albumCount,
+                IsVisible = entity.IsVisible,
+                DescriptionEn = entity.DescriptionEn,
+                DescriptionUa = entity.DescriptionUa,
+                Country = entity.Country,
+                CountryFlag = entity.CountryFlag,
+                LogoUrl = entity.LogoUrl,
+                WebsiteUrl = entity.WebsiteUrl,
+            });
+        }
 
         return distributors;
     }

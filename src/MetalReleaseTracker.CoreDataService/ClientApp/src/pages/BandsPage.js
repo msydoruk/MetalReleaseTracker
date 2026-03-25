@@ -13,12 +13,14 @@ import Tooltip from '@mui/material/Tooltip';
 import InputAdornment from '@mui/material/InputAdornment';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { DataGrid } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
-import { fetchBands, updateBand, deleteBand, generateBandSeo } from '../api/bands';
+import { fetchBands, updateBand, deleteBand, generateBandSeo, bulkGenerateBandSeo } from '../api/bands';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 const EMPTY_FORM = {
@@ -27,6 +29,7 @@ const EMPTY_FORM = {
   genre: '',
   metalArchivesUrl: '',
   formationYear: '',
+  isVisible: true,
   seoTitle: '',
   seoDescription: '',
   seoKeywords: '',
@@ -94,6 +97,7 @@ export default function BandsPage() {
       genre: row.genre || '',
       metalArchivesUrl: row.metalArchivesUrl || '',
       formationYear: row.formationYear || '',
+      isVisible: row.isVisible !== undefined ? row.isVisible : true,
       seoTitle: row.seoTitle || '',
       seoDescription: row.seoDescription || '',
       seoKeywords: row.seoKeywords || '',
@@ -184,7 +188,29 @@ export default function BandsPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader title="Bands" subtitle="Manage bands" />
+      <PageHeader
+        title="Bands"
+        subtitle="Manage bands"
+        action={
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AutoFixHighIcon />}
+            onClick={async () => {
+              try {
+                showSnackbar('Generating SEO for bands without SEO data...');
+                const { data } = await bulkGenerateBandSeo(50);
+                showSnackbar(`SEO generated for ${data.processed} bands`);
+                loadData();
+              } catch (err) {
+                showSnackbar(err.response?.data?.error || 'Bulk SEO failed', 'error');
+              }
+            }}
+          >
+            Bulk Generate SEO
+          </Button>
+        }
+      />
 
       <Box sx={{ mb: 2 }}>
         <TextField
@@ -224,6 +250,16 @@ export default function BandsPage() {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Edit Band</DialogTitle>
         <DialogContent>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.isVisible}
+                onChange={(e) => setForm((prev) => ({ ...prev, isVisible: e.target.checked }))}
+              />
+            }
+            label="Visible"
+            sx={{ mb: 1 }}
+          />
           <TextField
             label="Name"
             fullWidth

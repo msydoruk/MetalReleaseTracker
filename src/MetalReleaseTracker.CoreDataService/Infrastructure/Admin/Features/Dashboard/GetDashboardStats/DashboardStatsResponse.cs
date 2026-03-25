@@ -10,11 +10,11 @@ public class DashboardStatsResponse
 
     public int TotalUsers { get; set; }
 
-    public int RecentAlbums { get; set; }
+    public int NewAlbumsThisMonth { get; set; }
 
-    public int TotalReviews { get; set; }
+    public int PreOrders { get; set; }
 
-    public int TotalNotifications { get; set; }
+    public int TotalTranslations { get; set; }
 
-    public int TelegramLinkedUsers { get; set; }
+    public int PublishedNews { get; set; }
 }

@@ -29,6 +29,11 @@ public class UpdateDistributorHandler
         }
 
         entity.Name = request.Name;
+        if (request.IsVisible.HasValue)
+        {
+            entity.IsVisible = request.IsVisible.Value;
+        }
+
         entity.DescriptionEn = request.DescriptionEn;
         entity.DescriptionUa = request.DescriptionUa;
         entity.Country = request.Country;
@@ -48,6 +53,7 @@ public class UpdateDistributorHandler
             Name = entity.Name,
             Code = entity.Code.ToString(),
             AlbumCount = albumCount,
+            IsVisible = entity.IsVisible,
             DescriptionEn = entity.DescriptionEn,
             DescriptionUa = entity.DescriptionUa,
             Country = entity.Country,

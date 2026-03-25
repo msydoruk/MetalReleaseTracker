@@ -102,6 +102,8 @@ public partial class SeoMetaTagService : ISeoMetaTagService
                 SettingCategories.Seo, SettingKeys.Seo.OrganizationName, FallbackSiteName, cancellationToken),
             OrganizationLogoUrl = await _settingsService.GetStringSettingAsync(
                 SettingCategories.Seo, SettingKeys.Seo.OrganizationLogoUrl, FallbackOgImage, cancellationToken),
+            GoogleSiteVerification = await _settingsService.GetStringSettingAsync(
+                SettingCategories.Seo, SettingKeys.Seo.GoogleSiteVerification, string.Empty, cancellationToken),
         };
 
         _memoryCache.Set(SeoSettingsCacheKey, settings, TimeSpan.FromMinutes(30));
@@ -350,6 +352,12 @@ public partial class SeoMetaTagService : ISeoMetaTagService
                 $"<meta name=\"twitter:image\" content=\"{meta.ImageUrl}\" />");
         }
 
+        if (!string.IsNullOrEmpty(seoSettings.GoogleSiteVerification))
+        {
+            var verificationTag = $"<meta name=\"google-site-verification\" content=\"{seoSettings.GoogleSiteVerification}\" />";
+            html = html.Replace("</head>", $"    {verificationTag}\n</head>");
+        }
+
         html = WebSiteJsonLdRegex().Replace(html, BuildWebSiteJsonLd(seoSettings));
         html = OrganizationJsonLdRegex().Replace(html, BuildOrganizationJsonLd(seoSettings));
 
@@ -467,6 +475,8 @@ public partial class SeoMetaTagService : ISeoMetaTagService
         public string OrganizationName { get; init; } = FallbackSiteName;
 
         public string OrganizationLogoUrl { get; init; } = FallbackOgImage;
+
+        public string? GoogleSiteVerification { get; init; }
     }
 
     private sealed class SeoStaticPageMeta

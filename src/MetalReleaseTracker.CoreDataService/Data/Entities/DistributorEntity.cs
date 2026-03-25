@@ -16,6 +16,8 @@ public class DistributorEntity
 
     public DistributorCode Code { get; set; }
 
+    public bool IsVisible { get; set; } = true;
+
     [MaxLength(1000)]
     public string? DescriptionEn { get; set; }
 

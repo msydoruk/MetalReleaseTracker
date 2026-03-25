@@ -20,7 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
-import { fetchAlbums, updateAlbum, deleteAlbum, generateAlbumSeo } from '../api/albums';
+import { fetchAlbums, updateAlbum, deleteAlbum, generateAlbumSeo, bulkGenerateAlbumSeo } from '../api/albums';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 const STATUS_OPTIONS = [
@@ -237,7 +237,29 @@ export default function AlbumsPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader title="Albums" subtitle="Manage albums" />
+      <PageHeader
+        title="Albums"
+        subtitle="Manage albums"
+        action={
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AutoFixHighIcon />}
+            onClick={async () => {
+              try {
+                showSnackbar('Generating SEO for albums without SEO data...');
+                const { data } = await bulkGenerateAlbumSeo(50);
+                showSnackbar(`SEO generated for ${data.processed} albums`);
+                loadData();
+              } catch (err) {
+                showSnackbar(err.response?.data?.error || 'Bulk SEO failed', 'error');
+              }
+            }}
+          >
+            Bulk Generate SEO
+          </Button>
+        }
+      />
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <TextField

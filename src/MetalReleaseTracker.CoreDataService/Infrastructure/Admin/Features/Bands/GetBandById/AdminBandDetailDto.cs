@@ -20,6 +20,8 @@ public class AdminBandDetailDto
 
     public string Slug { get; set; } = string.Empty;
 
+    public bool IsVisible { get; set; }
+
     public List<AdminBandAlbumDto> Albums { get; set; } = [];
 
     public string? SeoTitle { get; set; }

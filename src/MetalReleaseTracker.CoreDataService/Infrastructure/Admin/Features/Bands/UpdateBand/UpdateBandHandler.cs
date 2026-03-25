@@ -58,6 +58,11 @@ public class UpdateBandHandler
             entity.FormationYear = request.FormationYear;
         }
 
+        if (request.IsVisible.HasValue)
+        {
+            entity.IsVisible = request.IsVisible.Value;
+        }
+
         entity.SeoTitle = request.SeoTitle;
         entity.SeoDescription = request.SeoDescription;
         entity.SeoKeywords = request.SeoKeywords;
@@ -79,6 +84,7 @@ public class UpdateBandHandler
             FormationYear = entity.FormationYear,
             AlbumCount = albumCount,
             Slug = entity.Slug,
+            IsVisible = entity.IsVisible,
             SeoTitle = entity.SeoTitle,
             SeoDescription = entity.SeoDescription,
             SeoKeywords = entity.SeoKeywords,

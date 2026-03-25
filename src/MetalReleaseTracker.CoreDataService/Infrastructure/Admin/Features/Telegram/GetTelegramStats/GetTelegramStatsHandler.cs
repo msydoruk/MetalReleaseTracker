@@ -1,4 +1,6 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Constants;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Telegram.GetTelegramStats;
@@ -6,10 +8,14 @@ namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Tele
 public class GetTelegramStatsHandler
 {
     private readonly CoreDataServiceDbContext _context;
+    private readonly IAdminSettingsService _settingsService;
 
-    public GetTelegramStatsHandler(CoreDataServiceDbContext context)
+    public GetTelegramStatsHandler(
+        CoreDataServiceDbContext context,
+        IAdminSettingsService settingsService)
     {
         _context = context;
+        _settingsService = settingsService;
     }
 
     public async Task<TelegramStatsResponse> HandleAsync(CancellationToken cancellationToken = default)
@@ -24,10 +30,17 @@ public class GetTelegramStatsHandler
             .Distinct()
             .CountAsync(cancellationToken);
 
+        var botActive = await _settingsService.GetBoolSettingAsync(
+            SettingCategories.FeatureToggles,
+            SettingKeys.FeatureToggles.TelegramBotEnabled,
+            false,
+            cancellationToken);
+
         return new TelegramStatsResponse
         {
             LinkedUsersCount = linkedUsersCount,
             TotalLinksCount = totalLinksCount,
+            BotActive = botActive,
         };
     }
 }

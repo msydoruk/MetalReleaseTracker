@@ -58,6 +58,7 @@ public static class SettingKeys
         public const string OrganizationName = "OrganizationName";
         public const string OrganizationLogoUrl = "OrganizationLogoUrl";
         public const string RobotsTxt = "RobotsTxt";
+        public const string GoogleSiteVerification = "GoogleSiteVerification";
     }
 
     public static class AiSeo

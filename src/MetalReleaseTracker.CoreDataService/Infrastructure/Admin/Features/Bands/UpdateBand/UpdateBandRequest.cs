@@ -14,6 +14,8 @@ public class UpdateBandRequest
 
     public int? FormationYear { get; set; }
 
+    public bool? IsVisible { get; set; }
+
     public string? SeoTitle { get; set; }
 
     public string? SeoDescription { get; set; }

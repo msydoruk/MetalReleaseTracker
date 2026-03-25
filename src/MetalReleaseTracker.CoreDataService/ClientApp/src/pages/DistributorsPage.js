@@ -12,6 +12,8 @@ import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { DataGrid } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -24,7 +26,7 @@ import {
   deleteDistributor,
 } from '../api/distributors';
 
-const EMPTY_FORM = { name: '', code: '', descriptionEn: '', descriptionUa: '', country: '', countryFlag: '', logoUrl: '', websiteUrl: '' };
+const EMPTY_FORM = { name: '', code: '', isVisible: true, descriptionEn: '', descriptionUa: '', country: '', countryFlag: '', logoUrl: '', websiteUrl: '' };
 
 export default function DistributorsPage() {
   const [rows, setRows] = useState([]);
@@ -67,6 +69,7 @@ export default function DistributorsPage() {
     setEditingId(row.id);
     setForm({
       name: row.name || '', code: row.code || '',
+      isVisible: row.isVisible !== undefined ? row.isVisible : true,
       descriptionEn: row.descriptionEn || '', descriptionUa: row.descriptionUa || '',
       country: row.country || '', countryFlag: row.countryFlag || '',
       logoUrl: row.logoUrl || '', websiteUrl: row.websiteUrl || '',
@@ -193,6 +196,16 @@ export default function DistributorsPage() {
             onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value }))}
             disabled={!!editingId}
             helperText={editingId ? 'Code cannot be changed after creation' : ''}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.isVisible}
+                onChange={(e) => setForm((prev) => ({ ...prev, isVisible: e.target.checked }))}
+              />
+            }
+            label="Visible"
+            sx={{ mt: 1, mb: 1 }}
           />
           <Divider sx={{ my: 2 }} />
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Details</Typography>

@@ -29,6 +29,7 @@ public class GetBandByIdHandler
                 MetalArchivesUrl = band.MetalArchivesUrl,
                 FormationYear = band.FormationYear,
                 Slug = band.Slug,
+                IsVisible = band.IsVisible,
                 SeoTitle = band.SeoTitle,
                 SeoDescription = band.SeoDescription,
                 SeoKeywords = band.SeoKeywords,

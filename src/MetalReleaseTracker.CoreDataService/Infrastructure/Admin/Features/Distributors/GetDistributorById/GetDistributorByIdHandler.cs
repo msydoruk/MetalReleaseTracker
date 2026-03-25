@@ -17,24 +17,31 @@ public class GetDistributorByIdHandler
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var distributor = await _context.Distributors
+        var entity = await _context.Distributors
             .AsNoTracking()
-            .Where(distributor => distributor.Id == id)
-            .Select(distributor => new AdminDistributorDto
-            {
-                Id = distributor.Id,
-                Name = distributor.Name,
-                Code = distributor.Code.ToString(),
-                AlbumCount = _context.Albums.Count(album => album.DistributorId == distributor.Id),
-                DescriptionEn = distributor.DescriptionEn,
-                DescriptionUa = distributor.DescriptionUa,
-                Country = distributor.Country,
-                CountryFlag = distributor.CountryFlag,
-                LogoUrl = distributor.LogoUrl,
-                WebsiteUrl = distributor.WebsiteUrl,
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(distributor => distributor.Id == id, cancellationToken);
 
-        return distributor;
+        if (entity is null)
+        {
+            return null;
+        }
+
+        var albumCount = await _context.Albums
+            .CountAsync(album => album.DistributorId == entity.Id, cancellationToken);
+
+        return new AdminDistributorDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Code = entity.Code.ToString(),
+            AlbumCount = albumCount,
+            IsVisible = entity.IsVisible,
+            DescriptionEn = entity.DescriptionEn,
+            DescriptionUa = entity.DescriptionUa,
+            Country = entity.Country,
+            CountryFlag = entity.CountryFlag,
+            LogoUrl = entity.LogoUrl,
+            WebsiteUrl = entity.WebsiteUrl,
+        };
     }
 }

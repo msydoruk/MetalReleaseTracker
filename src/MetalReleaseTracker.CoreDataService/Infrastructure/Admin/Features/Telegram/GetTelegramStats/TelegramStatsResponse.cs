@@ -5,4 +5,6 @@ public class TelegramStatsResponse
     public int LinkedUsersCount { get; set; }
 
     public int TotalLinksCount { get; set; }
+
+    public bool BotActive { get; set; }
 }

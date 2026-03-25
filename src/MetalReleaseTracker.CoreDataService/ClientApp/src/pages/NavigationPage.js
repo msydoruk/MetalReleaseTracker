@@ -25,9 +25,9 @@ const EMPTY_FORM = {
   titleEn: '',
   titleUa: '',
   path: '',
-  icon: '',
+  iconName: '',
   sortOrder: 0,
-  visible: true,
+  isVisible: true,
 };
 
 export default function NavigationPage() {
@@ -94,10 +94,10 @@ export default function NavigationPage() {
           titleEn: edited.titleEn !== undefined ? edited.titleEn : item.titleEn,
           titleUa: edited.titleUa !== undefined ? edited.titleUa : item.titleUa,
           path: edited.path !== undefined ? edited.path : item.path,
-          icon: edited.icon !== undefined ? edited.icon : item.icon,
+          iconName: edited.iconName !== undefined ? edited.iconName : item.iconName,
           sortOrder:
             edited.sortOrder !== undefined ? parseInt(edited.sortOrder, 10) : item.sortOrder,
-          visible: edited.visible !== undefined ? edited.visible : item.visible,
+          isVisible: edited.isVisible !== undefined ? edited.isVisible : item.isVisible,
         };
         await updateNavigationItem(item.id, payload);
         showSnackbar(`"${payload.titleEn}" updated`);
@@ -174,8 +174,8 @@ export default function NavigationPage() {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={getFieldValue(item, 'visible')}
-                        onChange={(e) => handleFieldChange(item.id, 'visible', e.target.checked)}
+                        checked={getFieldValue(item, 'isVisible')}
+                        onChange={(e) => handleFieldChange(item.id, 'isVisible', e.target.checked)}
                         size="small"
                       />
                     }
@@ -216,8 +216,8 @@ export default function NavigationPage() {
                   <TextField
                     label="Icon"
                     size="small"
-                    value={getFieldValue(item, 'icon')}
-                    onChange={(e) => handleFieldChange(item.id, 'icon', e.target.value)}
+                    value={getFieldValue(item, 'iconName')}
+                    onChange={(e) => handleFieldChange(item.id, 'iconName', e.target.value)}
                     sx={{ flex: 0.6, minWidth: 120 }}
                   />
                   <TextField
@@ -281,8 +281,8 @@ export default function NavigationPage() {
             label="Icon"
             fullWidth
             margin="normal"
-            value={form.icon}
-            onChange={(e) => setForm((prev) => ({ ...prev, icon: e.target.value }))}
+            value={form.iconName}
+            onChange={(e) => setForm((prev) => ({ ...prev, iconName: e.target.value }))}
             placeholder="MUI icon name"
           />
           <TextField
@@ -296,8 +296,8 @@ export default function NavigationPage() {
           <FormControlLabel
             control={
               <Switch
-                checked={form.visible}
-                onChange={(e) => setForm((prev) => ({ ...prev, visible: e.target.checked }))}
+                checked={form.isVisible}
+                onChange={(e) => setForm((prev) => ({ ...prev, isVisible: e.target.checked }))}
               />
             }
             label="Visible"

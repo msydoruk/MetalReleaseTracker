@@ -6,3 +6,4 @@ export const updateAlbum = (id, data) => client.put(`/albums/${id}`, data);
 export const deleteAlbum = (id) => client.delete(`/albums/${id}`);
 export const bulkUpdateAlbumStatus = (data) => client.put('/albums/bulk-status', data);
 export const generateAlbumSeo = (id) => client.post(`/ai-seo/album/${id}`);
+export const bulkGenerateAlbumSeo = (limit = 50) => client.post('/ai-seo/bulk/albums', { limit });

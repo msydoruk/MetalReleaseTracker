@@ -26,6 +26,8 @@ public class BandEntity
     [MaxLength(250)]
     public string Slug { get; set; } = string.Empty;
 
+    public bool IsVisible { get; set; } = true;
+
     [MaxLength(160)]
     public string? SeoTitle { get; set; }
 

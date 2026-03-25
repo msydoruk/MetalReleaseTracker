@@ -25,13 +25,19 @@ public class GetDashboardStatsHandler
         var totalBands = await _context.Bands.CountAsync(cancellationToken);
         var totalDistributors = await _context.Distributors.CountAsync(cancellationToken);
         var totalUsers = await _userManager.Users.CountAsync(cancellationToken);
-        var recentAlbums = await _context.Albums
+        var newAlbumsThisMonth = await _context.Albums
             .CountAsync(
                 album => album.CreatedDate >= thirtyDaysAgo,
                 cancellationToken);
-        var totalReviews = await _context.Reviews.CountAsync(cancellationToken);
-        var totalNotifications = await _context.UserNotifications.CountAsync(cancellationToken);
-        var telegramLinkedUsers = await _context.TelegramLinks.CountAsync(cancellationToken);
+        var preOrders = await _context.Albums
+            .CountAsync(
+                album => album.Status == Data.Entities.Enums.AlbumStatus.Preorder,
+                cancellationToken);
+        var totalTranslations = await _context.Translations.CountAsync(cancellationToken);
+        var publishedNews = await _context.NewsArticles
+            .CountAsync(
+                news => news.IsPublished,
+                cancellationToken);
 
         return new DashboardStatsResponse
         {
@@ -39,10 +45,10 @@ public class GetDashboardStatsHandler
             TotalBands = totalBands,
             TotalDistributors = totalDistributors,
             TotalUsers = totalUsers,
-            RecentAlbums = recentAlbums,
-            TotalReviews = totalReviews,
-            TotalNotifications = totalNotifications,
-            TelegramLinkedUsers = telegramLinkedUsers,
+            NewAlbumsThisMonth = newAlbumsThisMonth,
+            PreOrders = preOrders,
+            TotalTranslations = totalTranslations,
+            PublishedNews = publishedNews,
         };
     }
 }
