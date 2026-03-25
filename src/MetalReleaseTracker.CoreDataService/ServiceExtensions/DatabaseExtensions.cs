@@ -27,6 +27,7 @@ public static class DatabaseExtensions
     public static WebApplication ApplyMigrations(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
+
         try
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<CoreDataServiceDbContext>();
@@ -34,14 +35,36 @@ public static class DatabaseExtensions
 
             var identityDbContext = scope.ServiceProvider.GetRequiredService<IdentityServerDbContext>();
             identityDbContext.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error applying migrations");
+        }
 
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<SlugDataSeeder>>();
-            var seeder = new SlugDataSeeder(dbContext, logger);
+        try
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<CoreDataServiceDbContext>();
+            var slugLogger = scope.ServiceProvider.GetRequiredService<ILogger<SlugDataSeeder>>();
+            var seeder = new SlugDataSeeder(dbContext, slugLogger);
             seeder.SeedSlugsAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error seeding slugs");
+        }
 
+        try
+        {
             var settingsSeedService = scope.ServiceProvider.GetRequiredService<IAdminSettingsSeedService>();
             settingsSeedService.SeedAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error seeding admin settings");
+        }
 
+        try
+        {
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             if (!roleManager.RoleExistsAsync("Admin").GetAwaiter().GetResult())
             {
@@ -50,7 +73,7 @@ public static class DatabaseExtensions
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error applying migrations");
+            Log.Error(ex, "Error seeding roles");
         }
 
         return app;
