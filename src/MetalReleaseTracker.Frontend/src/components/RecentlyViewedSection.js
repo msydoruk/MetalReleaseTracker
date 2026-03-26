@@ -40,8 +40,8 @@ const RecentlyViewedSection = ({ albums }) => {
             component={Link}
             to={`/albums/${album.slug}`}
             sx={{
-              minWidth: 160,
-              maxWidth: 160,
+              minWidth: { xs: 140, sm: 160 },
+              maxWidth: { xs: 140, sm: 160 },
               flexShrink: 0,
               scrollSnapAlign: 'start',
               textDecoration: 'none',

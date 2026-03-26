@@ -340,7 +340,7 @@ const Header = () => {
 
   return (
     <>
-      <AppBar position="sticky">
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             {/* Mobile menu button */}

@@ -76,18 +76,16 @@ const NewArrivalsSection = () => {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 1.5,
+            gridTemplateColumns: '1fr',
+            gap: 2,
             alignItems: 'start',
           }}
         >
-          {displayAlbums.map((group, index) => (
-            <Box
+          {displayAlbums.slice(0, 6).map((group, index) => (
+            <GroupedAlbumCard
               key={`${group.bandName}-${group.albumName}-${index}`}
-              sx={{ display: 'flex', height: '100%' }}
-            >
-              <GroupedAlbumCard group={group} />
-            </Box>
+              group={group}
+            />
           ))}
         </Box>
       ) : (

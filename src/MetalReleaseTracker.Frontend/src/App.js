@@ -177,7 +177,7 @@ function App() {
             <Router>
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
-              <Box component="main" sx={{ flexGrow: 1 }}>
+              <Box component="main" sx={{ flexGrow: 1, pt: { xs: '56px', sm: '64px' } }}>
                 <Suspense fallback={
                   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
                     <CircularProgress />
