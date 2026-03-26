@@ -51,6 +51,9 @@ services:
       - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
       - TelegramBot__WebhookBaseUrl=${TELEGRAM_WEBHOOK_BASE_URL:-https://metal-release.com}
       - TelegramBot__BotUsername=${TELEGRAM_BOT_USERNAME:-MetalReleaseTrackerBot}
+      - EmailService__ApiKey=${EMAIL_SERVICE_API_KEY}
+      - EmailService__FromEmail=${EMAIL_SERVICE_FROM_EMAIL:-notifications@metal-release.com}
+      - EmailService__FromName=${EMAIL_SERVICE_FROM_NAME:-Metal Release Tracker}
       - AdminAuth__Username=${ADMIN_USERNAME}
       - AdminAuth__Password=${ADMIN_PASSWORD}
       - AdminAuth__JwtKey=${ADMIN_JWT_KEY}
