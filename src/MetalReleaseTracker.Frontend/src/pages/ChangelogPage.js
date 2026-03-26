@@ -181,17 +181,14 @@ const ChangelogPage = () => {
                       </TableCell>
                       <TableCell>{item.bandName}</TableCell>
                       <TableCell>
-                        {item.purchaseUrl && item.changeType !== 'Deleted' ? (
+                        {item.albumSlug && item.changeType !== 'Deleted' ? (
                           <Link
-                            href={item.purchaseUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            component={RouterLink}
+                            to={`/albums/${item.albumSlug}`}
                             color="primary"
                             underline="hover"
-                            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
                           >
                             {item.albumName}
-                            <OpenInNewIcon sx={{ fontSize: 14 }} />
                           </Link>
                         ) : (
                           item.albumName
