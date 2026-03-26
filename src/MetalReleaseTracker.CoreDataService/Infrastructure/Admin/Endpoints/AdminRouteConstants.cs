@@ -117,6 +117,15 @@ public static class AdminRouteConstants
         public const string LinkedUsers = $"{Prefix}/linked-users";
     }
 
+    public static class Languages
+    {
+        private const string Prefix = $"{Base}/languages";
+        public const string GetAll = Prefix;
+        public const string Create = Prefix;
+        public const string Update = $"{Prefix}/{{code}}";
+        public const string Delete = $"{Prefix}/{{code}}";
+    }
+
     public static class AiSeo
     {
         private const string Prefix = $"{Base}/ai-seo";

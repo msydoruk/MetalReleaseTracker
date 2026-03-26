@@ -1,10 +1,10 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBands;
+
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.UpdateBand;
 
 public class UpdateBandRequest
 {
     public string? Name { get; set; }
-
-    public string? Description { get; set; }
 
     public string? Genre { get; set; }
 
@@ -16,9 +16,5 @@ public class UpdateBandRequest
 
     public bool? IsVisible { get; set; }
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, BandTranslationDto>? Translations { get; set; }
 }

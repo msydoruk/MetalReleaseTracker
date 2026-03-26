@@ -10,20 +10,6 @@ public class NewsArticleEntityConfiguration : IEntityTypeConfiguration<NewsArtic
     {
         builder.HasKey(entity => entity.Id);
 
-        builder.Property(entity => entity.TitleEn)
-            .IsRequired()
-            .HasMaxLength(500);
-
-        builder.Property(entity => entity.TitleUa)
-            .IsRequired()
-            .HasMaxLength(500);
-
-        builder.Property(entity => entity.ContentEn)
-            .IsRequired();
-
-        builder.Property(entity => entity.ContentUa)
-            .IsRequired();
-
         builder.Property(entity => entity.ChipLabel)
             .IsRequired()
             .HasMaxLength(50);

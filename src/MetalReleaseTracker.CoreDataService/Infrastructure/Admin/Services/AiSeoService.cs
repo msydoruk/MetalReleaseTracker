@@ -89,7 +89,10 @@ public class AiSeoService : IAiSeoService
                 band.Name,
                 band.Genre,
                 band.FormationYear,
-                band.Description,
+                Description = band.Translations
+                    .Where(t => t.LanguageCode == "en")
+                    .Select(t => t.Description)
+                    .FirstOrDefault(),
                 AlbumCount = _context.Albums.Count(album => album.BandId == band.Id),
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -113,14 +116,31 @@ public class AiSeoService : IAiSeoService
             return result;
         }
 
-        var entity = await _context.Bands.FindAsync([bandId], cancellationToken);
-        if (entity is not null)
+        var translation = await _context.BandTranslations
+            .FirstOrDefaultAsync(
+                t => t.BandId == bandId && t.LanguageCode == "en",
+                cancellationToken);
+
+        if (translation is not null)
         {
-            entity.SeoTitle = Truncate(result.SeoTitle, 160);
-            entity.SeoDescription = Truncate(result.SeoDescription, 320);
-            entity.SeoKeywords = Truncate(result.SeoKeywords, 500);
-            await _context.SaveChangesAsync(cancellationToken);
+            translation.SeoTitle = Truncate(result.SeoTitle, 160);
+            translation.SeoDescription = Truncate(result.SeoDescription, 320);
+            translation.SeoKeywords = Truncate(result.SeoKeywords, 500);
         }
+        else
+        {
+            _context.BandTranslations.Add(new Data.Entities.BandTranslationEntity
+            {
+                Id = Guid.NewGuid(),
+                BandId = bandId,
+                LanguageCode = "en",
+                SeoTitle = Truncate(result.SeoTitle, 160),
+                SeoDescription = Truncate(result.SeoDescription, 320),
+                SeoKeywords = Truncate(result.SeoKeywords, 500),
+            });
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Generated SEO for band: {BandName}", band.Name);
         return result;
@@ -169,15 +189,31 @@ public class AiSeoService : IAiSeoService
             return result;
         }
 
-        var entity = await _context.Albums.FindAsync([albumId], cancellationToken);
-        if (entity is not null)
+        var translation = await _context.AlbumTranslations
+            .FirstOrDefaultAsync(
+                t => t.AlbumId == albumId && t.LanguageCode == "en",
+                cancellationToken);
+
+        if (translation is not null)
         {
-            entity.SeoTitle = Truncate(result.SeoTitle, 160);
-            entity.SeoDescription = Truncate(result.SeoDescription, 320);
-            entity.SeoKeywords = Truncate(result.SeoKeywords, 500);
-            entity.LastUpdateDate = DateTime.UtcNow;
-            await _context.SaveChangesAsync(cancellationToken);
+            translation.SeoTitle = Truncate(result.SeoTitle, 160);
+            translation.SeoDescription = Truncate(result.SeoDescription, 320);
+            translation.SeoKeywords = Truncate(result.SeoKeywords, 500);
         }
+        else
+        {
+            _context.AlbumTranslations.Add(new Data.Entities.AlbumTranslationEntity
+            {
+                Id = Guid.NewGuid(),
+                AlbumId = albumId,
+                LanguageCode = "en",
+                SeoTitle = Truncate(result.SeoTitle, 160),
+                SeoDescription = Truncate(result.SeoDescription, 320),
+                SeoKeywords = Truncate(result.SeoKeywords, 500),
+            });
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Generated SEO for album: {AlbumName} by {BandName}", album.Name, album.BandName);
         return result;
@@ -187,7 +223,7 @@ public class AiSeoService : IAiSeoService
     {
         var bandIds = await _context.Bands
             .AsNoTracking()
-            .Where(band => band.SeoTitle == null)
+            .Where(band => !band.Translations.Any(t => t.LanguageCode == "en" && t.SeoTitle != null))
             .OrderBy(band => band.Name)
             .Take(limit)
             .Select(band => band.Id)
@@ -218,7 +254,7 @@ public class AiSeoService : IAiSeoService
     {
         var albumIds = await _context.Albums
             .AsNoTracking()
-            .Where(album => album.SeoTitle == null)
+            .Where(album => !album.Translations.Any(t => t.LanguageCode == "en" && t.SeoTitle != null))
             .OrderByDescending(album => album.CreatedDate)
             .Take(limit)
             .Select(album => album.Id)

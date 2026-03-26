@@ -132,18 +132,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SeoDescription")
-                        .HasMaxLength(320)
-                        .HasColumnType("character varying(320)");
-
-                    b.Property<string>("SeoKeywords")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("SeoTitle")
-                        .HasMaxLength(160)
-                        .HasColumnType("character varying(160)");
-
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -202,14 +190,47 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.ToTable("AlbumRatings");
                 });
 
-            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.BandEntity", b =>
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.AlbumTranslationEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+                    b.Property<Guid>("AlbumId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("SeoDescription")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("SeoKeywords")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("SeoTitle")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageCode");
+
+                    b.HasIndex("AlbumId", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("AlbumTranslations");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.BandEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<int?>("FormationYear")
                         .HasColumnType("integer");
@@ -230,6 +251,36 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Bands");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.BandTranslationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
                     b.Property<string>("SeoDescription")
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
@@ -242,17 +293,14 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Slug")
+                    b.HasIndex("LanguageCode");
+
+                    b.HasIndex("BandId", "LanguageCode")
                         .IsUnique();
 
-                    b.ToTable("Bands");
+                    b.ToTable("BandTranslations");
                 });
 
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.DistributorEntity", b =>
@@ -272,14 +320,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<string>("DescriptionEn")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("DescriptionUa")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<bool>("IsVisible")
                         .HasColumnType("boolean");
 
@@ -298,6 +338,34 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Distributors");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.DistributorTranslationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("DistributorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageCode");
+
+                    b.HasIndex("DistributorId", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("DistributorTranslations");
                 });
 
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.ReviewEntity", b =>
@@ -546,6 +614,63 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.ToTable("CurrencyRates");
                 });
 
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.LanguageEntity", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NativeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("Languages");
+
+                    b.HasData(
+                        new
+                        {
+                            Code = "en",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDefault = true,
+                            IsEnabled = true,
+                            Name = "English",
+                            NativeName = "English",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Code = "ua",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDefault = false,
+                            IsEnabled = true,
+                            Name = "Ukrainian",
+                            NativeName = "Українська",
+                            SortOrder = 2
+                        });
+                });
+
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NavigationItemEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -571,6 +696,33 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("NavigationItems");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NavigationItemTranslationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<Guid>("NavigationItemId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("SeoDescription")
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
@@ -583,27 +735,19 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TitleEn")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("TitleUa")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SortOrder");
+                    b.HasIndex("LanguageCode");
 
-                    b.ToTable("NavigationItems");
+                    b.HasIndex("NavigationItemId", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("NavigationItemTranslations");
                 });
 
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NewsArticleEntity", b =>
@@ -622,14 +766,6 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("ContentEn")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ContentUa")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -644,6 +780,39 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("IsPublished");
+
+                    b.ToTable("NewsArticles");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NewsArticleTranslationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<Guid>("NewsArticleId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("SeoDescription")
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
@@ -656,29 +825,19 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TitleEn")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<string>("TitleUa")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Date");
+                    b.HasIndex("LanguageCode");
 
-                    b.HasIndex("IsPublished");
+                    b.HasIndex("NewsArticleId", "LanguageCode")
+                        .IsUnique();
 
-                    b.ToTable("NewsArticles");
+                    b.ToTable("NewsArticleTranslations");
                 });
 
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.SettingEntity", b =>
@@ -763,6 +922,63 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                     b.Navigation("Distributor");
                 });
 
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.AlbumTranslationEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Data.Entities.AlbumEntity", "Album")
+                        .WithMany("Translations")
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.LanguageEntity", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Album");
+
+                    b.Navigation("Language");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.BandTranslationEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Data.Entities.BandEntity", "Band")
+                        .WithMany("Translations")
+                        .HasForeignKey("BandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.LanguageEntity", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Band");
+
+                    b.Navigation("Language");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.DistributorTranslationEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Data.Entities.DistributorEntity", "Distributor")
+                        .WithMany("Translations")
+                        .HasForeignKey("DistributorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.LanguageEntity", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Distributor");
+
+                    b.Navigation("Language");
+                });
+
             modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.UserAlbumWatchEntity", b =>
                 {
                     b.HasOne("MetalReleaseTracker.CoreDataService.Data.Entities.AlbumEntity", "Album")
@@ -811,6 +1027,69 @@ namespace MetalReleaseTracker.CoreDataService.Migrations
                         .HasForeignKey("AlbumId");
 
                     b.Navigation("Album");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NavigationItemTranslationEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.LanguageEntity", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NavigationItemEntity", "NavigationItem")
+                        .WithMany("Translations")
+                        .HasForeignKey("NavigationItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
+
+                    b.Navigation("NavigationItem");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NewsArticleTranslationEntity", b =>
+                {
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.LanguageEntity", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NewsArticleEntity", "NewsArticle")
+                        .WithMany("Translations")
+                        .HasForeignKey("NewsArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
+
+                    b.Navigation("NewsArticle");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.AlbumEntity", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.BandEntity", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Data.Entities.DistributorEntity", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NavigationItemEntity", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities.NewsArticleEntity", b =>
+                {
+                    b.Navigation("Translations");
                 });
 #pragma warning restore 612, 618
         }

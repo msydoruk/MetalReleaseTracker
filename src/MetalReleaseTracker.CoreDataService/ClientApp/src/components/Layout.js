@@ -26,6 +26,7 @@ import NewspaperIcon from '@mui/icons-material/Newspaper';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import TelegramIcon from '@mui/icons-material/Telegram';
+import LanguageIcon from '@mui/icons-material/Language';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../hooks/useAuth';
 
@@ -45,6 +46,7 @@ const NAV_ITEMS = [
   { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
   { label: 'Notifications', path: '/notifications', icon: <NotificationsIcon /> },
   { label: 'Telegram', path: '/telegram', icon: <TelegramIcon /> },
+  { label: 'Languages', path: '/languages', icon: <LanguageIcon /> },
 ];
 
 export default function Layout() {

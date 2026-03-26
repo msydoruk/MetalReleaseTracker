@@ -4,14 +4,6 @@ public class NewsArticleDto
 {
     public Guid Id { get; set; }
 
-    public string TitleEn { get; set; } = string.Empty;
-
-    public string TitleUa { get; set; } = string.Empty;
-
-    public string ContentEn { get; set; } = string.Empty;
-
-    public string ContentUa { get; set; } = string.Empty;
-
     public string ChipLabel { get; set; } = string.Empty;
 
     public string ChipColor { get; set; } = string.Empty;
@@ -28,9 +20,5 @@ public class NewsArticleDto
 
     public DateTime UpdatedAt { get; set; }
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, NewsArticleTranslationDto> Translations { get; set; } = new();
 }

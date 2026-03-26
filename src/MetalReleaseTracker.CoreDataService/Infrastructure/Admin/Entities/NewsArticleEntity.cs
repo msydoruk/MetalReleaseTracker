@@ -10,20 +10,6 @@ public class NewsArticleEntity
     public Guid Id { get; set; }
 
     [Required]
-    [MaxLength(500)]
-    public string TitleEn { get; set; }
-
-    [Required]
-    [MaxLength(500)]
-    public string TitleUa { get; set; }
-
-    [Required]
-    public string ContentEn { get; set; }
-
-    [Required]
-    public string ContentUa { get; set; }
-
-    [Required]
     [MaxLength(50)]
     public string ChipLabel { get; set; }
 
@@ -46,12 +32,5 @@ public class NewsArticleEntity
 
     public DateTime UpdatedAt { get; set; }
 
-    [MaxLength(160)]
-    public string? SeoTitle { get; set; }
-
-    [MaxLength(320)]
-    public string? SeoDescription { get; set; }
-
-    [MaxLength(500)]
-    public string? SeoKeywords { get; set; }
+    public ICollection<NewsArticleTranslationEntity> Translations { get; set; } = [];
 }

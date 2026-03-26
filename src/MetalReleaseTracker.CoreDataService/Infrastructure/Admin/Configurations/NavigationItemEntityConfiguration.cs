@@ -10,14 +10,6 @@ public class NavigationItemEntityConfiguration : IEntityTypeConfiguration<Naviga
     {
         builder.HasKey(entity => entity.Id);
 
-        builder.Property(entity => entity.TitleEn)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.Property(entity => entity.TitleUa)
-            .IsRequired()
-            .HasMaxLength(200);
-
         builder.Property(entity => entity.Path)
             .IsRequired()
             .HasMaxLength(200);

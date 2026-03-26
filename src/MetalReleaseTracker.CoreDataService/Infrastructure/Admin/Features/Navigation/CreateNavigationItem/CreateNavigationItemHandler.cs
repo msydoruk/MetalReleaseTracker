@@ -20,8 +20,6 @@ public class CreateNavigationItemHandler
         var entity = new NavigationItemEntity
         {
             Id = Guid.NewGuid(),
-            TitleEn = request.TitleEn,
-            TitleUa = request.TitleUa,
             Path = request.Path,
             IconName = request.IconName,
             SortOrder = request.SortOrder,
@@ -29,10 +27,21 @@ public class CreateNavigationItemHandler
             IsProtected = request.IsProtected,
             CreatedDate = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            SeoTitle = request.SeoTitle,
-            SeoDescription = request.SeoDescription,
-            SeoKeywords = request.SeoKeywords,
         };
+
+        foreach (var (languageCode, translationDto) in request.Translations)
+        {
+            entity.Translations.Add(new NavigationItemTranslationEntity
+            {
+                Id = Guid.NewGuid(),
+                NavigationItemId = entity.Id,
+                LanguageCode = languageCode,
+                Title = translationDto.Title,
+                SeoTitle = translationDto.SeoTitle,
+                SeoDescription = translationDto.SeoDescription,
+                SeoKeywords = translationDto.SeoKeywords,
+            });
+        }
 
         _context.NavigationItems.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
@@ -40,8 +49,6 @@ public class CreateNavigationItemHandler
         return new NavigationItemDto
         {
             Id = entity.Id,
-            TitleEn = entity.TitleEn,
-            TitleUa = entity.TitleUa,
             Path = entity.Path,
             IconName = entity.IconName,
             SortOrder = entity.SortOrder,
@@ -49,9 +56,15 @@ public class CreateNavigationItemHandler
             IsProtected = entity.IsProtected,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
-            SeoTitle = entity.SeoTitle,
-            SeoDescription = entity.SeoDescription,
-            SeoKeywords = entity.SeoKeywords,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NavigationItemTranslationDto
+                {
+                    Title = translation.Title,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
         };
     }
 }

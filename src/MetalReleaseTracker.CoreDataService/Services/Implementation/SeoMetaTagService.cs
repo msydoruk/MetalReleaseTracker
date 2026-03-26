@@ -174,16 +174,22 @@ public partial class SeoMetaTagService : ISeoMetaTagService
             var bandName = album.Band?.Name ?? "Unknown";
             var albumName = album.CanonicalTitle ?? album.Name;
 
-            var title = album.SeoTitle ?? $"{albumName} by {bandName} | {seoSettings.SiteName}";
+            var seoTranslation = await _context.AlbumTranslations
+                .AsNoTracking()
+                .Where(t => t.AlbumId == album.Id && t.LanguageCode == "en")
+                .Select(t => new { t.SeoTitle, t.SeoDescription, t.SeoKeywords })
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (album.SeoDescription != null)
+            var title = seoTranslation?.SeoTitle ?? $"{albumName} by {bandName} | {seoSettings.SiteName}";
+
+            if (seoTranslation?.SeoDescription != null)
             {
                 return new SeoMetaTagsDto
                 {
                     Title = title,
-                    Description = album.SeoDescription,
+                    Description = seoTranslation.SeoDescription,
                     OgType = "music.album",
-                    Keywords = album.SeoKeywords,
+                    Keywords = seoTranslation.SeoKeywords,
                 };
             }
 
@@ -214,7 +220,7 @@ public partial class SeoMetaTagService : ISeoMetaTagService
                 Title = title,
                 Description = string.Join(" ", descriptionParts),
                 OgType = "music.album",
-                Keywords = album.SeoKeywords,
+                Keywords = seoTranslation?.SeoKeywords,
             };
         }
         catch (Exception exception)
@@ -234,15 +240,21 @@ public partial class SeoMetaTagService : ISeoMetaTagService
                 return CreateDefaultMeta(seoSettings);
             }
 
-            var title = band.SeoTitle ?? $"{band.Name} | {seoSettings.SiteName}";
+            var seoTranslation = await _context.BandTranslations
+                .AsNoTracking()
+                .Where(t => t.BandId == band.Id && t.LanguageCode == "en")
+                .Select(t => new { t.SeoTitle, t.SeoDescription, t.SeoKeywords })
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (band.SeoDescription != null)
+            var title = seoTranslation?.SeoTitle ?? $"{band.Name} | {seoSettings.SiteName}";
+
+            if (seoTranslation?.SeoDescription != null)
             {
                 return new SeoMetaTagsDto
                 {
                     Title = title,
-                    Description = band.SeoDescription,
-                    Keywords = band.SeoKeywords,
+                    Description = seoTranslation.SeoDescription,
+                    Keywords = seoTranslation.SeoKeywords,
                 };
             }
 
@@ -253,7 +265,7 @@ public partial class SeoMetaTagService : ISeoMetaTagService
             {
                 Title = title,
                 Description = description,
-                Keywords = band.SeoKeywords,
+                Keywords = seoTranslation?.SeoKeywords,
             };
         }
         catch (Exception exception)

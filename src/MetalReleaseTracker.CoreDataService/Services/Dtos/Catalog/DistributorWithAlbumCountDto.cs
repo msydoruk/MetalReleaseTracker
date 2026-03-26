@@ -8,9 +8,7 @@ public class DistributorWithAlbumCountDto
 
     public int AlbumCount { get; set; }
 
-    public string? DescriptionEn { get; set; }
-
-    public string? DescriptionUa { get; set; }
+    public string? Description { get; set; }
 
     public string? Country { get; set; }
 

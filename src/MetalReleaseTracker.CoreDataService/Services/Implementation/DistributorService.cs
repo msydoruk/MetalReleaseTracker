@@ -28,8 +28,8 @@ public class DistributorService : IDistributorService
         return distributor == null ? null : _mapper.Map<DistributorDto>(distributor);
     }
 
-    public async Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(string language, CancellationToken cancellationToken = default)
     {
-        return await _distributorsRepository.GetDistributorsWithAlbumCountAsync(cancellationToken);
+        return await _distributorsRepository.GetDistributorsWithAlbumCountAsync(language, cancellationToken);
     }
 }

@@ -12,8 +12,6 @@ public class BandEntity
     [Required(ErrorMessage = "The band name is required.")]
     public string Name { get; set; }
 
-    public string? Description { get; set; }
-
     public string? PhotoUrl { get; set; }
 
     public string? Genre { get; set; }
@@ -28,12 +26,5 @@ public class BandEntity
 
     public bool IsVisible { get; set; } = true;
 
-    [MaxLength(160)]
-    public string? SeoTitle { get; set; }
-
-    [MaxLength(320)]
-    public string? SeoDescription { get; set; }
-
-    [MaxLength(500)]
-    public string? SeoKeywords { get; set; }
+    public ICollection<BandTranslationEntity> Translations { get; set; } = [];
 }

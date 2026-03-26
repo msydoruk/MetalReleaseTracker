@@ -10,5 +10,6 @@ public interface IDistributorService
     Task<DistributorDto?> GetDistributorByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(
+        string language,
         CancellationToken cancellationToken = default);
 }

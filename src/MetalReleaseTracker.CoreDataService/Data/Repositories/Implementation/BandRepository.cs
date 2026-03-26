@@ -70,7 +70,6 @@ public class BandRepository : IBandRepository
             {
                 Id = band.Id,
                 Name = band.Name,
-                Description = band.Description,
                 PhotoUrl = band.PhotoUrl,
                 Genre = band.Genre,
                 MetalArchivesUrl = band.MetalArchivesUrl,

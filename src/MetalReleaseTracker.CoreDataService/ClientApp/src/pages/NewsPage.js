@@ -14,8 +14,6 @@ import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import { DataGrid } from '@mui/x-data-grid';
@@ -25,6 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PageHeader from '../components/PageHeader';
+import LanguageTabs from '../components/LanguageTabs';
 import {
   fetchNewsArticles,
   createNewsArticle,
@@ -41,19 +40,13 @@ const CHIP_COLOR_OPTIONS = [
 ];
 
 const EMPTY_FORM = {
-  titleEn: '',
-  titleUa: '',
-  contentEn: '',
-  contentUa: '',
+  translations: {},
   chipLabel: '',
   chipColor: 'info',
   iconName: '',
   date: '',
   sortOrder: 0,
   isPublished: false,
-  seoTitle: '',
-  seoDescription: '',
-  seoKeywords: '',
 };
 
 export default function NewsPage() {
@@ -101,19 +94,13 @@ export default function NewsPage() {
   const handleOpenEdit = useCallback((row) => {
     setEditingId(row.id);
     setForm({
-      titleEn: row.titleEn || '',
-      titleUa: row.titleUa || '',
-      contentEn: row.contentEn || '',
-      contentUa: row.contentUa || '',
+      translations: row.translations || {},
       chipLabel: row.chipLabel || '',
       chipColor: row.chipColor || 'info',
       iconName: row.iconName || '',
       date: row.date ? row.date.split('T')[0] : '',
       sortOrder: row.sortOrder || 0,
       isPublished: row.isPublished || false,
-      seoTitle: row.seoTitle || '',
-      seoDescription: row.seoDescription || '',
-      seoKeywords: row.seoKeywords || '',
     });
     setDialogLang('en');
     setDialogOpen(true);
@@ -124,12 +111,27 @@ export default function NewsPage() {
     setDeleteDialogOpen(true);
   }, []);
 
+  const setTranslationField = (lang, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [lang]: { ...(prev.translations[lang] || {}), [field]: value }
+      }
+    }));
+  };
+
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
       const payload = {
-        ...form,
+        translations: form.translations,
+        chipLabel: form.chipLabel,
+        chipColor: form.chipColor,
+        iconName: form.iconName,
+        date: form.date,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
+        isPublished: form.isPublished,
       };
       if (editingId) {
         await updateNewsArticle(editingId, payload);
@@ -162,11 +164,14 @@ export default function NewsPage() {
     }
   }, [deletingRow, loadData, showSnackbar]);
 
-  const titleField = dialogLang === 'ua' ? 'titleUa' : 'titleEn';
-  const contentField = dialogLang === 'ua' ? 'contentUa' : 'contentEn';
-
   const columns = [
-    { field: 'titleEn', headerName: 'Title (En)', flex: 1, minWidth: 250 },
+    {
+      field: 'title',
+      headerName: 'Title (En)',
+      flex: 1,
+      minWidth: 250,
+      valueGetter: (value, row) => row.translations?.en?.title || '',
+    },
     {
       field: 'date',
       headerName: 'Date',
@@ -215,7 +220,7 @@ export default function NewsPage() {
       headerAlign: 'center',
     },
     {
-      field: 'seoTitle',
+      field: 'seo',
       headerName: 'SEO',
       width: 70,
       sortable: false,
@@ -223,7 +228,7 @@ export default function NewsPage() {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) =>
-        params.row.seoTitle ? (
+        params.row.translations?.en?.seoTitle ? (
           <Tooltip title="SEO configured">
             <CheckCircleIcon fontSize="small" color="success" />
           </Tooltip>
@@ -258,6 +263,8 @@ export default function NewsPage() {
     },
   ];
 
+  const currentTranslation = form.translations[dialogLang] || {};
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader
@@ -287,27 +294,16 @@ export default function NewsPage() {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingId ? 'Edit Article' : 'New Article'}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 2 }}>
-            <ToggleButtonGroup
-              value={dialogLang}
-              exclusive
-              onChange={(e, value) => { if (value) setDialogLang(value); }}
-              size="small"
-            >
-              <ToggleButton value="en" sx={{ px: 2 }}>EN</ToggleButton>
-              <ToggleButton value="ua" sx={{ px: 2 }}>UA</ToggleButton>
-            </ToggleButtonGroup>
-            <Typography variant="caption" color="text.secondary">
-              Editing {dialogLang === 'ua' ? 'Ukrainian' : 'English'} content
-            </Typography>
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <LanguageTabs value={dialogLang} onChange={setDialogLang} />
           </Box>
 
           <TextField
             label="Title"
             fullWidth
             margin="normal"
-            value={form[titleField]}
-            onChange={(e) => setForm((prev) => ({ ...prev, [titleField]: e.target.value }))}
+            value={currentTranslation.title || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'title', e.target.value)}
           />
           <TextField
             label="Content"
@@ -315,8 +311,8 @@ export default function NewsPage() {
             margin="normal"
             multiline
             rows={4}
-            value={form[contentField]}
-            onChange={(e) => setForm((prev) => ({ ...prev, [contentField]: e.target.value }))}
+            value={currentTranslation.content || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'content', e.target.value)}
           />
 
           <Divider sx={{ my: 2 }} />
@@ -384,9 +380,9 @@ export default function NewsPage() {
             label="SEO Title"
             fullWidth
             margin="normal"
-            value={form.seoTitle}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoTitle: e.target.value }))}
-            helperText={`${(form.seoTitle || '').length}/160`}
+            value={currentTranslation.seoTitle || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoTitle', e.target.value)}
+            helperText={`${(currentTranslation.seoTitle || '').length}/160`}
             inputProps={{ maxLength: 160 }}
           />
           <TextField
@@ -395,24 +391,24 @@ export default function NewsPage() {
             margin="normal"
             multiline
             rows={2}
-            value={form.seoDescription}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoDescription: e.target.value }))}
-            helperText={`${(form.seoDescription || '').length}/320`}
+            value={currentTranslation.seoDescription || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoDescription', e.target.value)}
+            helperText={`${(currentTranslation.seoDescription || '').length}/320`}
             inputProps={{ maxLength: 320 }}
           />
           <TextField
             label="SEO Keywords"
             fullWidth
             margin="normal"
-            value={form.seoKeywords}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoKeywords: e.target.value }))}
+            value={currentTranslation.seoKeywords || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoKeywords', e.target.value)}
             helperText="Comma-separated keywords"
             inputProps={{ maxLength: 500 }}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving || !form.titleEn}>
+          <Button variant="contained" onClick={handleSave} disabled={saving || !form.translations?.en?.title}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
@@ -422,7 +418,7 @@ export default function NewsPage() {
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Delete Article</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete <strong>{deletingRow?.titleEn}</strong>? This action cannot be undone.
+          Are you sure you want to delete <strong>{deletingRow?.translations?.en?.title}</strong>? This action cannot be undone.
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>

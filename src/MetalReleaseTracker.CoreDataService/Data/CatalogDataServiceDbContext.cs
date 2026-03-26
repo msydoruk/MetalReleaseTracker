@@ -1,5 +1,6 @@
 ﻿namespace MetalReleaseTracker.CoreDataService.Data;
 
+using MetalReleaseTracker.CoreDataService.Data.Configurations;
 using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Configurations;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities;
@@ -45,6 +46,18 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<CurrencyRateEntity> CurrencyRates { get; set; }
 
+    public DbSet<LanguageEntity> Languages { get; set; }
+
+    public DbSet<NewsArticleTranslationEntity> NewsArticleTranslations { get; set; }
+
+    public DbSet<NavigationItemTranslationEntity> NavigationItemTranslations { get; set; }
+
+    public DbSet<DistributorTranslationEntity> DistributorTranslations { get; set; }
+
+    public DbSet<BandTranslationEntity> BandTranslations { get; set; }
+
+    public DbSet<AlbumTranslationEntity> AlbumTranslations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -54,6 +67,12 @@ public class CoreDataServiceDbContext : DbContext
         modelBuilder.ApplyConfiguration(new NavigationItemEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TranslationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CurrencyRateEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new LanguageEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsArticleTranslationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NavigationItemTranslationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new DistributorTranslationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BandTranslationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AlbumTranslationEntityConfiguration());
 
         modelBuilder.Entity<AlbumEntity>()
             .Property(album => album.Media)

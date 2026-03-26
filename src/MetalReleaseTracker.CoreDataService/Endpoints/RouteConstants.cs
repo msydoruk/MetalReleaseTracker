@@ -136,6 +136,7 @@ public static class RouteConstants
             public const string Translations = $"{ConfigBase}/translations/{{language}}";
             public const string News = $"{ConfigBase}/news";
             public const string SeoConfig = $"{ConfigBase}/seo";
+            public const string Languages = $"{ConfigBase}/languages";
         }
     }
 

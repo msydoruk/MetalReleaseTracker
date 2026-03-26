@@ -1,3 +1,5 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbums;
+
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbumById;
 
 public class AdminAlbumDetailDto
@@ -48,9 +50,5 @@ public class AdminAlbumDetailDto
 
     public string DistributorName { get; set; } = string.Empty;
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, AlbumTranslationDto> Translations { get; set; } = new();
 }

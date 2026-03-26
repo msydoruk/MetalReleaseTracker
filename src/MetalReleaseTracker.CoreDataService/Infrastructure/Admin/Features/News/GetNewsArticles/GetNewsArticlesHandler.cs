@@ -16,28 +16,31 @@ public class GetNewsArticlesHandler
     {
         var articles = await _context.NewsArticles
             .AsNoTracking()
+            .Include(article => article.Translations)
             .OrderBy(article => article.SortOrder)
-            .Select(article => new NewsArticleDto
-            {
-                Id = article.Id,
-                TitleEn = article.TitleEn,
-                TitleUa = article.TitleUa,
-                ContentEn = article.ContentEn,
-                ContentUa = article.ContentUa,
-                ChipLabel = article.ChipLabel,
-                ChipColor = article.ChipColor,
-                IconName = article.IconName,
-                Date = article.Date,
-                SortOrder = article.SortOrder,
-                IsPublished = article.IsPublished,
-                CreatedDate = article.CreatedDate,
-                UpdatedAt = article.UpdatedAt,
-                SeoTitle = article.SeoTitle,
-                SeoDescription = article.SeoDescription,
-                SeoKeywords = article.SeoKeywords,
-            })
             .ToListAsync(cancellationToken);
 
-        return articles;
+        return articles.Select(article => new NewsArticleDto
+        {
+            Id = article.Id,
+            ChipLabel = article.ChipLabel,
+            ChipColor = article.ChipColor,
+            IconName = article.IconName,
+            Date = article.Date,
+            SortOrder = article.SortOrder,
+            IsPublished = article.IsPublished,
+            CreatedDate = article.CreatedDate,
+            UpdatedAt = article.UpdatedAt,
+            Translations = article.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NewsArticleTranslationDto
+                {
+                    Title = translation.Title,
+                    Content = translation.Content,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
+        }).ToList();
     }
 }

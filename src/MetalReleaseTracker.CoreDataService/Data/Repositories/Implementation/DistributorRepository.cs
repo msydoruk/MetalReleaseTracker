@@ -43,7 +43,7 @@ public class DistributorRepository : IDistributorsRepository
         return await _dbContext.Distributors.FindAsync(id, cancellationToken);
     }
 
-    public async Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(string language, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Distributors
             .AsNoTracking()
@@ -52,8 +52,14 @@ public class DistributorRepository : IDistributorsRepository
                 Id = distributor.Id,
                 Name = distributor.Name,
                 AlbumCount = _dbContext.Albums.Count(album => album.DistributorId == distributor.Id),
-                DescriptionEn = distributor.DescriptionEn,
-                DescriptionUa = distributor.DescriptionUa,
+                Description = distributor.Translations
+                    .Where(t => t.LanguageCode == language)
+                    .Select(t => t.Description)
+                    .FirstOrDefault()
+                    ?? distributor.Translations
+                        .Where(t => t.LanguageCode == "en")
+                        .Select(t => t.Description)
+                        .FirstOrDefault(),
                 Country = distributor.Country,
                 CountryFlag = distributor.CountryFlag,
                 LogoUrl = distributor.LogoUrl,

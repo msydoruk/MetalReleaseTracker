@@ -37,7 +37,7 @@ const NewsPage = () => {
   useEffect(() => {
     let cancelled = false;
     setLoadingNews(true);
-    fetchPublicNews()
+    fetchPublicNews(language)
       .then((response) => {
         if (cancelled) return;
         const data = response.data;
@@ -52,7 +52,7 @@ const NewsPage = () => {
         setLoadingNews(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [language]);
 
   const mapNewsItem = (item) => {
     const IconComponent = ICON_MAP[item.iconName];
@@ -61,8 +61,8 @@ const NewsPage = () => {
       icon: IconComponent ? <IconComponent sx={{ fontSize: 28 }} /> : <NewReleasesIcon sx={{ fontSize: 28 }} />,
       chipLabel: item.chipLabel,
       chipColor: item.chipColor,
-      title: language === 'ua' ? (item.titleUa || item.titleEn) : (item.titleEn || item.titleUa),
-      content: language === 'ua' ? (item.contentUa || item.contentEn) : (item.contentEn || item.contentUa),
+      title: item.title,
+      content: item.content,
     };
   };
 

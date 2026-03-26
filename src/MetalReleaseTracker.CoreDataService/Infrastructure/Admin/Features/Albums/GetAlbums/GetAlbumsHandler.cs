@@ -44,28 +44,37 @@ public class GetAlbumsHandler
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var albums = await query
             .OrderByDescending(album => album.CreatedDate)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .Select(album => new AdminAlbumDto
-            {
-                Id = album.Id,
-                Name = album.Name,
-                BandName = album.Band.Name,
-                DistributorName = album.Distributor.Name,
-                SKU = album.SKU,
-                Price = album.Price,
-                Status = album.Status != null ? album.Status.ToString() : null,
-                StockStatus = album.StockStatus != null ? album.StockStatus.ToString() : null,
-                Media = album.Media != null ? album.Media.ToString() : null,
-                CreatedDate = album.CreatedDate,
-                Slug = album.Slug,
-                SeoTitle = album.SeoTitle,
-                SeoDescription = album.SeoDescription,
-                SeoKeywords = album.SeoKeywords,
-            })
+            .Include(album => album.Band)
+            .Include(album => album.Distributor)
+            .Include(album => album.Translations)
             .ToListAsync(cancellationToken);
+
+        var items = albums.Select(album => new AdminAlbumDto
+        {
+            Id = album.Id,
+            Name = album.Name,
+            BandName = album.Band.Name,
+            DistributorName = album.Distributor.Name,
+            SKU = album.SKU,
+            Price = album.Price,
+            Status = album.Status?.ToString(),
+            StockStatus = album.StockStatus?.ToString(),
+            Media = album.Media?.ToString(),
+            CreatedDate = album.CreatedDate,
+            Slug = album.Slug,
+            Translations = album.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new AlbumTranslationDto
+                {
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
+        }).ToList();
 
         return new AdminAlbumPagedResult
         {

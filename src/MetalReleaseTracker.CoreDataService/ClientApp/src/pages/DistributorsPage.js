@@ -19,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PageHeader from '../components/PageHeader';
+import LanguageTabs from '../components/LanguageTabs';
 import {
   fetchDistributors,
   createDistributor,
@@ -26,7 +27,7 @@ import {
   deleteDistributor,
 } from '../api/distributors';
 
-const EMPTY_FORM = { name: '', code: '', isVisible: true, descriptionEn: '', descriptionUa: '', country: '', countryFlag: '', logoUrl: '', websiteUrl: '' };
+const EMPTY_FORM = { name: '', code: '', isVisible: true, translations: {}, country: '', countryFlag: '', logoUrl: '', websiteUrl: '' };
 
 export default function DistributorsPage() {
   const [rows, setRows] = useState([]);
@@ -38,6 +39,7 @@ export default function DistributorsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [dialogLang, setDialogLang] = useState('en');
 
   const showSnackbar = useCallback((message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -62,6 +64,7 @@ export default function DistributorsPage() {
   const handleOpenCreate = useCallback(() => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setDialogLang('en');
     setDialogOpen(true);
   }, []);
 
@@ -70,10 +73,11 @@ export default function DistributorsPage() {
     setForm({
       name: row.name || '', code: row.code || '',
       isVisible: row.isVisible !== undefined ? row.isVisible : true,
-      descriptionEn: row.descriptionEn || '', descriptionUa: row.descriptionUa || '',
+      translations: row.translations || {},
       country: row.country || '', countryFlag: row.countryFlag || '',
       logoUrl: row.logoUrl || '', websiteUrl: row.websiteUrl || '',
     });
+    setDialogLang('en');
     setDialogOpen(true);
   }, []);
 
@@ -82,14 +86,34 @@ export default function DistributorsPage() {
     setDeleteDialogOpen(true);
   }, []);
 
+  const setTranslationField = (lang, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [lang]: { ...(prev.translations[lang] || {}), [field]: value }
+      }
+    }));
+  };
+
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
+      const payload = {
+        name: form.name,
+        code: form.code,
+        isVisible: form.isVisible,
+        translations: form.translations,
+        country: form.country,
+        countryFlag: form.countryFlag,
+        logoUrl: form.logoUrl,
+        websiteUrl: form.websiteUrl,
+      };
       if (editingId) {
-        await updateDistributor(editingId, form);
+        await updateDistributor(editingId, payload);
         showSnackbar('Distributor updated');
       } else {
-        await createDistributor(form);
+        await createDistributor(payload);
         showSnackbar('Distributor created');
       }
       setDialogOpen(false);
@@ -152,6 +176,8 @@ export default function DistributorsPage() {
     },
   ];
 
+  const currentTranslation = form.translations[dialogLang] || {};
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader
@@ -209,23 +235,19 @@ export default function DistributorsPage() {
           />
           <Divider sx={{ my: 2 }} />
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Details</Typography>
+
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <LanguageTabs value={dialogLang} onChange={setDialogLang} />
+          </Box>
+
           <TextField
-            label="Description (EN)"
+            label="Description"
             fullWidth
             margin="normal"
             multiline
             rows={3}
-            value={form.descriptionEn}
-            onChange={(e) => setForm((prev) => ({ ...prev, descriptionEn: e.target.value }))}
-          />
-          <TextField
-            label="Description (UA)"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={3}
-            value={form.descriptionUa}
-            onChange={(e) => setForm((prev) => ({ ...prev, descriptionUa: e.target.value }))}
+            value={currentTranslation.description || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'description', e.target.value)}
           />
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField

@@ -2,14 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import InputAdornment from '@mui/material/InputAdornment';
 import { DataGrid } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
+import LanguageTabs from '../components/LanguageTabs';
 import { fetchTranslations, updateTranslation } from '../api/translations';
 
 const CATEGORY_OPTIONS = [
@@ -82,11 +81,9 @@ export default function TranslationsPage() {
   }, []);
 
   const handleLanguageChange = useCallback(
-    (event, newLanguage) => {
-      if (newLanguage !== null) {
-        setLanguageFilter(newLanguage);
-        setPaginationModel((prev) => ({ ...prev, page: 0 }));
-      }
+    (newLanguage) => {
+      setLanguageFilter(newLanguage);
+      setPaginationModel((prev) => ({ ...prev, page: 0 }));
     },
     []
   );
@@ -162,19 +159,7 @@ export default function TranslationsPage() {
             </MenuItem>
           ))}
         </TextField>
-        <ToggleButtonGroup
-          value={languageFilter}
-          exclusive
-          onChange={handleLanguageChange}
-          size="small"
-        >
-          <ToggleButton value="en" sx={{ px: 2 }}>
-            EN
-          </ToggleButton>
-          <ToggleButton value="ua" sx={{ px: 2 }}>
-            UA
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <LanguageTabs value={languageFilter} onChange={handleLanguageChange} />
       </Box>
 
       <Box sx={{ flexGrow: 1, minHeight: 0 }}>

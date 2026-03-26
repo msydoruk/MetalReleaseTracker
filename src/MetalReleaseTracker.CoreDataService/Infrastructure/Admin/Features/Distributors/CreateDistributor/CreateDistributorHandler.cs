@@ -28,13 +28,22 @@ public class CreateDistributorHandler
             Id = Guid.NewGuid(),
             Name = request.Name,
             Code = distributorCode,
-            DescriptionEn = request.DescriptionEn,
-            DescriptionUa = request.DescriptionUa,
             Country = request.Country,
             CountryFlag = request.CountryFlag,
             LogoUrl = request.LogoUrl,
             WebsiteUrl = request.WebsiteUrl,
         };
+
+        foreach (var (languageCode, translationDto) in request.Translations)
+        {
+            entity.Translations.Add(new DistributorTranslationEntity
+            {
+                Id = Guid.NewGuid(),
+                DistributorId = entity.Id,
+                LanguageCode = languageCode,
+                Description = translationDto.Description,
+            });
+        }
 
         _context.Distributors.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
@@ -45,12 +54,16 @@ public class CreateDistributorHandler
             Name = entity.Name,
             Code = entity.Code.ToString(),
             AlbumCount = 0,
-            DescriptionEn = entity.DescriptionEn,
-            DescriptionUa = entity.DescriptionUa,
             Country = entity.Country,
             CountryFlag = entity.CountryFlag,
             LogoUrl = entity.LogoUrl,
             WebsiteUrl = entity.WebsiteUrl,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new DistributorTranslationDto
+                {
+                    Description = translation.Description,
+                }),
         };
     }
 }

@@ -16,25 +16,29 @@ public class GetNavigationItemsHandler
     {
         var items = await _context.NavigationItems
             .AsNoTracking()
+            .Include(item => item.Translations)
             .OrderBy(item => item.SortOrder)
-            .Select(item => new NavigationItemDto
-            {
-                Id = item.Id,
-                TitleEn = item.TitleEn,
-                TitleUa = item.TitleUa,
-                Path = item.Path,
-                IconName = item.IconName,
-                SortOrder = item.SortOrder,
-                IsVisible = item.IsVisible,
-                IsProtected = item.IsProtected,
-                CreatedDate = item.CreatedDate,
-                UpdatedAt = item.UpdatedAt,
-                SeoTitle = item.SeoTitle,
-                SeoDescription = item.SeoDescription,
-                SeoKeywords = item.SeoKeywords,
-            })
             .ToListAsync(cancellationToken);
 
-        return items;
+        return items.Select(item => new NavigationItemDto
+        {
+            Id = item.Id,
+            Path = item.Path,
+            IconName = item.IconName,
+            SortOrder = item.SortOrder,
+            IsVisible = item.IsVisible,
+            IsProtected = item.IsProtected,
+            CreatedDate = item.CreatedDate,
+            UpdatedAt = item.UpdatedAt,
+            Translations = item.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NavigationItemTranslationDto
+                {
+                    Title = translation.Title,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
+        }).ToList();
     }
 }

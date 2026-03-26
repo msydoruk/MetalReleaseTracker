@@ -13,8 +13,6 @@ import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import { DataGrid } from '@mui/x-data-grid';
@@ -24,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PageHeader from '../components/PageHeader';
+import LanguageTabs from '../components/LanguageTabs';
 import {
   fetchNavigationItems,
   createNavigationItem,
@@ -32,16 +31,12 @@ import {
 } from '../api/navigation';
 
 const EMPTY_FORM = {
-  titleEn: '',
-  titleUa: '',
+  translations: {},
   path: '',
   iconName: '',
   sortOrder: 0,
   isVisible: true,
   isProtected: false,
-  seoTitle: '',
-  seoDescription: '',
-  seoKeywords: '',
 };
 
 export default function NavigationPage() {
@@ -86,16 +81,12 @@ export default function NavigationPage() {
   const handleOpenEdit = useCallback((row) => {
     setEditingId(row.id);
     setForm({
-      titleEn: row.titleEn || '',
-      titleUa: row.titleUa || '',
+      translations: row.translations || {},
       path: row.path || '',
       iconName: row.iconName || '',
       sortOrder: row.sortOrder || 0,
       isVisible: row.isVisible !== undefined ? row.isVisible : true,
       isProtected: row.isProtected || false,
-      seoTitle: row.seoTitle || '',
-      seoDescription: row.seoDescription || '',
-      seoKeywords: row.seoKeywords || '',
     });
     setDialogLang('en');
     setDialogOpen(true);
@@ -106,12 +97,26 @@ export default function NavigationPage() {
     setDeleteDialogOpen(true);
   }, []);
 
+  const setTranslationField = (lang, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [lang]: { ...(prev.translations[lang] || {}), [field]: value }
+      }
+    }));
+  };
+
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
       const payload = {
-        ...form,
+        translations: form.translations,
+        path: form.path,
+        iconName: form.iconName,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
+        isVisible: form.isVisible,
+        isProtected: form.isProtected,
       };
       if (editingId) {
         await updateNavigationItem(editingId, payload);
@@ -144,10 +149,14 @@ export default function NavigationPage() {
     }
   }, [deletingRow, loadData, showSnackbar]);
 
-  const titleField = dialogLang === 'ua' ? 'titleUa' : 'titleEn';
-
   const columns = [
-    { field: 'titleEn', headerName: 'Title (EN)', flex: 1, minWidth: 160 },
+    {
+      field: 'title',
+      headerName: 'Title (EN)',
+      flex: 1,
+      minWidth: 160,
+      valueGetter: (value, row) => row.translations?.en?.title || '',
+    },
     { field: 'path', headerName: 'Path', flex: 0.8, minWidth: 140 },
     { field: 'iconName', headerName: 'Icon', width: 140 },
     {
@@ -173,7 +182,7 @@ export default function NavigationPage() {
       ),
     },
     {
-      field: 'seoTitle',
+      field: 'seo',
       headerName: 'SEO',
       width: 70,
       sortable: false,
@@ -181,7 +190,7 @@ export default function NavigationPage() {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) =>
-        params.row.seoTitle ? (
+        params.row.translations?.en?.seoTitle ? (
           <Tooltip title="SEO configured">
             <CheckCircleIcon fontSize="small" color="success" />
           </Tooltip>
@@ -218,6 +227,8 @@ export default function NavigationPage() {
     },
   ];
 
+  const currentTranslation = form.translations[dialogLang] || {};
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader
@@ -247,27 +258,16 @@ export default function NavigationPage() {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editingId ? 'Edit Navigation Item' : 'New Navigation Item'}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 2 }}>
-            <ToggleButtonGroup
-              value={dialogLang}
-              exclusive
-              onChange={(e, value) => { if (value) setDialogLang(value); }}
-              size="small"
-            >
-              <ToggleButton value="en" sx={{ px: 2 }}>EN</ToggleButton>
-              <ToggleButton value="ua" sx={{ px: 2 }}>UA</ToggleButton>
-            </ToggleButtonGroup>
-            <Typography variant="caption" color="text.secondary">
-              Editing {dialogLang === 'ua' ? 'Ukrainian' : 'English'} title
-            </Typography>
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <LanguageTabs value={dialogLang} onChange={setDialogLang} />
           </Box>
 
           <TextField
             label="Title"
             fullWidth
             margin="normal"
-            value={form[titleField]}
-            onChange={(e) => setForm((prev) => ({ ...prev, [titleField]: e.target.value }))}
+            value={currentTranslation.title || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'title', e.target.value)}
           />
           <TextField
             label="Path"
@@ -320,9 +320,9 @@ export default function NavigationPage() {
             label="SEO Title"
             fullWidth
             margin="normal"
-            value={form.seoTitle}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoTitle: e.target.value }))}
-            helperText={`${(form.seoTitle || '').length}/160`}
+            value={currentTranslation.seoTitle || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoTitle', e.target.value)}
+            helperText={`${(currentTranslation.seoTitle || '').length}/160`}
             inputProps={{ maxLength: 160 }}
           />
           <TextField
@@ -331,24 +331,24 @@ export default function NavigationPage() {
             margin="normal"
             multiline
             rows={2}
-            value={form.seoDescription}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoDescription: e.target.value }))}
-            helperText={`${(form.seoDescription || '').length}/320`}
+            value={currentTranslation.seoDescription || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoDescription', e.target.value)}
+            helperText={`${(currentTranslation.seoDescription || '').length}/320`}
             inputProps={{ maxLength: 320 }}
           />
           <TextField
             label="SEO Keywords"
             fullWidth
             margin="normal"
-            value={form.seoKeywords}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoKeywords: e.target.value }))}
+            value={currentTranslation.seoKeywords || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoKeywords', e.target.value)}
             helperText="Comma-separated keywords"
             inputProps={{ maxLength: 500 }}
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving || !form.titleEn || !form.path}>
+          <Button variant="contained" onClick={handleSave} disabled={saving || !form.translations?.en?.title || !form.path}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
@@ -358,7 +358,7 @@ export default function NavigationPage() {
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Delete Navigation Item</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete <strong>{deletingRow?.titleEn}</strong>? This action cannot be undone.
+          Are you sure you want to delete <strong>{deletingRow?.translations?.en?.title}</strong>? This action cannot be undone.
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>

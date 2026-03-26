@@ -12,10 +12,6 @@ public class AdminDistributorDto
 
     public bool IsVisible { get; set; }
 
-    public string? DescriptionEn { get; set; }
-
-    public string? DescriptionUa { get; set; }
-
     public string? Country { get; set; }
 
     public string? CountryFlag { get; set; }
@@ -23,4 +19,6 @@ public class AdminDistributorDto
     public string? LogoUrl { get; set; }
 
     public string? WebsiteUrl { get; set; }
+
+    public Dictionary<string, DistributorTranslationDto> Translations { get; set; } = new();
 }

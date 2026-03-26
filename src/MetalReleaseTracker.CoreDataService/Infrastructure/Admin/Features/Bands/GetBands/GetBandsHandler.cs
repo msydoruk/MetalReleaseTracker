@@ -25,27 +25,44 @@ public class GetBandsHandler
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var bands = await query
             .OrderBy(band => band.Name)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .Select(band => new AdminBandDto
-            {
-                Id = band.Id,
-                Name = band.Name,
-                Genre = band.Genre,
-                PhotoUrl = band.PhotoUrl,
-                MetalArchivesUrl = band.MetalArchivesUrl,
-                FormationYear = band.FormationYear,
-                AlbumCount = _context.Albums.Count(album => album.BandId == band.Id),
-                Description = band.Description,
-                Slug = band.Slug,
-                IsVisible = band.IsVisible,
-                SeoTitle = band.SeoTitle,
-                SeoDescription = band.SeoDescription,
-                SeoKeywords = band.SeoKeywords,
-            })
+            .Include(band => band.Translations)
             .ToListAsync(cancellationToken);
+
+        var bandIds = bands.Select(band => band.Id).ToList();
+        var albumCounts = await _context.Albums
+            .Where(album => bandIds.Contains(album.BandId))
+            .GroupBy(album => album.BandId)
+            .Select(group => new { BandId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(
+                group => group.BandId,
+                group => group.Count,
+                cancellationToken);
+
+        var items = bands.Select(band => new AdminBandDto
+        {
+            Id = band.Id,
+            Name = band.Name,
+            Genre = band.Genre,
+            PhotoUrl = band.PhotoUrl,
+            MetalArchivesUrl = band.MetalArchivesUrl,
+            FormationYear = band.FormationYear,
+            AlbumCount = albumCounts.GetValueOrDefault(band.Id),
+            Slug = band.Slug,
+            IsVisible = band.IsVisible,
+            Translations = band.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new BandTranslationDto
+                {
+                    Description = translation.Description,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
+        }).ToList();
 
         return new AdminBandPagedResult
         {

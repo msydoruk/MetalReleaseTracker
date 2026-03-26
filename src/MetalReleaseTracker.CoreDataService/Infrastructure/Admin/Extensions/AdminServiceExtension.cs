@@ -17,6 +17,10 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distribu
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributorById;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributors;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.UpdateDistributor;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.CreateLanguage;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.DeleteLanguage;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.GetLanguages;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.UpdateLanguage;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.CreateNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.DeleteNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.GetNavigationItems;
@@ -117,6 +121,12 @@ public static class AdminServiceExtension
         // Telegram
         services.AddScoped<GetTelegramStatsHandler>();
         services.AddScoped<GetLinkedUsersHandler>();
+
+        // Languages
+        services.AddScoped<GetLanguagesHandler>();
+        services.AddScoped<CreateLanguageHandler>();
+        services.AddScoped<UpdateLanguageHandler>();
+        services.AddScoped<DeleteLanguageHandler>();
 
         // AI SEO
         services.AddScoped<IAiSeoService, AiSeoService>();

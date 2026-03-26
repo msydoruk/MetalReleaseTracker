@@ -6,7 +6,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useSeoConfig } from '../contexts/SeoContext';
 
 const Footer = () => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { navItems } = useNavigation();
   const seoConfig = useSeoConfig();
   const currentYear = new Date().getFullYear();
@@ -14,7 +14,7 @@ const Footer = () => {
   const footerLinks = navItems
     .filter((item) => !item.isProtected && item.path !== '/')
     .map((item) => ({
-      title: language === 'ua' ? item.titleUa : item.titleEn,
+      title: item.title,
       path: item.path,
     }));
 

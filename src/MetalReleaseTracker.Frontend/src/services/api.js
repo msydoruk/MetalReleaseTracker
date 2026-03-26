@@ -82,7 +82,7 @@ export const fetchSimilarBands = (bandId) => api.get(`/bands/${bandId}/similar`)
 export const fetchGenres = () => api.get('/bands/genres');
 export const fetchDistributors = () => api.get('/distributors/all');
 export const fetchDistributorById = (id) => api.get(`/distributors/${id}`);
-export const fetchDistributorsWithAlbumCount = () => api.get('/distributors/with-album-count');
+export const fetchDistributorsWithAlbumCount = (language) => api.get('/distributors/with-album-count', { params: language ? { language } : {} });
 
 export const addFavorite = (albumId, status = 0) => api.post(`/favorites/${albumId}?status=${status}`);
 export const removeFavorite = (albumId) => api.delete(`/favorites/${albumId}`);
@@ -135,7 +135,8 @@ export const unlinkTelegram = () => api.delete('/telegram/unlink');
 
 // Config
 export const fetchPublicCurrencies = () => api.get('/config/currencies');
-export const fetchPublicNavigation = () => api.get('/config/navigation');
-export const fetchPublicNews = () => api.get('/config/news');
+export const fetchPublicNavigation = (language) => api.get('/config/navigation', { params: language ? { language } : {} });
+export const fetchPublicNews = (language) => api.get('/config/news', { params: language ? { language } : {} });
 export const fetchPublicTranslations = (language) => api.get(`/config/translations/${language}`);
+export const fetchPublicLanguages = () => api.get('/config/languages');
 export const fetchSeoConfig = () => api.get('/config/seo');

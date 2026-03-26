@@ -19,6 +19,7 @@ public class GetDistributorByIdHandler
     {
         var entity = await _context.Distributors
             .AsNoTracking()
+            .Include(distributor => distributor.Translations)
             .FirstOrDefaultAsync(distributor => distributor.Id == id, cancellationToken);
 
         if (entity is null)
@@ -36,12 +37,16 @@ public class GetDistributorByIdHandler
             Code = entity.Code.ToString(),
             AlbumCount = albumCount,
             IsVisible = entity.IsVisible,
-            DescriptionEn = entity.DescriptionEn,
-            DescriptionUa = entity.DescriptionUa,
             Country = entity.Country,
             CountryFlag = entity.CountryFlag,
             LogoUrl = entity.LogoUrl,
             WebsiteUrl = entity.WebsiteUrl,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new DistributorTranslationDto
+                {
+                    Description = translation.Description,
+                }),
         };
     }
 }

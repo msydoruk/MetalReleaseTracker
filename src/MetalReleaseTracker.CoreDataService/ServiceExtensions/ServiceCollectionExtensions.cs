@@ -50,6 +50,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
 
         private static IServiceCollection AddDomainServices(this IServiceCollection services)
         {
+            services.AddSingleton<ITranslationResolverService, TranslationResolverService>();
             services.AddScoped<IAlbumService, AlbumService>();
             services.AddScoped<IBandService, BandService>();
             services.AddScoped<IDistributorService, DistributorService>();

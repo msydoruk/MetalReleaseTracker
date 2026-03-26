@@ -1,6 +1,8 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Entities.Enums;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbumById;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbums;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.UpdateAlbum;
@@ -22,6 +24,7 @@ public class UpdateAlbumHandler
         var entity = await _context.Albums
             .Include(album => album.Band)
             .Include(album => album.Distributor)
+            .Include(album => album.Translations)
             .FirstOrDefaultAsync(
                 album => album.Id == id,
                 cancellationToken);
@@ -73,19 +76,22 @@ public class UpdateAlbumHandler
             entity.Press = request.Press;
         }
 
-        if (request.SeoTitle is not null)
+        if (request.Translations is not null)
         {
-            entity.SeoTitle = request.SeoTitle;
-        }
+            _context.AlbumTranslations.RemoveRange(entity.Translations);
 
-        if (request.SeoDescription is not null)
-        {
-            entity.SeoDescription = request.SeoDescription;
-        }
-
-        if (request.SeoKeywords is not null)
-        {
-            entity.SeoKeywords = request.SeoKeywords;
+            foreach (var (languageCode, translationDto) in request.Translations)
+            {
+                entity.Translations.Add(new AlbumTranslationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    AlbumId = entity.Id,
+                    LanguageCode = languageCode,
+                    SeoTitle = translationDto.SeoTitle,
+                    SeoDescription = translationDto.SeoDescription,
+                    SeoKeywords = translationDto.SeoKeywords,
+                });
+            }
         }
 
         entity.LastUpdateDate = DateTime.UtcNow;
@@ -116,9 +122,14 @@ public class UpdateAlbumHandler
             BandName = entity.Band.Name,
             DistributorId = entity.DistributorId,
             DistributorName = entity.Distributor.Name,
-            SeoTitle = entity.SeoTitle,
-            SeoDescription = entity.SeoDescription,
-            SeoKeywords = entity.SeoKeywords,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new AlbumTranslationDto
+                {
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
         };
     }
 }

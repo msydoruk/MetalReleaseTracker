@@ -19,6 +19,10 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distribu
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributorById;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributors;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.UpdateDistributor;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.CreateLanguage;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.DeleteLanguage;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.GetLanguages;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Languages.UpdateLanguage;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.CreateNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.DeleteNavigationItem;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.GetNavigationItems;
@@ -128,6 +132,12 @@ public static class AdminEndpointExtension
         // Telegram
         GetTelegramStatsEndpoint.MapEndpoint(adminGroup);
         GetLinkedUsersEndpoint.MapEndpoint(adminGroup);
+
+        // Languages
+        GetLanguagesEndpoint.MapEndpoint(adminGroup);
+        CreateLanguageEndpoint.MapEndpoint(adminGroup);
+        UpdateLanguageEndpoint.MapEndpoint(adminGroup);
+        DeleteLanguageEndpoint.MapEndpoint(adminGroup);
 
         // AI SEO
         AiSeoEndpoints.MapEndpoints(adminGroup);

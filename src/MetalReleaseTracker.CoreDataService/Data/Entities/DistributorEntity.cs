@@ -18,12 +18,6 @@ public class DistributorEntity
 
     public bool IsVisible { get; set; } = true;
 
-    [MaxLength(1000)]
-    public string? DescriptionEn { get; set; }
-
-    [MaxLength(1000)]
-    public string? DescriptionUa { get; set; }
-
     [MaxLength(100)]
     public string? Country { get; set; }
 
@@ -35,4 +29,6 @@ public class DistributorEntity
 
     [MaxLength(500)]
     public string? WebsiteUrl { get; set; }
+
+    public ICollection<DistributorTranslationEntity> Translations { get; set; } = [];
 }

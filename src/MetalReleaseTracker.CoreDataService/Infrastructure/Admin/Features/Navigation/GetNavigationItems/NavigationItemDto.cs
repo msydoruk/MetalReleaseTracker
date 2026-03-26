@@ -4,10 +4,6 @@ public class NavigationItemDto
 {
     public Guid Id { get; set; }
 
-    public string TitleEn { get; set; } = string.Empty;
-
-    public string TitleUa { get; set; } = string.Empty;
-
     public string Path { get; set; } = string.Empty;
 
     public string IconName { get; set; } = string.Empty;
@@ -22,9 +18,5 @@ public class NavigationItemDto
 
     public DateTime UpdatedAt { get; set; }
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, NavigationItemTranslationDto> Translations { get; set; } = new();
 }

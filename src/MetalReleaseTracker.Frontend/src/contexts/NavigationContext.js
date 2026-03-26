@@ -1,18 +1,27 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { fetchPublicNavigation } from '../services/api';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const NavigationContext = createContext();
 
 export const NavigationProvider = ({ children }) => {
+  const { language } = useLanguage();
   const [navItems, setNavItems] = useState([]);
+  const cacheRef = useRef({});
 
   useEffect(() => {
+    if (cacheRef.current[language]) {
+      setNavItems(cacheRef.current[language]);
+      return;
+    }
+
     let cancelled = false;
-    fetchPublicNavigation()
+    fetchPublicNavigation(language)
       .then((response) => {
         if (cancelled) return;
         const data = response.data;
         if (Array.isArray(data) && data.length > 0) {
+          cacheRef.current[language] = data;
           setNavItems(data);
         }
       })
@@ -20,7 +29,7 @@ export const NavigationProvider = ({ children }) => {
         console.error('Failed to fetch navigation:', error);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [language]);
 
   return (
     <NavigationContext.Provider value={{ navItems }}>

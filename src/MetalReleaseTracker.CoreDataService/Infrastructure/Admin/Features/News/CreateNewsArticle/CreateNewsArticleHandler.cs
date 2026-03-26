@@ -20,10 +20,6 @@ public class CreateNewsArticleHandler
         var entity = new NewsArticleEntity
         {
             Id = Guid.NewGuid(),
-            TitleEn = request.TitleEn,
-            TitleUa = request.TitleUa,
-            ContentEn = request.ContentEn,
-            ContentUa = request.ContentUa,
             ChipLabel = request.ChipLabel,
             ChipColor = request.ChipColor,
             IconName = request.IconName,
@@ -32,10 +28,22 @@ public class CreateNewsArticleHandler
             IsPublished = request.IsPublished,
             CreatedDate = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            SeoTitle = request.SeoTitle,
-            SeoDescription = request.SeoDescription,
-            SeoKeywords = request.SeoKeywords,
         };
+
+        foreach (var (languageCode, translationDto) in request.Translations)
+        {
+            entity.Translations.Add(new NewsArticleTranslationEntity
+            {
+                Id = Guid.NewGuid(),
+                NewsArticleId = entity.Id,
+                LanguageCode = languageCode,
+                Title = translationDto.Title,
+                Content = translationDto.Content,
+                SeoTitle = translationDto.SeoTitle,
+                SeoDescription = translationDto.SeoDescription,
+                SeoKeywords = translationDto.SeoKeywords,
+            });
+        }
 
         _context.NewsArticles.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
@@ -43,10 +51,6 @@ public class CreateNewsArticleHandler
         return new NewsArticleDto
         {
             Id = entity.Id,
-            TitleEn = entity.TitleEn,
-            TitleUa = entity.TitleUa,
-            ContentEn = entity.ContentEn,
-            ContentUa = entity.ContentUa,
             ChipLabel = entity.ChipLabel,
             ChipColor = entity.ChipColor,
             IconName = entity.IconName,
@@ -55,9 +59,16 @@ public class CreateNewsArticleHandler
             IsPublished = entity.IsPublished,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
-            SeoTitle = entity.SeoTitle,
-            SeoDescription = entity.SeoDescription,
-            SeoKeywords = entity.SeoKeywords,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NewsArticleTranslationDto
+                {
+                    Title = translation.Title,
+                    Content = translation.Content,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
         };
     }
 }

@@ -1,4 +1,5 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBands;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public class UpdateBandHandler
         CancellationToken cancellationToken = default)
     {
         var entity = await _context.Bands
+            .Include(band => band.Translations)
             .FirstOrDefaultAsync(
                 band => band.Id == id,
                 cancellationToken);
@@ -31,11 +33,6 @@ public class UpdateBandHandler
         if (request.Name is not null)
         {
             entity.Name = request.Name;
-        }
-
-        if (request.Description is not null)
-        {
-            entity.Description = request.Description;
         }
 
         if (request.Genre is not null)
@@ -63,19 +60,23 @@ public class UpdateBandHandler
             entity.IsVisible = request.IsVisible.Value;
         }
 
-        if (request.SeoTitle is not null)
+        if (request.Translations is not null)
         {
-            entity.SeoTitle = request.SeoTitle;
-        }
+            _context.BandTranslations.RemoveRange(entity.Translations);
 
-        if (request.SeoDescription is not null)
-        {
-            entity.SeoDescription = request.SeoDescription;
-        }
-
-        if (request.SeoKeywords is not null)
-        {
-            entity.SeoKeywords = request.SeoKeywords;
+            foreach (var (languageCode, translationDto) in request.Translations)
+            {
+                entity.Translations.Add(new BandTranslationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    BandId = entity.Id,
+                    LanguageCode = languageCode,
+                    Description = translationDto.Description,
+                    SeoTitle = translationDto.SeoTitle,
+                    SeoDescription = translationDto.SeoDescription,
+                    SeoKeywords = translationDto.SeoKeywords,
+                });
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -96,9 +97,15 @@ public class UpdateBandHandler
             AlbumCount = albumCount,
             Slug = entity.Slug,
             IsVisible = entity.IsVisible,
-            SeoTitle = entity.SeoTitle,
-            SeoDescription = entity.SeoDescription,
-            SeoKeywords = entity.SeoKeywords,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new BandTranslationDto
+                {
+                    Description = translation.Description,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
         };
     }
 }

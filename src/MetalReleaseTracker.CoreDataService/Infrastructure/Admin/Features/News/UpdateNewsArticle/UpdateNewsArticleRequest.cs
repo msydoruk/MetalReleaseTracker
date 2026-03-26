@@ -1,15 +1,9 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.GetNewsArticles;
+
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.UpdateNewsArticle;
 
 public class UpdateNewsArticleRequest
 {
-    public string? TitleEn { get; set; }
-
-    public string? TitleUa { get; set; }
-
-    public string? ContentEn { get; set; }
-
-    public string? ContentUa { get; set; }
-
     public string? ChipLabel { get; set; }
 
     public string? ChipColor { get; set; }
@@ -22,9 +16,5 @@ public class UpdateNewsArticleRequest
 
     public bool? IsPublished { get; set; }
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, NewsArticleTranslationDto>? Translations { get; set; }
 }

@@ -1,4 +1,5 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Navigation.GetNavigationItems;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public class UpdateNavigationItemHandler
         CancellationToken cancellationToken = default)
     {
         var entity = await _context.NavigationItems
+            .Include(item => item.Translations)
             .FirstOrDefaultAsync(
                 item => item.Id == id,
                 cancellationToken);
@@ -26,16 +28,6 @@ public class UpdateNavigationItemHandler
         if (entity is null)
         {
             return null;
-        }
-
-        if (request.TitleEn is not null)
-        {
-            entity.TitleEn = request.TitleEn;
-        }
-
-        if (request.TitleUa is not null)
-        {
-            entity.TitleUa = request.TitleUa;
         }
 
         if (request.Path is not null)
@@ -63,19 +55,23 @@ public class UpdateNavigationItemHandler
             entity.IsProtected = request.IsProtected.Value;
         }
 
-        if (request.SeoTitle is not null)
+        if (request.Translations is not null)
         {
-            entity.SeoTitle = request.SeoTitle;
-        }
+            _context.NavigationItemTranslations.RemoveRange(entity.Translations);
 
-        if (request.SeoDescription is not null)
-        {
-            entity.SeoDescription = request.SeoDescription;
-        }
-
-        if (request.SeoKeywords is not null)
-        {
-            entity.SeoKeywords = request.SeoKeywords;
+            foreach (var (languageCode, translationDto) in request.Translations)
+            {
+                entity.Translations.Add(new NavigationItemTranslationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    NavigationItemId = entity.Id,
+                    LanguageCode = languageCode,
+                    Title = translationDto.Title,
+                    SeoTitle = translationDto.SeoTitle,
+                    SeoDescription = translationDto.SeoDescription,
+                    SeoKeywords = translationDto.SeoKeywords,
+                });
+            }
         }
 
         entity.UpdatedAt = DateTime.UtcNow;
@@ -84,8 +80,6 @@ public class UpdateNavigationItemHandler
         return new NavigationItemDto
         {
             Id = entity.Id,
-            TitleEn = entity.TitleEn,
-            TitleUa = entity.TitleUa,
             Path = entity.Path,
             IconName = entity.IconName,
             SortOrder = entity.SortOrder,
@@ -93,9 +87,15 @@ public class UpdateNavigationItemHandler
             IsProtected = entity.IsProtected,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
-            SeoTitle = entity.SeoTitle,
-            SeoDescription = entity.SeoDescription,
-            SeoKeywords = entity.SeoKeywords,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NavigationItemTranslationDto
+                {
+                    Title = translation.Title,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
         };
     }
 }

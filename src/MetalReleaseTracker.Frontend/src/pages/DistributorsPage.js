@@ -37,7 +37,7 @@ const DistributorsPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetchDistributorsWithAlbumCount();
+        const response = await fetchDistributorsWithAlbumCount(language);
         console.log('Distributors data:', response.data);
         setDistributors(response.data || []);
       } catch (err) {
@@ -49,7 +49,7 @@ const DistributorsPage = () => {
     };
 
     fetchData();
-  }, [t]);
+  }, [language, t]);
 
   const handleDistributorClick = (distributorId) => {
     navigate(`/albums?distributorId=${distributorId}`);
@@ -174,7 +174,7 @@ const DistributorsPage = () => {
                   WebkitBoxOrient: 'vertical',
                   height: '4.5em'
                 }}>
-                  {(language === 'ua' ? distributor.descriptionUa : distributor.descriptionEn) || distributor.description || t('distributors.fallbackDescription')}
+                  {distributor.description || t('distributors.fallbackDescription')}
                 </Typography>
 
                 <Box sx={{

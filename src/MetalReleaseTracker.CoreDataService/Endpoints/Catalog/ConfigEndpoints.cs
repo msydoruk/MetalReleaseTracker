@@ -34,17 +34,26 @@ public static class ConfigEndpoints
             .WithTags("Config");
 
         endpoints.MapGet(RouteConstants.Api.PublicConfig.Navigation, async (
+                string? language,
                 CoreDataServiceDbContext context,
                 CancellationToken cancellationToken) =>
             {
+                var languageCode = language ?? "en";
                 var navItems = await context.NavigationItems
                     .AsNoTracking()
                     .Where(item => item.IsVisible)
                     .OrderBy(item => item.SortOrder)
                     .Select(item => new
                     {
-                        item.TitleEn,
-                        item.TitleUa,
+                        Title = item.Translations
+                            .Where(t => t.LanguageCode == languageCode)
+                            .Select(t => t.Title)
+                            .FirstOrDefault()
+                            ?? item.Translations
+                                .Where(t => t.LanguageCode == "en")
+                                .Select(t => t.Title)
+                                .FirstOrDefault()
+                            ?? string.Empty,
                         item.Path,
                         item.IconName,
                         item.IsProtected,
@@ -75,9 +84,11 @@ public static class ConfigEndpoints
             .WithTags("Config");
 
         endpoints.MapGet(RouteConstants.Api.PublicConfig.News, async (
+                string? language,
                 CoreDataServiceDbContext context,
                 CancellationToken cancellationToken) =>
             {
+                var languageCode = language ?? "en";
                 var articles = await context.NewsArticles
                     .AsNoTracking()
                     .Where(article => article.IsPublished)
@@ -85,10 +96,24 @@ public static class ConfigEndpoints
                     .Select(article => new
                     {
                         article.Id,
-                        article.TitleEn,
-                        article.TitleUa,
-                        article.ContentEn,
-                        article.ContentUa,
+                        Title = article.Translations
+                            .Where(t => t.LanguageCode == languageCode)
+                            .Select(t => t.Title)
+                            .FirstOrDefault()
+                            ?? article.Translations
+                                .Where(t => t.LanguageCode == "en")
+                                .Select(t => t.Title)
+                                .FirstOrDefault()
+                            ?? string.Empty,
+                        Content = article.Translations
+                            .Where(t => t.LanguageCode == languageCode)
+                            .Select(t => t.Content)
+                            .FirstOrDefault()
+                            ?? article.Translations
+                                .Where(t => t.LanguageCode == "en")
+                                .Select(t => t.Content)
+                                .FirstOrDefault()
+                            ?? string.Empty,
                         article.ChipLabel,
                         article.ChipColor,
                         article.IconName,
@@ -99,6 +124,28 @@ public static class ConfigEndpoints
                 return Results.Ok(articles);
             })
             .WithName("GetPublicNews")
+            .WithTags("Config");
+
+        endpoints.MapGet(RouteConstants.Api.PublicConfig.Languages, async (
+                CoreDataServiceDbContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var languages = await context.Languages
+                    .AsNoTracking()
+                    .Where(language => language.IsEnabled)
+                    .OrderBy(language => language.SortOrder)
+                    .Select(language => new
+                    {
+                        language.Code,
+                        language.Name,
+                        language.NativeName,
+                        language.IsDefault,
+                    })
+                    .ToListAsync(cancellationToken);
+
+                return Results.Ok(languages);
+            })
+            .WithName("GetPublicLanguages")
             .WithTags("Config");
 
         endpoints.MapGet(RouteConstants.Api.PublicConfig.SeoConfig, async (

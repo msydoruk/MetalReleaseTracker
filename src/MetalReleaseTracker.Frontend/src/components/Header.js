@@ -66,7 +66,8 @@ const Header = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { language, changeLanguage, availableLanguages, t } = useLanguage();
+  const [languageAnchorEl, setLanguageAnchorEl] = useState(null);
   const { currency, changeCurrency, availableCurrencies } = useCurrency();
   const { navItems: apiNavItems } = useNavigation();
   const seoConfig = useSeoConfig();
@@ -121,12 +122,12 @@ const Header = () => {
       .map((item) => {
         const IconComponent = ICON_MAP[item.iconName];
         return {
-          title: language === 'ua' ? item.titleUa : item.titleEn,
+          title: item.title,
           path: item.path,
           icon: IconComponent ? <IconComponent /> : <HomeIcon />,
         };
       });
-  }, [apiNavItems, language]);
+  }, [apiNavItems]);
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -439,16 +440,37 @@ const Header = () => {
                     </MenuItem>
                   ))}
                 </Menu>
-                <Tooltip title={language === 'en' ? 'Українська' : 'English'}>
+                <Tooltip title={t('header.languageTooltip')}>
                   <Button
                     color="inherit"
-                    onClick={toggleLanguage}
+                    onClick={(event) => setLanguageAnchorEl(event.currentTarget)}
                     sx={{ minWidth: 'auto', px: 1, mr: { xs: -0.5, md: 1 } }}
                     startIcon={<LanguageIcon />}
                   >
-                    {language === 'en' ? 'UA' : 'EN'}
+                    {language.toUpperCase()}
                   </Button>
                 </Tooltip>
+                <Menu
+                  anchorEl={languageAnchorEl}
+                  open={Boolean(languageAnchorEl)}
+                  onClose={() => setLanguageAnchorEl(null)}
+                  keepMounted
+                  transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+                >
+                  {availableLanguages.map((lang) => (
+                    <MenuItem
+                      key={lang.code}
+                      selected={lang.code === language}
+                      onClick={() => {
+                        changeLanguage(lang.code);
+                        setLanguageAnchorEl(null);
+                      }}
+                    >
+                      {lang.nativeName}
+                    </MenuItem>
+                  ))}
+                </Menu>
                 {renderAuthButtons()}
               </Box>
             )}

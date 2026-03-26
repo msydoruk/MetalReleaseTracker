@@ -21,6 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import PageHeader from '../components/PageHeader';
+import LanguageTabs from '../components/LanguageTabs';
 import { fetchBands, fetchBandById, updateBand, deleteBand, generateBandSeo, bulkGenerateBandSeo } from '../api/bands';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -28,14 +29,11 @@ import CancelIcon from '@mui/icons-material/Cancel';
 
 const EMPTY_FORM = {
   name: '',
-  description: '',
   genre: '',
   metalArchivesUrl: '',
   formationYear: '',
   isVisible: true,
-  seoTitle: '',
-  seoDescription: '',
-  seoKeywords: '',
+  translations: {},
 };
 
 export default function BandsPage() {
@@ -51,6 +49,7 @@ export default function BandsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [dialogLang, setDialogLang] = useState('en');
   const searchTimeoutRef = useRef(null);
 
   const showSnackbar = useCallback((message, severity = 'success') => {
@@ -99,15 +98,13 @@ export default function BandsPage() {
       setEditingId(row.id);
       setForm({
         name: data.name || '',
-        description: data.description || '',
         genre: data.genre || '',
         metalArchivesUrl: data.metalArchivesUrl || '',
         formationYear: data.formationYear || '',
         isVisible: data.isVisible !== undefined ? data.isVisible : true,
-        seoTitle: data.seoTitle || '',
-        seoDescription: data.seoDescription || '',
-        seoKeywords: data.seoKeywords || '',
+        translations: data.translations || {},
       });
+      setDialogLang('en');
       setDialogOpen(true);
     } catch (err) {
       showSnackbar(err.response?.data?.message || 'Failed to load band details', 'error');
@@ -121,12 +118,26 @@ export default function BandsPage() {
     setDeleteDialogOpen(true);
   }, []);
 
+  const setTranslationField = (lang, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [lang]: { ...(prev.translations[lang] || {}), [field]: value }
+      }
+    }));
+  };
+
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
       const payload = {
-        ...form,
+        name: form.name,
+        genre: form.genre,
+        metalArchivesUrl: form.metalArchivesUrl,
         formationYear: form.formationYear ? parseInt(form.formationYear, 10) : null,
+        isVisible: form.isVisible,
+        translations: form.translations,
       };
       await updateBand(editingId, payload);
       showSnackbar('Band updated');
@@ -231,6 +242,8 @@ export default function BandsPage() {
     },
   ];
 
+  const currentTranslation = form.translations[dialogLang] || {};
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader
@@ -334,14 +347,22 @@ export default function BandsPage() {
             value={form.metalArchivesUrl}
             onChange={(e) => setForm((prev) => ({ ...prev, metalArchivesUrl: e.target.value }))}
           />
+
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Translatable Content</Typography>
+
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <LanguageTabs value={dialogLang} onChange={setDialogLang} />
+          </Box>
+
           <TextField
             label="Description"
             fullWidth
             margin="normal"
             multiline
             rows={3}
-            value={form.description}
-            onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+            value={currentTranslation.description || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'description', e.target.value)}
           />
           <Divider sx={{ my: 2 }} />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -355,12 +376,9 @@ export default function BandsPage() {
                     setSaving(true);
                     const { data } = await generateBandSeo(editingId);
                     if (data.success) {
-                      setForm((prev) => ({
-                        ...prev,
-                        seoTitle: data.seoTitle || '',
-                        seoDescription: data.seoDescription || '',
-                        seoKeywords: data.seoKeywords || '',
-                      }));
+                      setTranslationField(dialogLang, 'seoTitle', data.seoTitle || '');
+                      setTranslationField(dialogLang, 'seoDescription', data.seoDescription || '');
+                      setTranslationField(dialogLang, 'seoKeywords', data.seoKeywords || '');
                       showSnackbar('SEO generated by AI');
                     } else {
                       showSnackbar(data.error || 'AI generation failed', 'error');
@@ -381,9 +399,9 @@ export default function BandsPage() {
             label="SEO Title"
             fullWidth
             margin="normal"
-            value={form.seoTitle}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoTitle: e.target.value }))}
-            helperText={`${(form.seoTitle || '').length}/160 - Leave empty for auto-generated`}
+            value={currentTranslation.seoTitle || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoTitle', e.target.value)}
+            helperText={`${(currentTranslation.seoTitle || '').length}/160 - Leave empty for auto-generated`}
             inputProps={{ maxLength: 160 }}
           />
           <TextField
@@ -392,17 +410,17 @@ export default function BandsPage() {
             margin="normal"
             multiline
             rows={2}
-            value={form.seoDescription}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoDescription: e.target.value }))}
-            helperText={`${(form.seoDescription || '').length}/320`}
+            value={currentTranslation.seoDescription || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoDescription', e.target.value)}
+            helperText={`${(currentTranslation.seoDescription || '').length}/320`}
             inputProps={{ maxLength: 320 }}
           />
           <TextField
             label="SEO Keywords"
             fullWidth
             margin="normal"
-            value={form.seoKeywords}
-            onChange={(e) => setForm((prev) => ({ ...prev, seoKeywords: e.target.value }))}
+            value={currentTranslation.seoKeywords || ''}
+            onChange={(e) => setTranslationField(dialogLang, 'seoKeywords', e.target.value)}
             helperText="Comma-separated keywords"
             inputProps={{ maxLength: 500 }}
           />

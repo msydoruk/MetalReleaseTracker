@@ -35,10 +35,12 @@ public static class DistributorEndpoints
             .Produces(404);
 
         endpoints.MapGet(RouteConstants.Api.Distributors.GetWithAlbumCount, async (
+                string? language,
                 IDistributorService distributorService,
                 CancellationToken cancellationToken) =>
             {
-                var distributorsWithCount = await distributorService.GetDistributorsWithAlbumCountAsync(cancellationToken);
+                var languageCode = language ?? "en";
+                var distributorsWithCount = await distributorService.GetDistributorsWithAlbumCountAsync(languageCode, cancellationToken);
                 return Results.Ok(distributorsWithCount);
             })
             .WithName("GetDistributorsWithAlbumCount")

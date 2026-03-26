@@ -1,4 +1,5 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Entities;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.GetNewsArticles;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public class UpdateNewsArticleHandler
         CancellationToken cancellationToken = default)
     {
         var entity = await _context.NewsArticles
+            .Include(article => article.Translations)
             .FirstOrDefaultAsync(
                 article => article.Id == id,
                 cancellationToken);
@@ -26,26 +28,6 @@ public class UpdateNewsArticleHandler
         if (entity is null)
         {
             return null;
-        }
-
-        if (request.TitleEn is not null)
-        {
-            entity.TitleEn = request.TitleEn;
-        }
-
-        if (request.TitleUa is not null)
-        {
-            entity.TitleUa = request.TitleUa;
-        }
-
-        if (request.ContentEn is not null)
-        {
-            entity.ContentEn = request.ContentEn;
-        }
-
-        if (request.ContentUa is not null)
-        {
-            entity.ContentUa = request.ContentUa;
         }
 
         if (request.ChipLabel is not null)
@@ -78,19 +60,24 @@ public class UpdateNewsArticleHandler
             entity.IsPublished = request.IsPublished.Value;
         }
 
-        if (request.SeoTitle is not null)
+        if (request.Translations is not null)
         {
-            entity.SeoTitle = request.SeoTitle;
-        }
+            _context.NewsArticleTranslations.RemoveRange(entity.Translations);
 
-        if (request.SeoDescription is not null)
-        {
-            entity.SeoDescription = request.SeoDescription;
-        }
-
-        if (request.SeoKeywords is not null)
-        {
-            entity.SeoKeywords = request.SeoKeywords;
+            foreach (var (languageCode, translationDto) in request.Translations)
+            {
+                entity.Translations.Add(new NewsArticleTranslationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    NewsArticleId = entity.Id,
+                    LanguageCode = languageCode,
+                    Title = translationDto.Title,
+                    Content = translationDto.Content,
+                    SeoTitle = translationDto.SeoTitle,
+                    SeoDescription = translationDto.SeoDescription,
+                    SeoKeywords = translationDto.SeoKeywords,
+                });
+            }
         }
 
         entity.UpdatedAt = DateTime.UtcNow;
@@ -99,10 +86,6 @@ public class UpdateNewsArticleHandler
         return new NewsArticleDto
         {
             Id = entity.Id,
-            TitleEn = entity.TitleEn,
-            TitleUa = entity.TitleUa,
-            ContentEn = entity.ContentEn,
-            ContentUa = entity.ContentUa,
             ChipLabel = entity.ChipLabel,
             ChipColor = entity.ChipColor,
             IconName = entity.IconName,
@@ -111,9 +94,16 @@ public class UpdateNewsArticleHandler
             IsPublished = entity.IsPublished,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
-            SeoTitle = entity.SeoTitle,
-            SeoDescription = entity.SeoDescription,
-            SeoKeywords = entity.SeoKeywords,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NewsArticleTranslationDto
+                {
+                    Title = translation.Title,
+                    Content = translation.Content,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
         };
     }
 }

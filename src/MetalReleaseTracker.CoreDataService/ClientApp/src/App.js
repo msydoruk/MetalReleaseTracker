@@ -19,6 +19,7 @@ import ReviewsPage from './pages/ReviewsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import TelegramPage from './pages/TelegramPage';
+import LanguagesPage from './pages/LanguagesPage';
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="telegram" element={<TelegramPage />} />
+              <Route path="languages" element={<LanguagesPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

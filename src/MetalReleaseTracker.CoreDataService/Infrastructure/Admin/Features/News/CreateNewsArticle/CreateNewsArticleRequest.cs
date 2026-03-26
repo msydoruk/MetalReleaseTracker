@@ -1,15 +1,9 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.GetNewsArticles;
+
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.News.CreateNewsArticle;
 
 public class CreateNewsArticleRequest
 {
-    public string TitleEn { get; set; } = string.Empty;
-
-    public string TitleUa { get; set; } = string.Empty;
-
-    public string ContentEn { get; set; } = string.Empty;
-
-    public string ContentUa { get; set; } = string.Empty;
-
     public string ChipLabel { get; set; } = string.Empty;
 
     public string ChipColor { get; set; } = string.Empty;
@@ -22,9 +16,5 @@ public class CreateNewsArticleRequest
 
     public bool IsPublished { get; set; }
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, NewsArticleTranslationDto> Translations { get; set; } = new();
 }

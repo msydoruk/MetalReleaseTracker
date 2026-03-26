@@ -1,3 +1,5 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributors;
+
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.UpdateDistributor;
 
 public class UpdateDistributorRequest
@@ -6,10 +8,6 @@ public class UpdateDistributorRequest
 
     public bool? IsVisible { get; set; }
 
-    public string? DescriptionEn { get; set; }
-
-    public string? DescriptionUa { get; set; }
-
     public string? Country { get; set; }
 
     public string? CountryFlag { get; set; }
@@ -17,4 +15,6 @@ public class UpdateDistributorRequest
     public string? LogoUrl { get; set; }
 
     public string? WebsiteUrl { get; set; }
+
+    public Dictionary<string, DistributorTranslationDto>? Translations { get; set; }
 }

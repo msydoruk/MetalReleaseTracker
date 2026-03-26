@@ -1,3 +1,5 @@
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbums;
+
 namespace MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.UpdateAlbum;
 
 public class UpdateAlbumRequest
@@ -18,9 +20,5 @@ public class UpdateAlbumRequest
 
     public string? Press { get; set; }
 
-    public string? SeoTitle { get; set; }
-
-    public string? SeoDescription { get; set; }
-
-    public string? SeoKeywords { get; set; }
+    public Dictionary<string, AlbumTranslationDto>? Translations { get; set; }
 }

@@ -11,14 +11,6 @@ public class NavigationItemEntity
 
     [Required]
     [MaxLength(200)]
-    public string TitleEn { get; set; }
-
-    [Required]
-    [MaxLength(200)]
-    public string TitleUa { get; set; }
-
-    [Required]
-    [MaxLength(200)]
     public string Path { get; set; }
 
     [Required]
@@ -35,12 +27,5 @@ public class NavigationItemEntity
 
     public DateTime UpdatedAt { get; set; }
 
-    [MaxLength(160)]
-    public string? SeoTitle { get; set; }
-
-    [MaxLength(320)]
-    public string? SeoDescription { get; set; }
-
-    [MaxLength(500)]
-    public string? SeoKeywords { get; set; }
+    public ICollection<NavigationItemTranslationEntity> Translations { get; set; } = [];
 }

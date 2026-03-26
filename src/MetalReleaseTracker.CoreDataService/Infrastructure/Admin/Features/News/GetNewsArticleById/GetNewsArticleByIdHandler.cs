@@ -19,25 +19,35 @@ public class GetNewsArticleByIdHandler
     {
         var article = await _context.NewsArticles
             .AsNoTracking()
-            .Where(article => article.Id == id)
-            .Select(article => new NewsArticleDto
-            {
-                Id = article.Id,
-                TitleEn = article.TitleEn,
-                TitleUa = article.TitleUa,
-                ContentEn = article.ContentEn,
-                ContentUa = article.ContentUa,
-                ChipLabel = article.ChipLabel,
-                ChipColor = article.ChipColor,
-                IconName = article.IconName,
-                Date = article.Date,
-                SortOrder = article.SortOrder,
-                IsPublished = article.IsPublished,
-                CreatedDate = article.CreatedDate,
-                UpdatedAt = article.UpdatedAt,
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+            .Include(article => article.Translations)
+            .FirstOrDefaultAsync(article => article.Id == id, cancellationToken);
 
-        return article;
+        if (article is null)
+        {
+            return null;
+        }
+
+        return new NewsArticleDto
+        {
+            Id = article.Id,
+            ChipLabel = article.ChipLabel,
+            ChipColor = article.ChipColor,
+            IconName = article.IconName,
+            Date = article.Date,
+            SortOrder = article.SortOrder,
+            IsPublished = article.IsPublished,
+            CreatedDate = article.CreatedDate,
+            UpdatedAt = article.UpdatedAt,
+            Translations = article.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new NewsArticleTranslationDto
+                {
+                    Title = translation.Title,
+                    Content = translation.Content,
+                    SeoTitle = translation.SeoTitle,
+                    SeoDescription = translation.SeoDescription,
+                    SeoKeywords = translation.SeoKeywords,
+                }),
+        };
     }
 }

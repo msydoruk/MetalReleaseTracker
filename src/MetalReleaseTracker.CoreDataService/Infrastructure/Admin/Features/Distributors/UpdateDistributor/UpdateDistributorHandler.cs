@@ -1,4 +1,5 @@
 using MetalReleaseTracker.CoreDataService.Data;
+using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributors;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public class UpdateDistributorHandler
         CancellationToken cancellationToken = default)
     {
         var entity = await _context.Distributors
+            .Include(distributor => distributor.Translations)
             .FirstOrDefaultAsync(
                 distributor => distributor.Id == id,
                 cancellationToken);
@@ -34,12 +36,27 @@ public class UpdateDistributorHandler
             entity.IsVisible = request.IsVisible.Value;
         }
 
-        entity.DescriptionEn = request.DescriptionEn;
-        entity.DescriptionUa = request.DescriptionUa;
         entity.Country = request.Country;
         entity.CountryFlag = request.CountryFlag;
         entity.LogoUrl = request.LogoUrl;
         entity.WebsiteUrl = request.WebsiteUrl;
+
+        if (request.Translations is not null)
+        {
+            _context.DistributorTranslations.RemoveRange(entity.Translations);
+
+            foreach (var (languageCode, translationDto) in request.Translations)
+            {
+                entity.Translations.Add(new DistributorTranslationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    DistributorId = entity.Id,
+                    LanguageCode = languageCode,
+                    Description = translationDto.Description,
+                });
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var albumCount = await _context.Albums
@@ -54,12 +71,16 @@ public class UpdateDistributorHandler
             Code = entity.Code.ToString(),
             AlbumCount = albumCount,
             IsVisible = entity.IsVisible,
-            DescriptionEn = entity.DescriptionEn,
-            DescriptionUa = entity.DescriptionUa,
             Country = entity.Country,
             CountryFlag = entity.CountryFlag,
             LogoUrl = entity.LogoUrl,
             WebsiteUrl = entity.WebsiteUrl,
+            Translations = entity.Translations.ToDictionary(
+                translation => translation.LanguageCode,
+                translation => new DistributorTranslationDto
+                {
+                    Description = translation.Description,
+                }),
         };
     }
 }

@@ -16,6 +16,7 @@ public class GetDistributorsHandler
     {
         var entities = await _context.Distributors
             .AsNoTracking()
+            .Include(distributor => distributor.Translations)
             .OrderBy(distributor => distributor.Name)
             .ToListAsync(cancellationToken);
 
@@ -32,12 +33,16 @@ public class GetDistributorsHandler
                 Code = entity.Code.ToString(),
                 AlbumCount = albumCount,
                 IsVisible = entity.IsVisible,
-                DescriptionEn = entity.DescriptionEn,
-                DescriptionUa = entity.DescriptionUa,
                 Country = entity.Country,
                 CountryFlag = entity.CountryFlag,
                 LogoUrl = entity.LogoUrl,
                 WebsiteUrl = entity.WebsiteUrl,
+                Translations = entity.Translations.ToDictionary(
+                    translation => translation.LanguageCode,
+                    translation => new DistributorTranslationDto
+                    {
+                        Description = translation.Description,
+                    }),
             });
         }
 
