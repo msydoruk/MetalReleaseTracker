@@ -17,7 +17,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import Pagination from '../components/Pagination';
-import { fetchBandBySlug, fetchGroupedAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
+import { fetchBandBySlug, fetchGroupedAlbums, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -36,7 +36,6 @@ const BandDetailPage = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [similarBands, setSimilarBands] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -164,44 +163,10 @@ const BandDetailPage = () => {
     const loadAuth = async () => {
       const loggedIn = await authService.isLoggedIn();
       setIsLoggedIn(loggedIn);
-      if (loggedIn) {
-        try {
-          const response = await fetchFavoriteIds();
-          setFavoriteIds(response.data || {});
-        } catch {
-          // ignore
-        }
-      }
     };
 
     loadAuth();
   }, []);
-
-  const handleCollectionChange = async (albumId, status) => {
-    try {
-      if (albumId in favoriteIds) {
-        await updateFavoriteStatus(albumId, status);
-      } else {
-        await addFavorite(albumId, status);
-      }
-      setFavoriteIds((prev) => ({ ...prev, [albumId]: status }));
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleRemoveFromCollection = async (albumId) => {
-    try {
-      await removeFavorite(albumId);
-      setFavoriteIds((prev) => {
-        const next = { ...prev };
-        delete next[albumId];
-        return next;
-      });
-    } catch {
-      // ignore
-    }
-  };
 
   const handleFollowToggle = async () => {
     setFollowLoading(true);
