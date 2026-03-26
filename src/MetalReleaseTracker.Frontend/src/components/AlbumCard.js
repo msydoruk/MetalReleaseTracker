@@ -74,7 +74,7 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
             image={imageUrl}
             alt={album.name}
             loading="lazy"
-            onClick={() => setLightboxOpen(true)}
+            onClick={() => navigate(`/albums/${album.slug}`)}
             sx={{
               aspectRatio: '1 / 1',
               objectFit: 'contain',

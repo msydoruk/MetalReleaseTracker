@@ -27,6 +27,9 @@ public class AlbumChangeLogEntity
 
     public string? PurchaseUrl { get; set; }
 
+    [MaxLength(250)]
+    public string? AlbumSlug { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string ChangeType { get; set; }

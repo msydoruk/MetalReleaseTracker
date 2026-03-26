@@ -16,6 +16,8 @@ public class AlbumChangeLogDto
 
     public string? PurchaseUrl { get; set; }
 
+    public string? AlbumSlug { get; set; }
+
     public string ChangeType { get; set; }
 
     public DateTime ChangedAt { get; set; }

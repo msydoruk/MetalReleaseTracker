@@ -71,7 +71,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
                         albumEvent.SKU);
                 }
 
-                await LogChangeAsync(albumEvent, distributorName, oldPrice);
+                await LogChangeAsync(albumEvent, distributorName, existingAlbum?.Slug ?? string.Empty, oldPrice);
                 return;
             }
 
@@ -116,7 +116,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             }
 
             await _notificationService.GenerateNotificationsAsync(albumEvent, existingAlbum, bandId, context.CancellationToken);
-            await LogChangeAsync(albumEvent, distributorName, oldPrice);
+            await LogChangeAsync(albumEvent, distributorName, albumEntity.Slug, oldPrice);
         }
         catch (Exception exception)
         {
@@ -149,7 +149,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
         return $"{slug}-{suffix}";
     }
 
-    private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName, float? oldPrice = null)
+    private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName, string albumSlug, float? oldPrice = null)
     {
         var changeLogEntry = new AlbumChangeLogEntity
         {
@@ -160,6 +160,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             Price = albumEvent.Price,
             OldPrice = oldPrice,
             PurchaseUrl = albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted ? null : albumEvent.PurchaseUrl,
+            AlbumSlug = albumSlug,
             ChangeType = albumEvent.ProcessedStatus.ToString(),
             ChangedAt = DateTime.UtcNow,
         };

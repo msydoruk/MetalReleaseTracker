@@ -15,7 +15,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MediaTypeIcon from './MediaTypeIcon';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
@@ -23,6 +23,7 @@ import { getDistributorCountry } from '../utils/distributorCountries';
 const GroupedAlbumCard = ({ group }) => {
   const { t } = useLanguage();
   const { format: formatPrice } = useCurrency();
+  const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -60,7 +61,7 @@ const GroupedAlbumCard = ({ group }) => {
             image={group.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E"}
             alt={`${group.bandName} - ${group.albumName}`}
             loading="lazy"
-            onClick={() => setLightboxOpen(true)}
+            onClick={() => navigate(`/albums/${group.albumSlug || ''}`)}
             sx={{
               aspectRatio: '1 / 1',
               objectFit: 'contain',
