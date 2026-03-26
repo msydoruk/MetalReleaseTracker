@@ -17,7 +17,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { fetchChangelog } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -132,14 +132,17 @@ const ChangelogPage = () => {
                   </Box>
                   <Typography variant="subtitle2">{item.bandName}</Typography>
                   <Typography variant="body2">
-                    {item.albumSlug && item.changeType !== 'Deleted' ? (
+                    {item.purchaseUrl && item.changeType !== 'Deleted' ? (
                       <Link
-                        component={RouterLink}
-                        to={`/albums/${item.albumSlug}`}
+                        href={item.purchaseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         color="primary"
                         underline="hover"
+                        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
                       >
                         {item.albumName}
+                        <OpenInNewIcon sx={{ fontSize: 14 }} />
                       </Link>
                     ) : (
                       item.albumName
