@@ -78,7 +78,8 @@ public class UpdateAlbumHandler
 
         if (request.Translations is not null)
         {
-            _context.AlbumTranslations.RemoveRange(entity.Translations);
+            _context.AlbumTranslations.RemoveRange(entity.Translations.ToList());
+            entity.Translations.Clear();
 
             foreach (var (languageCode, translationDto) in request.Translations)
             {

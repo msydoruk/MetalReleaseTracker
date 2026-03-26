@@ -62,7 +62,8 @@ public class UpdateBandHandler
 
         if (request.Translations is not null)
         {
-            _context.BandTranslations.RemoveRange(entity.Translations);
+            _context.BandTranslations.RemoveRange(entity.Translations.ToList());
+            entity.Translations.Clear();
 
             foreach (var (languageCode, translationDto) in request.Translations)
             {

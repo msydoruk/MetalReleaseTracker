@@ -57,7 +57,8 @@ public class UpdateNavigationItemHandler
 
         if (request.Translations is not null)
         {
-            _context.NavigationItemTranslations.RemoveRange(entity.Translations);
+            _context.NavigationItemTranslations.RemoveRange(entity.Translations.ToList());
+            entity.Translations.Clear();
 
             foreach (var (languageCode, translationDto) in request.Translations)
             {

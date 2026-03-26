@@ -253,7 +253,7 @@ export default function AlbumsPage() {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) =>
-        params.row.seoTitle ? (
+        params.row.translations?.en?.seoTitle ? (
           <Tooltip title="SEO configured">
             <CheckCircleIcon fontSize="small" color="success" />
           </Tooltip>

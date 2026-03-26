@@ -43,7 +43,8 @@ public class UpdateDistributorHandler
 
         if (request.Translations is not null)
         {
-            _context.DistributorTranslations.RemoveRange(entity.Translations);
+            _context.DistributorTranslations.RemoveRange(entity.Translations.ToList());
+            entity.Translations.Clear();
 
             foreach (var (languageCode, translationDto) in request.Translations)
             {

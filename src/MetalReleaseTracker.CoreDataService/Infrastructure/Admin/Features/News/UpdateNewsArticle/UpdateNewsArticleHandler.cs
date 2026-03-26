@@ -62,7 +62,8 @@ public class UpdateNewsArticleHandler
 
         if (request.Translations is not null)
         {
-            _context.NewsArticleTranslations.RemoveRange(entity.Translations);
+            _context.NewsArticleTranslations.RemoveRange(entity.Translations.ToList());
+            entity.Translations.Clear();
 
             foreach (var (languageCode, translationDto) in request.Translations)
             {
