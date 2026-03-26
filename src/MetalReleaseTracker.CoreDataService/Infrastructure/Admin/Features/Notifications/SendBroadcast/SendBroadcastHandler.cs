@@ -63,30 +63,39 @@ public class SendBroadcastHandler
         _context.UserNotifications.AddRange(notifications);
         await _context.SaveChangesAsync(cancellationToken);
 
+        var channel = request.Channel?.ToLowerInvariant() ?? "all";
+
         var telegramSentCount = 0;
-        try
+        if (channel is "all" or "telegram")
         {
-            telegramSentCount = await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(exception, "Failed to send broadcast Telegram notifications");
+            try
+            {
+                telegramSentCount = await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Failed to send broadcast Telegram notifications");
+            }
         }
 
         var emailSentCount = 0;
-        try
+        if (channel is "all" or "email")
         {
-            emailSentCount = await _emailNotificationService.SendNotificationsAsync(notifications, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(exception, "Failed to send broadcast email notifications");
+            try
+            {
+                emailSentCount = await _emailNotificationService.SendNotificationsAsync(notifications, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Failed to send broadcast email notifications");
+            }
         }
 
         return new SendBroadcastResponse
         {
             CreatedCount = notifications.Count,
-            SentCount = telegramSentCount + emailSentCount,
+            TelegramSentCount = telegramSentCount,
+            EmailSentCount = emailSentCount,
         };
     }
 }

@@ -17,6 +17,8 @@ import Skeleton from '@mui/material/Skeleton';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 import SendIcon from '@mui/icons-material/Send';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import EmailIcon from '@mui/icons-material/Email';
 import PageHeader from '../components/PageHeader';
 import { fetchNotificationStats, sendBroadcast } from '../api/notifications';
 
@@ -41,6 +43,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState('');
   const [notificationType, setNotificationType] = useState('PriceDrop');
+  const [channel, setChannel] = useState('all');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -79,10 +82,12 @@ export default function NotificationsPage() {
       const { data } = await sendBroadcast({
         content: content.trim(),
         notificationType,
+        channel,
       });
       const createdCount = data?.createdCount ?? 0;
-      const sentCount = data?.sentCount ?? 0;
-      showSnackbar(`Notifications created: ${createdCount}, sent via Telegram: ${sentCount}`);
+      const telegramCount = data?.telegramSentCount ?? 0;
+      const emailCount = data?.emailSentCount ?? 0;
+      showSnackbar(`Created: ${createdCount} | Telegram: ${telegramCount} | Email: ${emailCount}`);
       setConfirmDialogOpen(false);
       setContent('');
       loadStats();
@@ -335,6 +340,30 @@ export default function NotificationsPage() {
                 </MenuItem>
               ))}
             </TextField>
+            <TextField
+              select
+              label="Channel"
+              value={channel}
+              onChange={(e) => setChannel(e.target.value)}
+              size="small"
+              sx={{ width: 200 }}
+            >
+              <MenuItem value="all">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <SendIcon fontSize="small" /> All Channels
+                </Box>
+              </MenuItem>
+              <MenuItem value="telegram">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TelegramIcon fontSize="small" /> Telegram Only
+                </Box>
+              </MenuItem>
+              <MenuItem value="email">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmailIcon fontSize="small" /> Email Only
+                </Box>
+              </MenuItem>
+            </TextField>
             <Button
               variant="contained"
               startIcon={<SendIcon />}
@@ -351,7 +380,7 @@ export default function NotificationsPage() {
       <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Confirm Broadcast</DialogTitle>
         <DialogContent>
-          Are you sure you want to send this <strong>{NOTIFICATION_TYPES.find((t) => t.value === notificationType)?.label}</strong> notification to all users?
+          Are you sure you want to send this <strong>{NOTIFICATION_TYPES.find((t) => t.value === notificationType)?.label}</strong> notification to all users via <strong>{channel === 'all' ? 'Telegram + Email' : channel === 'telegram' ? 'Telegram' : 'Email'}</strong>?
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>

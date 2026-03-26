@@ -7,4 +7,6 @@ public class SendBroadcastRequest
     public string NotificationType { get; set; } = string.Empty;
 
     public List<string>? UserIds { get; set; }
+
+    public string Channel { get; set; } = "all";
 }

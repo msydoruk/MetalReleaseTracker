@@ -4,5 +4,7 @@ public class SendBroadcastResponse
 {
     public int CreatedCount { get; set; }
 
-    public int SentCount { get; set; }
+    public int TelegramSentCount { get; set; }
+
+    public int EmailSentCount { get; set; }
 }
