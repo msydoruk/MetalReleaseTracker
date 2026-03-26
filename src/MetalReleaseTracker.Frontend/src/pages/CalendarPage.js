@@ -7,7 +7,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Chip,
-  Paper,
   Select,
   MenuItem,
   FormControl,
@@ -15,18 +14,13 @@ import {
 } from '@mui/material';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { Link } from 'react-router-dom';
 import { fetchGroupedAlbums, fetchDistributorsWithAlbumCount } from '../services/api';
-import MediaTypeIcon from '../components/MediaTypeIcon';
+import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useCurrency } from '../contexts/CurrencyContext';
-
-const placeholderImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
 
 const CalendarPage = () => {
   const { t } = useLanguage();
-  const { format: formatPrice } = useCurrency();
   const [preOrders, setPreOrders] = useState([]);
   const [recentReleases, setRecentReleases] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,67 +88,22 @@ const CalendarPage = () => {
         display: 'grid',
         gap: 3,
         gridTemplateColumns: {
-          xs: 'repeat(2, 1fr)',
-          sm: 'repeat(3, 1fr)',
-          md: 'repeat(4, 1fr)',
-          lg: 'repeat(5, 1fr)',
+          xs: 'repeat(1, 1fr)',
+          sm: 'repeat(2, 1fr)',
+          md: 'repeat(3, 1fr)',
+          lg: 'repeat(4, 1fr)',
+          xl: 'repeat(5, 1fr)',
         },
+        alignItems: 'start',
       }}
     >
-      {albums.map((album, index) => (
-        <Paper
-          key={`${album.albumSlug}-${index}`}
-          component={Link}
-          to={`/albums/${album.albumSlug}`}
-          elevation={0}
-          sx={{
-            textDecoration: 'none',
-            color: 'inherit',
-            overflow: 'hidden',
-            borderRadius: 2,
-            boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            transition: 'all 0.25s ease-in-out',
-            bgcolor: 'background.paper',
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              boxShadow: '0 12px 20px rgba(0, 0, 0, 0.15)',
-            },
-          }}
+      {albums.map((group, index) => (
+        <Box
+          key={`${group.bandName}-${group.albumName}-${index}`}
+          sx={{ display: 'flex', height: '100%' }}
         >
-          <Box
-            component="img"
-            src={album.photoUrl || placeholderImg}
-            alt={album.albumName}
-            loading="lazy"
-            sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
-          />
-          <Box sx={{ p: 2, pt: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-              <MediaTypeIcon mediaType={album.media} size={14} />
-              {album.status === 2 && (
-                <Chip label={t('calendar.preOrder')} size="small" color="warning" sx={{ height: 18, fontSize: '0.65rem' }} />
-              )}
-            </Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {album.albumName}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {album.bandName}
-            </Typography>
-            {album.originalYear > 0 && (
-              <Typography variant="caption" color="text.disabled">
-                {album.originalYear}
-              </Typography>
-            )}
-            {album.variants?.length > 0 && (
-              <Typography variant="caption" color="primary" sx={{ display: 'block', fontWeight: 600 }}>
-                {formatPrice(Math.min(...album.variants.map((variant) => variant.price)))}
-                {album.variants.length > 1 && ` — ${album.variants.length} stores`}
-              </Typography>
-            )}
-          </Box>
-        </Paper>
+          <GroupedAlbumCard group={group} />
+        </Box>
       ))}
     </Box>
   );

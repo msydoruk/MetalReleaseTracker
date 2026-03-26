@@ -15,9 +15,9 @@ import { useParams, Link } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import AlbumCard from '../components/AlbumCard';
+import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import Pagination from '../components/Pagination';
-import { fetchBandBySlug, fetchAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
+import { fetchBandBySlug, fetchGroupedAlbums, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -141,7 +141,7 @@ const BandDetailPage = () => {
     if (!band) return;
     try {
       setAlbumsLoading(true);
-      const response = await fetchAlbums({
+      const response = await fetchGroupedAlbums({
         bandId: band.id,
         page,
         pageSize,
@@ -358,17 +358,16 @@ const BandDetailPage = () => {
               xl: 'repeat(5, 1fr)',
             },
             gap: 3,
+            alignItems: 'start',
             my: 3,
           }}>
-            {albums.items.map((album) => (
-              <AlbumCard
-                key={album.id}
-                album={album}
-                collectionStatus={album.id in favoriteIds ? favoriteIds[album.id] : undefined}
-                onCollectionChange={(albumId, status) => handleCollectionChange(albumId, status)}
-                onRemoveFromCollection={(albumId) => handleRemoveFromCollection(albumId)}
-                isLoggedIn={isLoggedIn}
-              />
+            {albums.items.map((group, index) => (
+              <Box
+                key={`${group.bandName}-${group.albumName}-${index}`}
+                sx={{ display: 'flex', height: '100%' }}
+              >
+                <GroupedAlbumCard group={group} />
+              </Box>
             ))}
           </Box>
           <Pagination

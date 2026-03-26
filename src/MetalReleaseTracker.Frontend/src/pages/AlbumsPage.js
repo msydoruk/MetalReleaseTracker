@@ -257,12 +257,7 @@ const AlbumsPage = ({ isHome = false }) => {
         </Box>
       )}
       {isHome && (
-        <NewArrivalsSection
-          favoriteIds={favoriteIds}
-          onCollectionChange={handleCollectionChange}
-          onRemoveFromCollection={handleRemoveFromCollection}
-          isLoggedIn={isLoggedIn}
-        />
+        <NewArrivalsSection />
       )}
       {isHome && <RecentlyViewedSection albums={recentAlbums} />}
       <Box sx={{

@@ -1,23 +1,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Box, Typography, Paper, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Link } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import AlbumCard from './AlbumCard';
-import { fetchAlbums } from '../services/api';
+import GroupedAlbumCard from './GroupedAlbumCard';
+import { fetchGroupedAlbums } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useCurrency } from '../contexts/CurrencyContext';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 
 const DAYS_LOOKBACK = 14;
 const MAX_DISPLAY = 10;
 
-const placeholderImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
-
 const isPlaceholderImage = (url) => !url || url.startsWith('data:');
 
-const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromCollection, isLoggedIn }) => {
+const NewArrivalsSection = () => {
   const { t } = useLanguage();
-  const { format: formatPrice } = useCurrency();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [albums, setAlbums] = useState([]);
@@ -26,7 +22,7 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
   const loadNewArrivals = useCallback(async () => {
     try {
       const cutoff = new Date(Date.now() - DAYS_LOOKBACK * 24 * 60 * 60 * 1000);
-      const response = await fetchAlbums({
+      const response = await fetchGroupedAlbums({
         addedAfter: cutoff.toISOString(),
         sortBy: ALBUM_SORT_FIELDS.DATE_ADDED,
         sortAscending: false,
@@ -82,53 +78,16 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 1.5,
+            alignItems: 'start',
           }}
         >
-          {displayAlbums.map((album) => (
-            <Paper
-              key={album.id}
-              component={Link}
-              to={`/albums/${album.slug}`}
-              sx={{
-                textDecoration: 'none',
-                color: 'inherit',
-                overflow: 'hidden',
-                borderRadius: 2,
-                transition: 'transform 0.2s',
-                '&:hover': { transform: 'translateY(-2px)' },
-              }}
+          {displayAlbums.map((group, index) => (
+            <Box
+              key={`${group.bandName}-${group.albumName}-${index}`}
+              sx={{ display: 'flex', height: '100%' }}
             >
-              <Box
-                component="img"
-                src={album.photoUrl || placeholderImg}
-                alt={album.name}
-                loading="lazy"
-                sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', backgroundColor: '#111' }}
-              />
-              <Box sx={{ p: 1 }}>
-                <Typography variant="subtitle2" sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  fontWeight: 600,
-                  fontSize: '0.8rem',
-                }}>
-                  {album.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
-                  fontSize: '0.7rem',
-                }}>
-                  {album.bandName}
-                </Typography>
-                <Typography variant="caption" color="text.primary" sx={{ fontWeight: 700, fontSize: '0.75rem' }}>
-                  {formatPrice(album.price)}
-                </Typography>
-              </Box>
-            </Paper>
+              <GroupedAlbumCard group={group} />
+            </Box>
           ))}
         </Box>
       ) : (
@@ -145,9 +104,9 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
             '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
           }}
         >
-          {displayAlbums.map((album) => (
+          {displayAlbums.map((group, index) => (
             <Box
-              key={album.id}
+              key={`${group.bandName}-${group.albumName}-${index}`}
               sx={{
                 minWidth: 280,
                 maxWidth: 280,
@@ -155,13 +114,7 @@ const NewArrivalsSection = ({ favoriteIds, onCollectionChange, onRemoveFromColle
                 scrollSnapAlign: 'start',
               }}
             >
-              <AlbumCard
-                album={album}
-                collectionStatus={album.id in favoriteIds ? favoriteIds[album.id] : undefined}
-                onCollectionChange={(albumId, status) => onCollectionChange(albumId, status)}
-                onRemoveFromCollection={(albumId) => onRemoveFromCollection(albumId)}
-                isLoggedIn={isLoggedIn}
-              />
+              <GroupedAlbumCard group={group} />
             </Box>
           ))}
         </Box>
