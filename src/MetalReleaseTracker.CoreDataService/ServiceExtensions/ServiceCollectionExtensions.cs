@@ -18,9 +18,11 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddControllers();
             services.AddEndpointsApiExplorer();
             services.AddMemoryCache();
+            services.AddHttpClient();
             services.AddMinio();
             services.AddKafka(configuration);
             services.AddTelegramBot(configuration);
+            services.AddEmailService(configuration);
 
             services.AddCommonServices()
                 .AddRepositories()
@@ -44,6 +46,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IUserAlbumWatchRepository, UserAlbumWatchRepository>();
             services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
             services.AddScoped<ITelegramLinkRepository, TelegramLinkRepository>();
+            services.AddScoped<IEmailSubscriptionRepository, EmailSubscriptionRepository>();
 
             return services;
         }
@@ -65,6 +68,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IImageUrlResolverService, ImageUrlResolverService>();
             services.AddScoped<ITelegramBotService, TelegramBotService>();
+            services.AddScoped<IEmailNotificationService, EmailNotificationService>();
 
             return services;
         }
@@ -78,6 +82,12 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
                 services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
             }
 
+            return services;
+        }
+
+        private static IServiceCollection AddEmailService(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<EmailServiceSettings>(configuration.GetSection("EmailService"));
             return services;
         }
 

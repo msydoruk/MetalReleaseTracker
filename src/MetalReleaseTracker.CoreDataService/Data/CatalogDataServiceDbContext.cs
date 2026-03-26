@@ -36,6 +36,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<TelegramLinkTokenEntity> TelegramLinkTokens { get; set; }
 
+    public DbSet<EmailSubscriptionEntity> EmailSubscriptions { get; set; }
+
     public DbSet<SettingEntity> Settings { get; set; }
 
     public DbSet<NewsArticleEntity> NewsArticles { get; set; }
@@ -73,6 +75,7 @@ public class CoreDataServiceDbContext : DbContext
         modelBuilder.ApplyConfiguration(new DistributorTranslationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new BandTranslationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AlbumTranslationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new EmailSubscriptionEntityConfiguration());
 
         modelBuilder.Entity<AlbumEntity>()
             .Property(album => album.Media)

@@ -16,6 +16,7 @@ public class NotificationService : INotificationService
     private readonly IUserAlbumWatchRepository _userAlbumWatchRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly ITelegramBotService _telegramBotService;
+    private readonly IEmailNotificationService _emailNotificationService;
     private readonly IAdminSettingsService _adminSettingsService;
     private readonly ILogger<NotificationService> _logger;
 
@@ -24,6 +25,7 @@ public class NotificationService : INotificationService
         IUserAlbumWatchRepository userAlbumWatchRepository,
         IFileStorageService fileStorageService,
         ITelegramBotService telegramBotService,
+        IEmailNotificationService emailNotificationService,
         IAdminSettingsService adminSettingsService,
         ILogger<NotificationService> logger)
     {
@@ -31,6 +33,7 @@ public class NotificationService : INotificationService
         _userAlbumWatchRepository = userAlbumWatchRepository;
         _fileStorageService = fileStorageService;
         _telegramBotService = telegramBotService;
+        _emailNotificationService = emailNotificationService;
         _adminSettingsService = adminSettingsService;
         _logger = logger;
     }
@@ -104,6 +107,15 @@ public class NotificationService : INotificationService
             catch (Exception telegramException)
             {
                 _logger.LogWarning(telegramException, "Failed to send Telegram notifications for album {AlbumName}", albumName);
+            }
+
+            try
+            {
+                await _emailNotificationService.SendNotificationsAsync(notifications, cancellationToken);
+            }
+            catch (Exception emailException)
+            {
+                _logger.LogWarning(emailException, "Failed to send email notifications for album {AlbumName}", albumName);
             }
 
             _logger.LogInformation(

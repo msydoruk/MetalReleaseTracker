@@ -29,6 +29,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const GoogleCallback = lazy(() => import('./pages/GoogleCallback'));
 const LoginCallback = lazy(() => import('./pages/LoginCallback'));
+const EmailVerifyPage = lazy(() => import('./pages/EmailVerifyPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Create a dark theme for the metal music theme
@@ -200,6 +201,7 @@ function App() {
                   <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/changelog" element={<ChangelogPage />} />
+                  <Route path="/email/verify/:token" element={<EmailVerifyPage />} />
 
                   {/* Protected routes */}
                   <Route

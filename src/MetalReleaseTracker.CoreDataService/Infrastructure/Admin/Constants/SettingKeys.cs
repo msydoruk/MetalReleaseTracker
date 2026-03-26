@@ -40,6 +40,11 @@ public static class SettingKeys
         public const string LinkTokenExpiryMinutes = "LinkTokenExpiryMinutes";
     }
 
+    public static class Email
+    {
+        public const string ServiceEnabled = "EmailServiceEnabled";
+    }
+
     public static class Notifications
     {
         public const string PriceDropEnabled = "PriceDropEnabled";

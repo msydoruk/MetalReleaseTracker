@@ -131,6 +131,7 @@ const TABS = [
     category: 'FeatureToggles',
     fields: [
       { key: 'TelegramBotEnabled', label: 'Telegram Bot', type: 'boolean' },
+      { key: 'EmailServiceEnabled', label: 'Email Notifications', type: 'boolean' },
       { key: 'NotificationsEnabled', label: 'Notifications', type: 'boolean' },
       { key: 'ReviewsEnabled', label: 'Reviews', type: 'boolean' },
       { key: 'RegistrationEnabled', label: 'Registration', type: 'boolean' },
@@ -142,6 +143,15 @@ const TABS = [
     category: 'Telegram',
     fields: [
       { key: 'LinkTokenExpiryMinutes', label: 'Link Token Expiry (minutes)', type: 'number' },
+    ],
+  },
+  {
+    label: 'Email',
+    category: 'Email',
+    fields: [
+      { key: 'FromEmail', label: 'From Email', type: 'text', description: 'Sender email address for notifications' },
+      { key: 'FromName', label: 'From Name', type: 'text', description: 'Sender display name' },
+      { key: 'VerificationTokenExpiryHours', label: 'Verification Token Expiry (hours)', type: 'number', description: 'How long email verification links remain valid' },
     ],
   },
   {

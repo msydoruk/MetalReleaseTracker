@@ -13,17 +13,20 @@ public class SendBroadcastHandler
     private readonly CoreDataServiceDbContext _context;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ITelegramBotService _telegramBotService;
+    private readonly IEmailNotificationService _emailNotificationService;
     private readonly ILogger<SendBroadcastHandler> _logger;
 
     public SendBroadcastHandler(
         CoreDataServiceDbContext context,
         UserManager<IdentityUser> userManager,
         ITelegramBotService telegramBotService,
+        IEmailNotificationService emailNotificationService,
         ILogger<SendBroadcastHandler> logger)
     {
         _context = context;
         _userManager = userManager;
         _telegramBotService = telegramBotService;
+        _emailNotificationService = emailNotificationService;
         _logger = logger;
     }
 
@@ -60,20 +63,30 @@ public class SendBroadcastHandler
         _context.UserNotifications.AddRange(notifications);
         await _context.SaveChangesAsync(cancellationToken);
 
-        var sentCount = 0;
+        var telegramSentCount = 0;
         try
         {
-            sentCount = await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
+            telegramSentCount = await _telegramBotService.SendNotificationsAsync(notifications, cancellationToken);
         }
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "Failed to send broadcast Telegram notifications");
         }
 
+        var emailSentCount = 0;
+        try
+        {
+            emailSentCount = await _emailNotificationService.SendNotificationsAsync(notifications, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to send broadcast email notifications");
+        }
+
         return new SendBroadcastResponse
         {
             CreatedCount = notifications.Count,
-            SentCount = sentCount,
+            SentCount = telegramSentCount + emailSentCount,
         };
     }
 }

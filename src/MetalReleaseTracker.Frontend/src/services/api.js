@@ -133,6 +133,12 @@ export const generateTelegramToken = () => api.post('/telegram/link-token');
 export const getTelegramStatus = () => api.get('/telegram/status');
 export const unlinkTelegram = () => api.delete('/telegram/unlink');
 
+// Email notifications
+export const subscribeEmail = (email) => api.post('/email', { email });
+export const verifyEmail = (token) => api.get(`/email/verify/${token}`);
+export const unsubscribeEmail = () => api.delete('/email');
+export const getEmailStatus = () => api.get('/email/status');
+
 // Config
 export const fetchPublicCurrencies = () => api.get('/config/currencies');
 export const fetchPublicNavigation = (language) => api.get('/config/navigation', { params: language ? { language } : {} });

@@ -119,6 +119,15 @@ public static class RouteConstants
             public const string Unlink = $"{Base}/unlink";
         }
 
+        public static class Email
+        {
+            private const string Base = $"{ApiBase}/email";
+            public const string Subscribe = Base;
+            public const string Verify = $"{Base}/verify/{{token}}";
+            public const string Unsubscribe = Base;
+            public const string Status = $"{Base}/status";
+        }
+
         public static class Notifications
         {
             private const string Base = $"{ApiBase}/notifications";

@@ -10,4 +10,5 @@ public static class SettingCategories
     public const string Notifications = "Notifications";
     public const string Seo = "Seo";
     public const string AiSeo = "AiSeo";
+    public const string Email = "email";
 }

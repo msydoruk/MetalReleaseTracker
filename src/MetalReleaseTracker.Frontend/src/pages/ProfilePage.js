@@ -16,7 +16,9 @@ import {
   CardContent,
   CircularProgress,
   Tabs,
-  Tab
+  Tab,
+  TextField,
+  Alert
 } from '@mui/material';
 import {
   Email as EmailIcon,
@@ -29,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
-import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus, exportCollection, generateTelegramToken, getTelegramStatus, unlinkTelegram } from '../services/api';
+import { fetchFavorites, removeFavorite, addFavorite, updateFavoriteStatus, exportCollection, generateTelegramToken, getTelegramStatus, unlinkTelegram, subscribeEmail, unsubscribeEmail, getEmailStatus } from '../services/api';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -59,6 +61,10 @@ const ProfilePage = () => {
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [telegramToken, setTelegramToken] = useState(null);
   const [telegramBotUsername, setTelegramBotUsername] = useState(null);
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [emailInput, setEmailInput] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailMessage, setEmailMessage] = useState(null);
   const navigate = useNavigate();
 
   const userName = localStorage.getItem('user_name') || '';
@@ -94,7 +100,17 @@ const ProfilePage = () => {
       }
     };
 
+    const checkEmailStatus = async () => {
+      try {
+        const response = await getEmailStatus();
+        setEmailStatus(response.data);
+      } catch {
+        // ignore
+      }
+    };
+
     checkTelegramStatus();
+    checkEmailStatus();
   }, [navigate]);
 
   const handleGenerateTelegramToken = async () => {
@@ -114,6 +130,52 @@ const ProfilePage = () => {
       setTelegramToken(null);
     } catch {
       // ignore
+    }
+  };
+
+  const handleEmailSubscribe = async () => {
+    setEmailLoading(true);
+    setEmailMessage(null);
+    try {
+      await subscribeEmail(emailInput);
+      const { data } = await getEmailStatus();
+      setEmailStatus(data);
+      setEmailInput('');
+      setEmailMessage({ severity: 'success', text: t('email.subscribeSuccess') });
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data || t('email.subscribeError');
+      setEmailMessage({ severity: 'error', text: message });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handleEmailResend = async () => {
+    setEmailLoading(true);
+    setEmailMessage(null);
+    try {
+      await subscribeEmail(emailStatus?.email);
+      setEmailMessage({ severity: 'success', text: t('email.resendSuccess') });
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data || t('email.resendError');
+      setEmailMessage({ severity: 'error', text: message });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handleEmailUnsubscribe = async () => {
+    setEmailLoading(true);
+    setEmailMessage(null);
+    try {
+      await unsubscribeEmail();
+      setEmailStatus({ isSubscribed: false, isVerified: false, email: null });
+      setEmailMessage({ severity: 'success', text: t('email.unsubscribeSuccess') });
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data || t('email.unsubscribeError');
+      setEmailMessage({ severity: 'error', text: message });
+    } finally {
+      setEmailLoading(false);
     }
   };
 
@@ -529,6 +591,75 @@ const ProfilePage = () => {
           >
             {t('telegram.linkButton')}
           </Button>
+        )}
+      </Paper>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, mt: 3, p: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <EmailIcon color="info" />
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {t('email.title')}
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t('email.description')}
+        </Typography>
+
+        {emailMessage && (
+          <Alert severity={emailMessage.severity} sx={{ mb: 2 }} onClose={() => setEmailMessage(null)}>
+            {emailMessage.text}
+          </Alert>
+        )}
+
+        {emailStatus?.isSubscribed && emailStatus?.isVerified ? (
+          <Box>
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {t('email.activeFor')} {emailStatus.email}
+            </Alert>
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<LinkOffIcon />}
+              onClick={handleEmailUnsubscribe}
+              disabled={emailLoading}
+            >
+              {t('email.unsubscribe')}
+            </Button>
+          </Box>
+        ) : emailStatus?.isSubscribed && !emailStatus?.isVerified ? (
+          <Box>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('email.verificationSent')} {emailStatus.email}. {t('email.checkInbox')}
+            </Alert>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleEmailResend}
+              disabled={emailLoading}
+            >
+              {t('email.resend')}
+            </Button>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+            <TextField
+              size="small"
+              label={t('email.inputLabel')}
+              type="email"
+              value={emailInput}
+              onChange={(event) => setEmailInput(event.target.value)}
+              disabled={emailLoading}
+              sx={{ minWidth: 280 }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleEmailSubscribe}
+              disabled={emailLoading || !emailInput.trim()}
+            >
+              {t('email.subscribe')}
+            </Button>
+          </Box>
         )}
       </Paper>
     </Container>
