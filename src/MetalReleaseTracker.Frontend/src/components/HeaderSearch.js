@@ -176,7 +176,8 @@ const HeaderSearch = () => {
             <IconButton
               color="inherit"
               onClick={isExpanded ? handleCollapse : handleExpand}
-              sx={{ minWidth: 44, minHeight: 44 }}
+              sx={{ minWidth: 44, minHeight: 44, mr: -0.5 }}
+              edge="end"
               aria-label={isExpanded ? t('header.closeSearch') : t('header.searchTooltip')}
             >
               {isExpanded ? <CloseIcon /> : <SearchIcon />}

@@ -279,11 +279,6 @@ const AlbumDetailPage = () => {
               {t('albumDetail.label')}: {album.label}
             </Typography>
           )}
-          {album.press && (
-            <Typography variant="body2" color="text.secondary">
-              {t('albumDetail.press')}: {album.press}
-            </Typography>
-          )}
           {album.description && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               {album.description}
