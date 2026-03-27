@@ -3,6 +3,12 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.D
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbumById;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbums;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.UpdateAlbum;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetAlbumsPerWeek;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetPopularGenres;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetTopDistributors;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetTopWatchedAlbums;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetUserGrowth;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.AuditLog.GetAuditLogs;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.DeleteBand;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBandById;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBands;
@@ -127,6 +133,16 @@ public static class AdminServiceExtension
         services.AddScoped<CreateLanguageHandler>();
         services.AddScoped<UpdateLanguageHandler>();
         services.AddScoped<DeleteLanguageHandler>();
+
+        // Analytics
+        services.AddScoped<GetAlbumsPerWeekHandler>();
+        services.AddScoped<GetUserGrowthHandler>();
+        services.AddScoped<GetPopularGenresHandler>();
+        services.AddScoped<GetTopDistributorsHandler>();
+        services.AddScoped<GetTopWatchedAlbumsHandler>();
+
+        // Audit Log
+        services.AddScoped<GetAuditLogsHandler>();
 
         // AI SEO
         services.AddScoped<IAiSeoService, AiSeoService>();

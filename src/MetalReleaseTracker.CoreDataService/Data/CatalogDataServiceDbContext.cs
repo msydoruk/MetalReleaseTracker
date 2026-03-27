@@ -60,6 +60,8 @@ public class CoreDataServiceDbContext : DbContext
 
     public DbSet<AlbumTranslationEntity> AlbumTranslations { get; set; }
 
+    public DbSet<AuditLogEntity> AuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -76,6 +78,7 @@ public class CoreDataServiceDbContext : DbContext
         modelBuilder.ApplyConfiguration(new BandTranslationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AlbumTranslationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new EmailSubscriptionEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditLogEntityConfiguration());
 
         modelBuilder.Entity<AlbumEntity>()
             .Property(album => album.Media)

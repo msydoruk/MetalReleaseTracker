@@ -5,6 +5,12 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.D
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbumById;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.GetAlbums;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Albums.UpdateAlbum;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetAlbumsPerWeek;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetPopularGenres;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetTopDistributors;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetTopWatchedAlbums;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Analytics.GetUserGrowth;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.AuditLog.GetAuditLogs;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.DeleteBand;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBandById;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBands;
@@ -138,6 +144,16 @@ public static class AdminEndpointExtension
         CreateLanguageEndpoint.MapEndpoint(adminGroup);
         UpdateLanguageEndpoint.MapEndpoint(adminGroup);
         DeleteLanguageEndpoint.MapEndpoint(adminGroup);
+
+        // Analytics
+        GetAlbumsPerWeekEndpoint.MapEndpoint(adminGroup);
+        GetUserGrowthEndpoint.MapEndpoint(adminGroup);
+        GetPopularGenresEndpoint.MapEndpoint(adminGroup);
+        GetTopDistributorsEndpoint.MapEndpoint(adminGroup);
+        GetTopWatchedAlbumsEndpoint.MapEndpoint(adminGroup);
+
+        // Audit Log
+        GetAuditLogsEndpoint.MapEndpoint(adminGroup);
 
         // AI SEO
         AiSeoEndpoints.MapEndpoints(adminGroup);

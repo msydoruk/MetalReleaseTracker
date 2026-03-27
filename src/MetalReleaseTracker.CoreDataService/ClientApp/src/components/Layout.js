@@ -27,6 +27,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import LanguageIcon from '@mui/icons-material/Language';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../hooks/useAuth';
 
@@ -34,6 +36,7 @@ const DRAWER_WIDTH = 260;
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/', icon: <DashboardIcon /> },
+  { label: 'Analytics', path: '/analytics', icon: <BarChartIcon /> },
   { label: 'Distributors', path: '/distributors', icon: <StoreIcon /> },
   { label: 'Bands', path: '/bands', icon: <MusicNoteIcon /> },
   { label: 'Albums', path: '/albums', icon: <AlbumIcon /> },
@@ -47,6 +50,7 @@ const NAV_ITEMS = [
   { label: 'Notifications', path: '/notifications', icon: <NotificationsIcon /> },
   { label: 'Telegram', path: '/telegram', icon: <TelegramIcon /> },
   { label: 'Languages', path: '/languages', icon: <LanguageIcon /> },
+  { label: 'Audit Log', path: '/audit-log', icon: <HistoryIcon /> },
 ];
 
 export default function Layout() {

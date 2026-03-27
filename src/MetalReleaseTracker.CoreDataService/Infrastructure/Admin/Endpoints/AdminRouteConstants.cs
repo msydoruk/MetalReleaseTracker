@@ -126,6 +126,22 @@ public static class AdminRouteConstants
         public const string Delete = $"{Prefix}/{{code}}";
     }
 
+    public static class Analytics
+    {
+        private const string Prefix = $"{Base}/analytics";
+        public const string AlbumsPerWeek = $"{Prefix}/albums-per-week";
+        public const string UserGrowth = $"{Prefix}/user-growth";
+        public const string PopularGenres = $"{Prefix}/popular-genres";
+        public const string TopDistributors = $"{Prefix}/top-distributors";
+        public const string TopWatchedAlbums = $"{Prefix}/top-watched-albums";
+    }
+
+    public static class AuditLog
+    {
+        private const string Prefix = $"{Base}/audit-log";
+        public const string GetAll = Prefix;
+    }
+
     public static class AiSeo
     {
         private const string Prefix = $"{Base}/ai-seo";

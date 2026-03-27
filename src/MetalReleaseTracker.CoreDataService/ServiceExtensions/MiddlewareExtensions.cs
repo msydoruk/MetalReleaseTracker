@@ -19,4 +19,9 @@ public static class MiddlewareExtensions
     {
         return app.UseMiddleware<SlugRedirectMiddleware>();
     }
+
+    public static IApplicationBuilder UseAdminAuditLog(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<AdminAuditLogMiddleware>();
+    }
 }
