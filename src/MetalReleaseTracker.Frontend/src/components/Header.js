@@ -34,7 +34,9 @@ import {
   Language as LanguageIcon,
   History as HistoryIcon,
   CalendarMonth as CalendarMonthIcon,
-  RateReview as RateReviewIcon
+  RateReview as RateReviewIcon,
+  Brightness4 as Brightness4Icon,
+  Brightness7 as Brightness7Icon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
@@ -42,6 +44,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useSeoConfig } from '../contexts/SeoContext';
+import { useThemeMode } from '../contexts/ThemeContext';
 import HeaderSearch from './HeaderSearch';
 
 const ICON_MAP = {
@@ -71,6 +74,7 @@ const Header = () => {
   const { currency, changeCurrency, availableCurrencies } = useCurrency();
   const { navItems: apiNavItems } = useNavigation();
   const seoConfig = useSeoConfig();
+  const { themeMode, toggleThemeMode } = useThemeMode();
 
   const checkUserStatus = async () => {
     try {
@@ -440,6 +444,15 @@ const Header = () => {
                     </MenuItem>
                   ))}
                 </Menu>
+                <Tooltip title={t('header.themeTooltip') || (themeMode === 'dark' ? 'Light mode' : 'Dark mode')}>
+                  <IconButton
+                    color="inherit"
+                    onClick={toggleThemeMode}
+                    sx={{ mr: { xs: -0.5, md: 0.5 } }}
+                  >
+                    {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={t('header.languageTooltip')}>
                   <Button
                     color="inherit"

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
+import { ThemeProvider, CssBaseline, CircularProgress, Box } from '@mui/material';
 
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -11,7 +11,9 @@ import { LanguageProvider } from './i18n/LanguageContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { SeoProvider } from './contexts/SeoContext';
+import { ThemeModeProvider, useThemeMode } from './contexts/ThemeContext';
 import BackToTop from './components/BackToTop';
+import InstallPrompt from './components/InstallPrompt';
 
 // Lazy-loaded route components
 const AlbumsPage = lazy(() => import('./pages/AlbumsPage'));
@@ -32,74 +34,7 @@ const LoginCallback = lazy(() => import('./pages/LoginCallback'));
 const EmailVerifyPage = lazy(() => import('./pages/EmailVerifyPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-// Create a dark theme for the metal music theme
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#f44336', // Red 500 - WCAG AA accessible on dark backgrounds
-    },
-    secondary: {
-      main: '#9e9e9e', // Silver/metallic
-    },
-    background: {
-      default: '#121212',
-      paper: '#1e1e1e',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 700,
-    },
-    h2: {
-      fontWeight: 600,
-    },
-    h3: {
-      fontWeight: 600,
-    },
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 500,
-    },
-    h6: {
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#000000',
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          borderRadius: 4,
-        },
-        contained: {
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#1e1e1e',
-          borderRadius: 8,
-        },
-      },
-    },
-  },
-});
+// Theme is now managed by ThemeContext
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -133,15 +68,16 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+const AppContent = () => {
+  const { theme } = useThemeMode();
+
   useEffect(() => {
     const checkInitialAuthStatus = async () => {
       try {
         console.log('App: Checking initial auth status...');
         const isLoggedIn = await authService.isLoggedIn();
         console.log('App: Initial auth check complete', { isLoggedIn });
-        
-        // Trigger auth event to make sure all components are in sync
+
         if (isLoggedIn) {
           authService.triggerAuthUpdate();
         }
@@ -149,23 +85,22 @@ function App() {
         console.error('App: Error checking initial auth status', error);
       }
     };
-    
+
     checkInitialAuthStatus();
-    
-    // Listen for auth errors that might happen during the lifetime of the app
+
     const handleAuthError = (event) => {
       if (event.detail?.type === 'auth_error') {
         console.error('App: Auth error event received', event.detail);
       }
     };
-    
+
     window.addEventListener('auth_state_changed', handleAuthError);
-    
+
     return () => {
       window.removeEventListener('auth_state_changed', handleAuthError);
     };
   }, []);
-  
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -221,6 +156,7 @@ function App() {
               </Box>
               <Footer />
               <BackToTop />
+              <InstallPrompt />
             </Box>
             </Router>
             </SeoProvider>
@@ -229,6 +165,14 @@ function App() {
         </LanguageProvider>
       </LocalizationProvider>
     </ThemeProvider>
+  );
+};
+
+function App() {
+  return (
+    <ThemeModeProvider>
+      <AppContent />
+    </ThemeModeProvider>
   );
 }
 

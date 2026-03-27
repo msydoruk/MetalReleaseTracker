@@ -1,6 +1,7 @@
 {
   "short_name": "Metal Tracker",
   "name": "Metal Release Tracker",
+  "description": "Track and buy physical releases (vinyl, CD, tape) of Ukrainian metal bands from foreign distributors and labels.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,16 +11,39 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#121212"
+  "background_color": "#121212",
+  "categories": ["shopping", "music", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "Albums",
+      "short_name": "Albums",
+      "url": "/albums",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Bands",
+      "short_name": "Bands",
+      "url": "/bands",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "url": "/calendar",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ]
 }
