@@ -28,6 +28,35 @@ public class DistributorService : IDistributorService
         return distributor == null ? null : _mapper.Map<DistributorDto>(distributor);
     }
 
+    public async Task<DistributorWithAlbumCountDto?> GetDistributorBySlugAsync(
+        string slug,
+        string language,
+        CancellationToken cancellationToken = default)
+    {
+        var distributor = await _distributorsRepository.GetBySlugAsync(slug, cancellationToken);
+        if (distributor == null)
+        {
+            return null;
+        }
+
+        var description = distributor.Translations
+            .FirstOrDefault(translation => translation.LanguageCode == language)?.Description
+            ?? distributor.Translations
+                .FirstOrDefault(translation => translation.LanguageCode == "en")?.Description;
+
+        return new DistributorWithAlbumCountDto
+        {
+            Id = distributor.Id,
+            Name = distributor.Name,
+            Slug = distributor.Slug,
+            Description = description,
+            Country = distributor.Country,
+            CountryFlag = distributor.CountryFlag,
+            LogoUrl = distributor.LogoUrl,
+            WebsiteUrl = distributor.WebsiteUrl,
+        };
+    }
+
     public async Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(string language, CancellationToken cancellationToken = default)
     {
         return await _distributorsRepository.GetDistributorsWithAlbumCountAsync(language, cancellationToken);

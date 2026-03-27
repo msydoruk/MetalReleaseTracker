@@ -51,8 +51,8 @@ const DistributorsPage = () => {
     fetchData();
   }, [language, t]);
 
-  const handleDistributorClick = (distributorId) => {
-    navigate(`/albums?distributorId=${distributorId}`);
+  const handleDistributorClick = (distributorSlug) => {
+    navigate(`/distributors/${distributorSlug}`);
   };
 
   return (
@@ -111,7 +111,7 @@ const DistributorsPage = () => {
                   boxShadow: '0 12px 20px rgba(0, 0, 0, 0.15)',
                 }
               }}
-              onClick={() => handleDistributorClick(distributor.id)}
+              onClick={() => handleDistributorClick(distributor.slug)}
             >
               <CardMedia
                 component="div"
@@ -200,7 +200,7 @@ const DistributorsPage = () => {
                   color="primary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDistributorClick(distributor.id);
+                    handleDistributorClick(distributor.slug);
                   }}
                   sx={{
                     borderRadius: 5,

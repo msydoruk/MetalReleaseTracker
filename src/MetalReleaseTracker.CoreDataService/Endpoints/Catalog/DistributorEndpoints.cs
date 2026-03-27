@@ -34,6 +34,21 @@ public static class DistributorEndpoints
             .Produces<DistributorDto>(200)
             .Produces(404);
 
+        endpoints.MapGet(RouteConstants.Api.Distributors.GetBySlug, async (
+                string slug,
+                string? language,
+                IDistributorService distributorService,
+                CancellationToken cancellationToken) =>
+            {
+                var languageCode = language ?? "en";
+                var distributor = await distributorService.GetDistributorBySlugAsync(slug, languageCode, cancellationToken);
+                return distributor is null ? Results.NotFound() : Results.Ok(distributor);
+            })
+            .WithName("GetDistributorBySlug")
+            .WithTags("Distributors")
+            .Produces<DistributorWithAlbumCountDto>(200)
+            .Produces(404);
+
         endpoints.MapGet(RouteConstants.Api.Distributors.GetWithAlbumCount, async (
                 string? language,
                 IDistributorService distributorService,

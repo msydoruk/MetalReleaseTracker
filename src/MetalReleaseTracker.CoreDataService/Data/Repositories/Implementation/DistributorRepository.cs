@@ -1,7 +1,7 @@
 ﻿using MetalReleaseTracker.CoreDataService.Data.Entities;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
-using MetalReleaseTracker.CoreDataService.Services.Dtos;
 using MetalReleaseTracker.CoreDataService.Services.Dtos.Catalog;
+using MetalReleaseTracker.CoreDataService.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
@@ -26,7 +26,20 @@ public class DistributorRepository : IDistributorsRepository
             return existingDistributorEntity.Id;
         }
 
-        var newDistributorEntity = new DistributorEntity { Name = distributorName };
+        var slug = SlugGenerator.GenerateSlug(distributorName);
+        var slugExists = await _dbContext.Distributors.AnyAsync(distributor => distributor.Slug == slug, cancellationToken);
+        if (slugExists)
+        {
+            var counter = 2;
+            while (await _dbContext.Distributors.AnyAsync(distributor => distributor.Slug == $"{slug}-{counter}", cancellationToken))
+            {
+                counter++;
+            }
+
+            slug = $"{slug}-{counter}";
+        }
+
+        var newDistributorEntity = new DistributorEntity { Name = distributorName, Slug = slug };
         await _dbContext.Distributors.AddAsync(newDistributorEntity);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -43,6 +56,14 @@ public class DistributorRepository : IDistributorsRepository
         return await _dbContext.Distributors.FindAsync(id, cancellationToken);
     }
 
+    public async Task<DistributorEntity?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Distributors
+            .AsNoTracking()
+            .Include(distributor => distributor.Translations)
+            .FirstOrDefaultAsync(distributor => distributor.Slug == slug, cancellationToken);
+    }
+
     public async Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(string language, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Distributors
@@ -51,6 +72,7 @@ public class DistributorRepository : IDistributorsRepository
             {
                 Id = distributor.Id,
                 Name = distributor.Name,
+                Slug = distributor.Slug,
                 AlbumCount = _dbContext.Albums.Count(album => album.DistributorId == distributor.Id),
                 Description = distributor.Translations
                     .Where(t => t.LanguageCode == language)

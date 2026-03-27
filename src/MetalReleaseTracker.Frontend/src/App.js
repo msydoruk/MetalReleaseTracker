@@ -21,6 +21,7 @@ const AlbumDetailPage = lazy(() => import('./pages/AlbumDetailPage'));
 const BandsPage = lazy(() => import('./pages/BandsPage'));
 const BandDetailPage = lazy(() => import('./pages/BandDetailPage'));
 const DistributorsPage = lazy(() => import('./pages/DistributorsPage'));
+const DistributorDetailPage = lazy(() => import('./pages/DistributorDetailPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
@@ -131,6 +132,7 @@ const AppContent = () => {
                   <Route path="/bands" element={<BandsPage />} />
                   <Route path="/bands/:slug" element={<BandDetailPage />} />
                   <Route path="/distributors" element={<DistributorsPage />} />
+                  <Route path="/distributors/:slug" element={<DistributorDetailPage />} />
                   <Route path="/news" element={<NewsPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/reviews" element={<ReviewsPage />} />

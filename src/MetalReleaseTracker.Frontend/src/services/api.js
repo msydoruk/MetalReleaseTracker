@@ -82,6 +82,7 @@ export const fetchSimilarBands = (bandId) => api.get(`/bands/${bandId}/similar`)
 export const fetchGenres = () => api.get('/bands/genres');
 export const fetchDistributors = () => api.get('/distributors/all');
 export const fetchDistributorById = (id) => api.get(`/distributors/${id}`);
+export const fetchDistributorBySlug = (slug, language) => api.get(`/distributors/by-slug/${slug}`, { params: language ? { language } : {} });
 export const fetchDistributorsWithAlbumCount = (language) => api.get('/distributors/with-album-count', { params: language ? { language } : {} });
 
 export const addFavorite = (albumId, status = 0) => api.post(`/favorites/${albumId}?status=${status}`);

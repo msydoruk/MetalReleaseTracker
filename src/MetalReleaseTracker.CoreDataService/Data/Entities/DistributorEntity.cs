@@ -14,6 +14,10 @@ public class DistributorEntity
     [Required(ErrorMessage = "The distributor name is required.")]
     public string Name { get; set; }
 
+    [Required]
+    [MaxLength(250)]
+    public string Slug { get; set; } = string.Empty;
+
     public DistributorCode Code { get; set; }
 
     public bool IsVisible { get; set; } = true;

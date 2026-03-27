@@ -11,6 +11,8 @@ public interface IDistributorsRepository
 
     Task<DistributorEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<DistributorEntity?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+
     Task<List<DistributorWithAlbumCountDto>> GetDistributorsWithAlbumCountAsync(
         string language,
         CancellationToken cancellationToken = default);

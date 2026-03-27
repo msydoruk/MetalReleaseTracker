@@ -46,6 +46,7 @@ public static class RouteConstants
             private const string Base = $"{ApiBase}/distributors";
             public const string GetAll = $"{Base}/all";
             public const string GetById = $"{Base}/{{id:guid}}";
+            public const string GetBySlug = $"{Base}/by-slug/{{slug}}";
             public const string GetWithAlbumCount = $"{Base}/with-album-count";
         }
 
