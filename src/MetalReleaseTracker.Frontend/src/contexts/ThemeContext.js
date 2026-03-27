@@ -76,13 +76,6 @@ const lightTheme = createTheme({
   },
 });
 
-const getSystemPreference = () => {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
-  return 'dark';
-};
-
 export const ThemeModeProvider = ({ children }) => {
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem('themeMode') || 'dark';
