@@ -162,14 +162,15 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
       borderRadius: 2,
       bgcolor: 'background.paper',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      border: 1,
+      borderColor: 'divider',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
     }}>
       <Box sx={{ p: 3, pb: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" component="h2" sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', fontSize: '1.1rem' }}>
+          <Typography variant="h6" component="h2" sx={{ color: 'text.primary', fontWeight: 'bold', whiteSpace: 'nowrap', fontSize: '1.1rem' }}>
             {t('albumFilter.filterAlbums')}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -179,21 +180,21 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               onClick={handleReset}
               color="secondary"
               sx={{
-                borderColor: 'rgba(255, 255, 255, 0.3)',
-                color: '#fff',
+                borderColor: 'divider',
+                color: 'text.secondary',
                 whiteSpace: 'nowrap',
                 fontSize: '0.75rem',
                 px: 1.5,
                 '&:hover': {
-                  borderColor: '#fff',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                  borderColor: 'text.primary',
+                  backgroundColor: 'action.hover'
                 }
               }}
             >
               {t('albumFilter.resetFilters')}
             </Button>
             {onClose && (
-              <IconButton onClick={onClose} sx={{ color: 'white' }}>
+              <IconButton onClick={onClose} sx={{ color: 'text.primary' }}>
                 <CloseIcon />
               </IconButton>
             )}
@@ -209,7 +210,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
             <FormLabel
               component="legend"
               sx={{
-                color: 'white',
+                color: 'text.primary',
                 mb: 1,
                 fontWeight: 'medium'
               }}
@@ -231,17 +232,17 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               sx={{
                 display: 'flex',
                 '& .MuiToggleButton-root': {
-                  color: 'white',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  color: 'text.primary',
+                  borderColor: 'divider',
                   height: '40px',
                   fontSize: '0.85rem',
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.5)',
-                    color: 'white',
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
                     fontWeight: 'bold'
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    backgroundColor: 'action.hover'
                   }
                 }
               }}
@@ -287,17 +288,17 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               sx={{
                 display: 'flex',
                 '& .MuiToggleButton-root': {
-                  color: 'white',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  color: 'text.primary',
+                  borderColor: 'divider',
                   height: '40px',
                   fontSize: '0.85rem',
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.5)',
-                    color: 'white',
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
                     fontWeight: 'bold'
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    backgroundColor: 'action.hover'
                   }
                 }
               }}
@@ -313,7 +314,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
             <FormLabel
               component="legend"
               sx={{
-                color: 'white',
+                color: 'text.primary',
                 mb: 1,
                 fontWeight: 'medium'
               }}
@@ -325,7 +326,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               size="small"
               variant="outlined"
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: 'action.hover',
                 width: '100%'
               }}
             >
@@ -344,26 +345,24 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 MenuProps={{
                   PaperProps: {
                     style: {
-                      maxHeight: 300,
-                      backgroundColor: '#222',
-                      color: '#fff'
+                      maxHeight: 300
                     }
                   }
                 }}
                 sx={{
                   '& .MuiSelect-select': {
                     py: 1,
-                    color: 'white',
+                    color: 'text.primary',
                     fontWeight: 'medium',
                     height: '20px',
                     display: 'flex',
                     alignItems: 'center'
                   },
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)'
+                    borderColor: 'divider'
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)'
+                    borderColor: 'text.secondary'
                   },
                   height: '40px'
                 }}
@@ -383,7 +382,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
             <FormLabel
               component="legend"
               sx={{
-                color: 'white',
+                color: 'text.primary',
                 mb: 1,
                 fontWeight: 'medium'
               }}
@@ -395,7 +394,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
               size="small"
               variant="outlined"
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: 'action.hover',
                 width: '100%'
               }}
             >
@@ -414,26 +413,24 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 MenuProps={{
                   PaperProps: {
                     style: {
-                      maxHeight: 300,
-                      backgroundColor: '#222',
-                      color: '#fff'
+                      maxHeight: 300
                     }
                   }
                 }}
                 sx={{
                   '& .MuiSelect-select': {
                     py: 1,
-                    color: 'white',
+                    color: 'text.primary',
                     fontWeight: 'medium',
                     height: '20px',
                     display: 'flex',
                     alignItems: 'center'
                   },
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)'
+                    borderColor: 'divider'
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)'
+                    borderColor: 'text.secondary'
                   },
                   height: '40px'
                 }}
@@ -453,7 +450,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
             <FormLabel
               component="legend"
               sx={{
-                color: 'white',
+                color: 'text.primary',
                 mb: 1,
                 fontWeight: 'medium'
               }}
@@ -476,8 +473,9 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                   flexGrow: 1,
                   flexShrink: 1,
                   minWidth: 0,
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  backgroundColor: 'action.hover',
+                  border: 1,
+                  borderColor: 'divider',
                   borderRadius: 1,
                   height: '40px',
                   px: 1.5,
@@ -488,15 +486,15 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                     margin: 0,
                   },
                   '& .MuiRadio-root': {
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: 'text.secondary',
                     padding: '4px',
                     '&.Mui-checked': {
-                      color: 'white',
+                      color: 'text.primary',
                     }
                   },
                   '& .MuiTypography-root': {
                     fontSize: '0.85rem',
-                    color: 'white',
+                    color: 'text.primary',
                   }
                 }}
               >
@@ -525,13 +523,13 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 sx={{
                   flexShrink: 0,
                   '& .MuiToggleButton-root': {
-                    color: 'white',
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    color: 'text.primary',
+                    borderColor: 'divider',
                     height: '40px',
                     fontSize: '0.85rem',
                     '&.Mui-selected': {
                       backgroundColor: 'rgba(25, 118, 210, 0.5)',
-                      color: 'white'
+                      color: 'text.primary'
                     }
                   }
                 }}
@@ -551,7 +549,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
             <FormLabel
               component="legend"
               sx={{
-                color: 'white',
+                color: 'text.primary',
                 mb: 1,
                 fontWeight: 'medium'
               }}
@@ -571,13 +569,13 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 inputProps={{ min: 1970, max: 2030 }}
                 sx={{
                   flex: 1,
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  backgroundColor: 'action.hover',
                   '& .MuiOutlinedInput-root': {
                     height: '40px',
-                    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+                    '& fieldset': { borderColor: 'divider' },
+                    '&:hover fieldset': { borderColor: 'text.secondary' },
                   },
-                  '& .MuiInputBase-input': { color: 'white', fontSize: '0.85rem' },
+                  '& .MuiInputBase-input': { color: 'text.primary', fontSize: '0.85rem' },
                 }}
               />
               <TextField
@@ -592,13 +590,13 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
                 inputProps={{ min: 1970, max: 2030 }}
                 sx={{
                   flex: 1,
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  backgroundColor: 'action.hover',
                   '& .MuiOutlinedInput-root': {
                     height: '40px',
-                    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+                    '& fieldset': { borderColor: 'divider' },
+                    '&:hover fieldset': { borderColor: 'text.secondary' },
                   },
-                  '& .MuiInputBase-input': { color: 'white', fontSize: '0.85rem' },
+                  '& .MuiInputBase-input': { color: 'text.primary', fontSize: '0.85rem' },
                 }}
               />
             </Box>
@@ -606,7 +604,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
 
           {/* Price range filter */}
           <Box>
-            <Typography sx={{ color: 'white', mb: 1, fontWeight: 'medium' }}>
+            <Typography sx={{ color: 'text.primary', mb: 1, fontWeight: 'medium' }}>
               {t('albumFilter.priceRange')}: {'\u20AC'}{priceRange[0]} - {'\u20AC'}{priceRange[1]}
             </Typography>
             <Slider
@@ -637,7 +635,7 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
           </Box>
         </Box>
 
-        <Box sx={{ p: 3, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
           <Button
             variant="contained"
             color="primary"

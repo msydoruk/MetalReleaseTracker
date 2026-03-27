@@ -36,7 +36,8 @@ import {
   CalendarMonth as CalendarMonthIcon,
   RateReview as RateReviewIcon,
   Brightness4 as Brightness4Icon,
-  Brightness7 as Brightness7Icon
+  Brightness7 as Brightness7Icon,
+  CurrencyExchange as CurrencyExchangeIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
@@ -178,12 +179,14 @@ const Header = () => {
            'User';
   };
 
+  const handleDrawerNavClick = () => {
+    setDrawerOpen(false);
+  };
+
   const drawerList = (
     <Box
       sx={{ width: 250 }}
       role="presentation"
-      onClick={toggleDrawer(false)}
-      onKeyDown={toggleDrawer(false)}
     >
       {user && (
         <>
@@ -213,6 +216,7 @@ const Header = () => {
               component={Link}
               to={item.path}
               selected={isActive}
+              onClick={handleDrawerNavClick}
               sx={{
                 borderLeft: isActive ? '3px solid' : '3px solid transparent',
                 borderColor: isActive ? 'primary.main' : 'transparent',
@@ -241,24 +245,42 @@ const Header = () => {
 
       <Divider />
       <List>
+        <ListItemButton onClick={() => { toggleThemeMode(); handleDrawerNavClick(); }}>
+          <ListItemIcon>
+            {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </ListItemIcon>
+          <ListItemText primary={themeMode === 'dark' ? 'Light mode' : 'Dark mode'} />
+        </ListItemButton>
+        <ListItemButton onClick={(event) => { event.stopPropagation(); setCurrencyAnchorEl(event.currentTarget); }}>
+          <ListItemIcon><CurrencyExchangeIcon /></ListItemIcon>
+          <ListItemText primary={`Currency: ${currency}`} />
+        </ListItemButton>
+        <ListItemButton onClick={(event) => { event.stopPropagation(); setLanguageAnchorEl(event.currentTarget); }}>
+          <ListItemIcon><LanguageIcon /></ListItemIcon>
+          <ListItemText primary={`Language: ${language.toUpperCase()}`} />
+        </ListItemButton>
+      </List>
+
+      <Divider />
+      <List>
         {user ? (
           <>
-            <ListItemButton component={Link} to="/profile">
+            <ListItemButton component={Link} to="/profile" onClick={handleDrawerNavClick}>
               <ListItemIcon><AccountCircleIcon /></ListItemIcon>
               <ListItemText primary={t('nav.profile')} />
             </ListItemButton>
-            <ListItemButton onClick={handleLogout}>
+            <ListItemButton onClick={() => { handleLogout(); handleDrawerNavClick(); }}>
               <ListItemIcon><LogoutIcon color="error" /></ListItemIcon>
               <ListItemText primary={t('nav.signOut')} primaryTypographyProps={{ color: 'error' }} />
             </ListItemButton>
           </>
         ) : (
           <>
-            <ListItemButton component={Link} to="/login">
+            <ListItemButton component={Link} to="/login" onClick={handleDrawerNavClick}>
               <ListItemIcon><LoginIcon /></ListItemIcon>
               <ListItemText primary={t('nav.login')} />
             </ListItemButton>
-            <ListItemButton component={Link} to="/register">
+            <ListItemButton component={Link} to="/register" onClick={handleDrawerNavClick}>
               <ListItemIcon><RegisterIcon /></ListItemIcon>
               <ListItemText primary={t('nav.signUp')} />
             </ListItemButton>
@@ -418,7 +440,7 @@ const Header = () => {
                   <Button
                     color="inherit"
                     onClick={(event) => setCurrencyAnchorEl(event.currentTarget)}
-                    sx={{ minWidth: 'auto', px: 1, mr: { xs: -0.5, md: 0.5 }, fontSize: '0.85rem' }}
+                    sx={{ minWidth: 'auto', px: 1, mr: 0.5, fontSize: '0.85rem', display: { xs: 'none', md: 'inline-flex' } }}
                   >
                     {currency}
                   </Button>
@@ -448,7 +470,7 @@ const Header = () => {
                   <IconButton
                     color="inherit"
                     onClick={toggleThemeMode}
-                    sx={{ mr: { xs: -0.5, md: 0.5 } }}
+                    sx={{ mr: 0.5, display: { xs: 'none', md: 'inline-flex' } }}
                   >
                     {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
                   </IconButton>
@@ -457,7 +479,7 @@ const Header = () => {
                   <Button
                     color="inherit"
                     onClick={(event) => setLanguageAnchorEl(event.currentTarget)}
-                    sx={{ minWidth: 'auto', px: 1, mr: { xs: -0.5, md: 1 } }}
+                    sx={{ minWidth: 'auto', px: 1, mr: 1, display: { xs: 'none', md: 'inline-flex' } }}
                     startIcon={<LanguageIcon />}
                   >
                     {language.toUpperCase()}

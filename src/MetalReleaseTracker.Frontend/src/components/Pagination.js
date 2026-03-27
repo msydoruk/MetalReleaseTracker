@@ -86,6 +86,10 @@ const Pagination = ({
             onChange={handlePageSizeChange}
             variant="outlined"
             sx={{ height: 30 }}
+            MenuProps={{
+              disablePortal: false,
+              PaperProps: { sx: { zIndex: 1400 } },
+            }}
           >
             <MenuItem value={5}>5</MenuItem>
             <MenuItem value={10}>10</MenuItem>

@@ -85,7 +85,7 @@ const getSystemPreference = () => {
 
 export const ThemeModeProvider = ({ children }) => {
   const [themeMode, setThemeMode] = useState(() => {
-    return localStorage.getItem('themeMode') || getSystemPreference();
+    return localStorage.getItem('themeMode') || 'dark';
   });
 
   const changeThemeMode = useCallback((newMode) => {
