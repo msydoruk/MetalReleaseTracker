@@ -20,6 +20,12 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currenci
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.GetCurrencies;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.UpdateCurrency;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Dashboard.GetDashboardStats;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetAlbumsMissingCovers;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetBandsMissingGenre;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetBandsMissingPhoto;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetDataQualitySummary;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetPotentialDuplicateBands;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.HideAlbum;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.CreateDistributor;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.DeleteDistributor;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributorById;
@@ -157,6 +163,14 @@ public static class AdminEndpointExtension
 
         // AI SEO
         AiSeoEndpoints.MapEndpoints(adminGroup);
+
+        // Data Quality
+        GetDataQualitySummaryEndpoint.MapEndpoint(adminGroup);
+        GetAlbumsMissingCoversEndpoint.MapEndpoint(adminGroup);
+        GetBandsMissingGenreEndpoint.MapEndpoint(adminGroup);
+        GetBandsMissingPhotoEndpoint.MapEndpoint(adminGroup);
+        GetPotentialDuplicateBandsEndpoint.MapEndpoint(adminGroup);
+        HideAlbumEndpoint.MapEndpoint(adminGroup);
 
         return app;
     }

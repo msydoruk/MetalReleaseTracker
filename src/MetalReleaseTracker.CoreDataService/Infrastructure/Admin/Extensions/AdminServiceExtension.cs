@@ -18,6 +18,12 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currenci
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.GetCurrencies;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.UpdateCurrency;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Dashboard.GetDashboardStats;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetAlbumsMissingCovers;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetBandsMissingGenre;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetBandsMissingPhoto;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetDataQualitySummary;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.GetPotentialDuplicateBands;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.DataQuality.HideAlbum;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.CreateDistributor;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.DeleteDistributor;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Distributors.GetDistributorById;
@@ -146,6 +152,14 @@ public static class AdminServiceExtension
 
         // AI SEO
         services.AddScoped<IAiSeoService, AiSeoService>();
+
+        // Data Quality
+        services.AddScoped<GetDataQualitySummaryHandler>();
+        services.AddScoped<GetAlbumsMissingCoversHandler>();
+        services.AddScoped<GetBandsMissingGenreHandler>();
+        services.AddScoped<GetBandsMissingPhotoHandler>();
+        services.AddScoped<GetPotentialDuplicateBandsHandler>();
+        services.AddScoped<HideAlbumHandler>();
 
         return services;
     }

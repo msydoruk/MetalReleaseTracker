@@ -21,6 +21,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import TelegramPage from './pages/TelegramPage';
 import LanguagesPage from './pages/LanguagesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import DataQualityPage from './pages/DataQualityPage';
 import AuditLogPage from './pages/AuditLogPage';
 
 export default function App() {
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="telegram" element={<TelegramPage />} />
               <Route path="languages" element={<LanguagesPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="data-quality" element={<DataQualityPage />} />
               <Route path="audit-log" element={<AuditLogPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

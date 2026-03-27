@@ -150,4 +150,15 @@ public static class AdminRouteConstants
         public const string BulkBands = $"{Prefix}/bulk/bands";
         public const string BulkAlbums = $"{Prefix}/bulk/albums";
     }
+
+    public static class DataQuality
+    {
+        private const string Prefix = $"{Base}/data-quality";
+        public const string Summary = Prefix;
+        public const string AlbumsMissingCovers = $"{Prefix}/albums-missing-covers";
+        public const string BandsMissingGenre = $"{Prefix}/bands-missing-genre";
+        public const string BandsMissingPhoto = $"{Prefix}/bands-missing-photo";
+        public const string PotentialDuplicateBands = $"{Prefix}/potential-duplicate-bands";
+        public const string HideAlbum = $"{Prefix}/hide-album/{{id:guid}}";
+    }
 }
