@@ -22,6 +22,7 @@ import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
+import ShareButton from '../components/ShareButton';
 
 const BandDetailPage = () => {
   const { slug } = useParams();
@@ -247,6 +248,11 @@ const BandDetailPage = () => {
             <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
               {band.name}
             </Typography>
+            <ShareButton
+              url={window.location.href}
+              title={band.name}
+              text={t('share.bandText').replace('{bandName}', band.name)}
+            />
             {isLoggedIn && (
               <Button
                 variant={isFollowing ? "outlined" : "contained"}

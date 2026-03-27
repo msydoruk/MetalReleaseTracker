@@ -28,7 +28,8 @@ public static class AuthEndpoints
             .WithName("LoginWithEmail")
             .WithTags("Auth")
             .Produces<AuthResultDto>(200)
-            .Produces(400);
+            .Produces(400)
+            .RequireRateLimiting("auth");
 
         app.MapPost(RouteConstants.Api.Auth.Register, async (
                 RegisterRequestDto request,
@@ -47,7 +48,8 @@ public static class AuthEndpoints
             .WithName("Register")
             .WithTags("Auth")
             .Produces<AuthResultDto>(200)
-            .Produces<AuthResultDto>(400);
+            .Produces<AuthResultDto>(400)
+            .RequireRateLimiting("auth");
 
         app.MapPost(RouteConstants.Api.Auth.Logout, async (
                 IAuthService authService,
@@ -87,7 +89,8 @@ public static class AuthEndpoints
             .WithName("RefreshToken")
             .WithTags("Auth")
             .Produces<AuthResultDto>(200)
-            .Produces<AuthResultDto>(400);
+            .Produces<AuthResultDto>(400)
+            .RequireRateLimiting("auth");
 
         app.MapPost(RouteConstants.Api.Auth.RevokeToken, async (
                 RefreshTokenRequestDto request,

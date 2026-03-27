@@ -30,6 +30,7 @@ import { useCurrency } from '../contexts/CurrencyContext';
 import { getDistributorCountry, getDistributorCountryName } from '../utils/distributorCountries';
 import useRecentlyViewed from '../hooks/useRecentlyViewed';
 import WatchButton from '../components/WatchButton';
+import ShareButton from '../components/ShareButton';
 
 const AlbumDetailPage = () => {
   const { slug } = useParams();
@@ -233,6 +234,11 @@ const AlbumDetailPage = () => {
             <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
               {album.albumName}
             </Typography>
+            <ShareButton
+              url={window.location.href}
+              title={album.albumName}
+              text={t('share.albumText').replace('{bandName}', album.bandName).replace('{albumName}', album.albumName)}
+            />
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: isMobile ? 'center' : 'flex-start', mb: 1 }}>

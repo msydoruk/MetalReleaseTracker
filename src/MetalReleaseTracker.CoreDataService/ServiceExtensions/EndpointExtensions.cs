@@ -11,7 +11,8 @@ public static class EndpointExtensions
     public static WebApplication MapApplicationEndpoints(this WebApplication app)
     {
         MapAuthenticationEndpoints(app);
-        var catalogGroup = app.MapGroup(string.Empty);
+        var catalogGroup = app.MapGroup(string.Empty)
+            .RequireRateLimiting("fixed");
         MapCatalogEndpoints(catalogGroup);
 
         return app;

@@ -24,10 +24,10 @@ const Footer = () => {
       <Container maxWidth="xl">
         <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
           <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={{ xs: 1, sm: 3 }}
+            direction="row"
+            spacing={3}
             alignItems="center"
-            sx={{ flexWrap: 'wrap', justifyContent: 'center' }}
+            sx={{ flexWrap: 'wrap', justifyContent: 'center', display: { xs: 'none', sm: 'flex' } }}
           >
             {footerLinks.map((link) => (
               <MuiLink
@@ -42,6 +42,8 @@ const Footer = () => {
                 {link.title}
               </MuiLink>
             ))}
+          </Stack>
+          <Stack direction="row" spacing={3} alignItems="center" sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
             <MuiLink
               href={`mailto:${seoConfig.ContactEmail || 'metal.release.tracker@gmail.com'}?subject=Distributor Suggestion`}
               color="text.secondary"

@@ -42,6 +42,21 @@ const DEFAULTS = {
   maxPrice: 200,
 };
 
+const FILTER_STORAGE_KEY = 'albumFilters';
+
+const saveFilters = (filters) => {
+  localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+};
+
+const loadFilters = () => {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
 const parseIntParam = (value, defaultValue) => {
   const parsed = parseInt(value, 10);
   return isNaN(parsed) ? defaultValue : parsed;
@@ -111,8 +126,31 @@ const AlbumsPage = ({ isHome = false }) => {
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
   const albumListRef = useRef(null);
+  const restoredFromStorage = useRef(false);
+
+  // On initial load, if no URL params, restore filters from localStorage
+  useEffect(() => {
+    if (restoredFromStorage.current) return;
+    restoredFromStorage.current = true;
+
+    const hasUrlParams = searchParams.toString().length > 0;
+    if (!hasUrlParams) {
+      const savedFilters = loadFilters();
+      if (savedFilters) {
+        const params = filtersToSearchParams(savedFilters);
+        if (params.toString().length > 0) {
+          setSearchParams(params, { replace: true });
+        }
+      }
+    }
+  }, [searchParams, setSearchParams]);
 
   const filters = useMemo(() => parseFiltersFromUrl(searchParams), [searchParams]);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    saveFilters(filters);
+  }, [filters]);
 
   const updateFilters = (newFilters) => {
     setSearchParams(filtersToSearchParams(newFilters), { replace: true });

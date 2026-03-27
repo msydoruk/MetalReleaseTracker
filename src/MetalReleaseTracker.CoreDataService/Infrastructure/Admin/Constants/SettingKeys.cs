@@ -75,4 +75,12 @@ public static class SettingKeys
         public const string AlbumPrompt = "AlbumPrompt";
         public const string IsEnabled = "IsEnabled";
     }
+
+    public static class RateLimiting
+    {
+        public const string CatalogPermitLimit = "CatalogPermitLimit";
+        public const string CatalogWindowMinutes = "CatalogWindowMinutes";
+        public const string AuthPermitLimit = "AuthPermitLimit";
+        public const string AuthWindowMinutes = "AuthWindowMinutes";
+    }
 }

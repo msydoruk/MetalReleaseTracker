@@ -1,10 +1,13 @@
-﻿using MetalReleaseTracker.CoreDataService.Data.MappingProfiles;
+﻿using System.Threading.RateLimiting;
+using MetalReleaseTracker.CoreDataService.Data.MappingProfiles;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Implementation;
 using MetalReleaseTracker.CoreDataService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CoreDataService.Services.Configuration;
 using MetalReleaseTracker.CoreDataService.Services.Implementation;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using MetalReleaseTracker.SharedLibraries.Minio;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
 using Telegram.Bot;
 
 namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
@@ -23,6 +26,7 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddKafka(configuration);
             services.AddTelegramBot(configuration);
             services.AddEmailService(configuration);
+            services.AddApplicationRateLimiting();
 
             services.AddCommonServices()
                 .AddRepositories()
@@ -101,6 +105,46 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
         private static IServiceCollection AddCommonServices(this IServiceCollection services)
         {
             services.AddScoped<IFileStorageService, MinioFileStorageService>();
+            return services;
+        }
+
+        private static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services)
+        {
+            services.AddSingleton<RateLimitSettingsCache>();
+
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.AddPolicy("fixed", httpContext =>
+                {
+                    var settings = httpContext.RequestServices.GetRequiredService<RateLimitSettingsCache>();
+                    var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: remoteIp,
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = settings.CatalogPermitLimit,
+                            Window = TimeSpan.FromMinutes(settings.CatalogWindowMinutes),
+                            QueueLimit = 0,
+                        });
+                });
+
+                options.AddPolicy("auth", httpContext =>
+                {
+                    var settings = httpContext.RequestServices.GetRequiredService<RateLimitSettingsCache>();
+                    var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: remoteIp,
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = settings.AuthPermitLimit,
+                            Window = TimeSpan.FromMinutes(settings.AuthWindowMinutes),
+                            QueueLimit = 0,
+                        });
+                });
+            });
+
             return services;
         }
     }

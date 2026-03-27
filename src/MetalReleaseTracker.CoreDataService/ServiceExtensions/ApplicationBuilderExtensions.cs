@@ -52,6 +52,7 @@ public static class ApplicationBuilderExtensions
         app.UseSlugRedirect();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRateLimiter();
 
         return app;
     }
