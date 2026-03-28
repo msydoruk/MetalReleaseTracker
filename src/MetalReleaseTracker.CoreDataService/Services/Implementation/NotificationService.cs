@@ -91,6 +91,16 @@ public class NotificationService : INotificationService
             var message = $"{albumName} status changed to {albumEvent.StockStatus}";
             notifications.AddRange(CreateNotificationsForUsers(watcherUserIds, existingAlbum.Id, NotificationType.Restock, title, message));
         }
+        else if (existingAlbum != null
+            && albumEvent.StockStatus != null
+            && existingAlbum.StockStatus != albumEvent.StockStatus)
+        {
+            var oldStatus = existingAlbum.StockStatus?.ToString() ?? "Unknown";
+            var newStatus = albumEvent.StockStatus.ToString();
+            var title = $"Status change: {bandName} - {albumName}";
+            var message = $"{albumName} status changed from {oldStatus} to {newStatus}";
+            notifications.AddRange(CreateNotificationsForUsers(watcherUserIds, existingAlbum.Id, NotificationType.StatusChange, title, message));
+        }
 
         if (existingAlbum == null)
         {
@@ -99,7 +109,19 @@ public class NotificationService : INotificationService
             notifications.AddRange(CreateNotificationsForUsers(watcherUserIds, Guid.Empty, NotificationType.NewVariant, title, message));
         }
 
-        if (notifications.Count > 0)
+        if (notifications.Count == 0)
+        {
+            _logger.LogDebug(
+                "No notification conditions met for album {AlbumName} by {BandName}. Price: {Price}, OldPrice: {OldPrice}, Status: {Status}, OldStatus: {OldStatus}, IsNew: {IsNew}",
+                albumName,
+                bandName,
+                albumEvent.Price,
+                existingAlbum?.Price,
+                albumEvent.StockStatus,
+                existingAlbum?.StockStatus,
+                existingAlbum == null);
+        }
+        else
         {
             await _userNotificationRepository.AddBatchAsync(notifications, cancellationToken);
 

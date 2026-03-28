@@ -8,7 +8,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 
 const DAYS_LOOKBACK = 14;
-const MAX_DISPLAY = 10;
+const MAX_DISPLAY = 5;
 
 const isPlaceholderImage = (url) => !url || url.startsWith('data:');
 
@@ -81,7 +81,7 @@ const NewArrivalsSection = () => {
             alignItems: 'start',
           }}
         >
-          {displayAlbums.slice(0, 6).map((group, index) => (
+          {displayAlbums.slice(0, 3).map((group, index) => (
             <GroupedAlbumCard
               key={`${group.bandName}-${group.albumName}-${index}`}
               group={group}

@@ -5,5 +5,6 @@ public enum NotificationType
     PriceDrop,
     BackInStock,
     Restock,
-    NewVariant
+    NewVariant,
+    StatusChange
 }

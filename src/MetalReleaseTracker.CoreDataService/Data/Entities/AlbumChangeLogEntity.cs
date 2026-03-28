@@ -25,6 +25,12 @@ public class AlbumChangeLogEntity
 
     public float? OldPrice { get; set; }
 
+    [MaxLength(50)]
+    public string? StockStatus { get; set; }
+
+    [MaxLength(50)]
+    public string? OldStockStatus { get; set; }
+
     public string? PurchaseUrl { get; set; }
 
     [MaxLength(250)]

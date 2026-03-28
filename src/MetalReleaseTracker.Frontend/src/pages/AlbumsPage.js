@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -10,6 +10,7 @@ import {
   Button,
   Divider,
   Chip,
+  Fab,
   FormControl,
   FormControlLabel,
   Checkbox,
@@ -18,6 +19,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useSearchParams, Link } from 'react-router-dom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import AlbumCard from '../components/AlbumCard';
@@ -25,7 +27,7 @@ import NewArrivalsSection from '../components/NewArrivalsSection';
 import RecentlyViewedSection from '../components/RecentlyViewedSection';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import AlbumFilter from '../components/AlbumFilter';
-import Pagination from '../components/Pagination';
+import InfiniteScroll from '../components/InfiniteScroll';
 import { fetchAlbums, fetchGroupedAlbums, fetchDistributors, fetchFavoriteIds, addFavorite, removeFavorite, updateFavoriteStatus } from '../services/api';
 import authService from '../services/auth';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
@@ -115,16 +117,19 @@ const AlbumsPage = ({ isHome = false }) => {
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [albums, setAlbums] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [pageCount, setPageCount] = useState(0);
+  const [scrollPage, setScrollPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [distributors, setDistributors] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const albumListRef = useRef(null);
   const restoredFromStorage = useRef(false);
 
@@ -186,22 +191,45 @@ const AlbumsPage = ({ isHome = false }) => {
     loadDistributors();
   }, []);
 
+  // Reset scroll page when filters change
+  const filtersKey = useMemo(() => {
+    const { page, ...rest } = filters;
+    return JSON.stringify(rest);
+  }, [filters]);
+
+  useEffect(() => {
+    setScrollPage(1);
+    setAlbums([]);
+    setGroupedAlbums([]);
+  }, [filtersKey, isGrouped]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        const isAppending = scrollPage > 1;
+        if (isAppending) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
+
+        const fetchParams = { ...filters, page: scrollPage };
         if (isGrouped) {
-          const response = await fetchGroupedAlbums(filters);
+          const response = await fetchGroupedAlbums(fetchParams);
           if (response.data) {
-            setGroupedAlbums(response.data.items || []);
+            setGroupedAlbums((previous) => isAppending
+              ? [...previous, ...(response.data.items || [])]
+              : (response.data.items || []));
             setAlbums([]);
             setTotalCount(response.data.totalCount || 0);
             setPageCount(response.data.pageCount || 0);
           }
         } else {
-          const response = await fetchAlbums(filters);
+          const response = await fetchAlbums(fetchParams);
           if (response.data) {
-            setAlbums(response.data.items || []);
+            setAlbums((previous) => isAppending
+              ? [...previous, ...(response.data.items || [])]
+              : (response.data.items || []));
             setGroupedAlbums([]);
             setTotalCount(response.data.totalCount || 0);
             setPageCount(response.data.pageCount || 0);
@@ -212,24 +240,32 @@ const AlbumsPage = ({ isHome = false }) => {
         setError(t('albums.error'));
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     };
 
     fetchData();
-  }, [filters, isGrouped, t]);
+  }, [scrollPage, filtersKey, isGrouped, filters, t]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && scrollPage < pageCount) {
+      setScrollPage((previous) => previous + 1);
+    }
+  }, [loadingMore, scrollPage, pageCount]);
+
+  // Show scroll-to-top button on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 600);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleFilterChange = (newFilters) => {
     updateFilters({ ...newFilters, page: 1 });
     setIsFilterOpen(false);
-  };
-
-  const handlePageChange = (newPage) => {
-    updateFilters({ ...filters, page: newPage });
-    albumListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handlePageSizeChange = (newPageSize) => {
-    updateFilters({ ...filters, pageSize: newPageSize, page: 1 });
   };
 
   const toggleFilterDrawer = () => {
@@ -298,6 +334,7 @@ const AlbumsPage = ({ isHome = false }) => {
         <NewArrivalsSection />
       )}
       {isHome && <RecentlyViewedSection albums={recentAlbums} />}
+      {isHome && <Divider sx={{ my: 3 }} />}
       <Box sx={{
         display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },
@@ -306,7 +343,7 @@ const AlbumsPage = ({ isHome = false }) => {
         gap: { xs: 1.5, sm: 0 },
         mb: 3
       }}>
-        <Typography variant="h4" component={isHome ? 'h2' : 'h1'}>
+        <Typography variant="h4" component={isHome ? 'h2' : 'h1'} sx={{ fontWeight: 800 }}>
           {t('albums.metalReleases')}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
@@ -427,24 +464,24 @@ const AlbumsPage = ({ isHome = false }) => {
         </Alert>
       )}
 
+      {totalCount > 0 && !loading && (
+        <Box ref={albumListRef} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            {(isGrouped ? groupedAlbums.length : albums.length)} / {totalCount}
+          </Typography>
+        </Box>
+      )}
+
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
       ) : (isGrouped ? groupedAlbums.length > 0 : albums.length > 0) ? (
-        <>
-          <Box ref={albumListRef} sx={{ mb: 1 }}>
-            <Pagination
-              currentPage={filters.page}
-              totalPages={pageCount}
-              totalItems={totalCount}
-              pageSize={filters.pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              compact
-            />
-          </Box>
-
+        <InfiniteScroll
+          onLoadMore={handleLoadMore}
+          hasMore={scrollPage < pageCount}
+          loading={loadingMore}
+        >
           <Box sx={{ width: '100%', mb: 4 }}>
             <Box
               sx={{
@@ -470,9 +507,9 @@ const AlbumsPage = ({ isHome = false }) => {
                   </Box>
                 ))
               ) : (
-                albums.map((album) => (
+                albums.map((album, index) => (
                   <Box
-                    key={album.id}
+                    key={`${album.id}-${index}`}
                     sx={{
                       display: 'flex',
                       height: '100%'
@@ -490,18 +527,7 @@ const AlbumsPage = ({ isHome = false }) => {
               )}
             </Box>
           </Box>
-
-          <Box sx={{ mt: 3, mb: 4 }}>
-            <Pagination
-              currentPage={filters.page}
-              totalPages={pageCount}
-              totalItems={totalCount}
-              pageSize={filters.pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </Box>
-        </>
+        </InfiniteScroll>
       ) : (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
@@ -511,6 +537,17 @@ const AlbumsPage = ({ isHome = false }) => {
             {t('albums.tryAdjusting')}
           </Typography>
         </Paper>
+      )}
+
+      {showScrollTop && (
+        <Fab
+          size="small"
+          color="primary"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1200 }}
+        >
+          <KeyboardArrowUpIcon />
+        </Fab>
       )}
 
       {/* Filter drawer */}

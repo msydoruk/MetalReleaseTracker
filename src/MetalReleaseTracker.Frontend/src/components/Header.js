@@ -37,7 +37,8 @@ import {
   RateReview as RateReviewIcon,
   Brightness4 as Brightness4Icon,
   Brightness7 as Brightness7Icon,
-  CurrencyExchange as CurrencyExchangeIcon
+  CurrencyExchange as CurrencyExchangeIcon,
+  MoreHoriz as MoreHorizIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/auth';
@@ -60,11 +61,14 @@ const ICON_MAP = {
   RateReviewIcon: RateReviewIcon,
 };
 
+const MaxVisibleNavItems = 7;
+
 const Header = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [overflowAnchorEl, setOverflowAnchorEl] = useState(null);
 
   const [currencyAnchorEl, setCurrencyAnchorEl] = useState(null);
 
@@ -375,7 +379,7 @@ const Header = () => {
               edge="start"
               color="inherit"
               aria-label="menu"
-              onClick={toggleDrawer(true)}
+              onClick={() => setDrawerOpen((prev) => !prev)}
               sx={{ mr: 2, display: { md: 'none' } }}
             >
               <MenuIcon />
@@ -419,8 +423,8 @@ const Header = () => {
             </Box>
 
             {/* Desktop navigation */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              {navItems.map((item) => (
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+              {navItems.slice(0, MaxVisibleNavItems).map((item) => (
                 <Button
                   key={item.title}
                   component={Link}
@@ -430,6 +434,35 @@ const Header = () => {
                   {item.title}
                 </Button>
               ))}
+              {navItems.length > MaxVisibleNavItems && (
+                <>
+                  <IconButton
+                    color="inherit"
+                    onClick={(event) => setOverflowAnchorEl(event.currentTarget)}
+                    sx={{ my: 2 }}
+                  >
+                    <MoreHorizIcon />
+                  </IconButton>
+                  <Menu
+                    anchorEl={overflowAnchorEl}
+                    open={Boolean(overflowAnchorEl)}
+                    onClose={() => setOverflowAnchorEl(null)}
+                    keepMounted
+                  >
+                    {navItems.slice(MaxVisibleNavItems).map((item) => (
+                      <MenuItem
+                        key={item.title}
+                        component={Link}
+                        to={item.path}
+                        onClick={() => setOverflowAnchorEl(null)}
+                      >
+                        <ListItemIcon>{item.icon}</ListItemIcon>
+                        <ListItemText>{item.title}</ListItemText>
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </>
+              )}
             </Box>
 
             {/* Search + Currency + Language toggle + Auth buttons */}

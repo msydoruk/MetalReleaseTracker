@@ -68,7 +68,7 @@ const NewsPage = () => {
 
   if (loadingNews) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
         </Box>
@@ -79,7 +79,7 @@ const NewsPage = () => {
   const displayItems = newsItems.map(mapNewsItem);
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
           {t('news.title')}

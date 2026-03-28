@@ -55,6 +55,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
 
             var existingAlbum = await _albumRepository.GetBySkuAsync(albumEvent.SKU);
             float? oldPrice = existingAlbum?.Price;
+            AlbumStockStatus? oldStockStatus = existingAlbum?.StockStatus;
 
             if (albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted)
             {
@@ -71,7 +72,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
                         albumEvent.SKU);
                 }
 
-                await LogChangeAsync(albumEvent, distributorName, existingAlbum?.Slug ?? string.Empty, oldPrice);
+                await LogChangeAsync(albumEvent, distributorName, existingAlbum?.Slug ?? string.Empty, oldPrice, oldStockStatus);
                 return;
             }
 
@@ -116,7 +117,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             }
 
             await _notificationService.GenerateNotificationsAsync(albumEvent, existingAlbum, bandId, context.CancellationToken);
-            await LogChangeAsync(albumEvent, distributorName, albumEntity.Slug, oldPrice);
+            await LogChangeAsync(albumEvent, distributorName, albumEntity.Slug, oldPrice, oldStockStatus);
         }
         catch (Exception exception)
         {
@@ -149,7 +150,12 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
         return $"{slug}-{suffix}";
     }
 
-    private async Task LogChangeAsync(AlbumProcessedPublicationEvent albumEvent, string distributorName, string albumSlug, float? oldPrice = null)
+    private async Task LogChangeAsync(
+        AlbumProcessedPublicationEvent albumEvent,
+        string distributorName,
+        string albumSlug,
+        float? oldPrice = null,
+        AlbumStockStatus? oldStockStatus = null)
     {
         var changeLogEntry = new AlbumChangeLogEntity
         {
@@ -159,6 +165,8 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             DistributorName = distributorName,
             Price = albumEvent.Price,
             OldPrice = oldPrice,
+            StockStatus = albumEvent.StockStatus?.ToString(),
+            OldStockStatus = oldStockStatus?.ToString(),
             PurchaseUrl = albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted ? null : albumEvent.PurchaseUrl,
             AlbumSlug = albumSlug,
             ChangeType = albumEvent.ProcessedStatus.ToString(),

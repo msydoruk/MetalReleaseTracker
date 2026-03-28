@@ -78,6 +78,25 @@ const ChangelogPage = () => {
     });
   };
 
+  const formatChangeDetail = (item) => {
+    if (item.changeType === 'Deleted') return '\u2014';
+
+    const parts = [];
+
+    if (item.changeType === 'Updated' && item.oldPrice != null && item.oldPrice !== item.price) {
+      parts.push(`${formatPrice(item.oldPrice)} \u2192 ${formatPrice(item.price)}`);
+    } else if (item.price > 0) {
+      parts.push(formatPrice(item.price));
+    }
+
+    if (item.changeType === 'Updated' && item.oldStockStatus && item.stockStatus
+        && item.oldStockStatus !== item.stockStatus) {
+      parts.push(`${item.oldStockStatus} \u2192 ${item.stockStatus}`);
+    }
+
+    return parts.length > 0 ? parts.join(' | ') : formatPrice(item.price);
+  };
+
   const getStatusChip = (changeType) => {
     const config = statusConfig[changeType] || { color: 'default', translationKey: changeType };
     const label = t(`changelog.${config.translationKey}`) || changeType;
@@ -154,9 +173,7 @@ const ChangelogPage = () => {
                     </Typography>
                     {item.changeType !== 'Deleted' && (
                       <Typography variant="caption" color="text.secondary">
-                        {item.changeType === 'Updated' && item.oldPrice != null
-                          ? `${formatPrice(item.oldPrice)} \u2192 ${formatPrice(item.price)}`
-                          : formatPrice(item.price)}
+                        {formatChangeDetail(item)}
                       </Typography>
                     )}
                   </Box>
@@ -201,11 +218,7 @@ const ChangelogPage = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        {item.changeType === 'Deleted'
-                          ? '\u2014'
-                          : item.changeType === 'Updated' && item.oldPrice != null
-                            ? `${formatPrice(item.oldPrice)} \u2192 ${formatPrice(item.price)}`
-                            : formatPrice(item.price)}
+                        {formatChangeDetail(item)}
                       </TableCell>
                       <TableCell>{item.distributorName}</TableCell>
                       <TableCell>{getStatusChip(item.changeType)}</TableCell>

@@ -14,6 +14,10 @@ public class AlbumChangeLogDto
 
     public float? OldPrice { get; set; }
 
+    public string? StockStatus { get; set; }
+
+    public string? OldStockStatus { get; set; }
+
     public string? PurchaseUrl { get; set; }
 
     public string? AlbumSlug { get; set; }

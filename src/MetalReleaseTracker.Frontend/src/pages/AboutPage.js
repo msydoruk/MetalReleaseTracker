@@ -32,7 +32,7 @@ const AboutPage = () => {
   usePageMeta(t('pageMeta.aboutTitle'), t('pageMeta.aboutDescription'));
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Hero */}
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mb: 2 }}>

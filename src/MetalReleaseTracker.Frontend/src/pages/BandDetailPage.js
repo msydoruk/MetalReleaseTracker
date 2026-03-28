@@ -8,16 +8,24 @@ import {
   Paper,
   Chip,
   Button,
+  Fab,
+  Drawer,
+  FormControlLabel,
+  Checkbox,
   useMediaQuery,
   useTheme
 } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { useParams, Link } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import GroupedAlbumCard from '../components/GroupedAlbumCard';
-import Pagination from '../components/Pagination';
-import { fetchBandBySlug, fetchGroupedAlbums, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
+import AlbumCard from '../components/AlbumCard';
+import AlbumFilter from '../components/AlbumFilter';
+import InfiniteScroll from '../components/InfiniteScroll';
+import { fetchBandBySlug, fetchGroupedAlbums, fetchAlbums, fetchSimilarBands, followBand, unfollowBand, checkFollowingBand, fetchBandFollowerCount } from '../services/api';
 import authService from '../services/auth';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -32,12 +40,19 @@ const BandDetailPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [band, setBand] = useState(null);
-  const [albums, setAlbums] = useState(null);
+  const [allAlbums, setAllAlbums] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
+  const [scrollPage, setScrollPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [albumsLoading, setAlbumsLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [albumFilters, setAlbumFilters] = useState({});
+  const pageSize = 20;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [similarBands, setSimilarBands] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -49,8 +64,8 @@ const BandDetailPage = () => {
     const parts = [band.name];
     if (band.genre) parts[0] += ` - ${band.genre}`;
     parts[0] += ' from Ukraine';
-    if (albums?.totalCount > 0) {
-      parts.push(`${albums.totalCount} release${albums.totalCount > 1 ? 's' : ''} available from foreign distributors`);
+    if (totalCount > 0) {
+      parts.push(`${totalCount} release${totalCount > 1 ? 's' : ''} available from foreign distributors`);
     }
     return parts.join('. ');
   })();
@@ -138,28 +153,64 @@ const BandDetailPage = () => {
     loadFollowData();
   }, [band]);
 
+  // Reset scroll when filters or grouping change
+  useEffect(() => {
+    setScrollPage(1);
+    setAllAlbums([]);
+  }, [isGrouped, albumFilters]);
+
   const loadAlbums = useCallback(async () => {
     if (!band) return;
     try {
-      setAlbumsLoading(true);
-      const response = await fetchGroupedAlbums({
+      const isAppending = scrollPage > 1;
+      if (isAppending) {
+        setLoadingMore(true);
+      } else {
+        setAlbumsLoading(true);
+      }
+
+      const params = {
+        ...albumFilters,
         bandId: band.id,
-        page,
+        page: scrollPage,
         pageSize,
-        sortBy: ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
-        sortAscending: false,
-      });
-      setAlbums(response.data);
+        sortBy: albumFilters.sortBy || ALBUM_SORT_FIELDS.ORIGINAL_YEAR,
+        sortAscending: albumFilters.sortAscending ?? false,
+      };
+
+      const fetchFn = isGrouped ? fetchGroupedAlbums : fetchAlbums;
+      const response = await fetchFn(params);
+
+      if (response.data) {
+        setAllAlbums((previous) => isAppending
+          ? [...previous, ...(response.data.items || [])]
+          : (response.data.items || []));
+        setTotalCount(response.data.totalCount || 0);
+        setPageCount(response.data.pageCount || 0);
+      }
     } catch {
-      setAlbums(null);
+      if (scrollPage === 1) setAllAlbums([]);
     } finally {
       setAlbumsLoading(false);
+      setLoadingMore(false);
     }
-  }, [band, page, pageSize]);
+  }, [band, scrollPage, pageSize, isGrouped, albumFilters]);
 
   useEffect(() => {
     loadAlbums();
   }, [loadAlbums]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && scrollPage < pageCount) {
+      setScrollPage((previous) => previous + 1);
+    }
+  }, [loadingMore, scrollPage, pageCount]);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 600);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const loadAuth = async () => {
@@ -297,25 +348,70 @@ const BandDetailPage = () => {
         </Box>
       </Box>
 
-      <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
-        {t('bandDetail.albumsBy').replace('{bandName}', band.name)}
-      </Typography>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: { xs: 1, sm: 0 },
+        mb: 2,
+      }}>
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 700,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: { xs: 'nowrap', sm: 'normal' },
+          }}
+        >
+          {t('bandDetail.albumsBy').replace('{bandName}', band.name)}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isGrouped}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setIsGrouped(checked);
+                  localStorage.setItem('albumsGrouped', String(checked));
+                }}
+                size="small"
+              />
+            }
+            label={t('albums.comparePrices')}
+            sx={{ mr: 0, '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<FilterListIcon />}
+            onClick={() => setIsFilterOpen(true)}
+            sx={{ fontWeight: 'bold' }}
+          >
+            {t('albums.filters')}
+          </Button>
+        </Box>
+      </Box>
+
+      {totalCount > 0 && !albumsLoading && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {allAlbums.length} / {totalCount}
+        </Typography>
+      )}
 
       {albumsLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
-      ) : albums && albums.items.length > 0 ? (
-        <>
-          <Pagination
-            currentPage={albums.currentPage}
-            totalPages={albums.pageCount}
-            totalItems={albums.totalCount}
-            pageSize={albums.pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-            compact
-          />
+      ) : allAlbums.length > 0 ? (
+        <InfiniteScroll
+          onLoadMore={handleLoadMore}
+          hasMore={scrollPage < pageCount}
+          loading={loadingMore}
+        >
           <Box sx={{
             display: 'grid',
             gridTemplateColumns: {
@@ -329,30 +425,44 @@ const BandDetailPage = () => {
             alignItems: 'start',
             my: 3,
           }}>
-            {albums.items.map((group, index) => (
-              <Box
-                key={`${group.bandName}-${group.albumName}-${index}`}
-                sx={{ display: 'flex', height: '100%' }}
-              >
-                <GroupedAlbumCard group={group} />
-              </Box>
-            ))}
+            {isGrouped ? (
+              allAlbums.map((group, index) => (
+                <Box
+                  key={`${group.bandName}-${group.albumName}-${index}`}
+                  sx={{ display: 'flex', height: '100%' }}
+                >
+                  <GroupedAlbumCard group={group} />
+                </Box>
+              ))
+            ) : (
+              allAlbums.map((album, index) => (
+                <Box
+                  key={`${album.id}-${index}`}
+                  sx={{ display: 'flex', height: '100%' }}
+                >
+                  <AlbumCard album={album} />
+                </Box>
+              ))
+            )}
           </Box>
-          <Pagination
-            currentPage={albums.currentPage}
-            totalPages={albums.pageCount}
-            totalItems={albums.totalCount}
-            pageSize={albums.pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </>
+        </InfiniteScroll>
       ) : (
         <Paper sx={{ p: 4, my: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             {t('bandDetail.noAlbums')}
           </Typography>
         </Paper>
+      )}
+
+      {showScrollTop && (
+        <Fab
+          size="small"
+          color="primary"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1200 }}
+        >
+          <KeyboardArrowUpIcon />
+        </Fab>
       )}
 
       {similarBands.length > 0 && (
@@ -413,6 +523,33 @@ const BandDetailPage = () => {
           </Box>
         </>
       )}
+      <Drawer
+        anchor="right"
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: { xs: '100%', sm: 400 },
+            boxSizing: 'border-box',
+            backgroundColor: 'background.paper',
+            borderTopLeftRadius: { xs: 0, sm: 8 },
+            borderBottomLeftRadius: { xs: 0, sm: 8 },
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.2)',
+            overflow: 'hidden'
+          },
+        }}
+      >
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 1 }}>
+          <AlbumFilter
+            onFilterChange={(newFilters) => {
+              setAlbumFilters(newFilters);
+              setIsFilterOpen(false);
+            }}
+            onClose={() => setIsFilterOpen(false)}
+            initialFilters={{ ...albumFilters, bandId: band?.id }}
+          />
+        </Box>
+      </Drawer>
     </Container>
   );
 };
