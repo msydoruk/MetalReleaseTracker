@@ -14,18 +14,37 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import MediaTypeIcon from './MediaTypeIcon';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useCompare } from '../contexts/CompareContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
 
 const GroupedAlbumCard = ({ group }) => {
   const { t } = useLanguage();
   const { format: formatPrice } = useCurrency();
+  const { addToCompare, removeFromCompare, isInCompare, isFull } = useCompare();
   const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const firstVariant = group.variants[0];
+  const compareAlbum = firstVariant ? {
+    id: firstVariant.albumId,
+    name: group.albumName,
+    bandName: group.bandName,
+    bandSlug: group.bandSlug,
+    slug: group.albumSlug,
+    photoUrl: group.photoUrl,
+    price: Math.min(...group.variants.map((v) => v.price)),
+    media: group.media,
+    distributorName: firstVariant.distributorName,
+    status: group.status,
+    originalYear: group.originalYear,
+    purchaseUrl: firstVariant.purchaseUrl,
+  } : null;
+  const inCompare = compareAlbum && isInCompare(compareAlbum.id);
 
   const MAX_VISIBLE_VARIANTS = 3;
 
@@ -87,6 +106,24 @@ const GroupedAlbumCard = ({ group }) => {
                 color: 'white'
               }}
             />
+          )}
+          {compareAlbum && (
+            <IconButton
+              onClick={(e) => { e.stopPropagation(); inCompare ? removeFromCompare(compareAlbum.id) : addToCompare(compareAlbum); }}
+              disabled={!inCompare && isFull}
+              size="small"
+              sx={{
+                position: 'absolute',
+                bottom: 8,
+                right: 8,
+                bgcolor: inCompare ? 'primary.main' : 'rgba(0,0,0,0.5)',
+                '&:hover': { bgcolor: inCompare ? 'primary.dark' : 'rgba(0,0,0,0.7)' },
+                width: 36,
+                height: 36,
+              }}
+            >
+              <CompareArrowsIcon sx={{ color: 'white', fontSize: 18 }} />
+            </IconButton>
           )}
         </Box>
 

@@ -47,6 +47,7 @@ const EMPTY_FORM = {
   date: '',
   sortOrder: 0,
   isPublished: false,
+  scheduledPublishDate: '',
 };
 
 export default function NewsPage() {
@@ -101,6 +102,7 @@ export default function NewsPage() {
       date: row.date ? row.date.split('T')[0] : '',
       sortOrder: row.sortOrder || 0,
       isPublished: row.isPublished || false,
+      scheduledPublishDate: row.scheduledPublishDate ? row.scheduledPublishDate.split('T')[0] + 'T' + (row.scheduledPublishDate.split('T')[1] || '00:00').substring(0, 5) : '',
     });
     setDialogLang('en');
     setDialogOpen(true);
@@ -132,6 +134,7 @@ export default function NewsPage() {
         date: form.date,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
         isPublished: form.isPublished,
+        scheduledPublishDate: form.scheduledPublishDate || null,
       };
       if (editingId) {
         await updateNewsArticle(editingId, payload);
@@ -203,14 +206,11 @@ export default function NewsPage() {
       width: 110,
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Yes' : 'No'}
-          size="small"
-          color={params.value ? 'success' : 'default'}
-          variant={params.value ? 'filled' : 'outlined'}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.value) return <Chip label="Yes" size="small" color="success" />;
+        if (params.row.scheduledPublishDate) return <Chip label="Scheduled" size="small" color="warning" />;
+        return <Chip label="No" size="small" variant="outlined" />;
+      },
     },
     {
       field: 'sortOrder',
@@ -367,12 +367,24 @@ export default function NewsPage() {
             control={
               <Switch
                 checked={form.isPublished}
-                onChange={(e) => setForm((prev) => ({ ...prev, isPublished: e.target.checked }))}
+                onChange={(e) => setForm((prev) => ({ ...prev, isPublished: e.target.checked, ...(e.target.checked ? { scheduledPublishDate: '' } : {}) }))}
               />
             }
             label="Published"
             sx={{ mt: 2 }}
           />
+          {!form.isPublished && (
+            <TextField
+              label="Scheduled Publish Date"
+              type="datetime-local"
+              fullWidth
+              margin="normal"
+              value={form.scheduledPublishDate || ''}
+              onChange={(e) => setForm((prev) => ({ ...prev, scheduledPublishDate: e.target.value }))}
+              helperText="Leave empty for manual publishing"
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          )}
 
           <Divider sx={{ my: 2 }} />
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>SEO (optional)</Typography>

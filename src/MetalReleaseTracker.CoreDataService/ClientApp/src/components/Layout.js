@@ -29,6 +29,7 @@ import TelegramIcon from '@mui/icons-material/Telegram';
 import LanguageIcon from '@mui/icons-material/Language';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import StorageIcon from '@mui/icons-material/Storage';
 import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../hooks/useAuth';
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
   { label: 'Telegram', path: '/telegram', icon: <TelegramIcon /> },
   { label: 'Languages', path: '/languages', icon: <LanguageIcon /> },
   { label: 'Data Quality', path: '/data-quality', icon: <VerifiedIcon /> },
+  { label: 'Bulk Data', path: '/bulk-data', icon: <StorageIcon /> },
   { label: 'Audit Log', path: '/audit-log', icon: <HistoryIcon /> },
 ];
 

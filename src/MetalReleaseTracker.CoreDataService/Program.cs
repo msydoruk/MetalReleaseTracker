@@ -1,5 +1,6 @@
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Extensions;
 using MetalReleaseTracker.CoreDataService.ServiceExtensions;
+using MetalReleaseTracker.CoreDataService.Services.Implementation;
 using MetalReleaseTracker.CoreDataService.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -42,6 +43,7 @@ builder.Services
     .AddAdminAuthentication(builder.Configuration)
     .AddAdminServices();
 
+builder.Services.AddHostedService<NewsPublisherService>();
 builder.Services.AddHttpClient();
 
 builder.Services

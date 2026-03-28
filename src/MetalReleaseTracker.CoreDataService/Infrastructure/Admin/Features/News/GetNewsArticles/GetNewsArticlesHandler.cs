@@ -29,6 +29,7 @@ public class GetNewsArticlesHandler
             Date = article.Date,
             SortOrder = article.SortOrder,
             IsPublished = article.IsPublished,
+            ScheduledPublishDate = article.ScheduledPublishDate,
             CreatedDate = article.CreatedDate,
             UpdatedAt = article.UpdatedAt,
             Translations = article.Translations.ToDictionary(

@@ -16,6 +16,8 @@ public class NewsArticleDto
 
     public bool IsPublished { get; set; }
 
+    public DateTime? ScheduledPublishDate { get; set; }
+
     public DateTime CreatedDate { get; set; }
 
     public DateTime UpdatedAt { get; set; }

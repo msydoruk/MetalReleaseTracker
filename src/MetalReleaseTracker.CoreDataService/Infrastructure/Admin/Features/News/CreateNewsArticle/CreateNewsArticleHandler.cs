@@ -26,6 +26,7 @@ public class CreateNewsArticleHandler
             Date = request.Date,
             SortOrder = request.SortOrder,
             IsPublished = request.IsPublished,
+            ScheduledPublishDate = request.ScheduledPublishDate,
             CreatedDate = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -57,6 +58,7 @@ public class CreateNewsArticleHandler
             Date = entity.Date,
             SortOrder = entity.SortOrder,
             IsPublished = entity.IsPublished,
+            ScheduledPublishDate = entity.ScheduledPublishDate,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
             Translations = entity.Translations.ToDictionary(

@@ -58,6 +58,15 @@ public class UpdateNewsArticleHandler
         if (request.IsPublished.HasValue)
         {
             entity.IsPublished = request.IsPublished.Value;
+            if (request.IsPublished.Value)
+            {
+                entity.ScheduledPublishDate = null;
+            }
+        }
+
+        if (request.ScheduledPublishDate.HasValue)
+        {
+            entity.ScheduledPublishDate = request.ScheduledPublishDate.Value;
         }
 
         if (request.Translations is not null)
@@ -93,6 +102,7 @@ public class UpdateNewsArticleHandler
             Date = entity.Date,
             SortOrder = entity.SortOrder,
             IsPublished = entity.IsPublished,
+            ScheduledPublishDate = entity.ScheduledPublishDate,
             CreatedDate = entity.CreatedDate,
             UpdatedAt = entity.UpdatedAt,
             Translations = entity.Translations.ToDictionary(

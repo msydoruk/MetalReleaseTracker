@@ -12,7 +12,9 @@ import { CurrencyProvider } from './contexts/CurrencyContext';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { SeoProvider } from './contexts/SeoContext';
 import { ThemeModeProvider, useThemeMode } from './contexts/ThemeContext';
+import { CompareProvider } from './contexts/CompareContext';
 import BackToTop from './components/BackToTop';
+import CompareBar from './components/CompareBar';
 import InstallPrompt from './components/InstallPrompt';
 
 // Lazy-loaded route components
@@ -33,6 +35,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const GoogleCallback = lazy(() => import('./pages/GoogleCallback'));
 const LoginCallback = lazy(() => import('./pages/LoginCallback'));
 const EmailVerifyPage = lazy(() => import('./pages/EmailVerifyPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Theme is now managed by ThemeContext
@@ -110,6 +113,7 @@ const AppContent = () => {
           <CurrencyProvider>
             <NavigationProvider>
             <SeoProvider>
+            <CompareProvider>
             <Router>
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Header />
@@ -138,6 +142,7 @@ const AppContent = () => {
                   <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/changelog" element={<ChangelogPage />} />
+                  <Route path="/compare" element={<ComparePage />} />
                   <Route path="/email/verify/:token" element={<EmailVerifyPage />} />
 
                   {/* Protected routes */}
@@ -157,10 +162,12 @@ const AppContent = () => {
                 </Suspense>
               </Box>
               <Footer />
+              <CompareBar />
               <BackToTop />
               <InstallPrompt />
             </Box>
             </Router>
+            </CompareProvider>
             </SeoProvider>
             </NavigationProvider>
           </CurrencyProvider>

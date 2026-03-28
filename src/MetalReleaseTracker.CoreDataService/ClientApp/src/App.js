@@ -22,6 +22,7 @@ import TelegramPage from './pages/TelegramPage';
 import LanguagesPage from './pages/LanguagesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import DataQualityPage from './pages/DataQualityPage';
+import BulkDataPage from './pages/BulkDataPage';
 import AuditLogPage from './pages/AuditLogPage';
 
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
               <Route path="languages" element={<LanguagesPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="data-quality" element={<DataQualityPage />} />
+              <Route path="bulk-data" element={<BulkDataPage />} />
               <Route path="audit-log" element={<AuditLogPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -16,5 +16,7 @@ public class CreateNewsArticleRequest
 
     public bool IsPublished { get; set; }
 
+    public DateTime? ScheduledPublishDate { get; set; }
+
     public Dictionary<string, NewsArticleTranslationDto> Translations { get; set; } = new();
 }

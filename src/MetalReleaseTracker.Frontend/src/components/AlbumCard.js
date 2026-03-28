@@ -13,11 +13,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import Chip from '@mui/material/Chip';
 import { useNavigate, Link } from 'react-router-dom';
 import MediaTypeIcon from './MediaTypeIcon';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useCompare } from '../contexts/CompareContext';
 import { getDistributorCountry } from '../utils/distributorCountries';
 
 const COLLECTION_STATUS_FAVORITE = 0;
@@ -25,8 +27,10 @@ const COLLECTION_STATUS_FAVORITE = 0;
 const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCollection, isLoggedIn = false }) => {
   const { t } = useLanguage();
   const { format: formatPrice } = useCurrency();
+  const { addToCompare, removeFromCompare, isInCompare, isFull } = useCompare();
   const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const inCompare = isInCompare(album.id);
 
   const imageUrl = album.photoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23111'/%3E%3Cpath d='M162 100v66.5c-3.7-2.1-8-3.5-12.5-3.5-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25V119h25v-19H162z' fill='%23333'/%3E%3C/svg%3E";
 
@@ -127,6 +131,22 @@ const AlbumCard = ({ album, collectionStatus, onCollectionChange, onRemoveFromCo
               )}
             </IconButton>
           )}
+          <IconButton
+            onClick={(e) => { e.stopPropagation(); inCompare ? removeFromCompare(album.id) : addToCompare(album); }}
+            disabled={!inCompare && isFull}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: onCollectionChange ? 56 : 8,
+              right: 8,
+              bgcolor: inCompare ? 'primary.main' : 'rgba(0,0,0,0.5)',
+              '&:hover': { bgcolor: inCompare ? 'primary.dark' : 'rgba(0,0,0,0.7)' },
+              width: 36,
+              height: 36,
+            }}
+          >
+            <CompareArrowsIcon sx={{ color: 'white', fontSize: 18 }} />
+          </IconButton>
         </Box>
         <CardContent sx={{
           flex: '1 0 auto',

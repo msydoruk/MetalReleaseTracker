@@ -14,6 +14,9 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.Ge
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBands;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.MergeBands;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.UpdateBand;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.BulkData.ExportAlbums;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.BulkData.ExportBands;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.BulkData.ImportAlbums;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.CreateCurrency;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.GetCurrencies;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.UpdateCurrency;
@@ -160,6 +163,11 @@ public static class AdminServiceExtension
         services.AddScoped<GetBandsMissingPhotoHandler>();
         services.AddScoped<GetPotentialDuplicateBandsHandler>();
         services.AddScoped<HideAlbumHandler>();
+
+        // Bulk Data
+        services.AddScoped<ExportAlbumsHandler>();
+        services.AddScoped<ExportBandsHandler>();
+        services.AddScoped<ImportAlbumsHandler>();
 
         return services;
     }

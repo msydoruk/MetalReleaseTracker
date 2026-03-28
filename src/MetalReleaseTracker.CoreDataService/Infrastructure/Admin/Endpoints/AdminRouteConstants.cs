@@ -161,4 +161,12 @@ public static class AdminRouteConstants
         public const string PotentialDuplicateBands = $"{Prefix}/potential-duplicate-bands";
         public const string HideAlbum = $"{Prefix}/hide-album/{{id:guid}}";
     }
+
+    public static class BulkData
+    {
+        private const string Prefix = $"{Base}/bulk-data";
+        public const string ExportAlbums = $"{Prefix}/export/albums";
+        public const string ExportBands = $"{Prefix}/export/bands";
+        public const string ImportAlbums = $"{Prefix}/import/albums";
+    }
 }

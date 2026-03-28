@@ -16,6 +16,9 @@ using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.Ge
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.GetBands;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.MergeBands;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Bands.UpdateBand;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.BulkData.ExportAlbums;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.BulkData.ExportBands;
+using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.BulkData.ImportAlbums;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.CreateCurrency;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.GetCurrencies;
 using MetalReleaseTracker.CoreDataService.Infrastructure.Admin.Features.Currencies.UpdateCurrency;
@@ -171,6 +174,11 @@ public static class AdminEndpointExtension
         GetBandsMissingPhotoEndpoint.MapEndpoint(adminGroup);
         GetPotentialDuplicateBandsEndpoint.MapEndpoint(adminGroup);
         HideAlbumEndpoint.MapEndpoint(adminGroup);
+
+        // Bulk Data
+        ExportAlbumsEndpoint.MapEndpoint(adminGroup);
+        ExportBandsEndpoint.MapEndpoint(adminGroup);
+        ImportAlbumsEndpoint.MapEndpoint(adminGroup);
 
         return app;
     }
