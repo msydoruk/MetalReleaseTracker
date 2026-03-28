@@ -23,7 +23,7 @@ import { fetchBands, fetchDistributors } from '../services/api';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
+const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {}, hideBandFilter = false, hideDistributorFilter = false }) => {
   const { t } = useLanguage();
 
   const [filters, setFilters] = useState({
@@ -124,8 +124,8 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
   const handleReset = () => {
     const resetFilters = {
       name: '',
-      bandId: '',
-      distributorId: '',
+      bandId: initialFilters.bandId || '',
+      distributorId: initialFilters.distributorId || '',
       genre: '',
       mediaType: '',
       stockStatus: '',
@@ -310,140 +310,144 @@ const AlbumFilter = ({ onFilterChange, onClose, initialFilters = {} }) => {
           </Box>
 
           {/* Band filter - Simplified with autocomplete look */}
-          <Box>
-            <FormLabel
-              component="legend"
-              sx={{
-                color: 'text.primary',
-                mb: 1,
-                fontWeight: 'medium'
-              }}
-            >
-              {t('albumFilter.band')}
-            </FormLabel>
-            <FormControl
-              fullWidth
-              size="small"
-              variant="outlined"
-              sx={{
-                backgroundColor: 'action.hover',
-                width: '100%'
-              }}
-            >
-              <Select
-                name="bandId"
-                value={filters.bandId}
-                onChange={handleInputChange}
-                displayEmpty
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allBands')}</em>;
-                  }
-                  const selectedBand = bands.find(b => b.id === selected);
-                  return selectedBand ? selectedBand.name : '';
-                }}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 300
-                    }
-                  }
-                }}
+          {!hideBandFilter && (
+            <Box>
+              <FormLabel
+                component="legend"
                 sx={{
-                  '& .MuiSelect-select': {
-                    py: 1,
-                    color: 'text.primary',
-                    fontWeight: 'medium',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'divider'
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'text.secondary'
-                  },
-                  height: '40px'
+                  color: 'text.primary',
+                  mb: 1,
+                  fontWeight: 'medium'
                 }}
               >
-                <MenuItem value="">{t('albumFilter.allBands')}</MenuItem>
-                {bands.map((band) => (
-                  <MenuItem key={band.id} value={band.id}>
-                    {band.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+                {t('albumFilter.band')}
+              </FormLabel>
+              <FormControl
+                fullWidth
+                size="small"
+                variant="outlined"
+                sx={{
+                  backgroundColor: 'action.hover',
+                  width: '100%'
+                }}
+              >
+                <Select
+                  name="bandId"
+                  value={filters.bandId}
+                  onChange={handleInputChange}
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <em style={{ opacity: 0.7 }}>{t('albumFilter.allBands')}</em>;
+                    }
+                    const selectedBand = bands.find(b => b.id === selected);
+                    return selectedBand ? selectedBand.name : '';
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300
+                      }
+                    }
+                  }}
+                  sx={{
+                    '& .MuiSelect-select': {
+                      py: 1,
+                      color: 'text.primary',
+                      fontWeight: 'medium',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'divider'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'text.secondary'
+                    },
+                    height: '40px'
+                  }}
+                >
+                  <MenuItem value="">{t('albumFilter.allBands')}</MenuItem>
+                  {bands.map((band) => (
+                    <MenuItem key={band.id} value={band.id}>
+                      {band.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
 
           {/* Distributor filter */}
-          <Box>
-            <FormLabel
-              component="legend"
-              sx={{
-                color: 'text.primary',
-                mb: 1,
-                fontWeight: 'medium'
-              }}
-            >
-              {t('albumFilter.distributor')}
-            </FormLabel>
-            <FormControl
-              fullWidth
-              size="small"
-              variant="outlined"
-              sx={{
-                backgroundColor: 'action.hover',
-                width: '100%'
-              }}
-            >
-              <Select
-                name="distributorId"
-                value={filters.distributorId}
-                onChange={handleInputChange}
-                displayEmpty
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return <em style={{ opacity: 0.7 }}>{t('albumFilter.allDistributors')}</em>;
-                  }
-                  const selectedDistributor = distributors.find(d => d.id === selected);
-                  return selectedDistributor ? selectedDistributor.name : '';
-                }}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 300
-                    }
-                  }
-                }}
+          {!hideDistributorFilter && (
+            <Box>
+              <FormLabel
+                component="legend"
                 sx={{
-                  '& .MuiSelect-select': {
-                    py: 1,
-                    color: 'text.primary',
-                    fontWeight: 'medium',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'divider'
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'text.secondary'
-                  },
-                  height: '40px'
+                  color: 'text.primary',
+                  mb: 1,
+                  fontWeight: 'medium'
                 }}
               >
-                <MenuItem value="">{t('albumFilter.allDistributors')}</MenuItem>
-                {distributors.map((distributor) => (
-                  <MenuItem key={distributor.id} value={distributor.id}>
-                    {distributor.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+                {t('albumFilter.distributor')}
+              </FormLabel>
+              <FormControl
+                fullWidth
+                size="small"
+                variant="outlined"
+                sx={{
+                  backgroundColor: 'action.hover',
+                  width: '100%'
+                }}
+              >
+                <Select
+                  name="distributorId"
+                  value={filters.distributorId}
+                  onChange={handleInputChange}
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <em style={{ opacity: 0.7 }}>{t('albumFilter.allDistributors')}</em>;
+                    }
+                    const selectedDistributor = distributors.find(d => d.id === selected);
+                    return selectedDistributor ? selectedDistributor.name : '';
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300
+                      }
+                    }
+                  }}
+                  sx={{
+                    '& .MuiSelect-select': {
+                      py: 1,
+                      color: 'text.primary',
+                      fontWeight: 'medium',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'divider'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'text.secondary'
+                    },
+                    height: '40px'
+                  }}
+                >
+                  <MenuItem value="">{t('albumFilter.allDistributors')}</MenuItem>
+                  {distributors.map((distributor) => (
+                    <MenuItem key={distributor.id} value={distributor.id}>
+                      {distributor.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
 
           {/* Sort options - using RadioGroup for better UI */}
           <Box>

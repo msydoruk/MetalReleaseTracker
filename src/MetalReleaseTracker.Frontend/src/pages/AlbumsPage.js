@@ -130,7 +130,6 @@ const AlbumsPage = ({ isHome = false }) => {
   const [isGrouped, setIsGrouped] = useState(() => localStorage.getItem('albumsGrouped') !== 'false');
   const [groupedAlbums, setGroupedAlbums] = useState([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const albumListRef = useRef(null);
   const restoredFromStorage = useRef(false);
 
   // On initial load, if no URL params, restore filters from localStorage
@@ -464,14 +463,6 @@ const AlbumsPage = ({ isHome = false }) => {
         </Alert>
       )}
 
-      {totalCount > 0 && !loading && (
-        <Box ref={albumListRef} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            {(isGrouped ? groupedAlbums.length : albums.length)} / {totalCount}
-          </Typography>
-        </Box>
-      )}
-
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
@@ -481,6 +472,8 @@ const AlbumsPage = ({ isHome = false }) => {
           onLoadMore={handleLoadMore}
           hasMore={scrollPage < pageCount}
           loading={loadingMore}
+          loadedCount={isGrouped ? groupedAlbums.length : albums.length}
+          totalCount={totalCount}
         >
           <Box sx={{ width: '100%', mb: 4 }}>
             <Box

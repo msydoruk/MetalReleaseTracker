@@ -100,7 +100,7 @@ public class AlbumService : IAlbumService
         var groupedDtos = new List<GroupedAlbumDto>();
         foreach (var group in pagedGroups)
         {
-            var primary = group[0];
+            var primary = group.FirstOrDefault(album => !string.IsNullOrWhiteSpace(album.PhotoUrl)) ?? group[0];
             var photoUrl = await _fileStorageService.GetFileUrlAsync(primary.PhotoUrl, cancellationToken);
             var imageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(primary.PhotoUrl, cancellationToken);
 

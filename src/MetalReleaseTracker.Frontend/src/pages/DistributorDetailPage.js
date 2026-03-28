@@ -311,6 +311,7 @@ const DistributorDetailPage = () => {
                 onChange={(event) => {
                   const checked = event.target.checked;
                   setIsGrouped(checked);
+                  setAllAlbums([]);
                   localStorage.setItem('albumsGrouped', String(checked));
                 }}
                 size="small"
@@ -331,12 +332,6 @@ const DistributorDetailPage = () => {
         </Box>
       </Box>
 
-      {totalCount > 0 && !albumsLoading && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {allAlbums.length} / {totalCount}
-        </Typography>
-      )}
-
       {albumsLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
@@ -346,6 +341,8 @@ const DistributorDetailPage = () => {
           onLoadMore={handleLoadMore}
           hasMore={scrollPage < pageCount}
           loading={loadingMore}
+          loadedCount={allAlbums.length}
+          totalCount={totalCount}
         >
           <Box sx={{
             display: 'grid',
@@ -424,6 +421,7 @@ const DistributorDetailPage = () => {
             }}
             onClose={() => setIsFilterOpen(false)}
             initialFilters={{ ...albumFilters, distributorId: distributor?.id }}
+            hideDistributorFilter
           />
         </Box>
       </Drawer>
