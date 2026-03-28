@@ -73,6 +73,8 @@ namespace MetalReleaseTracker.CoreDataService.ServiceExtensions
             services.AddScoped<IImageUrlResolverService, ImageUrlResolverService>();
             services.AddScoped<ITelegramBotService, TelegramBotService>();
             services.AddScoped<IEmailNotificationService, EmailNotificationService>();
+            services.AddScoped<IDiscordNotificationService, DiscordNotificationService>();
+            services.AddHttpClient("Discord");
 
             return services;
         }

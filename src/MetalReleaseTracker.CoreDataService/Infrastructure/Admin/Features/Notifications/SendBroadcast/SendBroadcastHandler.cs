@@ -14,6 +14,7 @@ public class SendBroadcastHandler
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ITelegramBotService _telegramBotService;
     private readonly IEmailNotificationService _emailNotificationService;
+    private readonly IDiscordNotificationService _discordNotificationService;
     private readonly ILogger<SendBroadcastHandler> _logger;
 
     public SendBroadcastHandler(
@@ -21,12 +22,14 @@ public class SendBroadcastHandler
         UserManager<IdentityUser> userManager,
         ITelegramBotService telegramBotService,
         IEmailNotificationService emailNotificationService,
+        IDiscordNotificationService discordNotificationService,
         ILogger<SendBroadcastHandler> logger)
     {
         _context = context;
         _userManager = userManager;
         _telegramBotService = telegramBotService;
         _emailNotificationService = emailNotificationService;
+        _discordNotificationService = discordNotificationService;
         _logger = logger;
     }
 
@@ -91,11 +94,25 @@ public class SendBroadcastHandler
             }
         }
 
+        var discordSentCount = 0;
+        if (channel is "all" or "discord")
+        {
+            try
+            {
+                discordSentCount = await _discordNotificationService.SendNotificationsAsync(notifications, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Failed to send broadcast Discord notifications");
+            }
+        }
+
         return new SendBroadcastResponse
         {
             CreatedCount = notifications.Count,
             TelegramSentCount = telegramSentCount,
             EmailSentCount = emailSentCount,
+            DiscordSentCount = discordSentCount,
         };
     }
 }

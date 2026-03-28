@@ -7,4 +7,6 @@ public class SendBroadcastResponse
     public int TelegramSentCount { get; set; }
 
     public int EmailSentCount { get; set; }
+
+    public int DiscordSentCount { get; set; }
 }

@@ -17,6 +17,7 @@ public class NotificationService : INotificationService
     private readonly IFileStorageService _fileStorageService;
     private readonly ITelegramBotService _telegramBotService;
     private readonly IEmailNotificationService _emailNotificationService;
+    private readonly IDiscordNotificationService _discordNotificationService;
     private readonly IAdminSettingsService _adminSettingsService;
     private readonly ILogger<NotificationService> _logger;
 
@@ -26,6 +27,7 @@ public class NotificationService : INotificationService
         IFileStorageService fileStorageService,
         ITelegramBotService telegramBotService,
         IEmailNotificationService emailNotificationService,
+        IDiscordNotificationService discordNotificationService,
         IAdminSettingsService adminSettingsService,
         ILogger<NotificationService> logger)
     {
@@ -34,6 +36,7 @@ public class NotificationService : INotificationService
         _fileStorageService = fileStorageService;
         _telegramBotService = telegramBotService;
         _emailNotificationService = emailNotificationService;
+        _discordNotificationService = discordNotificationService;
         _adminSettingsService = adminSettingsService;
         _logger = logger;
     }
@@ -116,6 +119,15 @@ public class NotificationService : INotificationService
             catch (Exception emailException)
             {
                 _logger.LogWarning(emailException, "Failed to send email notifications for album {AlbumName}", albumName);
+            }
+
+            try
+            {
+                await _discordNotificationService.SendNotificationsAsync(notifications, cancellationToken);
+            }
+            catch (Exception discordException)
+            {
+                _logger.LogWarning(discordException, "Failed to send Discord notifications for album {AlbumName}", albumName);
             }
 
             _logger.LogInformation(

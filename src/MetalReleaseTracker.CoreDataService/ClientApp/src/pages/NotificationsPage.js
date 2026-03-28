@@ -87,7 +87,8 @@ export default function NotificationsPage() {
       const createdCount = data?.createdCount ?? 0;
       const telegramCount = data?.telegramSentCount ?? 0;
       const emailCount = data?.emailSentCount ?? 0;
-      showSnackbar(`Created: ${createdCount} | Telegram: ${telegramCount} | Email: ${emailCount}`);
+      const discordCount = data?.discordSentCount ?? 0;
+      showSnackbar(`Created: ${createdCount} | Telegram: ${telegramCount} | Email: ${emailCount} | Discord: ${discordCount}`);
       setConfirmDialogOpen(false);
       setContent('');
       loadStats();
@@ -361,6 +362,11 @@ export default function NotificationsPage() {
               <MenuItem value="email">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EmailIcon fontSize="small" /> Email Only
+                </Box>
+              </MenuItem>
+              <MenuItem value="discord">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  Discord Only
                 </Box>
               </MenuItem>
             </TextField>

@@ -191,6 +191,14 @@ const TABS = [
       { key: 'AlbumPrompt', label: 'Album SEO Prompt', type: 'text', description: 'Prompt template for album SEO. Variables: {{bandName}}, {{albumTitle}}, {{genre}}, {{year}}, {{media}}, {{price}}, {{label}}, {{description}}' },
     ],
   },
+  {
+    label: 'Discord',
+    category: 'Discord',
+    fields: [
+      { key: 'Enabled', label: 'Discord Notifications Enabled', type: 'boolean', description: 'Enable sending notifications to Discord channel' },
+      { key: 'WebhookUrl', label: 'Webhook URL', type: 'text', description: 'Discord channel webhook URL for release announcements' },
+    ],
+  },
 ];
 
 export default function SettingsPage() {

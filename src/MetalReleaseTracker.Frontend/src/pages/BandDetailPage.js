@@ -23,6 +23,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
 import { ALBUM_SORT_FIELDS } from '../constants/albumSortFields';
 import ShareButton from '../components/ShareButton';
+import BreadcrumbNav from '../components/BreadcrumbNav';
 
 const BandDetailPage = () => {
   const { slug } = useParams();
@@ -213,14 +214,10 @@ const BandDetailPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Button
-        component={Link}
-        to="/bands"
-        startIcon={<ArrowBackIcon />}
-        sx={{ textTransform: 'none', mb: 3 }}
-      >
-        {t('bandDetail.backToBands')}
-      </Button>
+      <BreadcrumbNav items={[
+        { label: t('nav.bands'), to: '/bands' },
+        { label: band.name },
+      ]} />
 
       <Box sx={{
         display: 'flex',

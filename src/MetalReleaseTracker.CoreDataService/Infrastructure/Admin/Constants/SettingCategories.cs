@@ -12,4 +12,5 @@ public static class SettingCategories
     public const string AiSeo = "AiSeo";
     public const string Email = "email";
     public const string RateLimiting = "RateLimiting";
+    public const string Discord = "Discord";
 }

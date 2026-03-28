@@ -26,6 +26,7 @@ public class SitemapService : ISitemapService
 
     private readonly IAlbumRepository _albumRepository;
     private readonly IBandRepository _bandRepository;
+    private readonly IDistributorsRepository _distributorsRepository;
     private readonly IAdminSettingsService _settingsService;
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<SitemapService> _logger;
@@ -33,12 +34,14 @@ public class SitemapService : ISitemapService
     public SitemapService(
         IAlbumRepository albumRepository,
         IBandRepository bandRepository,
+        IDistributorsRepository distributorsRepository,
         IAdminSettingsService settingsService,
         IMemoryCache memoryCache,
         ILogger<SitemapService> logger)
     {
         _albumRepository = albumRepository;
         _bandRepository = bandRepository;
+        _distributorsRepository = distributorsRepository;
         _settingsService = settingsService;
         _memoryCache = memoryCache;
         _logger = logger;
@@ -67,11 +70,13 @@ public class SitemapService : ISitemapService
 
         var albumSlugs = await _albumRepository.GetAllAlbumSlugsAsync(cancellationToken);
         var bandSlugs = await _bandRepository.GetAllBandSlugsAsync(cancellationToken);
+        var distributors = await _distributorsRepository.GetAllAsync(cancellationToken);
 
         _logger.LogInformation(
-            "Generating sitemap with {AlbumCount} albums and {BandCount} bands",
+            "Generating sitemap with {AlbumCount} albums, {BandCount} bands, and {DistributorCount} distributors",
             albumSlugs.Count,
-            bandSlugs.Count);
+            bandSlugs.Count,
+            distributors.Count);
 
         var builder = new StringBuilder();
         builder.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -92,6 +97,20 @@ public class SitemapService : ISitemapService
             builder.Append("    <loc>").Append(baseUrl).Append("/bands/").Append(band.Slug).AppendLine("</loc>");
             builder.AppendLine("    <changefreq>weekly</changefreq>");
             builder.AppendLine("    <priority>0.7</priority>");
+            builder.AppendLine("  </url>");
+        }
+
+        foreach (var distributor in distributors)
+        {
+            if (string.IsNullOrEmpty(distributor.Slug))
+            {
+                continue;
+            }
+
+            builder.AppendLine("  <url>");
+            builder.Append("    <loc>").Append(baseUrl).Append("/distributors/").Append(distributor.Slug).AppendLine("</loc>");
+            builder.AppendLine("    <changefreq>monthly</changefreq>");
+            builder.AppendLine("    <priority>0.6</priority>");
             builder.AppendLine("  </url>");
         }
 

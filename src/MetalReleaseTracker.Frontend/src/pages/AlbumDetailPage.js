@@ -31,6 +31,7 @@ import { getDistributorCountry, getDistributorCountryName } from '../utils/distr
 import useRecentlyViewed from '../hooks/useRecentlyViewed';
 import WatchButton from '../components/WatchButton';
 import ShareButton from '../components/ShareButton';
+import BreadcrumbNav from '../components/BreadcrumbNav';
 
 const AlbumDetailPage = () => {
   const { slug } = useParams();
@@ -78,14 +79,21 @@ const AlbumDetailPage = () => {
       ...(album.originalYear > 0 && { datePublished: String(album.originalYear) }),
       ...(album.genre && { genre: album.genre }),
       ...(album.photoUrl && { image: album.photoUrl }),
-      offers: album.variants.map((variant) => ({
-        '@type': 'Offer',
-        price: variant.price.toFixed(2),
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: Math.min(...album.variants.map((v) => v.price)).toFixed(2),
+        highPrice: Math.max(...album.variants.map((v) => v.price)).toFixed(2),
         priceCurrency: 'EUR',
-        url: variant.purchaseUrl,
-        seller: { '@type': 'Organization', name: variant.distributorName },
-        availability: 'https://schema.org/InStock',
-      })),
+        offerCount: album.variants.length,
+        offers: album.variants.map((variant) => ({
+          '@type': 'Offer',
+          price: variant.price.toFixed(2),
+          priceCurrency: 'EUR',
+          url: variant.purchaseUrl,
+          seller: { '@type': 'Organization', name: variant.distributorName },
+          availability: 'https://schema.org/InStock',
+        })),
+      },
     };
     const script = document.createElement('script');
     script.type = 'application/ld+json';
@@ -196,14 +204,10 @@ const AlbumDetailPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Button
-        component={Link}
-        to="/albums"
-        startIcon={<ArrowBackIcon />}
-        sx={{ textTransform: 'none', mb: 3 }}
-      >
-        {t('albumDetail.backToAlbums')}
-      </Button>
+      <BreadcrumbNav items={[
+        { label: t('nav.albums'), to: '/albums' },
+        { label: `${album.bandName} - ${album.albumName}` },
+      ]} />
 
       <Box sx={{
         display: 'flex',

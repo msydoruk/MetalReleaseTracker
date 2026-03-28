@@ -21,6 +21,7 @@ import GroupedAlbumCard from '../components/GroupedAlbumCard';
 import Pagination from '../components/Pagination';
 import DefaultDistributorImage from '../components/DefaultDistributorImage';
 import ShareButton from '../components/ShareButton';
+import BreadcrumbNav from '../components/BreadcrumbNav';
 import { fetchDistributorBySlug, fetchGroupedAlbums } from '../services/api';
 import usePageMeta from '../hooks/usePageMeta';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -140,14 +141,10 @@ const DistributorDetailPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Button
-        component={Link}
-        to="/distributors"
-        startIcon={<ArrowBackIcon />}
-        sx={{ textTransform: 'none', mb: 3 }}
-      >
-        {t('distributorDetail.backToDistributors')}
-      </Button>
+      <BreadcrumbNav items={[
+        { label: t('nav.distributors'), to: '/distributors' },
+        { label: distributor.name },
+      ]} />
 
       <Box sx={{
         display: 'flex',

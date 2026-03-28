@@ -76,6 +76,12 @@ public static class SettingKeys
         public const string IsEnabled = "IsEnabled";
     }
 
+    public static class Discord
+    {
+        public const string WebhookUrl = "WebhookUrl";
+        public const string Enabled = "Enabled";
+    }
+
     public static class RateLimiting
     {
         public const string CatalogPermitLimit = "CatalogPermitLimit";
