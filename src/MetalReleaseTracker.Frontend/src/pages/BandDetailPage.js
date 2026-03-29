@@ -368,7 +368,7 @@ const BandDetailPage = () => {
         >
           {t('bandDetail.albumsBy').replace('{bandName}', band.name)}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
           <FormControlLabel
             control={
               <Checkbox

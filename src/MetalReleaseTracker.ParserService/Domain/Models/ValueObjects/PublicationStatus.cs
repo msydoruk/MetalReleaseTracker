@@ -4,5 +4,6 @@ public enum PublicationStatus
 {
     Unpublished,
     Published,
-    SkippedZeroPrice
+    SkippedZeroPrice,
+    SkippedNoCanonicalTitle
 }

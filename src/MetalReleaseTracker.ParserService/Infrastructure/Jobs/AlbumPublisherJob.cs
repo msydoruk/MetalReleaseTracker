@@ -55,6 +55,18 @@ public class AlbumPublisherJob
 
                 foreach (var detail in unpublished)
                 {
+                    if (string.IsNullOrWhiteSpace(detail.CanonicalTitle))
+                    {
+                        _logger.LogWarning(
+                            "Skipping album without CanonicalTitle: '{BandName}' - '{AlbumName}' (SKU={SKU}).",
+                            detail.BandName,
+                            detail.Name,
+                            detail.SKU);
+                        detail.PublicationStatus = PublicationStatus.SkippedNoCanonicalTitle;
+                        await _catalogueIndexDetailRepository.UpdateAsync(detail, cancellationToken);
+                        continue;
+                    }
+
                     var publicationEvent = MapToPublicationEvent(detail);
                     await _topicProducer.Produce(publicationEvent, cancellationToken);
 

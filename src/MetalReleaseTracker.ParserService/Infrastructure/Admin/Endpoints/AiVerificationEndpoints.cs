@@ -92,5 +92,16 @@ public static class AiVerificationEndpoints
             .WithName("BulkSetAiVerificationDecision")
             .WithTags("Admin AI Verification")
             .Produces<object>();
+
+        endpoints.MapPost(AdminRouteConstants.AiVerification.ResetForReanalysis, async (
+                IAiVerificationService aiVerificationService,
+                CancellationToken cancellationToken) =>
+            {
+                var count = await aiVerificationService.ResetForReanalysisAsync(cancellationToken);
+                return Results.Ok(new { count });
+            })
+            .WithName("ResetForReanalysis")
+            .WithTags("Admin AI Verification")
+            .Produces<object>();
     }
 }

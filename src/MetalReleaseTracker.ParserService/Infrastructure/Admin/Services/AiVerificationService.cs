@@ -444,6 +444,40 @@ public class AiVerificationService : IAiVerificationService
         return verifications.Count;
     }
 
+    public async Task<int> ResetForReanalysisAsync(CancellationToken cancellationToken)
+    {
+        var entriesToReset = await _context.CatalogueIndex
+            .Where(entry => entry.Status == CatalogueIndexStatus.AiVerified && entry.BandDiscographyId == null)
+            .ToListAsync(cancellationToken);
+
+        if (entriesToReset.Count == 0)
+        {
+            return 0;
+        }
+
+        var catalogueIndexIds = entriesToReset.Select(entry => entry.Id).ToList();
+
+        var verificationsToRemove = await _context.AiVerifications
+            .Where(verification => catalogueIndexIds.Contains(verification.CatalogueIndexId))
+            .ToListAsync(cancellationToken);
+
+        _context.AiVerifications.RemoveRange(verificationsToRemove);
+
+        foreach (var entry in entriesToReset)
+        {
+            entry.Status = CatalogueIndexStatus.Relevant;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Reset {EntryCount} AiVerified entries to Relevant for re-analysis. Removed {VerificationCount} old verifications.",
+            entriesToReset.Count,
+            verificationsToRemove.Count);
+
+        return entriesToReset.Count;
+    }
+
     private async Task<List<CatalogueIndexEntity>> ResolveEntriesToVerifyAsync(
         RunVerificationDto request,
         CancellationToken cancellationToken)
@@ -521,6 +555,24 @@ public class AiVerificationService : IAiVerificationService
                 .Replace("{{albumTitle}}", albumTitle)
                 .Replace("{{discography}}", discography);
 
+            var verificationTool = new
+            {
+                name = "submit_verification",
+                description = "Submit the verification result for whether this band is Ukrainian and which discography entry matches.",
+                input_schema = new
+                {
+                    type = "object",
+                    properties = new Dictionary<string, object>
+                    {
+                        ["isUkrainian"] = new { type = "boolean", description = "Whether the band originates from Ukraine" },
+                        ["confidence"] = new { type = "number", description = "Confidence score from 0.0 to 1.0" },
+                        ["analysis"] = new { type = "string", description = "Brief reasoning for the decision" },
+                        ["matchedAlbumId"] = new { type = "string", description = "The exact UUID from the discography list that matches this album, or null if no match" },
+                    },
+                    required = new[] { "isUkrainian", "confidence", "analysis", "matchedAlbumId" },
+                },
+            };
+
             var requestBody = new
             {
                 model = agent.Model,
@@ -529,6 +581,8 @@ public class AiVerificationService : IAiVerificationService
                 {
                     new { role = "user", content = prompt },
                 },
+                tools = new[] { verificationTool },
+                tool_choice = new { type = "tool", name = "submit_verification" },
             };
 
             var client = _httpClientFactory.CreateClient();
@@ -552,25 +606,12 @@ public class AiVerificationService : IAiVerificationService
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
             var apiResponse = JsonSerializer.Deserialize<JsonElement>(responseBody);
 
-            var textContent = apiResponse
-                .GetProperty("content")[0]
-                .GetProperty("text")
-                .GetString();
-
-            if (string.IsNullOrEmpty(textContent))
+            var result = ExtractToolUseResult(apiResponse);
+            if (result == null)
             {
-                return (null, new ApiCallError("Empty response from Claude API", false));
+                return (null, new ApiCallError("Could not extract tool_use result from Claude response", false));
             }
 
-            var jsonStart = textContent.IndexOf('{');
-            var jsonEnd = textContent.LastIndexOf('}');
-            if (jsonStart < 0 || jsonEnd < 0)
-            {
-                return (null, new ApiCallError("Could not parse JSON from Claude response", false));
-            }
-
-            var jsonString = textContent.Substring(jsonStart, jsonEnd - jsonStart + 1);
-            var result = JsonSerializer.Deserialize<ClaudeVerificationResult>(jsonString, JsonOptions);
             return (result, null);
         }
         catch (TaskCanceledException)
@@ -620,6 +661,26 @@ public class AiVerificationService : IAiVerificationService
         public string Analysis { get; set; } = string.Empty;
 
         public string? MatchedAlbumId { get; set; }
+    }
+
+    private static ClaudeVerificationResult? ExtractToolUseResult(JsonElement apiResponse)
+    {
+        if (!apiResponse.TryGetProperty("content", out var contentArray))
+        {
+            return null;
+        }
+
+        foreach (var block in contentArray.EnumerateArray())
+        {
+            if (block.TryGetProperty("type", out var blockType) &&
+                blockType.GetString() == "tool_use" &&
+                block.TryGetProperty("input", out var input))
+            {
+                return JsonSerializer.Deserialize<ClaudeVerificationResult>(input.GetRawText(), JsonOptions);
+            }
+        }
+
+        return null;
     }
 
     private static Guid? ParseGuidOrNull(string? value)

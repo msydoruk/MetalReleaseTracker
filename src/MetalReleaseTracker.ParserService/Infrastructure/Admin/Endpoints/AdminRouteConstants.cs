@@ -38,6 +38,7 @@ public static class AdminRouteConstants
         public const string SetDecision = $"{Prefix}/{{id:guid}}/decision";
         public const string BatchDecision = $"{Prefix}/batch-decision";
         public const string BulkDecision = $"{Prefix}/bulk-decision";
+        public const string ResetForReanalysis = $"{Prefix}/reset-for-reanalysis";
     }
 
     public static class ParsingMonitor

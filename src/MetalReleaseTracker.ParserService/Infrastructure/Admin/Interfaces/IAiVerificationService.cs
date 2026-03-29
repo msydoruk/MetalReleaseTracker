@@ -35,4 +35,6 @@ public interface IAiVerificationService
         bool? isUkrainian,
         AiVerificationDecision decision,
         CancellationToken cancellationToken);
+
+    Task<int> ResetForReanalysisAsync(CancellationToken cancellationToken);
 }
