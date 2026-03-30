@@ -227,6 +227,7 @@ public class TelegramBotService : ITelegramBotService
         var emoji = notification.NotificationType switch
         {
             Data.Entities.Enums.NotificationType.PriceDrop => "🔻",
+            Data.Entities.Enums.NotificationType.PriceIncrease => "🔺",
             Data.Entities.Enums.NotificationType.BackInStock => "✅",
             Data.Entities.Enums.NotificationType.Restock => "🔄",
             Data.Entities.Enums.NotificationType.NewVariant => "🆕",

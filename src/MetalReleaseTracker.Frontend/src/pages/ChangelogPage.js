@@ -30,6 +30,28 @@ const statusConfig = {
   Deleted: { color: 'error', translationKey: 'statusDeleted' },
 };
 
+const getChangeReasons = (item) => {
+  if (item.changeType !== 'Updated') return null;
+
+  const reasons = [];
+
+  if (item.oldPrice != null && item.oldPrice !== item.price) {
+    reasons.push(item.price < item.oldPrice ? 'priceDown' : 'priceUp');
+  }
+
+  if (item.oldStockStatus && item.stockStatus && item.oldStockStatus !== item.stockStatus) {
+    reasons.push('statusChange');
+  }
+
+  return reasons.length > 0 ? reasons : null;
+};
+
+const reasonConfig = {
+  priceDown: { color: 'success', translationKey: 'reasonPriceDown' },
+  priceUp: { color: 'warning', translationKey: 'reasonPriceUp' },
+  statusChange: { color: 'info', translationKey: 'reasonStatusChange' },
+};
+
 const ChangelogPage = () => {
   const { t } = useLanguage();
   const { format: formatPrice } = useCurrency();
@@ -97,9 +119,23 @@ const ChangelogPage = () => {
     return parts.length > 0 ? parts.join(' | ') : formatPrice(item.price);
   };
 
-  const getStatusChip = (changeType) => {
-    const config = statusConfig[changeType] || { color: 'default', translationKey: changeType };
-    const label = t(`changelog.${config.translationKey}`) || changeType;
+  const getStatusChips = (item) => {
+    const reasons = getChangeReasons(item);
+
+    if (reasons) {
+      return (
+        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+          {reasons.map((reason) => {
+            const config = reasonConfig[reason];
+            const label = t(`changelog.${config.translationKey}`) || reason;
+            return <Chip key={reason} label={label} color={config.color} size="small" />;
+          })}
+        </Box>
+      );
+    }
+
+    const config = statusConfig[item.changeType] || { color: 'default', translationKey: item.changeType };
+    const label = t(`changelog.${config.translationKey}`) || item.changeType;
     return <Chip label={label} color={config.color} size="small" />;
   };
 
@@ -147,7 +183,7 @@ const ChangelogPage = () => {
                     <Typography variant="caption" color="text.secondary">
                       {formatDate(item.changedAt)}
                     </Typography>
-                    {getStatusChip(item.changeType)}
+                    {getStatusChips(item)}
                   </Box>
                   <Typography variant="subtitle2">{item.bandName}</Typography>
                   <Typography variant="body2">
@@ -190,7 +226,7 @@ const ChangelogPage = () => {
                     <TableCell>{t('changelog.album')}</TableCell>
                     <TableCell>{t('changelog.price')}</TableCell>
                     <TableCell>{t('changelog.distributor')}</TableCell>
-                    <TableCell>{t('changelog.status')}</TableCell>
+                    <TableCell>{t('changelog.change')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -221,7 +257,7 @@ const ChangelogPage = () => {
                         {formatChangeDetail(item)}
                       </TableCell>
                       <TableCell>{item.distributorName}</TableCell>
-                      <TableCell>{getStatusChip(item.changeType)}</TableCell>
+                      <TableCell>{getStatusChips(item)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

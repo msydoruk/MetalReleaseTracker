@@ -76,6 +76,12 @@ public class NotificationService : INotificationService
             var message = $"Price dropped from €{existingAlbum.Price:F2} to €{albumEvent.Price:F2}";
             notifications.AddRange(CreateNotificationsForUsers(watcherUserIds, existingAlbum.Id, NotificationType.PriceDrop, title, message));
         }
+        else if (existingAlbum != null && albumEvent.Price > existingAlbum.Price && existingAlbum.Price > 0)
+        {
+            var title = $"Price increase: {bandName} - {albumName}";
+            var message = $"Price increased from €{existingAlbum.Price:F2} to €{albumEvent.Price:F2}";
+            notifications.AddRange(CreateNotificationsForUsers(watcherUserIds, existingAlbum.Id, NotificationType.PriceIncrease, title, message));
+        }
 
         if (existingAlbum?.StockStatus == AlbumStockStatus.OutOfStock && albumEvent.StockStatus == AlbumStockStatus.InStock)
         {

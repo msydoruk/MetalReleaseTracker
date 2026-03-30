@@ -244,6 +244,7 @@ public class EmailNotificationService : IEmailNotificationService
         var emoji = notification.NotificationType switch
         {
             NotificationType.PriceDrop => "&#128315;",
+            NotificationType.PriceIncrease => "&#128314;",
             NotificationType.BackInStock => "&#9989;",
             NotificationType.Restock => "&#128260;",
             NotificationType.NewVariant => "&#127381;",

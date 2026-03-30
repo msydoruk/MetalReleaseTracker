@@ -109,6 +109,7 @@ public class DiscordNotificationService : IDiscordNotificationService
         return notificationType switch
         {
             NotificationType.PriceDrop => 0x4CAF50,
+            NotificationType.PriceIncrease => 0xF44336,
             NotificationType.BackInStock => 0x2196F3,
             NotificationType.Restock => 0xFF9800,
             NotificationType.NewVariant => 0xE53935,

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import RestoreIcon from '@mui/icons-material/Restore';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
@@ -29,6 +30,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 const NotificationTypeIcons = {
   PriceDrop: TrendingDownIcon,
+  PriceIncrease: TrendingUpIcon,
   BackInStock: InventoryIcon,
   Restock: RestoreIcon,
   NewVariant: NewReleasesIcon,
@@ -36,6 +38,7 @@ const NotificationTypeIcons = {
 
 const NotificationTypeColors = {
   PriceDrop: 'success.main',
+  PriceIncrease: 'error.main',
   BackInStock: 'info.main',
   Restock: 'warning.main',
   NewVariant: 'secondary.main',
