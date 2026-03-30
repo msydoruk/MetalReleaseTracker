@@ -556,7 +556,9 @@ const AlbumsPage = ({ isHome = false }) => {
             borderTopLeftRadius: { xs: 0, sm: 8 },
             borderBottomLeftRadius: { xs: 0, sm: 8 },
             boxShadow: '-4px 0 20px rgba(0,0,0,0.2)',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            mt: { xs: '56px', sm: '64px' },
+            height: { xs: 'calc(100% - 56px)', sm: 'calc(100% - 64px)' },
           },
         }}
       >
