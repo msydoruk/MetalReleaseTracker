@@ -126,7 +126,8 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SCRIPT'
           set -e
           cd ${{ env.DEPLOY_DIR }}/src/MetalReleaseTracker.CoreDataService
-          SKIP_FRONTEND_BUILD=true docker compose up -d --build
+          docker compose build --no-cache --build-arg SKIP_FRONTEND_BUILD=true
+          SKIP_FRONTEND_BUILD=true docker compose up -d
           echo "Waiting for services to start..."
           sleep 10
           docker compose ps
