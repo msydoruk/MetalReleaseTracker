@@ -198,6 +198,61 @@ Container: `metalrelease_postgres_coredata`, credentials in `.env`
 | AlbumId | uuid | | FK → Albums |
 | CreatedDate | timestamptz | | |
 
+**AlbumChangeLogs** — Audit trail of album changes (changelog page)
+| Column | Type | Nullable | Notes |
+|--------|------|----------|-------|
+| Id | uuid | PK | |
+| AlbumName | varchar(500) | | |
+| BandName | varchar(500) | | |
+| DistributorName | varchar(200) | | |
+| Price | real | | Current price |
+| OldPrice | real | YES | Previous price (Updated only) |
+| StockStatus | varchar(50) | YES | Current stock status |
+| OldStockStatus | varchar(50) | YES | Previous stock status |
+| PurchaseUrl | text | YES | |
+| AlbumSlug | varchar(250) | YES | For frontend links |
+| ChangeType | varchar(50) | | New, Updated, Deleted |
+| ChangeReason | varchar(50) | YES | PriceChange, StatusChange, PriceAndStatusChange |
+| ChangedAt | timestamptz | | |
+
+**UserAlbumWatches** — Albums watched by user for notifications
+| Column | Type | Nullable | Notes |
+|--------|------|----------|-------|
+| Id | uuid | PK | |
+| UserId | text | | |
+| BandId | uuid | | FK → Bands |
+| AlbumId | uuid | | FK → Albums |
+| CanonicalTitle | text | | Watch covers all variants |
+| CreatedDate | timestamptz | | |
+
+**UserNotifications** — In-app and push notification records
+| Column | Type | Nullable | Notes |
+|--------|------|----------|-------|
+| Id | uuid | PK | |
+| UserId | text | | |
+| AlbumId | uuid | YES | Null for broadcasts |
+| NotificationType | int | | PriceDrop=0, BackInStock=1, Restock=2, NewVariant=3, StatusChange=4, PriceIncrease=5 |
+| Title | varchar(500) | | |
+| Message | varchar(2000) | | |
+| IsRead | boolean | | |
+| CreatedDate | timestamptz | | |
+
+**TelegramLinks** — User ↔ Telegram chat mapping
+| Column | Type | Nullable | Notes |
+|--------|------|----------|-------|
+| Id | uuid | PK | |
+| UserId | text | | 1:1 with AspNetUsers |
+| ChatId | bigint | | Telegram chat ID |
+| LinkedAt | timestamptz | | |
+
+**TelegramLinkTokens** — Temporary tokens for Telegram linking (10-min TTL)
+| Column | Type | Nullable | Notes |
+|--------|------|----------|-------|
+| Id | uuid | PK | |
+| UserId | text | | |
+| Token | varchar(20) | | 8-char random |
+| ExpiresAt | timestamptz | | |
+
 **ASP.NET Identity tables**: AspNetUsers, AspNetRoles, AspNetRoleClaims, AspNetUserClaims, AspNetUserLogins, AspNetUserRoles, AspNetUserTokens — standard Identity schema for Google OAuth + JWT auth.
 
 ### FK Relationships
@@ -205,6 +260,9 @@ Container: `metalrelease_postgres_coredata`, credentials in `.env`
 Albums.BandId → Bands.Id
 Albums.DistributorId → Distributors.Id
 UserFavorites.AlbumId → Albums.Id
+UserAlbumWatches.BandId → Bands.Id
+UserAlbumWatches.AlbumId → Albums.Id
+UserNotifications.AlbumId → Albums.Id
 RefreshTokens.UserId → AspNetUsers.Id
 + standard ASP.NET Identity FKs
 ```

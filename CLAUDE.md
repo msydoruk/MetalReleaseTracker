@@ -44,7 +44,7 @@ Service database ports: ParserService=5434, CoreDataService=5436. PostgreSQL col
 
 **ParserServiceDb** (PostgreSQL, port 5434): BandReferences, BandDiscography, CatalogueIndex, CatalogueIndexDetails, AiVerifications, AiAgents, ParsingSources, Settings.
 
-**CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, Feedbacks, RefreshTokens, UserFavorites, UserAlbumWatches, UserNotifications, TelegramLinks, TelegramLinkTokens, Settings + ASP.NET Identity tables.
+**CoreDataServiceDb** (PostgreSQL, port 5436): Albums, Bands, Distributors, AlbumChangeLogs, Feedbacks, RefreshTokens, UserFavorites, UserAlbumWatches, UserNotifications, TelegramLinks, TelegramLinkTokens, Settings + ASP.NET Identity tables.
 
 Full schema with columns, types, and FK relationships: [`docs/database-schema.md`](docs/database-schema.md).
 
@@ -86,6 +86,8 @@ ParserService -> Kafka (albums-processed-topic) -> CoreDataService (API + SPA)
 Distributor parsers scrape album data from metal music distributor websites. Each distributor has a dedicated parser.
 
 **Parsing pipeline** (4 TickerQ jobs): `BandReferenceSyncJob` -> `CatalogueIndexJob` -> `AlbumDetailParsingJob` -> `AlbumPublisherJob`
+
+**Change detection** (`AlbumDetailParsingJob`): `DetectChangeReason()` compares Price and StockStatus, returns `ChangeReason` enum (`PriceChange`, `StatusChange`, `PriceAndStatusChange`) or null if nothing changed. The reason flows through Kafka → Consumer → AlbumChangeLogs → API → Frontend. See [`docs/notification-system.md`](docs/notification-system.md) § "Change Reason Tracking".
 
 **Files per distributor** (all under `src/MetalReleaseTracker.ParserService/`):
 - `Infrastructure/Parsers/{Name}Parser.cs` — parser implementation
