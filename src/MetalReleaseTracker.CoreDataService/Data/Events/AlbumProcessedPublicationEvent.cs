@@ -52,4 +52,6 @@ public class AlbumProcessedPublicationEvent
     public string? MetalArchivesUrl { get; set; }
 
     public string? BandcampUrl { get; set; }
+
+    public string? ChangeReason { get; set; }
 }

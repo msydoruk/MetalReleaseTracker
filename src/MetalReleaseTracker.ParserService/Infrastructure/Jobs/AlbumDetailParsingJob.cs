@@ -222,13 +222,15 @@ public class AlbumDetailParsingJob
             return (ChangeType.New, publicationStatus == PublicationStatus.SkippedZeroPrice);
         }
 
-        if (HasAlbumChanged(existingDetail, albumParsedEvent))
+        var changeReason = DetectChangeReason(existingDetail, albumParsedEvent);
+        if (changeReason != null)
         {
             var existingPhotoUrl = existingDetail.PhotoUrl;
             MapAlbumFieldsToDetail(existingDetail, albumParsedEvent, entry);
             existingDetail.PhotoUrl = existingPhotoUrl;
             var publicationStatus = DeterminePublicationStatus(existingDetail.Price, entry.Status);
             existingDetail.ChangeType = ChangeType.Updated;
+            existingDetail.ChangeReason = changeReason;
             existingDetail.PublicationStatus = publicationStatus;
 
             if (publicationStatus == PublicationStatus.SkippedZeroPrice && entry.Status != CatalogueIndexStatus.ZeroPriced)
@@ -286,15 +288,33 @@ public class AlbumDetailParsingJob
         detail.Press = AlbumParsingHelper.TruncatePress(source.Press);
         detail.Description = source.Description;
         detail.Status = source.Status;
+        detail.StockStatus = source.StockStatus;
         detail.CanonicalTitle = source.CanonicalTitle;
         detail.OriginalYear = source.OriginalYear;
         detail.MetalArchivesUrl = BuildMetalArchivesUrl(entry.BandReference);
     }
 
-    private static bool HasAlbumChanged(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
+    private static ChangeReason? DetectChangeReason(CatalogueIndexDetailEntity existing, AlbumParsedEvent parsed)
     {
-        return existing.Price != parsed.Price
-            || existing.StockStatus != parsed.StockStatus;
+        bool priceChanged = existing.Price != parsed.Price;
+        bool statusChanged = existing.StockStatus != parsed.StockStatus;
+
+        if (priceChanged && statusChanged)
+        {
+            return ChangeReason.PriceAndStatusChange;
+        }
+
+        if (priceChanged)
+        {
+            return ChangeReason.PriceChange;
+        }
+
+        if (statusChanged)
+        {
+            return ChangeReason.StatusChange;
+        }
+
+        return null;
     }
 
     private async Task ProcessAlbumImageAsync(AlbumParsedEvent albumParsedEvent, IAlbumDetailParser parser, CancellationToken cancellationToken)

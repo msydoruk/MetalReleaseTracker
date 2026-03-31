@@ -24,5 +24,7 @@ public class AlbumChangeLogDto
 
     public string ChangeType { get; set; }
 
+    public string? ChangeReason { get; set; }
+
     public DateTime ChangedAt { get; set; }
 }

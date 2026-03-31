@@ -19,6 +19,8 @@ public class CatalogueIndexDetailEntity : AlbumBase
     [Required]
     public PublicationStatus PublicationStatus { get; set; }
 
+    public ChangeReason? ChangeReason { get; set; }
+
     public DateTime? LastPublishedAt { get; set; }
 
     [Required]

@@ -33,6 +33,21 @@ const statusConfig = {
 const getChangeReasons = (item) => {
   if (item.changeType !== 'Updated') return null;
 
+  if (item.changeReason) {
+    if (item.changeReason === 'PriceAndStatusChange') {
+      const priceDir = item.oldPrice != null && item.price < item.oldPrice ? 'priceDown' : 'priceUp';
+      return [priceDir, 'statusChange'];
+    }
+
+    if (item.changeReason === 'PriceChange') {
+      return [item.oldPrice != null && item.price < item.oldPrice ? 'priceDown' : 'priceUp'];
+    }
+
+    if (item.changeReason === 'StatusChange') {
+      return ['statusChange'];
+    }
+  }
+
   const reasons = [];
 
   if (item.oldPrice != null && item.oldPrice !== item.price) {

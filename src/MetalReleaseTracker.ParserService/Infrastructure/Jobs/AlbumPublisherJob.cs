@@ -131,6 +131,7 @@ public class AlbumPublisherJob
             OriginalYear = detail.OriginalYear,
             MetalArchivesUrl = detail.MetalArchivesUrl,
             BandcampUrl = detail.BandcampUrl,
+            ChangeReason = detail.ChangeReason?.ToString(),
         };
     }
 

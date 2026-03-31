@@ -38,9 +38,60 @@ See [database-schema.md](database-schema.md) for full column definitions.
 | Type | Trigger | Emoji |
 |------|---------|-------|
 | `PriceDrop` | Album price decreased | `🔻` |
+| `PriceIncrease` | Album price increased | `🔺` |
 | `BackInStock` | Changed from OutOfStock → InStock | `✅` |
 | `Restock` | Changed from OutOfStock → any other status | `🔄` |
+| `StatusChange` | Any other stock status change | `🔔` |
 | `NewVariant` | New album pressing detected / admin broadcast | `🆕` |
+
+## Change Reason Tracking
+
+The system tracks **why** an album was updated end-to-end, from parser detection to changelog display.
+
+### ChangeReason Enum (ParserService)
+
+| Value | Meaning |
+|-------|---------|
+| `PriceChange` | Only the price changed |
+| `StatusChange` | Only the stock status changed |
+| `PriceAndStatusChange` | Both price and stock status changed |
+
+### Data Flow
+
+```
+Parser: DetectChangeReason()  →  CatalogueIndexDetailEntity.ChangeReason
+    ↓
+Publisher: MapToPublicationEvent()  →  AlbumProcessedPublicationEvent.ChangeReason (string)
+    ↓
+Kafka: albums-processed-topic
+    ↓
+Consumer: LogChangeAsync()  →  AlbumChangeLogEntity.ChangeReason (varchar(50))
+    ↓
+API: /api/changelog  →  AlbumChangeLogDto.ChangeReason
+    ↓
+Frontend: ChangelogPage.js  →  getChangeReasons(item) renders specific chips
+```
+
+### Key Files
+
+| File | Role |
+|------|------|
+| `ParserService/.../AlbumDetailParsingJob.cs` | `DetectChangeReason()` — detects what changed (Price, Status, or both) |
+| `ParserService/.../ValueObjects/ChangeReason.cs` | Enum definition |
+| `ParserService/.../AlbumPublisherJob.cs` | Maps `ChangeReason` to Kafka event |
+| `CoreDataService/.../AlbumProcessedEventConsumer.cs` | Passes `ChangeReason` to changelog; skips no-op updates |
+| `CoreDataService/.../AlbumChangeLogEntity.cs` | DB column `ChangeReason` (nullable varchar(50)) |
+| `Frontend/.../ChangelogPage.js` | Renders reason chips: "Price ↓", "Price ↑", "Status" |
+
+### Consumer No-op Guard
+
+The consumer skips changelog creation when the CoreDataService album has no actual difference from the event (prevents phantom "Updated" entries when parser and CoreDataService are out of sync):
+
+```csharp
+bool hasPriceChange = oldPrice.HasValue && Math.Abs(oldPrice.Value - albumEvent.Price) > 0.001f;
+bool hasStatusChange = oldStockStatus.HasValue && oldStockStatus != albumEvent.StockStatus;
+if (!isNewAlbum && !hasPriceChange && !hasStatusChange) → skip changelog
+```
 
 ---
 

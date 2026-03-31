@@ -40,6 +40,9 @@ public class AlbumChangeLogEntity
     [MaxLength(50)]
     public string ChangeType { get; set; }
 
+    [MaxLength(50)]
+    public string? ChangeReason { get; set; }
+
     [Required]
     public DateTime ChangedAt { get; set; }
 }

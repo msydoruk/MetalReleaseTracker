@@ -117,7 +117,22 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             }
 
             await _notificationService.GenerateNotificationsAsync(albumEvent, existingAlbum, bandId, context.CancellationToken);
-            await LogChangeAsync(albumEvent, distributorName, albumEntity.Slug, oldPrice, oldStockStatus);
+
+            bool hasPriceChange = oldPrice.HasValue && Math.Abs(oldPrice.Value - albumEvent.Price) > 0.001f;
+            bool hasStatusChange = oldStockStatus.HasValue && oldStockStatus != albumEvent.StockStatus;
+            bool isNewAlbum = albumEvent.ProcessedStatus != AlbumProcessedStatus.Updated;
+
+            if (isNewAlbum || hasPriceChange || hasStatusChange)
+            {
+                await LogChangeAsync(albumEvent, distributorName, albumEntity.Slug, oldPrice, oldStockStatus);
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "Skipping changelog for '{AlbumName}' (SKU={SKU}) — no actual change in CoreDataService.",
+                    albumEvent.Name,
+                    albumEvent.SKU);
+            }
         }
         catch (Exception exception)
         {
@@ -170,6 +185,7 @@ public class AlbumProcessedEventConsumer : IConsumer<AlbumProcessedPublicationEv
             PurchaseUrl = albumEvent.ProcessedStatus == AlbumProcessedStatus.Deleted ? null : albumEvent.PurchaseUrl,
             AlbumSlug = albumSlug,
             ChangeType = albumEvent.ProcessedStatus.ToString(),
+            ChangeReason = albumEvent.ChangeReason,
             ChangedAt = DateTime.UtcNow,
         };
 
