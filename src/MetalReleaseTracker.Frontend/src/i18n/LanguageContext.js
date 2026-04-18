@@ -74,6 +74,25 @@ export const LanguageProvider = ({ children }) => {
     [translations]
   );
 
+  useEffect(() => {
+    if (!translationsLoaded) {
+      return;
+    }
+    const splash = document.getElementById('initial-splash');
+    if (!splash) {
+      return;
+    }
+    splash.classList.add('splash-hidden');
+    const timeoutId = window.setTimeout(() => {
+      splash.parentNode?.removeChild(splash);
+    }, 300);
+    return () => window.clearTimeout(timeoutId);
+  }, [translationsLoaded]);
+
+  if (!translationsLoaded) {
+    return null;
+  }
+
   return (
     <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, availableLanguages, t, translationsLoaded }}>
       {children}

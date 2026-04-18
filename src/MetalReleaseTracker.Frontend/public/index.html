@@ -57,9 +57,59 @@
       "logo": "https://metal-release.com/logo512.png"
     }
     </script>
+    <style>
+      #initial-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #121212;
+        transition: opacity 250ms ease;
+      }
+      #initial-splash[data-theme="light"] {
+        background: #f5f5f5;
+      }
+      #initial-splash.splash-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #initial-splash .splash-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(244, 67, 54, 0.25);
+        border-top-color: #f44336;
+        border-radius: 50%;
+        animation: splash-spin 0.9s linear infinite;
+      }
+      #initial-splash[data-theme="light"] .splash-spinner {
+        border-color: rgba(211, 47, 47, 0.25);
+        border-top-color: #d32f2f;
+      }
+      @keyframes splash-spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <div id="initial-splash" data-theme="dark" aria-hidden="true">
+      <div class="splash-spinner"></div>
+    </div>
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem('themeMode') || 'dark';
+          var splash = document.getElementById('initial-splash');
+          if (splash) {
+            splash.setAttribute('data-theme', mode === 'light' ? 'light' : 'dark');
+          }
+        } catch (error) {
+          /* ignore storage errors */
+        }
+      })();
+    </script>
   </body>
 </html>
