@@ -165,40 +165,33 @@ public class AlbumService : IAlbumService
             return null;
         }
 
-        var photoUrl = await _fileStorageService.GetFileUrlAsync(album.PhotoUrl, cancellationToken);
-        var imageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(album.PhotoUrl, cancellationToken);
-
-        List<AlbumVariantDto> variants;
+        List<Data.Entities.AlbumEntity> matchingAlbums;
         if (!string.IsNullOrWhiteSpace(album.CanonicalTitle))
         {
-            var matchingAlbums = await _albumRepository.GetMatchingAlbumsAsync(
+            matchingAlbums = await _albumRepository.GetMatchingAlbumsAsync(
                 album.CanonicalTitle, album.Media, album.BandId, cancellationToken);
-
-            variants = matchingAlbums.Select(matchingAlbum => new AlbumVariantDto
-            {
-                AlbumId = matchingAlbum.Id,
-                DistributorId = matchingAlbum.DistributorId,
-                DistributorName = matchingAlbum.Distributor?.Name ?? string.Empty,
-                Price = matchingAlbum.Price,
-                PurchaseUrl = matchingAlbum.PurchaseUrl,
-                StockStatus = matchingAlbum.StockStatus
-            }).ToList();
         }
         else
         {
-            variants =
-            [
-                new AlbumVariantDto
-                {
-                    AlbumId = album.Id,
-                    DistributorId = album.DistributorId,
-                    DistributorName = album.Distributor?.Name ?? string.Empty,
-                    Price = album.Price,
-                    PurchaseUrl = album.PurchaseUrl,
-                    StockStatus = album.StockStatus
-                }
-            ];
+            matchingAlbums = [album];
         }
+
+        var photoSource = !string.IsNullOrWhiteSpace(album.PhotoUrl)
+            ? album
+            : matchingAlbums.FirstOrDefault(matchingAlbum => !string.IsNullOrWhiteSpace(matchingAlbum.PhotoUrl)) ?? album;
+
+        var photoUrl = await _fileStorageService.GetFileUrlAsync(photoSource.PhotoUrl, cancellationToken);
+        var imageSet = await _imageUrlResolverService.ResolveImageUrlSetAsync(photoSource.PhotoUrl, cancellationToken);
+
+        var variants = matchingAlbums.Select(matchingAlbum => new AlbumVariantDto
+        {
+            AlbumId = matchingAlbum.Id,
+            DistributorId = matchingAlbum.DistributorId,
+            DistributorName = matchingAlbum.Distributor?.Name ?? string.Empty,
+            Price = matchingAlbum.Price,
+            PurchaseUrl = matchingAlbum.PurchaseUrl,
+            StockStatus = matchingAlbum.StockStatus
+        }).ToList();
 
         var formatGroups = await BuildFormatGroupsAsync(album, cancellationToken);
 
