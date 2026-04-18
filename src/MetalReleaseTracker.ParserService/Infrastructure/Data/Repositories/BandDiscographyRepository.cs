@@ -69,31 +69,26 @@ public class BandDiscographyRepository : IBandDiscographyRepository
     public async Task<DiscographySyncResult> ReplaceForBandAsync(Guid bandReferenceId, List<BandDiscographyEntity> entries, CancellationToken cancellationToken)
     {
         var existing = await _context.BandDiscography
-            .Where(d => d.BandReferenceId == bandReferenceId)
+            .Where(discography => discography.BandReferenceId == bandReferenceId)
             .ToListAsync(cancellationToken);
 
-        var existingTitles = new HashSet<string>(
-            existing.Select(e => e.NormalizedAlbumTitle),
-            StringComparer.OrdinalIgnoreCase);
+        var existingKeys = new HashSet<(string NormalizedAlbumTitle, int? Year)>(
+            existing.Select(discography => (discography.NormalizedAlbumTitle, discography.Year)));
 
-        var newAlbumTitles = entries
-            .Where(e => !existingTitles.Contains(e.NormalizedAlbumTitle))
-            .Select(e => e.AlbumTitle)
+        var toInsert = entries
+            .Where(entry => !existingKeys.Contains((entry.NormalizedAlbumTitle, entry.Year)))
             .ToList();
 
-        _context.BandDiscography.RemoveRange(existing);
-
-        if (entries.Count > 0)
+        if (toInsert.Count > 0)
         {
-            await _context.BandDiscography.AddRangeAsync(entries, cancellationToken);
+            await _context.BandDiscography.AddRangeAsync(toInsert, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         }
-
-        await _context.SaveChangesAsync(cancellationToken);
 
         return new DiscographySyncResult
         {
             TotalCount = entries.Count,
-            NewAlbumTitles = newAlbumTitles,
+            NewAlbumTitles = toInsert.Select(entry => entry.AlbumTitle).ToList(),
         };
     }
 }

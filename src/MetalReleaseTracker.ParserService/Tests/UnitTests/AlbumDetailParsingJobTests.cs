@@ -190,6 +190,148 @@ public class AlbumDetailParsingJobTests
         Assert.Null(capturedDetail.OriginalYear);
     }
 
+    [Fact]
+    public async Task ParseRelevantEntries_ExistingDetailWithNullCanonicalTitle_UpdatesFieldsWhenDiscographyLinked()
+    {
+        var distributorCode = DistributorCode.Drakkar;
+        var discographyId = Guid.NewGuid();
+        var catalogueIndexId = Guid.NewGuid();
+
+        var catalogueEntry = new CatalogueIndexEntity
+        {
+            Id = catalogueIndexId,
+            DistributorCode = distributorCode,
+            BandName = "Drudkh",
+            AlbumTitle = "Autumn aurora",
+            DetailUrl = "https://example.com/detail",
+            Status = CatalogueIndexStatus.AiVerified,
+            BandDiscographyId = discographyId,
+            BandDiscography = new BandDiscographyEntity
+            {
+                Id = discographyId,
+                BandReferenceId = Guid.NewGuid(),
+                AlbumTitle = "Autumn Aurora",
+                NormalizedAlbumTitle = "autumn aurora",
+                AlbumType = "Full-length",
+                Year = 2004,
+            },
+        };
+
+        var existingDetail = new CatalogueIndexDetailEntity
+        {
+            Id = Guid.NewGuid(),
+            CatalogueIndexId = catalogueIndexId,
+            DistributorCode = distributorCode,
+            BandName = "Drudkh",
+            SKU = "2-drudkh-autumn-aurora",
+            Name = "Autumn aurora",
+            Price = 15.0f,
+            PurchaseUrl = "https://example.com/buy",
+            PhotoUrl = "https://example.com/photo.jpg",
+            CanonicalTitle = null,
+            OriginalYear = null,
+            ChangeType = ChangeType.New,
+            PublicationStatus = PublicationStatus.SkippedNoCanonicalTitle,
+        };
+
+        var parsedEvent = new AlbumParsedEvent
+        {
+            DistributorCode = distributorCode,
+            BandName = "Drudkh",
+            SKU = "2-drudkh-autumn-aurora",
+            Name = "Autumn aurora",
+            Price = 15.0f,
+            PurchaseUrl = "https://example.com/buy",
+            PhotoUrl = "https://example.com/photo.jpg",
+        };
+
+        CatalogueIndexDetailEntity? capturedDetail = null;
+        SetupMocksWithExistingDetail(distributorCode, catalogueEntry, existingDetail, parsedEvent, detail => capturedDetail = detail);
+
+        var job = CreateJob();
+        var dataSource = new ParserDataSource
+        {
+            DistributorCode = distributorCode,
+            Name = "Drakkar",
+            ParsingUrl = "https://example.com",
+        };
+
+        await job.RunDetailParsingJob(dataSource, CancellationToken.None);
+
+        Assert.NotNull(capturedDetail);
+        Assert.Equal("Autumn Aurora", capturedDetail!.CanonicalTitle);
+        Assert.Equal(2004, capturedDetail.OriginalYear);
+        Assert.Equal(ChangeType.Updated, capturedDetail.ChangeType);
+        Assert.Equal(PublicationStatus.Unpublished, capturedDetail.PublicationStatus);
+        Assert.Null(capturedDetail.ChangeReason);
+    }
+
+    [Fact]
+    public async Task ParseRelevantEntries_ExistingDetailWithCanonicalTitle_PreservesCanonicalTitleWhenSourceIsNull()
+    {
+        var distributorCode = DistributorCode.Drakkar;
+        var catalogueIndexId = Guid.NewGuid();
+
+        var catalogueEntry = new CatalogueIndexEntity
+        {
+            Id = catalogueIndexId,
+            DistributorCode = distributorCode,
+            BandName = "Drudkh",
+            AlbumTitle = "Autumn aurora",
+            DetailUrl = "https://example.com/detail",
+            Status = CatalogueIndexStatus.AiVerified,
+            BandDiscographyId = null,
+            BandDiscography = null,
+        };
+
+        var existingDetail = new CatalogueIndexDetailEntity
+        {
+            Id = Guid.NewGuid(),
+            CatalogueIndexId = catalogueIndexId,
+            DistributorCode = distributorCode,
+            BandName = "Drudkh",
+            SKU = "2-drudkh-autumn-aurora",
+            Name = "Autumn aurora",
+            Price = 15.0f,
+            PurchaseUrl = "https://example.com/buy",
+            PhotoUrl = "https://example.com/photo.jpg",
+            CanonicalTitle = "Autumn Aurora",
+            OriginalYear = 2004,
+            ChangeType = ChangeType.Updated,
+            PublicationStatus = PublicationStatus.Published,
+        };
+
+        var parsedEvent = new AlbumParsedEvent
+        {
+            DistributorCode = distributorCode,
+            BandName = "Drudkh",
+            SKU = "2-drudkh-autumn-aurora",
+            Name = "Autumn aurora",
+            Price = 17.0f,
+            PurchaseUrl = "https://example.com/buy",
+            PhotoUrl = "https://example.com/photo.jpg",
+        };
+
+        CatalogueIndexDetailEntity? capturedDetail = null;
+        SetupMocksWithExistingDetail(distributorCode, catalogueEntry, existingDetail, parsedEvent, detail => capturedDetail = detail);
+
+        var job = CreateJob();
+        var dataSource = new ParserDataSource
+        {
+            DistributorCode = distributorCode,
+            Name = "Drakkar",
+            ParsingUrl = "https://example.com",
+        };
+
+        await job.RunDetailParsingJob(dataSource, CancellationToken.None);
+
+        Assert.NotNull(capturedDetail);
+        Assert.Equal("Autumn Aurora", capturedDetail!.CanonicalTitle);
+        Assert.Equal(2004, capturedDetail.OriginalYear);
+        Assert.Equal(ChangeType.Updated, capturedDetail.ChangeType);
+        Assert.Equal(ChangeReason.PriceChange, capturedDetail.ChangeReason);
+    }
+
     private AlbumDetailParsingJob CreateJob()
     {
         return new AlbumDetailParsingJob(
@@ -250,5 +392,52 @@ public class AlbumDetailParsingJobTests
         _imageUploadServiceMock
             .Setup(service => service.UploadAlbumImageAsync(It.IsAny<ImageUploadRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ImageUploadResult.Success("blob/path.jpg", "https://example.com/photo.jpg"));
+    }
+
+    private void SetupMocksWithExistingDetail(
+        DistributorCode distributorCode,
+        CatalogueIndexEntity catalogueEntry,
+        CatalogueIndexDetailEntity existingDetail,
+        AlbumParsedEvent parsedEvent,
+        Action<CatalogueIndexDetailEntity> captureDetail)
+    {
+        _settingsServiceMock
+            .Setup(settingsService => settingsService.GetParsingSourceByCodeAsync(distributorCode, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ParsingSourceEntity
+            {
+                Id = Guid.NewGuid(),
+                DistributorCode = distributorCode,
+                Name = "Test Source",
+                ParsingUrl = "https://example.com",
+                IsEnabled = true,
+            });
+
+        _settingsServiceMock
+            .Setup(settingsService => settingsService.GetGeneralParserSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GeneralParserSettings
+            {
+                MinDelayBetweenRequestsSeconds = 0,
+                MaxDelayBetweenRequestsSeconds = 0,
+            });
+
+        _catalogueIndexRepoMock
+            .Setup(repository => repository.GetByStatusesWithDiscographyAsync(
+                distributorCode,
+                It.IsAny<IEnumerable<CatalogueIndexStatus>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CatalogueIndexEntity> { catalogueEntry });
+
+        _catalogueIndexDetailRepoMock
+            .Setup(repository => repository.GetByCatalogueIndexIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingDetail);
+
+        _catalogueIndexDetailRepoMock
+            .Setup(repository => repository.UpdateAsync(It.IsAny<CatalogueIndexDetailEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<CatalogueIndexDetailEntity, CancellationToken>((detail, _) => captureDetail(detail))
+            .Returns(Task.CompletedTask);
+
+        _parserMock
+            .Setup(parser => parser.ParseAlbumDetailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(parsedEvent);
     }
 }

@@ -223,7 +223,11 @@ public class AlbumDetailParsingJob
         }
 
         var changeReason = DetectChangeReason(existingDetail, albumParsedEvent);
-        if (changeReason != null)
+        var canonicalTitleRecovered =
+            string.IsNullOrWhiteSpace(existingDetail.CanonicalTitle)
+            && !string.IsNullOrWhiteSpace(albumParsedEvent.CanonicalTitle);
+
+        if (changeReason != null || canonicalTitleRecovered)
         {
             var existingPhotoUrl = existingDetail.PhotoUrl;
             MapAlbumFieldsToDetail(existingDetail, albumParsedEvent, entry);
@@ -289,8 +293,16 @@ public class AlbumDetailParsingJob
         detail.Description = source.Description;
         detail.Status = source.Status;
         detail.StockStatus = source.StockStatus;
-        detail.CanonicalTitle = source.CanonicalTitle;
-        detail.OriginalYear = source.OriginalYear;
+        if (!string.IsNullOrWhiteSpace(source.CanonicalTitle))
+        {
+            detail.CanonicalTitle = source.CanonicalTitle;
+        }
+
+        if (source.OriginalYear.HasValue)
+        {
+            detail.OriginalYear = source.OriginalYear;
+        }
+
         detail.MetalArchivesUrl = BuildMetalArchivesUrl(entry.BandReference);
     }
 
