@@ -68,8 +68,6 @@ public class MinioFileStorageService : IFileStorageService
                 .WithObject(filePath)
                 .WithExpiry(60 * 60 * 24 * _config.PresignedUrlExpiryDays));
 
-            presignedUrl = System.Web.HttpUtility.UrlDecode(presignedUrl);
-
             if (!string.IsNullOrEmpty(_config.PublicEndpoint))
             {
                 presignedUrl = presignedUrl.Replace($"http://{_config.Endpoint}", _config.PublicEndpoint);
